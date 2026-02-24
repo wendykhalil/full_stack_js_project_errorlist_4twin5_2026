@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import ThemeToggle from "../components/ThemeToggle";
+import LanguageSwitcher from "../components/LanguageSwitcher";
 
 const NavItem = ({ to, icon, label, onClick, collapsed }) => (
   <NavLink
@@ -200,6 +201,7 @@ export default function ArtisanLayout() {
             </div>
 
             <div className="flex items-center gap-2">
+                  <LanguageSwitcher />
               <ThemeToggle />
               <button className="rounded-xl p-2 text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700">
                 <Bell className="h-5 w-5" />
@@ -219,6 +221,7 @@ export default function ArtisanLayout() {
         </div>
 
         <div className="hidden xl:flex justify-end px-6 pt-4">
+          <LanguageSwitcher />
           <ThemeToggle />
         </div>
 

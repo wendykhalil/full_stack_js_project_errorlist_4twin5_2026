@@ -1,6 +1,7 @@
 import React from "react";
 import { ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 
 const Stepper = ({ step }) => (
   <div className="mt-6 flex items-center gap-4">
@@ -59,36 +60,55 @@ const Textarea = ({ label, placeholder }) => (
 );
 
 export default function ArtisanFactureStep1() {
-  const navigate = useNavigate(); // ✅ MUST be here
+  const { t } = useTranslation();
+  const navigate = useNavigate();
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-10">
-      <h1 className="text-3xl font-semibold text-slate-900">Créer une Facture</h1>
-      <p className="mt-1 text-sm text-slate-500">Informations générales</p>
+      <h1 className="text-3xl font-semibold text-slate-900">{t('artisanFactureStep1.title')}</h1>
+      <p className="mt-1 text-sm text-slate-500">{t('artisanFactureStep1.subtitle')}</p>
 
       <Stepper step={1} />
 
       <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-900">Informations de la facture</h2>
+        <h2 className="text-lg font-semibold text-slate-900">{t('artisanFactureStep1.formTitle')}</h2>
 
         <div className="mt-6 space-y-6">
-          <Select label="Projet associé" placeholder="Sélectionner un projet..." />
-          <Select label="Basé sur le devis (optionnel)" placeholder="Aucun devis" />
-          <Input label="Client" placeholder="Nom du client" />
+          <Select 
+            label={t('artisanFactureStep1.projectLabel')} 
+            placeholder={t('artisanFactureStep1.projectPlaceholder')} 
+          />
+          <Select 
+            label={t('artisanFactureStep1.quoteBasedLabel')} 
+            placeholder={t('artisanFactureStep1.quoteBasedPlaceholder')} 
+          />
+          <Input 
+            label={t('artisanFactureStep1.clientLabel')} 
+            placeholder={t('artisanFactureStep1.clientPlaceholder')} 
+          />
 
           <div className="grid gap-6 md:grid-cols-2">
-            <Input label="Date d'échéance" placeholder="mm/dd/yyyy" />
-            <Select label="Mode de paiement" placeholder="Sélectionner..." />
+            <Input 
+              label={t('artisanFactureStep1.dueDateLabel')} 
+              placeholder={t('artisanFactureStep1.dueDatePlaceholder')} 
+            />
+            <Select 
+              label={t('artisanFactureStep1.paymentMethodLabel')} 
+              placeholder={t('artisanFactureStep1.paymentMethodPlaceholder')} 
+            />
           </div>
 
-          <Textarea label="Notes (optionnel)" placeholder="Conditions de paiement, notes..." />
+          <Textarea 
+            label={t('artisanFactureStep1.notesLabel')} 
+            placeholder={t('artisanFactureStep1.notesPlaceholder')} 
+          />
         </div>
 
         <button
           onClick={() => navigate("/artisan/factures/new/step-2")}
           className="mt-6 w-full rounded-xl bg-indigo-700 py-4 font-semibold text-white hover:bg-indigo-800"
         >
-          Suivant: Ajouter les articles
+          {t('artisanFactureStep1.nextButton')}
         </button>
       </div>
     </main>

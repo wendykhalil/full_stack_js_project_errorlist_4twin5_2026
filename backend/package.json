@@ -17,10 +17,14 @@
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
+    "google-auth-library": "^9.15.1",
+    "i18next": "^25.8.13",
+    "i18next-browser-languagedetector": "^8.2.1",
+    "i18next-http-backend": "^3.0.2",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.2.1",
     "nodemailer": "^6.9.14",
-    "google-auth-library": "^9.15.1"
+    "react-i18next": "^16.5.4"
   },
   "devDependencies": {
     "nodemon": "^3.1.11"

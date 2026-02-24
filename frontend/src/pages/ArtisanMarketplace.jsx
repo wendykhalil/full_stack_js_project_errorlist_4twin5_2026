@@ -1,6 +1,7 @@
 import React from "react";
 import { Search, ChevronDown, ShoppingCart, Star } from "lucide-react";
 import SimpleFooter from "../components/Footer";
+import { useTranslation } from 'react-i18next';
 
 const ProductCard = ({
   image,
@@ -10,62 +11,67 @@ const ProductCard = ({
   supplier,
   price,
   unit,
-}) => (
-  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-    <img
-      src={image}
-      alt={title}
-      className="h-48 w-full rounded-xl object-cover"
-    />
+}) => {
+  const { t } = useTranslation();
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <img
+        src={image}
+        alt={title}
+        className="h-48 w-full rounded-xl object-cover"
+      />
 
-    <div className="mt-4">
-      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
-        {category}
-      </span>
+      <div className="mt-4">
+        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+          {category}
+        </span>
 
-      <h3 className="mt-3 text-lg font-semibold text-slate-900">{title}</h3>
-      <p className="mt-1 text-sm text-slate-500">{description}</p>
+        <h3 className="mt-3 text-lg font-semibold text-slate-900">{title}</h3>
+        <p className="mt-1 text-sm text-slate-500">{description}</p>
 
-      <div className="mt-2 text-sm text-slate-600">{supplier}</div>
+        <div className="mt-2 text-sm text-slate-600">{supplier}</div>
 
-      <div className="mt-4 flex items-center justify-between">
-        <div>
-          <div className="text-xl font-semibold text-indigo-700">
-            {price} TND
+        <div className="mt-4 flex items-center justify-between">
+          <div>
+            <div className="text-xl font-semibold text-indigo-700">
+              {price} TND
+            </div>
+            <div className="text-xs text-slate-500">{unit}</div>
           </div>
-          <div className="text-xs text-slate-500">{unit}</div>
+
+          <div className="flex items-center gap-1 text-sm text-orange-500">
+            <Star className="h-4 w-4 fill-orange-500" />
+            4.5
+          </div>
         </div>
 
-        <div className="flex items-center gap-1 text-sm text-orange-500">
-          <Star className="h-4 w-4 fill-orange-500" />
-          4.5
-        </div>
+        <button className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
+          <ShoppingCart className="h-4 w-4" />
+          {t('artisanMarketplace.addToCart')}
+        </button>
       </div>
-
-      <button className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
-        <ShoppingCart className="h-4 w-4" />
-        Ajouter au panier
-      </button>
     </div>
-  </div>
-);
+  );
+};
 
 export default function ArtisanMarketplace() {
+  const { t } = useTranslation();
+
   return (
-    <div className="flex-1"> {/* Changed from main wrapper to flex-1 */}
+    <div className="flex-1">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-semibold text-slate-900">
-            Marketplace
+            {t('artisanMarketplace.title')}
           </h1>
           <p className="mt-2 text-sm text-slate-500">
-            Découvrez et commandez des matériaux de construction
+            {t('artisanMarketplace.subtitle')}
           </p>
         </div>
 
         <button className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium hover:bg-slate-50">
-          🛒 Panier (0)
+          🛒 {t('artisanMarketplace.cartButton', { count: 0 })}
         </button>
       </div>
 
@@ -76,17 +82,17 @@ export default function ArtisanMarketplace() {
             <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              placeholder="Rechercher des produits..."
+              placeholder={t('artisanMarketplace.searchPlaceholder')}
               className="w-full rounded-xl border border-slate-200 py-3 pl-10 pr-4 text-sm focus:border-indigo-500 focus:outline-none"
             />
           </div>
 
           <div className="relative w-full md:w-60">
             <select className="w-full appearance-none rounded-xl border border-slate-200 py-3 pl-4 pr-10 text-sm focus:border-indigo-500 focus:outline-none">
-              <option>Toutes catégories</option>
-              <option>Matériaux</option>
-              <option>Peinture</option>
-              <option>Menuiserie</option>
+              <option>{t('artisanMarketplace.filterAllCategories')}</option>
+              <option>{t('artisanMarketplace.categories.materials')}</option>
+              <option>{t('artisanMarketplace.categories.paint')}</option>
+              <option>{t('artisanMarketplace.categories.carpentry')}</option>
             </select>
             <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           </div>
@@ -135,7 +141,7 @@ export default function ArtisanMarketplace() {
           unit="par unité"
         />
       </div>
-      <SimpleFooter></SimpleFooter>
+      <SimpleFooter />
     </div>
   );
 }

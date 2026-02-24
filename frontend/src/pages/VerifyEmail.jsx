@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { HardHat, CheckCircle2, XCircle, ArrowRight } from "lucide-react";
 import { apiFetch } from "../auth/api";
+import { useTranslation } from 'react-i18next';
 
 function useQuery() {
   const { search } = useLocation();
@@ -9,6 +10,7 @@ function useQuery() {
 }
 
 export default function VerifyEmail() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const q = useQuery();
   const token = q.get("token") || "";
@@ -23,23 +25,23 @@ export default function VerifyEmail() {
         const data = await apiFetch(`/auth/verify-email?token=${encodeURIComponent(token)}`, { method: "GET" });
         if (!mounted) return;
         setStatus("ok");
-        setMessage(data.message || "Email vérifié. Vous pouvez vous connecter.");
+        setMessage(data.message || t('verifyEmail.successDefaultMessage'));
       } catch (e) {
         if (!mounted) return;
         setStatus("error");
-        setMessage(e.message || "Lien invalide ou expiré.");
+        setMessage(e.message || t('verifyEmail.errorDefaultMessage'));
       }
     }
     if (!token) {
       setStatus("error");
-      setMessage("Token manquant.");
+      setMessage(t('verifyEmail.missingToken'));
       return;
     }
     run();
     return () => {
       mounted = false;
     };
-  }, [token]);
+  }, [token, t]);
 
   return (
     <div className="relative flex h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-slate-50 via-indigo-50/60 to-slate-100 px-4">
@@ -53,15 +55,15 @@ export default function VerifyEmail() {
             <HardHat className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="text-2xl font-semibold text-slate-900">Vérification Email</h1>
-            <p className="text-slate-600">Confirmation de votre compte</p>
+            <h1 className="text-2xl font-semibold text-slate-900">{t('verifyEmail.title')}</h1>
+            <p className="text-slate-600">{t('verifyEmail.subtitle')}</p>
           </div>
         </div>
 
         <div className="mt-8">
           {status === "loading" && (
             <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-slate-700">
-              Vérification en cours...
+              {t('verifyEmail.loadingMessage')}
             </div>
           )}
 
@@ -69,7 +71,7 @@ export default function VerifyEmail() {
             <div className="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-emerald-900">
               <CheckCircle2 className="mt-0.5 h-5 w-5" />
               <div>
-                <div className="font-medium">Succès</div>
+                <div className="font-medium">{t('verifyEmail.successTitle')}</div>
                 <div className="text-sm">{message}</div>
               </div>
             </div>
@@ -79,7 +81,7 @@ export default function VerifyEmail() {
             <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-red-800">
               <XCircle className="mt-0.5 h-5 w-5" />
               <div>
-                <div className="font-medium">Erreur</div>
+                <div className="font-medium">{t('verifyEmail.errorTitle')}</div>
                 <div className="text-sm">{message}</div>
               </div>
             </div>
@@ -90,7 +92,7 @@ export default function VerifyEmail() {
           onClick={() => navigate("/login", { replace: true })}
           className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-700 px-5 py-4 text-lg font-semibold text-white hover:bg-indigo-800"
         >
-          Aller à la connexion <ArrowRight className="h-5 w-5" />
+          {t('verifyEmail.goToLoginButton')} <ArrowRight className="h-5 w-5" />
         </button>
       </div>
     </div>

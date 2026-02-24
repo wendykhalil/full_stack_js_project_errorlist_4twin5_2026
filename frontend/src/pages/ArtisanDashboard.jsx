@@ -13,14 +13,9 @@ import {
   AlertCircle,
 } from "lucide-react";
 import SimpleFooter from "../components/Footer";
+import { useTranslation } from 'react-i18next';
 
-const StatCard = ({
-  title,
-  value,
-  icon,
-  iconBg = "bg-slate-100",
-  iconFg = "text-slate-700",
-}) => (
+const StatCard = ({ title, value, icon, iconBg = "bg-slate-100", iconFg = "text-slate-700" }) => (
   <div className="relative rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
     <div className="flex items-start justify-between gap-4">
       <div className="min-w-0">
@@ -68,7 +63,7 @@ const ProjectCard = ({ title, client, budget, remaining, status, statusTone = "i
     </div>
     <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
       <div className="text-slate-600">
-        Budget: <span className="font-medium text-slate-900">{budget}</span>
+        {t('artisanDashboard.projectCard.budget')} <span className="font-medium text-slate-900">{budget}</span>
       </div>
       <div className="text-emerald-600 font-medium">{remaining}</div>
     </div>
@@ -99,34 +94,34 @@ const ActivityRow = ({ icon, title, time, tone = "slate" }) => {
 };
 
 export default function ArtisanDashboard() {
+  const { t } = useTranslation();
+
   return (
-    <div className="flex-1"> {/* This will be used inside the layout */}
+    <div className="flex-1">
       <div>
         <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
-          Tableau de Bord
+          {t('artisanDashboard.title')}
         </h1>
         <p className="mt-2 text-sm text-slate-500">
-          Vue d&apos;ensemble de votre activité
+          {t('artisanDashboard.subtitle')}
         </p>
       </div>
 
-      {/* Stats */}
-
+      {/* Welcome card */}
       <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-900">Bienvenue 👋</h2>
-        <p className="mt-2 text-sm text-slate-600">Tableau de bord en mode simplifié. Utilisez les actions rapides pour commencer.</p>
+        <h2 className="text-lg font-semibold text-slate-900">{t('artisanDashboard.welcome.title')}</h2>
+        <p className="mt-2 text-sm text-slate-600">{t('artisanDashboard.welcome.description')}</p>
       </div>
-
 
       {/* Quick Actions */}
       <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-900">Actions Rapides</h2>
+        <h2 className="text-lg font-semibold text-slate-900">{t('artisanDashboard.quickActions.title')}</h2>
 
         <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <ActionCard icon={<Plus />} label="Nouveau Projet" iconBg="bg-indigo-50" iconFg="text-indigo-600" />
-          <ActionCard icon={<ClipboardList />} label="Créer un Devis" iconBg="bg-orange-50" iconFg="text-orange-600" />
-          <ActionCard icon={<Receipt />} label="Nouvelle Facture" iconBg="bg-emerald-50" iconFg="text-emerald-600" />
-          <ActionCard icon={<ShoppingCart />} label="Commander" iconBg="bg-indigo-50" iconFg="text-indigo-600" />
+          <ActionCard icon={<Plus />} label={t('artisanDashboard.quickActions.newProject')} iconBg="bg-indigo-50" iconFg="text-indigo-600" />
+          <ActionCard icon={<ClipboardList />} label={t('artisanDashboard.quickActions.createQuote')} iconBg="bg-orange-50" iconFg="text-orange-600" />
+          <ActionCard icon={<Receipt />} label={t('artisanDashboard.quickActions.newInvoice')} iconBg="bg-emerald-50" iconFg="text-emerald-600" />
+          <ActionCard icon={<ShoppingCart />} label={t('artisanDashboard.quickActions.order')} iconBg="bg-indigo-50" iconFg="text-indigo-600" />
         </div>
       </section>
 
@@ -134,31 +129,72 @@ export default function ArtisanDashboard() {
       <section className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-slate-900">Projets Récents</h2>
+            <h2 className="text-lg font-semibold text-slate-900">{t('artisanDashboard.recentProjects.title')}</h2>
             <a href="#" className="inline-flex items-center gap-2 text-sm font-medium text-slate-700 hover:text-slate-900">
-              Voir tout <ArrowUpRight className="h-4 w-4" />
+              {t('artisanDashboard.recentProjects.viewAll')} <ArrowUpRight className="h-4 w-4" />
             </a>
           </div>
 
           <div className="mt-6 space-y-4">
-            <ProjectCard title="Villa Ben Arous" client="Mohammed Ahmed" budget="45,000 TND" remaining="37% restant" status="Actif" statusTone="indigo" />
-            <ProjectCard title="Appartement Tunis" client="Fatima Ben Ali" budget="18,000 TND" remaining="33% restant" status="Actif" statusTone="indigo" />
-            <ProjectCard title="Bureau Ariana" client="Tech Solutions SARL" budget="35,000 TND" remaining="100% restant" status="En attente" statusTone="slate" />
+            <ProjectCard 
+              title={t('artisanDashboard.recentProjects.project1.title')} 
+              client={t('artisanDashboard.recentProjects.project1.client')} 
+              budget="45,000 TND" 
+              remaining={t('artisanDashboard.recentProjects.project1.remaining')} 
+              status={t('artisanDashboard.status.active')} 
+              statusTone="indigo" 
+            />
+            <ProjectCard 
+              title={t('artisanDashboard.recentProjects.project2.title')} 
+              client={t('artisanDashboard.recentProjects.project2.client')} 
+              budget="18,000 TND" 
+              remaining={t('artisanDashboard.recentProjects.project2.remaining')} 
+              status={t('artisanDashboard.status.active')} 
+              statusTone="indigo" 
+            />
+            <ProjectCard 
+              title={t('artisanDashboard.recentProjects.project3.title')} 
+              client={t('artisanDashboard.recentProjects.project3.client')} 
+              budget="35,000 TND" 
+              remaining={t('artisanDashboard.recentProjects.project3.remaining')} 
+              status={t('artisanDashboard.status.pending')} 
+              statusTone="slate" 
+            />
           </div>
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-slate-900">Activité Récente</h2>
+          <h2 className="text-lg font-semibold text-slate-900">{t('artisanDashboard.recentActivity.title')}</h2>
 
           <div className="mt-6 space-y-5">
-            <ActivityRow icon={<CheckCircle2 />} title="Facture INV001 payée" time="Il y a 2h" tone="green" />
-            <ActivityRow icon={<Clock3 />} title="Devis Q002 envoyé à Fatima Ben Ali" time="Il y a 5h" tone="blue" />
-            <ActivityRow icon={<Truck />} title="Commande ORD002 expédiée" time="Hier" tone="orange" />
-            <ActivityRow icon={<AlertCircle />} title="Facture INV003 en retard" time="Il y a 2j" tone="red" />
+            <ActivityRow 
+              icon={<CheckCircle2 />} 
+              title={t('artisanDashboard.recentActivity.invoicePaid', { invoice: 'INV001' })} 
+              time={t('artisanDashboard.recentActivity.timeAgo', { hours: 2 })} 
+              tone="green" 
+            />
+            <ActivityRow 
+              icon={<Clock3 />} 
+              title={t('artisanDashboard.recentActivity.quoteSent', { quote: 'Q002', client: t('artisanDashboard.recentActivity.clientFatima') })} 
+              time={t('artisanDashboard.recentActivity.timeAgo', { hours: 5 })} 
+              tone="blue" 
+            />
+            <ActivityRow 
+              icon={<Truck />} 
+              title={t('artisanDashboard.recentActivity.orderShipped', { order: 'ORD002' })} 
+              time={t('artisanDashboard.recentActivity.yesterday')} 
+              tone="orange" 
+            />
+            <ActivityRow 
+              icon={<AlertCircle />} 
+              title={t('artisanDashboard.recentActivity.invoiceOverdue', { invoice: 'INV003' })} 
+              time={t('artisanDashboard.recentActivity.daysAgo', { days: 2 })} 
+              tone="red" 
+            />
           </div>
         </div>
       </section>
-      <SimpleFooter></SimpleFooter>
+      <SimpleFooter />
     </div>
   );
 }

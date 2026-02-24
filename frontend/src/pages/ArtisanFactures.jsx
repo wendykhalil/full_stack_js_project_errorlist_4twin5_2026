@@ -14,21 +14,28 @@ import {
   Clock3,
 } from "lucide-react";
 import SimpleFooter from "../components/Footer";
+import { useTranslation } from 'react-i18next';
 
 const StatusPill = ({ status }) => {
-  const map = {
-    Payée: "bg-emerald-100 text-emerald-700",
+  const { t } = useTranslation();
+  // Mapping des statuts (valeurs brutes) vers les clés de traduction
+  const statusKeyMap = {
+    "Payée": "artisanFactures.status.paid",
+    "En attente": "artisanFactures.status.pending",
+    "Retard": "artisanFactures.status.overdue",
+  };
+  const toneMap = {
+    "Payée": "bg-emerald-100 text-emerald-700",
     "En attente": "bg-indigo-100 text-indigo-700",
-    Retard: "bg-red-100 text-red-700",
+    "Retard": "bg-red-100 text-red-700",
   };
 
+  const translatedStatus = t(statusKeyMap[status] || status);
+  const toneClass = toneMap[status] ?? "bg-slate-100 text-slate-700";
+
   return (
-    <span
-      className={`rounded-full px-3 py-1 text-xs font-semibold ${
-        map[status] ?? "bg-slate-100 text-slate-700"
-      }`}
-    >
-      {status}
+    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${toneClass}`}>
+      {translatedStatus}
     </span>
   );
 };
@@ -40,6 +47,7 @@ const Money = ({ children }) => (
 );
 
 const FactureRow = ({ inv, client, date, amount, status }) => {
+  const { t } = useTranslation();
   const icon =
     status === "Payée" ? (
       <CheckCircle2 className="h-5 w-5" />
@@ -86,7 +94,7 @@ const FactureRow = ({ inv, client, date, amount, status }) => {
 
             <div className="flex items-center gap-2">
               <FileText className="h-4 w-4 text-slate-400" />
-              Montant: <Money>{amount.toLocaleString()}</Money>
+              {t('artisanFactures.amountLabel')} <Money>{amount.toLocaleString()}</Money>
             </div>
           </div>
         </div>
@@ -95,12 +103,12 @@ const FactureRow = ({ inv, client, date, amount, status }) => {
       <div className="flex flex-wrap items-center gap-2 md:justify-end">
         <button className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
           <Eye className="h-4 w-4" />
-          Voir
+          {t('artisanFactures.viewButton')}
         </button>
 
         <button className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
           <Download className="h-4 w-4" />
-          Télécharger
+          {t('artisanFactures.downloadButton')}
         </button>
       </div>
     </div>
@@ -108,18 +116,19 @@ const FactureRow = ({ inv, client, date, amount, status }) => {
 };
 
 export default function ArtisanFactures() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   return (
-    <div className="flex-1"> {/* Changed from main wrapper to flex-1 */}
+    <div className="flex-1">
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-semibold text-slate-900">
-            Factures
+            {t('artisanFactures.title')}
           </h1>
           <p className="mt-2 text-sm text-slate-500">
-            Suivez vos factures, paiements et retards
+            {t('artisanFactures.subtitle')}
           </p>
         </div>
 
@@ -128,7 +137,7 @@ export default function ArtisanFactures() {
           className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow hover:bg-indigo-700"
         >
           <Plus className="h-4 w-4" />
-          Nouvelle Facture
+          {t('artisanFactures.newInvoiceButton')}
         </button>
       </div>
 
@@ -139,17 +148,17 @@ export default function ArtisanFactures() {
             <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              placeholder="Rechercher par numéro, client..."
+              placeholder={t('artisanFactures.searchPlaceholder')}
               className="w-full rounded-xl border border-slate-200 py-3 pl-10 pr-4 text-sm focus:border-indigo-500 focus:outline-none"
             />
           </div>
 
           <div className="relative w-full md:w-60">
             <select className="w-full appearance-none rounded-xl border border-slate-200 py-3 pl-4 pr-10 text-sm focus:border-indigo-500 focus:outline-none">
-              <option>Tous les statuts</option>
-              <option>Payée</option>
-              <option>En attente</option>
-              <option>Retard</option>
+              <option value="">{t('artisanFactures.filterAllStatuses')}</option>
+              <option value="Payée">{t('artisanFactures.status.paid')}</option>
+              <option value="En attente">{t('artisanFactures.status.pending')}</option>
+              <option value="Retard">{t('artisanFactures.status.overdue')}</option>
             </select>
 
             <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -181,7 +190,7 @@ export default function ArtisanFactures() {
           status="Retard"
         />
       </div>
-      <SimpleFooter></SimpleFooter>
+      <SimpleFooter />
     </div>
   );
 }

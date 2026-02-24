@@ -13,6 +13,12 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
 import AdminAuthLogs from "./pages/AdminAuthLogs";
 
+// Language 
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from "./components/LanguageSwitcher";
+
+
+
 
 
 
@@ -46,8 +52,11 @@ import Profile from "./pages/Profile";
 
 
 export default function App() {
+    const { t } = useTranslation(); 
+
   return (
     <BrowserRouter>
+     
 
       <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />

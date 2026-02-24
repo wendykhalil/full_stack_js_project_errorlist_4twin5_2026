@@ -11,6 +11,7 @@ import {
   Trash2,
 } from "lucide-react";
 import SimpleFooter from "../components/Footer";
+import { useTranslation } from 'react-i18next';
 
 const StatCard = ({ title, value, icon, iconBg, iconFg }) => (
   <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -56,6 +57,7 @@ const ActionBtn = ({ children, className = "" }) => (
 );
 
 export default function FournisseurProduits() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const rows = [
@@ -116,15 +118,15 @@ export default function FournisseurProduits() {
   ];
 
   return (
-    <div className="flex-1"> {/* Changed from main wrapper to flex-1 */}
+    <div className="flex-1">
       {/* Title + CTA */}
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
-            Gestion des Produits
+            {t('fournisseurProduits.title')}
           </h1>
           <p className="mt-2 text-sm text-slate-500">
-            Gérez votre catalogue de produits et équipements
+            {t('fournisseurProduits.subtitle')}
           </p>
         </div>
 
@@ -133,27 +135,27 @@ export default function FournisseurProduits() {
           className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-700 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-800"
         >
           <Plus className="h-4 w-4" />
-          Ajouter un produit
+          {t('fournisseurProduits.addButton')}
         </button>
       </div>
 
       {/* Stats */}
       <section className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Produits actifs" value="42" icon={<Package />} iconBg="bg-indigo-50" iconFg="text-indigo-600" />
-        <StatCard title="Commandes ce mois" value="127" icon={<ShoppingCart />} iconBg="bg-emerald-50" iconFg="text-emerald-600" />
-        <StatCard title="Chiffre d'affaires" value="45,280 TND" icon={<TrendingUp />} iconBg="bg-orange-50" iconFg="text-orange-600" />
-        <StatCard title="Catalogues" value="3" icon={<FileText />} iconBg="bg-slate-100" iconFg="text-slate-700" />
+        <StatCard title={t('fournisseurProduits.stats.activeProducts')} value="42" icon={<Package />} iconBg="bg-indigo-50" iconFg="text-indigo-600" />
+        <StatCard title={t('fournisseurProduits.stats.monthlyOrders')} value="127" icon={<ShoppingCart />} iconBg="bg-emerald-50" iconFg="text-emerald-600" />
+        <StatCard title={t('fournisseurProduits.stats.revenue')} value="45,280 TND" icon={<TrendingUp />} iconBg="bg-orange-50" iconFg="text-orange-600" />
+        <StatCard title={t('fournisseurProduits.stats.catalogs')} value="3" icon={<FileText />} iconBg="bg-slate-100" iconFg="text-slate-700" />
       </section>
 
       {/* Table card */}
       <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <h2 className="text-lg font-semibold text-slate-900">Mes Produits</h2>
+          <h2 className="text-lg font-semibold text-slate-900">{t('fournisseurProduits.tableTitle')}</h2>
 
           <div className="relative w-full md:w-72">
             <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
-              placeholder="Rechercher..."
+              placeholder={t('fournisseurProduits.searchPlaceholder')}
               className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-4 text-sm focus:border-indigo-500 focus:outline-none"
             />
           </div>
@@ -163,12 +165,12 @@ export default function FournisseurProduits() {
           <table className="w-full min-w-[900px] border-separate border-spacing-0">
             <thead>
               <tr className="text-left text-sm text-slate-500">
-                <th className="border-b border-slate-200 pb-3 font-semibold">Produit</th>
-                <th className="border-b border-slate-200 pb-3 font-semibold">Catégorie</th>
-                <th className="border-b border-slate-200 pb-3 text-right font-semibold">Prix</th>
-                <th className="border-b border-slate-200 pb-3 text-center font-semibold">Stock</th>
-                <th className="border-b border-slate-200 pb-3 text-center font-semibold">Statut</th>
-                <th className="border-b border-slate-200 pb-3 text-right font-semibold">Actions</th>
+                <th className="border-b border-slate-200 pb-3 font-semibold">{t('fournisseurProduits.table.product')}</th>
+                <th className="border-b border-slate-200 pb-3 font-semibold">{t('fournisseurProduits.table.category')}</th>
+                <th className="border-b border-slate-200 pb-3 text-right font-semibold">{t('fournisseurProduits.table.price')}</th>
+                <th className="border-b border-slate-200 pb-3 text-center font-semibold">{t('fournisseurProduits.table.stock')}</th>
+                <th className="border-b border-slate-200 pb-3 text-center font-semibold">{t('fournisseurProduits.table.status')}</th>
+                <th className="border-b border-slate-200 pb-3 text-right font-semibold">{t('fournisseurProduits.table.actions')}</th>
               </tr>
             </thead>
 
@@ -212,7 +214,7 @@ export default function FournisseurProduits() {
           </table>
         </div>
       </section>
-      <SimpleFooter></SimpleFooter>
+      <SimpleFooter />
     </div>
   );
 }

@@ -1,43 +1,48 @@
 import React from "react";
 import { Search, ChevronDown, FileText } from "lucide-react";
-import SimpleFooter from "../components/Footer";
 import Footer from "../components/Footer";
+import { useTranslation } from 'react-i18next';
 
-const Card = ({ cat, title, desc, supplier, price, unit }) => (
-  <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-    <span className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
-      {cat}
-    </span>
+const Card = ({ cat, title, desc, supplier, price, unit }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <span className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+        {cat}
+      </span>
 
-    <h3 className="mt-4 text-lg font-semibold text-slate-900">{title}</h3>
-    <p className="mt-1 text-sm text-slate-500">{desc}</p>
+      <h3 className="mt-4 text-lg font-semibold text-slate-900">{title}</h3>
+      <p className="mt-1 text-sm text-slate-500">{desc}</p>
 
-    <div className="mt-4 flex items-center gap-2 text-sm text-slate-600">
-      <FileText className="h-4 w-4 text-slate-400" />
-      {supplier}
-    </div>
-
-    <div className="mt-6 flex items-end justify-between">
-      <div>
-        <div className="text-xl font-semibold text-indigo-700">{price} TND</div>
-        <div className="text-xs text-slate-500">{unit}</div>
+      <div className="mt-4 flex items-center gap-2 text-sm text-slate-600">
+        <FileText className="h-4 w-4 text-slate-400" />
+        {supplier}
       </div>
 
-      <button className="rounded-xl bg-indigo-600 px-5 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
-        Détails
-      </button>
+      <div className="mt-6 flex items-end justify-between">
+        <div>
+          <div className="text-xl font-semibold text-indigo-700">{price} TND</div>
+          <div className="text-xs text-slate-500">{unit}</div>
+        </div>
+
+        <button className="rounded-xl bg-indigo-600 px-5 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
+          {t('prescripteurProduits.detailsButton')}
+        </button>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default function PrescripteurProduits() {
+  const { t } = useTranslation();
+
   return (
-    <div className="flex-1"> {/* Changed from main wrapper to flex-1 */}
+    <div className="flex-1">
       <h1 className="text-3xl font-semibold text-slate-900">
-        Catalogue de Produits
+        {t('prescripteurProduits.title')}
       </h1>
       <p className="mt-2 text-sm text-slate-500">
-        Découvrez notre sélection de matériaux et équipements
+        {t('prescripteurProduits.subtitle')}
       </p>
 
       {/* Search / filter */}
@@ -46,27 +51,27 @@ export default function PrescripteurProduits() {
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
-              placeholder="Rechercher des produits..."
+              placeholder={t('prescripteurProduits.searchPlaceholder')}
               className="w-full rounded-xl border border-slate-200 py-3 pl-10 pr-4 text-sm focus:border-indigo-500 focus:outline-none"
             />
           </div>
 
           <div className="relative w-full md:w-64">
             <select className="w-full appearance-none rounded-xl border border-slate-200 py-3 pl-4 pr-10 text-sm focus:border-indigo-500 focus:outline-none">
-              <option>Toutes catégories</option>
-              <option>Matériaux de base</option>
-              <option>Revêtements</option>
-              <option>Peinture</option>
-              <option>Menuiserie</option>
-              <option>Électricité</option>
-              <option>Sanitaire</option>
+              <option>{t('prescripteurProduits.categoryPlaceholder')}</option>
+              <option>{t('prescripteurProduits.categories.basicMaterials')}</option>
+              <option>{t('prescripteurProduits.categories.flooring')}</option>
+              <option>{t('prescripteurProduits.categories.paint')}</option>
+              <option>{t('prescripteurProduits.categories.carpentry')}</option>
+              <option>{t('prescripteurProduits.categories.electricity')}</option>
+              <option>{t('prescripteurProduits.categories.plumbing')}</option>
             </select>
             <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           </div>
         </div>
       </div>
 
-      {/* Cards */}
+      {/* Cards - données statiques en français */}
       <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card
           cat="Matériaux de base"
@@ -117,7 +122,7 @@ export default function PrescripteurProduits() {
           unit="par unité"
         />
       </div>
-      <Footer></Footer>
+      <Footer />
     </div>
   );
 }

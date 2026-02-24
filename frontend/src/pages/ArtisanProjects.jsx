@@ -7,11 +7,19 @@ import {
   Plus,
 } from "lucide-react";
 import SimpleFooter from "../components/Footer";
+import { useTranslation } from 'react-i18next';
 
 // Artisan - Projects Page
 // Tailwind required
 
 const StatusPill = ({ status }) => {
+  const { t } = useTranslation();
+  // Mapping des statuts (valeurs brutes) vers les clés de traduction
+  const statusKeyMap = {
+    "Actif": "artisanProjects.status.active",
+    "En attente": "artisanProjects.status.pending",
+    "Terminé": "artisanProjects.status.completed",
+  };
   const styles = {
     Actif: "bg-indigo-100 text-indigo-700",
     "En attente": "bg-orange-100 text-orange-700",
@@ -20,18 +28,19 @@ const StatusPill = ({ status }) => {
 
   return (
     <span className={`rounded-full px-3 py-1 text-xs font-semibold ${styles[status]}`}>
-      {status}
+      {t(statusKeyMap[status] || status)}
     </span>
   );
 };
 
 const BudgetBar = ({ used, total, color }) => {
+  const { t } = useTranslation();
   const pct = Math.round((used / total) * 100);
 
   return (
     <div className="mt-2">
       <div className="flex justify-between text-sm">
-        <span className="text-slate-500">Budget</span>
+        <span className="text-slate-500">{t('artisanProjects.budgetLabel')}</span>
         <span className="text-slate-900 font-medium">
           {used.toLocaleString()} / {total.toLocaleString()} TND
         </span>
@@ -48,13 +57,14 @@ const BudgetBar = ({ used, total, color }) => {
         <span className="text-emerald-600 font-medium">
           +{(total - used).toLocaleString()} TND
         </span>
-        <span className="text-slate-500">{pct}% utilisé</span>
+        <span className="text-slate-500">{pct}% {t('artisanProjects.usedLabel')}</span>
       </div>
     </div>
   );
 };
 
 const ProjectCard = ({ title, client, location, start, status, used, total }) => {
+  const { t } = useTranslation();
   const color =
     status === "Terminé"
       ? "bg-red-500"
@@ -77,7 +87,7 @@ const ProjectCard = ({ title, client, location, start, status, used, total }) =>
           <MapPin className="h-4 w-4" /> {location}
         </div>
         <div className="flex items-center gap-2">
-          <Calendar className="h-4 w-4" /> Début: {start}
+          <Calendar className="h-4 w-4" /> {t('artisanProjects.startLabel')} {start}
         </div>
       </div>
 
@@ -87,19 +97,19 @@ const ProjectCard = ({ title, client, location, start, status, used, total }) =>
 };
 
 export default function ArtisanProjects() {
+  const { t } = useTranslation();
+
   return (
-    <div className="flex-1"> {/* Changed from min-h-screen wrapper to flex-1 */}
+    <div className="flex-1">
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-semibold text-slate-900">Mes Projets</h1>
-          <p className="mt-2 text-sm text-slate-500">
-            Gérez tous vos chantiers en cours
-          </p>
+          <h1 className="text-3xl font-semibold text-slate-900">{t('artisanProjects.title')}</h1>
+          <p className="mt-2 text-sm text-slate-500">{t('artisanProjects.subtitle')}</p>
         </div>
 
         <button className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow hover:bg-indigo-700">
-          <Plus className="h-4 w-4" /> Nouveau Projet
+          <Plus className="h-4 w-4" /> {t('artisanProjects.newProjectButton')}
         </button>
       </div>
 
@@ -110,17 +120,17 @@ export default function ArtisanProjects() {
             <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              placeholder="Rechercher par nom de projet ou client..."
+              placeholder={t('artisanProjects.searchPlaceholder')}
               className="w-full rounded-xl border border-slate-200 py-3 pl-10 pr-4 text-sm focus:border-indigo-500 focus:outline-none"
             />
           </div>
 
           <div className="relative w-full md:w-60">
             <select className="w-full appearance-none rounded-xl border border-slate-200 py-3 pl-4 pr-10 text-sm focus:border-indigo-500 focus:outline-none">
-              <option>Tous les statuts</option>
-              <option>Actif</option>
-              <option>En attente</option>
-              <option>Terminé</option>
+              <option value="">{t('artisanProjects.filterAllStatuses')}</option>
+              <option value="Actif">{t('artisanProjects.status.active')}</option>
+              <option value="En attente">{t('artisanProjects.status.pending')}</option>
+              <option value="Terminé">{t('artisanProjects.status.completed')}</option>
             </select>
             <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           </div>
@@ -169,8 +179,7 @@ export default function ArtisanProjects() {
           total={52000}
         />
       </div>
-      <SimpleFooter></SimpleFooter>
+      <SimpleFooter />
     </div>
   );
-
 }

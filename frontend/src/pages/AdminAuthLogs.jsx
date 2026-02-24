@@ -3,6 +3,7 @@ import { apiFetch } from "../auth/api";
 import { useAuth } from "../auth/AuthContext";
 import { History, RefreshCw } from "lucide-react";
 import SimpleFooter from "../components/Footer";
+import { useTranslation } from 'react-i18next';
 
 function fmt(dt) {
   try {
@@ -13,6 +14,7 @@ function fmt(dt) {
 }
 
 export default function AdminAuthLogs() {
+  const { t } = useTranslation();
   const { token } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -30,7 +32,7 @@ export default function AdminAuthLogs() {
       const res = await apiFetch(`/admin/auth-logs?page=${page}&limit=${data.limit}`, { token });
       setData(res);
     } catch (e) {
-      setError(e.message || "Impossible de charger les logs");
+      setError(e.message || t('adminLogs.loadError'));
     } finally {
       setLoading(false);
     }
@@ -42,15 +44,15 @@ export default function AdminAuthLogs() {
   }, []);
 
   return (
-    <div className="flex-1"> {/* Changed from main wrapper to flex-1 */}
+    <div className="flex-1">
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
             <History className="h-5 w-5 text-indigo-600" />
-            <h1 className="text-2xl font-semibold text-slate-900">Historique Connexion / Déconnexion</h1>
+            <h1 className="text-2xl font-semibold text-slate-900">{t('adminLogs.title')}</h1>
           </div>
           <p className="mt-1 text-sm text-slate-600">
-            Dernières activités d&apos;authentification (LOGIN / LOGOUT).
+            {t('adminLogs.subtitle')}
           </p>
         </div>
 
@@ -59,7 +61,7 @@ export default function AdminAuthLogs() {
           className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
         >
           <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-          Actualiser
+          {t('adminLogs.refreshButton')}
         </button>
       </div>
 
@@ -74,19 +76,19 @@ export default function AdminAuthLogs() {
           <table className="min-w-full text-left text-sm">
             <thead className="bg-slate-50 text-slate-600">
               <tr>
-                <th className="px-4 py-3 font-semibold">Date</th>
-                <th className="px-4 py-3 font-semibold">Utilisateur</th>
-                <th className="px-4 py-3 font-semibold">Rôle</th>
-                <th className="px-4 py-3 font-semibold">Action</th>
-                <th className="px-4 py-3 font-semibold">IP</th>
-                <th className="px-4 py-3 font-semibold">User-Agent</th>
+                <th className="px-4 py-3 font-semibold">{t('adminLogs.table.date')}</th>
+                <th className="px-4 py-3 font-semibold">{t('adminLogs.table.user')}</th>
+                <th className="px-4 py-3 font-semibold">{t('adminLogs.table.role')}</th>
+                <th className="px-4 py-3 font-semibold">{t('adminLogs.table.action')}</th>
+                <th className="px-4 py-3 font-semibold">{t('adminLogs.table.ip')}</th>
+                <th className="px-4 py-3 font-semibold">{t('adminLogs.table.userAgent')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
                   <td className="px-4 py-6 text-slate-500" colSpan={6}>
-                    Chargement...
+                    {t('adminLogs.loading')}
                   </td>
                 </tr>
               ) : data.items?.length ? (
@@ -108,7 +110,7 @@ export default function AdminAuthLogs() {
                             : "bg-slate-100 text-slate-700"
                         }`}
                       >
-                        {it.action}
+                        {it.action === "LOGIN" ? t('adminLogs.action.login') : t('adminLogs.action.logout')}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-slate-700">{it.ip || "—"}</td>
@@ -120,7 +122,7 @@ export default function AdminAuthLogs() {
               ) : (
                 <tr>
                   <td className="px-4 py-6 text-slate-500" colSpan={6}>
-                    Aucun log pour le moment.
+                    {t('adminLogs.noData')}
                   </td>
                 </tr>
               )}
@@ -130,7 +132,7 @@ export default function AdminAuthLogs() {
 
         <div className="flex items-center justify-between gap-3 border-t border-slate-200 px-4 py-3">
           <div className="text-xs text-slate-500">
-            Total: <span className="font-semibold text-slate-700">{data.total || 0}</span>
+            {t('adminLogs.totalLabel')} <span className="font-semibold text-slate-700">{data.total || 0}</span>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -138,22 +140,22 @@ export default function AdminAuthLogs() {
               onClick={() => load(Math.max(1, data.page - 1))}
               className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 disabled:opacity-50"
             >
-              Précédent
+              {t('adminLogs.previous')}
             </button>
             <div className="text-xs text-slate-600">
-              Page <span className="font-semibold">{data.page}</span> / {pages}
+              {t('adminLogs.pageLabel')} <span className="font-semibold">{data.page}</span> / {pages}
             </div>
             <button
               disabled={loading || data.page >= pages}
               onClick={() => load(Math.min(pages, data.page + 1))}
               className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 disabled:opacity-50"
             >
-              Suivant
+              {t('adminLogs.next')}
             </button>
           </div>
         </div>
       </div>
-      <SimpleFooter></SimpleFooter>
+      <SimpleFooter />
     </div>
   );
 }

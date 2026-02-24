@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import ThemeToggle from "../components/ThemeToggle";
-
+import LanguageSwitcher from "../components/LanguageSwitcher";
 const Tab = ({ to, icon, label, onClick, collapsed }) => (
   <NavLink
     to={to}
@@ -109,7 +109,9 @@ export default function AdminLayout() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+                  <LanguageSwitcher />
               <ThemeToggle />
+
               <button className="relative rounded-xl p-2 text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700">
                 <Bell className="h-5 w-5" />
                 <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500" />
@@ -126,6 +128,8 @@ export default function AdminLayout() {
 
         {/* Desktop top-right toggle (visible on xl) */}
         <div className="hidden xl:flex justify-end px-6 pt-4">
+          <LanguageSwitcher />
+          
           <ThemeToggle />
         </div>
 

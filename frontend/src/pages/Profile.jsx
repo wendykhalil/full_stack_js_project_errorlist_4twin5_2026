@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../auth/AuthContext";
+import { useTranslation } from 'react-i18next';
 
 export default function Profile() {
+  const { t } = useTranslation();
   const { user, refreshMe, updateProfile, changePassword } = useAuth();
 
   const [firstName, setFirstName] = useState(user?.firstName || "");
@@ -19,7 +21,6 @@ export default function Profile() {
   const [pwErr, setPwErr] = useState("");
 
   useEffect(() => {
-    // refresh user in case localStorage is old
     refreshMe().catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -36,9 +37,9 @@ export default function Profile() {
     setSaving(true);
     try {
       await updateProfile({ firstName, lastName, phone });
-      setMsg("Profil mis à jour ✅");
+      setMsg(t('profile.saveSuccess'));
     } catch (e2) {
-      setErr(e2.message || "Impossible de mettre à jour le profil");
+      setErr(e2.message || t('profile.saveError'));
     } finally {
       setSaving(false);
     }
@@ -49,18 +50,18 @@ export default function Profile() {
     setPwErr(""); setPwMsg("");
 
     if (!newPassword || newPassword.length < 6) {
-      setPwErr("Le nouveau mot de passe doit contenir au moins 6 caractères.");
+      setPwErr(t('profile.passwordMinLengthError'));
       return;
     }
 
     setPwLoading(true);
     try {
       await changePassword({ currentPassword, newPassword });
-      setPwMsg("Mot de passe mis à jour ✅");
+      setPwMsg(t('profile.passwordChangeSuccess'));
       setCurrentPassword("");
       setNewPassword("");
     } catch (e2) {
-      setPwErr(e2.message || "Impossible de changer le mot de passe");
+      setPwErr(e2.message || t('profile.passwordChangeError'));
     } finally {
       setPwLoading(false);
     }
@@ -71,39 +72,39 @@ export default function Profile() {
   return (
     <div className="mx-auto max-w-3xl space-y-6 py-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">Mon profil</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">{t('profile.title')}</h1>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-          Modifiez vos informations et votre mot de passe.
+          {t('profile.subtitle')}
         </p>
       </div>
 
       {/* Profile info */}
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Informations</h2>
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{t('profile.informationSection')}</h2>
 
         <form onSubmit={onSave} className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Prénom</label>
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('profile.firstNameLabel')}</label>
             <input
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
               className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
-              placeholder="Prénom"
+              placeholder={t('profile.firstNamePlaceholder')}
             />
           </div>
 
           <div>
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Nom</label>
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('profile.lastNameLabel')}</label>
             <input
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
               className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
-              placeholder="Nom"
+              placeholder={t('profile.lastNamePlaceholder')}
             />
           </div>
 
           <div className="sm:col-span-2">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Email</label>
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('profile.emailLabel')}</label>
             <input
               value={user?.email || ""}
               disabled
@@ -112,12 +113,12 @@ export default function Profile() {
           </div>
 
           <div className="sm:col-span-2">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Téléphone</label>
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('profile.phoneLabel')}</label>
             <input
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
-              placeholder="+216..."
+              placeholder={t('profile.phonePlaceholder')}
             />
           </div>
 
@@ -138,7 +139,7 @@ export default function Profile() {
               disabled={saving}
               className="rounded-xl bg-indigo-700 px-5 py-3 text-sm font-semibold text-white hover:bg-indigo-800 disabled:opacity-60"
             >
-              {saving ? "Enregistrement..." : "Enregistrer"}
+              {saving ? t('profile.savingButton') : t('profile.saveButton')}
             </button>
           </div>
         </form>
@@ -146,36 +147,36 @@ export default function Profile() {
 
       {/* Password */}
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Mot de passe</h2>
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{t('profile.passwordSection')}</h2>
 
         {isGoogle && (
           <div className="mt-3 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-800 dark:border-indigo-800/60 dark:bg-indigo-900/30 dark:text-indigo-200">
-            Vous êtes connecté avec Google. Vous pouvez définir un mot de passe local ici (optionnel).
+            {t('profile.googleInfo')}
           </div>
         )}
 
         <form onSubmit={onChangePassword} className="mt-4 grid grid-cols-1 gap-4">
           {!isGoogle && (
             <div>
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Mot de passe actuel</label>
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('profile.currentPasswordLabel')}</label>
               <input
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 type="password"
                 className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
-                placeholder="••••••••"
+                placeholder={t('profile.passwordPlaceholder')}
               />
             </div>
           )}
 
           <div>
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Nouveau mot de passe</label>
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('profile.newPasswordLabel')}</label>
             <input
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               type="password"
               className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
-              placeholder="••••••••"
+              placeholder={t('profile.passwordPlaceholder')}
             />
           </div>
 
@@ -196,7 +197,7 @@ export default function Profile() {
               disabled={pwLoading}
               className="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
             >
-              {pwLoading ? "Mise à jour..." : "Changer le mot de passe"}
+              {pwLoading ? t('profile.changingPasswordButton') : t('profile.changePasswordButton')}
             </button>
           </div>
         </form>

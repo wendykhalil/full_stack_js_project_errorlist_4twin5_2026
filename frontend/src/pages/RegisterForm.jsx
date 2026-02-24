@@ -3,56 +3,27 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { urlRoleToEnum } from "../auth/role";
 import { CheckCircle, XCircle } from "lucide-react";
-
-/* ── Validation ── */
-function validate({ firstName, lastName, email, password, phoneNumber }) {
-  const errors = {};
-
-  if (!lastName.trim() || lastName.trim().length < 2)
-    errors.lastName = "Au moins 2 caractères.";
-  else if (lastName.trim().length > 60)
-    errors.lastName = "Maximum 60 caractères.";
-
-  if (!firstName.trim() || firstName.trim().length < 2)
-    errors.firstName = "Au moins 2 caractères.";
-  else if (firstName.trim().length > 60)
-    errors.firstName = "Maximum 60 caractères.";
-
-  if (!email.trim())
-    errors.email = "L'email est requis.";
-  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))
-    errors.email = "Adresse email invalide.";
-
-  if (!password)
-    errors.password = "Le mot de passe est requis.";
-  else if (password.length < 8)
-    errors.password = "Au moins 8 caractères.";
-  else if (!/[A-Z]/.test(password))
-    errors.password = "Au moins une majuscule.";
-  else if (!/[0-9]/.test(password))
-    errors.password = "Au moins un chiffre.";
-
-  const cleaned = phoneNumber.replace(/\s+/g, "");
-  if (!cleaned)
-    errors.phoneNumber = "Le numéro est requis.";
-  else if (!/^\d{6,14}$/.test(cleaned))
-    errors.phoneNumber = "Entre 6 et 14 chiffres.";
-
-  return errors;
-}
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from "../components/LanguageSwitcher";
 
 /* ── Password strength ── */
 function PasswordStrength({ password }) {
+  const { t } = useTranslation();
   if (!password) return null;
   const checks = [
-    { label: "8 caractères min.", ok: password.length >= 8 },
-    { label: "Majuscule",         ok: /[A-Z]/.test(password) },
-    { label: "Chiffre",           ok: /[0-9]/.test(password) },
-    { label: "Caractère spécial", ok: /[^A-Za-z0-9]/.test(password) },
+    { label: t('registerForm.passwordStrength.minChars'), ok: password.length >= 8 },
+    { label: t('registerForm.passwordStrength.uppercase'), ok: /[A-Z]/.test(password) },
+    { label: t('registerForm.passwordStrength.number'), ok: /[0-9]/.test(password) },
+    { label: t('registerForm.passwordStrength.special'), ok: /[^A-Za-z0-9]/.test(password) },
   ];
   const score  = checks.filter((c) => c.ok).length;
   const colors = ["bg-red-400", "bg-orange-400", "bg-yellow-400", "bg-emerald-500"];
-  const labels = ["Très faible", "Faible", "Moyen", "Fort"];
+  const labels = [
+    t('registerForm.passwordStrength.veryWeak'),
+    t('registerForm.passwordStrength.weak'),
+    t('registerForm.passwordStrength.medium'),
+    t('registerForm.passwordStrength.strong')
+  ];
   const bar    = colors[score - 1] ?? "bg-slate-200";
 
   return (
@@ -63,7 +34,8 @@ function PasswordStrength({ password }) {
         ))}
       </div>
       <p className="text-xs text-slate-500">
-        Force : <span className="font-medium">{labels[score - 1] ?? "—"}</span>
+        {t('registerForm.passwordStrength.strengthLabel')}{" "}
+        <span className="font-medium">{labels[score - 1] ?? "—"}</span>
       </p>
       <div className="flex flex-wrap gap-x-4 gap-y-0.5">
         {checks.map((c) => (
@@ -84,7 +56,7 @@ function Field({ label, error, hint, children }) {
       <label className="mb-2 block text-base font-medium text-slate-700">{label}</label>
       {children}
       {hint && !error && <p className="mt-1 text-xs text-slate-400">{hint}</p>}
-      {error           && <p className="mt-1 text-xs text-red-600">{error}</p>}
+      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
     </div>
   );
 }
@@ -113,38 +85,41 @@ function Input({ label, placeholder, type = "text", value, onChange, error, hint
 
 /* ── Phone input ── */
 function PhoneInput({ label, countryCode, setCountryCode, phoneNumber, setPhoneNumber, error }) {
-  const codes = [
-    { value: "+216", label: "🇹🇳 Tunisie (+216)" },
-    { value: "+213", label: "🇩🇿 Algérie (+213)" },
-    { value: "+212", label: "🇲🇦 Maroc (+212)" },
-    { value: "+218", label: "🇱🇾 Libye (+218)" },
-    { value: "+20",  label: "🇪🇬 Égypte (+20)" },
-    { value: "+222", label: "🇲🇷 Mauritanie (+222)" },
-    { value: "+221", label: "🇸🇳 Sénégal (+221)" },
-    { value: "+225", label: "🇨🇮 Côte d'Ivoire (+225)" },
-    { value: "+234", label: "🇳🇬 Nigeria (+234)" },
-    { value: "+33",  label: "🇫🇷 France (+33)" },
-    { value: "+32",  label: "🇧🇪 Belgique (+32)" },
-    { value: "+41",  label: "🇨🇭 Suisse (+41)" },
-    { value: "+352", label: "🇱🇺 Luxembourg (+352)" },
-    { value: "+49",  label: "🇩🇪 Allemagne (+49)" },
-    { value: "+39",  label: "🇮🇹 Italie (+39)" },
-    { value: "+34",  label: "🇪🇸 Espagne (+34)" },
-    { value: "+351", label: "🇵🇹 Portugal (+351)" },
-    { value: "+31",  label: "🇳🇱 Pays-Bas (+31)" },
-    { value: "+44",  label: "🇬🇧 Royaume-Uni (+44)" },
-    { value: "+971", label: "🇦🇪 Émirats (+971)" },
-    { value: "+966", label: "🇸🇦 Arabie Saoudite (+966)" },
-    { value: "+974", label: "🇶🇦 Qatar (+974)" },
-    { value: "+965", label: "🇰🇼 Koweït (+965)" },
-    { value: "+961", label: "🇱🇧 Liban (+961)" },
-    { value: "+1",   label: "🇺🇸 États-Unis (+1)" },
-    { value: "+52",  label: "🇲🇽 Mexique (+52)" },
-    { value: "+55",  label: "🇧🇷 Brésil (+55)" },
-    { value: "+91",  label: "🇮🇳 Inde (+91)" },
-    { value: "+86",  label: "🇨🇳 Chine (+86)" },
-    { value: "+81",  label: "🇯🇵 Japon (+81)" },
-    { value: "+61",  label: "🇦🇺 Australie (+61)" },
+  const { t } = useTranslation();
+
+  // Liste des pays avec clés de traduction
+  const countries = [
+    { value: "+216", labelKey: "countries.tn" },
+    { value: "+213", labelKey: "countries.dz" },
+    { value: "+212", labelKey: "countries.ma" },
+    { value: "+218", labelKey: "countries.ly" },
+    { value: "+20",  labelKey: "countries.eg" },
+    { value: "+222", labelKey: "countries.mr" },
+    { value: "+221", labelKey: "countries.sn" },
+    { value: "+225", labelKey: "countries.ci" },
+    { value: "+234", labelKey: "countries.ng" },
+    { value: "+33",  labelKey: "countries.fr" },
+    { value: "+32",  labelKey: "countries.be" },
+    { value: "+41",  labelKey: "countries.ch" },
+    { value: "+352", labelKey: "countries.lu" },
+    { value: "+49",  labelKey: "countries.de" },
+    { value: "+39",  labelKey: "countries.it" },
+    { value: "+34",  labelKey: "countries.es" },
+    { value: "+351", labelKey: "countries.pt" },
+    { value: "+31",  labelKey: "countries.nl" },
+    { value: "+44",  labelKey: "countries.uk" },
+    { value: "+971", labelKey: "countries.ae" },
+    { value: "+966", labelKey: "countries.sa" },
+    { value: "+974", labelKey: "countries.qa" },
+    { value: "+965", labelKey: "countries.kw" },
+    { value: "+961", labelKey: "countries.lb" },
+    { value: "+1",   labelKey: "countries.us" },
+    { value: "+52",  labelKey: "countries.mx" },
+    { value: "+55",  labelKey: "countries.br" },
+    { value: "+91",  labelKey: "countries.in" },
+    { value: "+86",  labelKey: "countries.cn" },
+    { value: "+81",  labelKey: "countries.jp" },
+    { value: "+61",  labelKey: "countries.au" },
   ];
 
   const hasError = Boolean(error);
@@ -158,8 +133,10 @@ function PhoneInput({ label, countryCode, setCountryCode, phoneNumber, setPhoneN
           value={countryCode}
           onChange={(e) => setCountryCode(e.target.value)}
         >
-          {codes.map((c) => (
-            <option key={c.label} value={c.value}>{c.label}</option>
+          {countries.map((c) => (
+            <option key={c.value} value={c.value}>
+              {t(c.labelKey)} ({c.value})
+            </option>
           ))}
         </select>
         <input
@@ -168,7 +145,7 @@ function PhoneInput({ label, countryCode, setCountryCode, phoneNumber, setPhoneN
             : isValid ? "border-emerald-400 focus:border-emerald-500"
             : "border-slate-200 focus:border-indigo-500"
           }`}
-          placeholder="Votre numéro"
+          placeholder={t('registerForm.phonePlaceholder')}
           value={phoneNumber}
           onChange={(e) => setPhoneNumber(e.target.value.replace(/[^\d\s]/g, ""))}
           inputMode="tel"
@@ -181,6 +158,7 @@ function PhoneInput({ label, countryCode, setCountryCode, phoneNumber, setPhoneN
 
 /* ── Main ── */
 export default function RegisterForm() {
+  const { t } = useTranslation();
   const { role: roleParam } = useParams();
   const navigate = useNavigate();
   const { register } = useAuth();
@@ -198,6 +176,43 @@ export default function RegisterForm() {
   const [errors,      setErrors]      = useState({});
   const [serverError, setServerError] = useState("");
 
+  // Validation (déplacée à l'intérieur pour accéder à t)
+  function validate() {
+    const errors = {};
+
+    if (!lastName.trim() || lastName.trim().length < 2)
+      errors.lastName = t('registerForm.errors.lastNameMin');
+    else if (lastName.trim().length > 60)
+      errors.lastName = t('registerForm.errors.lastNameMax');
+
+    if (!firstName.trim() || firstName.trim().length < 2)
+      errors.firstName = t('registerForm.errors.firstNameMin');
+    else if (firstName.trim().length > 60)
+      errors.firstName = t('registerForm.errors.firstNameMax');
+
+    if (!email.trim())
+      errors.email = t('registerForm.errors.emailRequired');
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))
+      errors.email = t('registerForm.errors.emailInvalid');
+
+    if (!password)
+      errors.password = t('registerForm.errors.passwordRequired');
+    else if (password.length < 8)
+      errors.password = t('registerForm.errors.passwordMin');
+    else if (!/[A-Z]/.test(password))
+      errors.password = t('registerForm.errors.passwordUppercase');
+    else if (!/[0-9]/.test(password))
+      errors.password = t('registerForm.errors.passwordNumber');
+
+    const cleaned = phoneNumber.replace(/\s+/g, "");
+    if (!cleaned)
+      errors.phoneNumber = t('registerForm.errors.phoneRequired');
+    else if (!/^\d{6,14}$/.test(cleaned))
+      errors.phoneNumber = t('registerForm.errors.phoneInvalid');
+
+    return errors;
+  }
+
   function clearError(field) {
     setErrors((prev) => ({ ...prev, [field]: undefined }));
   }
@@ -206,9 +221,9 @@ export default function RegisterForm() {
     e.preventDefault();
     setServerError("");
 
-    if (!roleEnum) { setServerError("Rôle invalide"); return; }
+    if (!roleEnum) { setServerError(t('registerForm.errors.invalidRole')); return; }
 
-    const fieldErrors = validate({ firstName, lastName, email, password, phoneNumber });
+    const fieldErrors = validate();
     if (Object.keys(fieldErrors).length > 0) {
       setErrors(fieldErrors);
       return;
@@ -226,118 +241,125 @@ export default function RegisterForm() {
       });
       navigate("/login", {
         replace: true,
-        state: { info: "Compte créé. Vérifiez votre email pour confirmer, puis connectez-vous." },
+        state: { info: t('registerForm.successMessage') },
       });
     } catch (err) {
-      setServerError(err.message || "Inscription impossible");
+      setServerError(err.message || t('registerForm.errors.registerError'));
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-8">
-      <form
-        onSubmit={onSubmit}
-        noValidate
-        className="w-full max-w-6xl rounded-3xl border border-slate-200 bg-white p-8 shadow-sm lg:p-12"
-      >
-        <div className="mb-8">
-          <h1 className="text-4xl font-semibold tracking-tight text-slate-900">Créer un compte</h1>
-          <p className="mt-1 text-lg text-slate-500">Complétez vos informations</p>
-        </div>
+    <>
+      {/* Language Switcher - fixed top right */}
+      <div className="fixed top-4 right-4 z-50">
+        <LanguageSwitcher />
+      </div>
 
-        <div className="grid gap-5 lg:grid-cols-3">
-          {/* Nom */}
-          <Input
-            label="Nom"
-            placeholder="Dupont"
-            value={lastName}
-            onChange={(v) => { setLastName(v); clearError("lastName"); }}
-            error={errors.lastName}
-          />
+      <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-8">
+        <form
+          onSubmit={onSubmit}
+          noValidate
+          className="w-full max-w-6xl rounded-3xl border border-slate-200 bg-white p-8 shadow-sm lg:p-12"
+        >
+          <div className="mb-8">
+            <h1 className="text-4xl font-semibold tracking-tight text-slate-900">{t('registerForm.title')}</h1>
+            <p className="mt-1 text-lg text-slate-500">{t('registerForm.subtitle')}</p>
+          </div>
 
-          {/* Prénom */}
-          <Input
-            label="Prénom"
-            placeholder="Jean"
-            value={firstName}
-            onChange={(v) => { setFirstName(v); clearError("firstName"); }}
-            error={errors.firstName}
-          />
-
-          {/* Email */}
-          <Input
-            label="Email"
-            placeholder="jean@example.com"
-            type="email"
-            value={email}
-            onChange={(v) => { setEmail(v); clearError("email"); }}
-            error={errors.email}
-          />
-
-          {/* Mot de passe + strength */}
-          <div>
+          <div className="grid gap-5 lg:grid-cols-3">
+            {/* Nom */}
             <Input
-              label="Mot de passe"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(v) => { setPassword(v); clearError("password"); }}
-              error={errors.password}
-              hint="8 caractères min., une majuscule et un chiffre."
+              label={t('registerForm.lastNameLabel')}
+              placeholder={t('registerForm.lastNamePlaceholder')}
+              value={lastName}
+              onChange={(v) => { setLastName(v); clearError("lastName"); }}
+              error={errors.lastName}
             />
-            <PasswordStrength password={password} />
-          </div>
 
-          {/* Téléphone */}
-          <div className="lg:col-span-2">
-            <PhoneInput
-              label="Téléphone"
-              countryCode={countryCode}
-              setCountryCode={setCountryCode}
-              phoneNumber={phoneNumber}
-              setPhoneNumber={(v) => { setPhoneNumber(v); clearError("phoneNumber"); }}
-              error={errors.phoneNumber}
-            />
-          </div>
-
-          {/* Entreprise (optionnel) */}
-          <div className="lg:col-span-3">
+            {/* Prénom */}
             <Input
-              label="Entreprise (optionnel)"
-              placeholder="Nom de votre entreprise"
-              value={company}
-              onChange={setCompany}
-              required={false}
+              label={t('registerForm.firstNameLabel')}
+              placeholder={t('registerForm.firstNamePlaceholder')}
+              value={firstName}
+              onChange={(v) => { setFirstName(v); clearError("firstName"); }}
+              error={errors.firstName}
             />
-          </div>
-        </div>
 
-        {/* Server error */}
-        {serverError && (
-          <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
-            {serverError}
-          </div>
-        )}
+            {/* Email */}
+            <Input
+              label={t('registerForm.emailLabel')}
+              placeholder={t('registerForm.emailPlaceholder')}
+              type="email"
+              value={email}
+              onChange={(v) => { setEmail(v); clearError("email"); }}
+              error={errors.email}
+            />
 
-        <div className="mt-8 flex gap-4">
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="flex-1 rounded-2xl border border-slate-200 py-4 text-lg font-semibold hover:bg-slate-50"
-          >
-            Retour
-          </button>
-          <button
-            type="submit"
-            disabled={loading}
-            className="flex-1 rounded-2xl bg-indigo-700 py-4 text-lg font-semibold text-white hover:bg-indigo-800 disabled:opacity-60"
-          >
-            {loading ? "Création..." : "Créer mon compte"}
-          </button>
-        </div>
-      </form>
-    </main>
+            {/* Mot de passe + strength */}
+            <div>
+              <Input
+                label={t('registerForm.passwordLabel')}
+                type="password"
+                placeholder={t('registerForm.passwordPlaceholder')}
+                value={password}
+                onChange={(v) => { setPassword(v); clearError("password"); }}
+                error={errors.password}
+                hint={t('registerForm.passwordHint')}
+              />
+              <PasswordStrength password={password} />
+            </div>
+
+            {/* Téléphone */}
+            <div className="lg:col-span-2">
+              <PhoneInput
+                label={t('registerForm.phoneLabel')}
+                countryCode={countryCode}
+                setCountryCode={setCountryCode}
+                phoneNumber={phoneNumber}
+                setPhoneNumber={(v) => { setPhoneNumber(v); clearError("phoneNumber"); }}
+                error={errors.phoneNumber}
+              />
+            </div>
+
+            {/* Entreprise (optionnel) */}
+            <div className="lg:col-span-3">
+              <Input
+                label={t('registerForm.companyLabel')}
+                placeholder={t('registerForm.companyPlaceholder')}
+                value={company}
+                onChange={setCompany}
+                required={false}
+              />
+            </div>
+          </div>
+
+          {/* Server error */}
+          {serverError && (
+            <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
+              {serverError}
+            </div>
+          )}
+
+          <div className="mt-8 flex gap-4">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="flex-1 rounded-2xl border border-slate-200 py-4 text-lg font-semibold hover:bg-slate-50"
+            >
+              {t('registerForm.backButton')}
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 rounded-2xl bg-indigo-700 py-4 text-lg font-semibold text-white hover:bg-indigo-800 disabled:opacity-60"
+            >
+              {loading ? t('registerForm.creatingButton') : t('registerForm.submitButton')}
+            </button>
+          </div>
+        </form>
+      </main>
+    </>
   );
 }

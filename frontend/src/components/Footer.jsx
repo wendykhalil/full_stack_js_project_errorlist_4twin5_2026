@@ -10,14 +10,15 @@ import {
   ArrowRight
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 
 export default function Footer() {
+  const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
   const navigate = useNavigate();
 
   return (
     <footer className="bg-white border-t border-slate-200 mt-9">
-      {/* Main Footer */}
       <div className="mx-auto p-5 md:p-6 lg:p-8">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
           {/* Company Info */}
@@ -33,11 +34,9 @@ export default function Footer() {
             </div>
             
             <p className="text-sm text-slate-600 leading-relaxed">
-              La première plateforme digitale en Tunisie connectant artisans, 
-              prescripteurs et fournisseurs du secteur du bâtiment.
+              {t('footer.description')}
             </p>
             
-            {/* Social Links */}
             <div className="flex items-center gap-3 pt-2">
               <a 
                 href="https://facebook.com" 
@@ -69,14 +68,14 @@ export default function Footer() {
           {/* Quick Links */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-900">
-              Liens Rapides
+              {t('footer.quickLinks.title')}
             </h3>
             <ul className="space-y-3">
               {[
-                { path: "/about", label: "À propos" },
-                { path: "/contact", label: "Contact" },
-                { path: "/blog", label: "Blog" },
-                { path: "/faq", label: "FAQ" },
+                { path: "/about", key: "about" },
+                { path: "/contact", key: "contact" },
+                { path: "/blog", key: "blog" },
+                { path: "/faq", key: "faq" },
               ].map((link) => (
                 <li key={link.path}>
                   <Link
@@ -84,7 +83,7 @@ export default function Footer() {
                     className="group flex items-center gap-2 text-sm text-slate-600 hover:text-indigo-600 transition-colors"
                   >
                     <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-all" />
-                    {link.label}
+                    {t(`footer.quickLinks.${link.key}`)}
                   </Link>
                 </li>
               ))}
@@ -94,14 +93,14 @@ export default function Footer() {
           {/* Legal */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-900">
-              Informations Légales
+              {t('footer.legal.title')}
             </h3>
             <ul className="space-y-3">
               {[
-                { path: "/terms", label: "Conditions d'utilisation" },
-                { path: "/privacy", label: "Politique de confidentialité" },
-                { path: "/cookies", label: "Gestion des cookies" },
-                { path: "/legal", label: "Mentions légales" },
+                { path: "/terms", key: "terms" },
+                { path: "/privacy", key: "privacy" },
+                { path: "/cookies", key: "cookies" },
+                { path: "/legal", key: "legal" },
               ].map((link) => (
                 <li key={link.path}>
                   <Link
@@ -109,7 +108,7 @@ export default function Footer() {
                     className="group flex items-center gap-2 text-sm text-slate-600 hover:text-indigo-600 transition-colors"
                   >
                     <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-all" />
-                    {link.label}
+                    {t(`footer.legal.${link.key}`)}
                   </Link>
                 </li>
               ))}
@@ -119,16 +118,16 @@ export default function Footer() {
           {/* Contact */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-900">
-              Contact
+              {t('footer.contact.title')}
             </h3>
             <ul className="space-y-3">
               <li className="flex items-start gap-3 text-sm text-slate-600">
                 <MapPin className="h-5 w-5 flex-shrink-0 text-indigo-600" />
-                <span>Immeuble BMP, Rue de la Construction, 1000 Tunis, Tunisie</span>
+                <span>{t('footer.contact.address')}</span>
               </li>
               <li className="flex items-center gap-3 text-sm text-slate-600">
                 <Phone className="h-5 w-5 flex-shrink-0 text-indigo-600" />
-                <span>+216 71 123 456</span>
+                <span>{t('footer.contact.phone')}</span>
               </li>
               <li className="flex items-center gap-3 text-sm text-slate-600">
                 <Mail className="h-5 w-5 flex-shrink-0 text-indigo-600" />
@@ -138,34 +137,32 @@ export default function Footer() {
               </li>
             </ul>
 
-            {/* Newsletter (optional) */}
             <div className="pt-4">
-              <p className="mb-2 text-sm font-medium text-slate-700">Newsletter</p>
+              <p className="mb-2 text-sm font-medium text-slate-700">{t('footer.newsletter.title')}</p>
               <div className="flex gap-2">
                 <input
                   type="email"
-                  placeholder="Votre email"
+                  placeholder={t('footer.newsletter.placeholder')}
                   className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
                 />
                 <button className="rounded-xl bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors">
-                  OK
+                  {t('footer.newsletter.button')}
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Bottom Bar */}
         <div className="mt-8 pt-6 border-t border-slate-200">
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <p className="text-xs text-slate-500">
-              © {currentYear} BMP.tn - Tous droits réservés. 
-              <span className="hidden sm:inline"> Plateforme digitale pour le secteur du bâtiment en Tunisie.</span>
+              {t('footer.copyright', { year: currentYear })}
+              <span className="hidden sm:inline"> {t('footer.copyrightExtra')}</span>
             </p>
             <div className="flex gap-4 text-xs text-slate-500">
-              <span>Version 1.0.0</span>
+              <span>{t('footer.version', { version: '1.0.0' })}</span>
               <span>•</span>
-              <span>Made with ♥ in Tunisia</span>
+              <span>{t('footer.madeWith')}</span>
             </div>
           </div>
         </div>
