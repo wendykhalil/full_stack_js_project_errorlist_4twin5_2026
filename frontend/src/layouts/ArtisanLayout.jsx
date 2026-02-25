@@ -82,7 +82,7 @@ export default function ArtisanLayout() {
         {/* Nav */}
         <div className="flex-1 overflow-y-auto py-6 px-3">
           <div className="space-y-1">
-            {/* ✅ PROFILE BUTTON ADDED HERE */}
+            {/* Profile Button */}
             <NavItem
               to="/artisan/profile"
               icon={<UserCircle2 className="h-5 w-5" />}
@@ -96,24 +96,29 @@ export default function ArtisanLayout() {
               label="Tableau de bord"
               collapsed={isSidebarCollapsed}
             />
+            
             <NavItem
               to="/artisan/projects"
               icon={<FolderKanban className="h-5 w-5" />}
               label="Projets"
               collapsed={isSidebarCollapsed}
             />
+            
+            {/* ✅ CORRIGÉ: Lien vers la création de devis */}
             <NavItem
-              to="/artisan/devis"
+              to="/artisan/devis/create"
               icon={<FileText className="h-5 w-5" />}
-              label="Devis"
+              label="Créer un devis"
               collapsed={isSidebarCollapsed}
             />
+            
             <NavItem
               to="/artisan/factures"
               icon={<Receipt className="h-5 w-5" />}
               label="Factures"
               collapsed={isSidebarCollapsed}
             />
+            
             <NavItem
               to="/artisan/marketplace"
               icon={<ShoppingCart className="h-5 w-5" />}
@@ -201,7 +206,7 @@ export default function ArtisanLayout() {
             </div>
 
             <div className="flex items-center gap-2">
-                  <LanguageSwitcher />
+              <LanguageSwitcher />
               <ThemeToggle />
               <button className="rounded-xl p-2 text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700">
                 <Bell className="h-5 w-5" />
@@ -258,6 +263,7 @@ export default function ArtisanLayout() {
               </div>
 
               <div className="flex-1 space-y-1 p-3">
+                {/* Profile Button - Mobile */}
                 <NavItem
                   to="/artisan/profile"
                   icon={<UserCircle2 className="h-5 w-5" />}
@@ -265,6 +271,7 @@ export default function ArtisanLayout() {
                   onClick={closeMobileMenu}
                   collapsed={false}
                 />
+                
                 <NavItem
                   to="/artisan"
                   icon={<LayoutDashboard className="h-5 w-5" />}
@@ -272,6 +279,7 @@ export default function ArtisanLayout() {
                   onClick={closeMobileMenu}
                   collapsed={false}
                 />
+                
                 <NavItem
                   to="/artisan/projects"
                   icon={<FolderKanban className="h-5 w-5" />}
@@ -279,13 +287,16 @@ export default function ArtisanLayout() {
                   onClick={closeMobileMenu}
                   collapsed={false}
                 />
+                
+                {/* ✅ CORRIGÉ: Lien vers la création de devis - Mobile */}
                 <NavItem
-                  to="/artisan/devis"
+                  to="/artisan/devis/create"
                   icon={<FileText className="h-5 w-5" />}
-                  label="Devis"
+                  label="Créer un devis"
                   onClick={closeMobileMenu}
                   collapsed={false}
                 />
+                
                 <NavItem
                   to="/artisan/factures"
                   icon={<Receipt className="h-5 w-5" />}
@@ -293,6 +304,7 @@ export default function ArtisanLayout() {
                   onClick={closeMobileMenu}
                   collapsed={false}
                 />
+                
                 <NavItem
                   to="/artisan/marketplace"
                   icon={<ShoppingCart className="h-5 w-5" />}

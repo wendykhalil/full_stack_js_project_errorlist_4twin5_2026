@@ -1,18 +1,25 @@
+// i18n.js
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import Backend from 'i18next-http-backend';
 
 i18n
-  .use(Backend)                // Charge les fichiers de traduction (via HTTP)
-  .use(LanguageDetector)       // Détecte la langue du navigateur
-  .use(initReactI18next)       // Passe i18next à React
+  .use(Backend)
+  .use(LanguageDetector)
+  .use(initReactI18next)
   .init({
-    fallbackLng: 'fr',          // Langue par défaut
-    supportedLngs: ['fr', 'en'], // Langues supportées
-    interpolation: { escapeValue: false }, // React le fait déjà
+    fallbackLng: 'fr',
+    supportedLngs: ['fr', 'en', 'ar'], // ✅ 'tn' a été supprimé
+    interpolation: { 
+      escapeValue: false 
+    },
     backend: {
-      loadPath: '/locales/{{lng}}/translation.json' // Chemin des fichiers
+      loadPath: '/locales/{{lng}}/translation.json'
+    },
+    detection: {
+      order: ['localStorage', 'navigator'],
+      caches: ['localStorage']
     }
   });
 

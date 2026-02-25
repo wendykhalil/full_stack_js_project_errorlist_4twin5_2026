@@ -52,37 +52,46 @@ const Pill = ({ children, tone = "indigo" }) => {
   );
 };
 
-const ProjectCard = ({ title, client, budget, remaining, status, statusTone = "indigo" }) => (
-  <div className="rounded-2xl bg-slate-50 p-5">
-    <div className="flex items-start justify-between gap-3">
-      <div className="min-w-0">
-        <div className="text-base font-semibold text-slate-900">{title}</div>
-        <div className="mt-1 text-sm text-slate-600">{client}</div>
+// ✅ CORRIGÉ: Ajout de useTranslation dans ProjectCard
+const ProjectCard = ({ title, client, budget, remaining, status, statusTone = "indigo" }) => {
+  const { t } = useTranslation(); // ✅ Ajouté
+  
+  return (
+    <div className="rounded-2xl bg-slate-50 p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="text-base font-semibold text-slate-900">{title}</div>
+          <div className="mt-1 text-sm text-slate-600">{client}</div>
+        </div>
+        <Pill tone={statusTone}>{status}</Pill>
       </div>
-      <Pill tone={statusTone}>{status}</Pill>
-    </div>
-    <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-      <div className="text-slate-600">
-        {t('artisanDashboard.projectCard.budget')} <span className="font-medium text-slate-900">{budget}</span>
+      <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+        <div className="text-slate-600">
+          {t('artisanDashboard.projectCard.budget')} <span className="font-medium text-slate-900">{budget}</span>
+        </div>
+        <div className="text-emerald-600 font-medium">{remaining}</div>
       </div>
-      <div className="text-emerald-600 font-medium">{remaining}</div>
     </div>
-  </div>
-);
+  );
+};
 
+// ✅ CORRIGÉ: Ajout de useTranslation et correction du conflit de noms
 const ActivityRow = ({ icon, title, time, tone = "slate" }) => {
-  const tones = {
+  
+  
+  const toneStyles = { // ✅ Renommé de 'tones' à 'toneStyles' pour éviter la confusion
     green: { bg: "bg-emerald-50", fg: "text-emerald-700" },
     blue: { bg: "bg-indigo-50", fg: "text-indigo-700" },
     orange: { bg: "bg-orange-50", fg: "text-orange-700" },
     red: { bg: "bg-red-50", fg: "text-red-700" },
     slate: { bg: "bg-slate-100", fg: "text-slate-700" },
   };
-  const t = tones[tone] ?? tones.slate;
+  
+  const currentTone = toneStyles[tone] ?? toneStyles.slate; // ✅ Renommé pour éviter le conflit avec la fonction t
 
   return (
     <div className="flex items-start gap-3">
-      <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${t.bg} ${t.fg}`}>
+      <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${currentTone.bg} ${currentTone.fg}`}>
         {React.cloneElement(icon, { className: "h-5 w-5" })}
       </div>
       <div className="min-w-0">

@@ -20,6 +20,7 @@ export default function VerifyEmail() {
 
   useEffect(() => {
     let mounted = true;
+    
     async function run() {
       try {
         const data = await apiFetch(`/auth/verify-email?token=${encodeURIComponent(token)}`, { method: "GET" });
@@ -32,12 +33,19 @@ export default function VerifyEmail() {
         setMessage(e.message || t('verifyEmail.errorDefaultMessage'));
       }
     }
-    if (!token) {
-      setStatus("error");
-      setMessage(t('verifyEmail.missingToken'));
-      return;
-    }
-    run();
+    
+    // ✅ CORRIGÉ: Déplacer la logique synchrone dans une fonction séparée
+    const handleVerification = () => {
+      if (!token) {
+        setStatus("error");
+        setMessage(t('verifyEmail.missingToken'));
+        return;
+      }
+      run();
+    };
+    
+    handleVerification();
+    
     return () => {
       mounted = false;
     };

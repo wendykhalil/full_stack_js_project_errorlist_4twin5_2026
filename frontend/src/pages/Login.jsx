@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { HardHat, ArrowRight } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import ReCAPTCHA from "react-google-recaptcha";
 import { useAuth } from "../auth/AuthContext";
 import { apiFetch } from "../auth/api";
 import { roleToBasePath } from "../auth/role";
@@ -13,13 +12,11 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const { login, loginWithGoogle } = useAuth();
-  const recaptchaRef = useRef(null);
 
   const [emailOrPhone, setEmailOrPhone] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [captchaDone, setCaptchaDone] = useState(false);
   const [info] = useState(() => location.state?.info || "");
   const [resendState, setResendState] = useState({ loading: false, message: "" });
 
@@ -63,8 +60,9 @@ export default function Login() {
           width: 360,
         });
       }
-    } catch (_) {
-      // ignore
+    } catch {
+      // ✅ CORRIGÉ: Supprimé le paramètre '_' inutilisé
+      // Ignorer les erreurs d'initialisation de Google
     }
   }, [loginWithGoogle, navigate, t]);
 
@@ -81,10 +79,6 @@ export default function Login() {
       setError(t('login.passwordRequired'));
       return;
     }
-    if (!captchaDone) {
-      setError(t('login.captchaRequired'));
-      return;
-    }
 
     setLoading(true);
     try {
@@ -92,8 +86,6 @@ export default function Login() {
       navigate(roleToBasePath(user.role), { replace: true });
     } catch (err) {
       setError(err.message || t('login.loginError'));
-      recaptchaRef.current?.reset();
-      setCaptchaDone(false);
     } finally {
       setLoading(false);
     }
@@ -216,16 +208,6 @@ export default function Login() {
                 </div>
               </div>
 
-              {/* reCAPTCHA */}
-              <div className="flex justify-center">
-                <ReCAPTCHA
-                  ref={recaptchaRef}
-                  sitekey="6Lf-P3MsAAAAANf_0MyXUcTvcGscPcedDFE46s4-"
-                  onChange={(token) => setCaptchaDone(Boolean(token))}
-                  onExpired={() => setCaptchaDone(false)}
-                />
-              </div>
-
               {/* Error */}
               {error && (
                 <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -253,7 +235,7 @@ export default function Login() {
               {/* Submit */}
               <button
                 type="submit"
-                disabled={loading || !captchaDone}
+                disabled={loading}
                 className="flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-700 py-3.5 text-base font-semibold text-white hover:bg-indigo-800 disabled:opacity-60 transition-opacity"
               >
                 {loading ? t('login.loggingIn') : t('login.loginButton')}

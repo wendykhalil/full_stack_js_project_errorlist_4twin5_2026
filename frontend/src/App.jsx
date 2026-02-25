@@ -13,15 +13,6 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
 import AdminAuthLogs from "./pages/AdminAuthLogs";
 
-// Language 
-import { useTranslation } from 'react-i18next';
-import LanguageSwitcher from "./components/LanguageSwitcher";
-
-
-
-
-
-
 // REGISTER
 import RegisterChooseRole from "./pages/RegisterChooseRole";
 import RegisterForm from "./pages/RegisterForm";
@@ -50,80 +41,86 @@ import ResetPassword from "./pages/ResetPassword";
 import FournisseurProduitNew from "./pages/FournisseurProduitNew";
 import Profile from "./pages/Profile";
 
-
 export default function App() {
-    const { t } = useTranslation(); 
+    return (
+        <BrowserRouter>
+            <Routes>
+                {/* Routes publiques */}
+                <Route path="/" element={<Navigate to="/login" replace />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/verify-email" element={<VerifyEmail />} />
+                <Route path="/unauthorized" element={<Unauthorized />} />
+                <Route path="/profile" element={<Profile />} />
 
-  return (
-    <BrowserRouter>
-     
+                {/* Register */}
+                <Route path="/register" element={<RegisterChooseRole />} />
+                <Route path="/register/:role" element={<RegisterForm />} />
 
-      <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-<Route path="/reset-password" element={<ResetPassword />} />
-<Route path="/profile" element={<Profile />} />
+                {/* ✅ SOLUTION 1: Redirection pour /artisandeviscreate */}
+                <Route 
+                    path="/artisandeviscreate" 
+                    element={<Navigate to="/artisan/devis/create" replace />} 
+                />
 
-        <Route path="/login" element={<Login />} />
-        <Route path="/verify-email" element={<VerifyEmail />} />
-        <Route path="/unauthorized" element={<Unauthorized />} />
+                {/* ✅ SOLUTION 2: Aussi ajouter cette redirection au cas où */}
+                <Route 
+                    path="/artisan/deviscreate" 
+                    element={<Navigate to="/artisan/devis/create" replace />} 
+                />
 
-        {/* Register */}
-        <Route path="/register" element={<RegisterChooseRole />} />
-        <Route path="/register/:role" element={<RegisterForm />} />
+                {/* Admin (protected) */}
+                <Route element={<ProtectedRoute allowedRoles={[Roles.ADMIN]} />}>
+                    <Route path="/admin" element={<AdminLayout />}>
+                        <Route index element={<AdminDashboard />} />
+                        <Route path="profile" element={<Profile />} />
+                        <Route path="users" element={<AdminUsers />} />
+                        <Route path="logs" element={<AdminAuthLogs />} />
+                        <Route
+                            path="transactions"
+                            element={<div className="mx-auto max-w-6xl py-10">Transactions (à faire)</div>}
+                        />
+                    </Route>
+                </Route>
 
-        {/* Admin (protected) */}
-        <Route element={<ProtectedRoute allowedRoles={[Roles.ADMIN]} />}>
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<AdminDashboard />} />
-            <Route path="profile" element={<Profile />} />
-            <Route path="users" element={<AdminUsers />} />
-            <Route path="logs" element={<AdminAuthLogs />} />
-            <Route
-              path="transactions"
-              element={<div className="mx-auto max-w-6xl py-10">Transactions (à faire)</div>}
-            />
-          </Route>
-        </Route>
+                {/* Artisan (protected) */}
+                <Route element={<ProtectedRoute allowedRoles={[Roles.ARTISAN]} />}>
+                    <Route path="/artisan" element={<ArtisanLayout />}>
+                        <Route index element={<ArtisanDashboard />} />
+                        <Route path="profile" element={<Profile />} />
+                        <Route path="projects" element={<ArtisanProjects />} />
+                        <Route path="devis/create" element={<ArtisanDevisCreate />} />
+                        <Route path="factures" element={<ArtisanFactures />} />
+                        <Route path="factures/new" element={<ArtisanFactureStep1 />} />
+                        <Route path="factures/new/step-2" element={<ArtisanFactureStep2 />} />
+                        <Route path="factures/new/step-3" element={<ArtisanFactureStep3 />} />
+                        <Route path="marketplace" element={<ArtisanMarketplace />} />
+                    </Route>
+                </Route>
 
-        {/* Artisan (protected) */}
-        <Route element={<ProtectedRoute allowedRoles={[Roles.ARTISAN]} />}>
-          <Route path="/artisan" element={<ArtisanLayout />}>
-            <Route index element={<ArtisanDashboard />} />
-            <Route path="profile" element={<Profile />} />
-            <Route path="projects" element={<ArtisanProjects />} />
-            <Route path="devis/create" element={<ArtisanDevisCreate />} />
-            <Route path="factures" element={<ArtisanFactures />} />
-            <Route path="factures/new" element={<ArtisanFactureStep1 />} />
-            <Route path="factures/new/step-2" element={<ArtisanFactureStep2 />} />
-            <Route path="factures/new/step-3" element={<ArtisanFactureStep3 />} />
-            <Route path="marketplace" element={<ArtisanMarketplace />} />
-          </Route>
-        </Route>
+                {/* Prescripteur (protected) */}
+                <Route element={<ProtectedRoute allowedRoles={[Roles.PRESCRIPTEUR]} />}>
+                    <Route path="/prescripteur" element={<PrescripteurLayout />}>
+                        <Route index element={<PrescripteurProduits />} />
+                        <Route path="profile" element={<Profile />} />
+                        <Route path="artisans" element={<PrescripteurArtisans />} />
+                    </Route>
+                </Route>
 
-        {/* Prescripteur (protected) */}
-        <Route element={<ProtectedRoute allowedRoles={[Roles.PRESCRIPTEUR]} />}>
-          <Route path="/prescripteur" element={<PrescripteurLayout />}>
-            <Route index element={<PrescripteurProduits />} />
-            <Route path="profile" element={<Profile />} />
-            <Route path="artisans" element={<PrescripteurArtisans />} />
-          </Route>
-        </Route>
+                {/* Fournisseur (protected) */}
+                <Route element={<ProtectedRoute allowedRoles={[Roles.SUPPLIER]} />}>
+                    <Route path="/fournisseur" element={<FournisseurLayout />}>
+                        <Route index element={<Navigate to="produits" replace />} />
+                        <Route path="profile" element={<Profile />} />
+                        <Route path="produits" element={<FournisseurProduits />} />
+                        <Route path="produits/new" element={<FournisseurProduitNew />} />
+                    </Route>
+                </Route>
 
-        {/* Fournisseur (protected) */}
-        <Route element={<ProtectedRoute allowedRoles={[Roles.SUPPLIER]} />}>
-          <Route path="/fournisseur" element={<FournisseurLayout />}>
-            <Route index element={<Navigate to="produits" replace />} />
-            <Route path="profile" element={<Profile />} />
-            <Route path="produits" element={<FournisseurProduits />} />
-            <Route path="produits/new" element={<FournisseurProduitNew />} />
-          </Route>
-        </Route>
-
-        
-
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
-    </BrowserRouter>
-  );
+                {/* Route par défaut - redirige vers login */}
+                <Route path="*" element={<Navigate to="/login" replace />} />
+            </Routes>
+        </BrowserRouter>
+    );
 }

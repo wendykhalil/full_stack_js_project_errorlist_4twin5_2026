@@ -15,6 +15,19 @@
       "cookies": "Cookie Management",
       "legal": "Legal Notice"
     },
+    
+  "artisanLayout": {
+    "brand": "BMP.tn",
+    "role": "Artisan",
+    "profile": "Profile",
+    "dashboard": "Dashboard",
+    "projects": "Projects",
+    "createQuote": "Create quote",
+    "invoices": "Invoices",
+    "marketplace": "Marketplace",
+    "logout": "Logout"
+  },
+
     "contact": {
       "title": "Contact",
       "address": "BMP Building, Construction Street, 1000 Tunis, Tunisia",

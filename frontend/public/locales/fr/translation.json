@@ -235,6 +235,20 @@
       "blockButton": "Bloquer"
     }
   },
+  
+  "artisanLayout": {
+    "brand": "BMP.tn",
+    "role": "Artisan",
+    "profile": "Profil",
+    "dashboard": "Tableau de bord",
+    "projects": "Projets",
+    "createQuote": "Créer un devis",
+    "invoices": "Factures",
+    "marketplace": "Marketplace",
+    "logout": "Déconnexion"
+  },
+
+  
   "artisanDevisCreate": {
     "backButton": "Retour",
     "title": "Créer un Devis",

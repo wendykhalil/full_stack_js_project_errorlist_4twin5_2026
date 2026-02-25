@@ -4,8 +4,10 @@ import { useTranslation } from 'react-i18next';
 import { Globe, ChevronDown } from 'lucide-react';
 
 const languages = [
-  { code: 'fr', name: 'Français', flag: 'fr' },
-  { code: 'en', name: 'English', flag: 'en' },
+  { code: 'fr', name: 'Français', flag: '🇫🇷', dir: 'ltr' },
+  { code: 'en', name: 'English', flag: '🇬🇧', dir: 'ltr' },
+  { code: 'ar', name: 'العربية', flag: '🇸🇦', dir: 'rtl' },
+  // ✅ 'tn' a été supprimé
 ];
 
 export default function LanguageSwitcher() {
@@ -20,7 +22,14 @@ export default function LanguageSwitcher() {
     setIsOpen(false);
   };
 
-  // Fermer le menu si on clique en dehors
+  // Changer la direction RTL/LTR
+  useEffect(() => {
+    const dir = languages.find(l => l.code === i18n.language)?.dir || 'ltr';
+    document.documentElement.dir = dir;
+    document.documentElement.lang = i18n.language;
+  }, [i18n.language]);
+
+  // Fermer le menu
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {

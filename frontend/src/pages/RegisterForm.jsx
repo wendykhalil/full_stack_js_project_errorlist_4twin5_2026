@@ -176,39 +176,64 @@ export default function RegisterForm() {
   const [errors,      setErrors]      = useState({});
   const [serverError, setServerError] = useState("");
 
-  // Validation (déplacée à l'intérieur pour accéder à t)
+  // Validation améliorée avec messages plus clairs
   function validate() {
     const errors = {};
 
-    if (!lastName.trim() || lastName.trim().length < 2)
-      errors.lastName = t('registerForm.errors.lastNameMin');
-    else if (lastName.trim().length > 60)
-      errors.lastName = t('registerForm.errors.lastNameMax');
+    // Validation Nom
+    if (!lastName.trim()) {
+      errors.lastName = t('registerForm.errors.lastNameRequired') || "Le nom est requis";
+    } else if (lastName.trim().length < 2) {
+      errors.lastName = t('registerForm.errors.lastNameMin') || "Le nom doit contenir au moins 2 caractères";
+    } else if (lastName.trim().length > 60) {
+      errors.lastName = t('registerForm.errors.lastNameMax') || "Le nom ne peut pas dépasser 60 caractères";
+    }
 
-    if (!firstName.trim() || firstName.trim().length < 2)
-      errors.firstName = t('registerForm.errors.firstNameMin');
-    else if (firstName.trim().length > 60)
-      errors.firstName = t('registerForm.errors.firstNameMax');
+    // Validation Prénom
+    if (!firstName.trim()) {
+      errors.firstName = t('registerForm.errors.firstNameRequired') || "Le prénom est requis";
+    } else if (firstName.trim().length < 2) {
+      errors.firstName = t('registerForm.errors.firstNameMin') || "Le prénom doit contenir au moins 2 caractères";
+    } else if (firstName.trim().length > 60) {
+      errors.firstName = t('registerForm.errors.firstNameMax') || "Le prénom ne peut pas dépasser 60 caractères";
+    }
 
-    if (!email.trim())
-      errors.email = t('registerForm.errors.emailRequired');
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))
-      errors.email = t('registerForm.errors.emailInvalid');
+    // Validation Email
+    if (!email.trim()) {
+      errors.email = t('registerForm.errors.emailRequired') || "L'email est requis";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      errors.email = t('registerForm.errors.emailInvalid') || "Format d'email invalide (ex: nom@domaine.com)";
+    }
 
-    if (!password)
-      errors.password = t('registerForm.errors.passwordRequired');
-    else if (password.length < 8)
-      errors.password = t('registerForm.errors.passwordMin');
-    else if (!/[A-Z]/.test(password))
-      errors.password = t('registerForm.errors.passwordUppercase');
-    else if (!/[0-9]/.test(password))
-      errors.password = t('registerForm.errors.passwordNumber');
+    // Validation Mot de passe
+    if (!password) {
+      errors.password = t('registerForm.errors.passwordRequired') || "Le mot de passe est requis";
+    } else if (password.length < 8) {
+      errors.password = t('registerForm.errors.passwordMin') || "Le mot de passe doit contenir au moins 8 caractères";
+    } else if (!/[A-Z]/.test(password)) {
+      errors.password = t('registerForm.errors.passwordUppercase') || "Le mot de passe doit contenir au moins une majuscule";
+    } else if (!/[0-9]/.test(password)) {
+      errors.password = t('registerForm.errors.passwordNumber') || "Le mot de passe doit contenir au moins un chiffre";
+    }
 
+    // Validation Téléphone
     const cleaned = phoneNumber.replace(/\s+/g, "");
-    if (!cleaned)
-      errors.phoneNumber = t('registerForm.errors.phoneRequired');
-    else if (!/^\d{6,14}$/.test(cleaned))
-      errors.phoneNumber = t('registerForm.errors.phoneInvalid');
+    if (!cleaned) {
+      errors.phoneNumber = t('registerForm.errors.phoneRequired') || "Le numéro de téléphone est requis";
+    } else if (!/^\d{6,14}$/.test(cleaned)) {
+      errors.phoneNumber = t('registerForm.errors.phoneInvalid') || "Le numéro de téléphone doit contenir entre 6 et 14 chiffres";
+    }
+
+    // ✅ VALIDATION AMÉLIORÉE: Entreprise (optionnel mais avec messages clairs)
+    const companyTrimmed = company.trim();
+    if (companyTrimmed) {
+      if (companyTrimmed.length < 2) {
+        errors.company = t('registerForm.errors.companyMin') || "Le nom de l'entreprise doit contenir au moins 2 caractères";
+      } else if (companyTrimmed.length > 100) {
+        errors.company = t('registerForm.errors.companyMax') || "Le nom de l'entreprise ne peut pas dépasser 100 caractères";
+      }
+    }
+    // Si companyTrimmed est vide, pas d'erreur (champ optionnel)
 
     return errors;
   }
@@ -221,7 +246,10 @@ export default function RegisterForm() {
     e.preventDefault();
     setServerError("");
 
-    if (!roleEnum) { setServerError(t('registerForm.errors.invalidRole')); return; }
+    if (!roleEnum) { 
+      setServerError(t('registerForm.errors.invalidRole') || "Rôle invalide"); 
+      return; 
+    }
 
     const fieldErrors = validate();
     if (Object.keys(fieldErrors).length > 0) {
@@ -238,13 +266,14 @@ export default function RegisterForm() {
         password,
         phone:     `${countryCode}${phoneNumber.replace(/\s+/g, "").trim()}`,
         role:      roleEnum,
+        company:   company.trim() || undefined, // Envoyer undefined si vide
       });
       navigate("/login", {
         replace: true,
-        state: { info: t('registerForm.successMessage') },
+        state: { info: t('registerForm.successMessage') || "Inscription réussie ! Vous pouvez maintenant vous connecter." },
       });
     } catch (err) {
-      setServerError(err.message || t('registerForm.errors.registerError'));
+      setServerError(err.message || t('registerForm.errors.registerError') || "Une erreur est survenue lors de l'inscription");
     } finally {
       setLoading(false);
     }
@@ -323,14 +352,16 @@ export default function RegisterForm() {
               />
             </div>
 
-            {/* Entreprise (optionnel) */}
+            {/* ✅ Entreprise (optionnel mais validé) */}
             <div className="lg:col-span-3">
               <Input
                 label={t('registerForm.companyLabel')}
                 placeholder={t('registerForm.companyPlaceholder')}
                 value={company}
-                onChange={setCompany}
+                onChange={(v) => { setCompany(v); clearError("company"); }}
                 required={false}
+                error={errors.company}
+                hint={t('registerForm.companyHint') || "Optionnel - Si vous saisissez une entreprise, minimum 2 caractères"}
               />
             </div>
           </div>

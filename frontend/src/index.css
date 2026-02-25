@@ -1,3 +1,69 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+/* src/index.css - Ajouter à la fin du fichier */
+
+/* Classes utilitaires pour RTL */
+[dir="rtl"] .ml-auto {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+[dir="rtl"] .mr-auto {
+  margin-right: 0;
+  margin-left: auto;
+}
+
+[dir="rtl"] .pl-4 {
+  padding-left: 0;
+  padding-right: 1rem;
+}
+
+[dir="rtl"] .pr-4 {
+  padding-right: 0;
+  padding-left: 1rem;
+}
+
+[dir="rtl"] .left-0 {
+  left: auto;
+  right: 0;
+}
+
+[dir="rtl"] .right-0 {
+  right: auto;
+  left: 0;
+}
+
+[dir="rtl"] .-left-3 {
+  left: auto;
+  right: -0.75rem;
+}
+
+[dir="rtl"] .-right-3 {
+  right: auto;
+  left: -0.75rem;
+}
+
+[dir="rtl"] .border-r {
+  border-right-width: 0;
+  border-left-width: 1px;
+}
+
+[dir="rtl"] .border-l {
+  border-left-width: 0;
+  border-right-width: 1px;
+}
+
+[dir="rtl"] .xl\:ml-64 {
+  margin-left: 0;
+  margin-right: 16rem;
+}
+
+[dir="rtl"] .xl\:ml-20 {
+  margin-left: 0;
+  margin-right: 5rem;
+}
+
+[dir="rtl"] .space-x-4 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-x-reverse: 1;
+}
