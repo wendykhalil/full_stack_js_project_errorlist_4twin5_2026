@@ -161,7 +161,7 @@ export default function Login() {
                     }}
                     type="text"
                     autoComplete="username"
-                    placeholder={t('login.emailPhonePlaceholder')}
+                    placeholder="mohamed@gmail.com ou +216 22 345 678"
                     className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 pr-24 text-base focus:border-indigo-500 focus:outline-none"
                     required
                   />
@@ -196,16 +196,6 @@ export default function Login() {
                   className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-base focus:border-indigo-500 focus:outline-none"
                   required
                 />
-
-                <div className="mt-2 text-right">
-                  <button
-                    type="button"
-                    onClick={() => navigate("/forgot-password")}
-                    className="text-sm font-medium text-indigo-600 hover:underline"
-                  >
-                    {t('login.forgotPassword')}
-                  </button>
-                </div>
               </div>
 
               {/* Error */}
@@ -241,6 +231,17 @@ export default function Login() {
                 {loading ? t('login.loggingIn') : t('login.loginButton')}
                 <ArrowRight className="h-4 w-4" />
               </button>
+
+              {/* Forgot password link - moved below login button */}
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => navigate("/forgot-password")}
+                  className="text-sm font-medium text-indigo-600 hover:underline"
+                >
+                  {t('login.forgotPassword')}
+                </button>
+              </div>
 
               {/* Google login */}
               {import.meta.env.VITE_GOOGLE_CLIENT_ID && (
