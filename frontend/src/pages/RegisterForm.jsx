@@ -187,7 +187,6 @@ export default function RegisterForm() {
   const [password,    setPassword]    = useState("");
   const [countryCode, setCountryCode] = useState("+216");
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [company,     setCompany]     = useState("");
   const [loading,     setLoading]     = useState(false);
   const [errors,      setErrors]      = useState({});
   const [serverError, setServerError] = useState("");
@@ -240,17 +239,6 @@ export default function RegisterForm() {
       errors.phoneNumber = t('registerForm.errors.phoneInvalid') || "Le numéro de téléphone doit contenir entre 6 et 14 chiffres";
     }
 
-    // ✅ VALIDATION AMÉLIORÉE: Entreprise (optionnel mais avec messages clairs)
-    const companyTrimmed = company.trim();
-    if (companyTrimmed) {
-      if (companyTrimmed.length < 2) {
-        errors.company = t('registerForm.errors.companyMin') || "Le nom de l'entreprise doit contenir au moins 2 caractères";
-      } else if (companyTrimmed.length > 100) {
-        errors.company = t('registerForm.errors.companyMax') || "Le nom de l'entreprise ne peut pas dépasser 100 caractères";
-      }
-    }
-    // Si companyTrimmed est vide, pas d'erreur (champ optionnel)
-
     return errors;
   }
 
@@ -282,7 +270,7 @@ export default function RegisterForm() {
         password,
         phone:     `${countryCode}${phoneNumber.replace(/\s+/g, "").trim()}`,
         role:      roleEnum,
-        company:   company.trim() || undefined, // Envoyer undefined si vide
+        // company field removed
       });
       navigate("/login", {
         replace: true,
@@ -503,17 +491,6 @@ export default function RegisterForm() {
               phoneNumber={phoneNumber}
               setPhoneNumber={(v) => { setPhoneNumber(v); clearError("phoneNumber"); }}
               error={errors.phoneNumber}
-            />
-
-            {/* Entreprise (optionnel) */}
-            <Input
-              label={t('registerForm.companyLabel')}
-              placeholder="Nom de votre entreprise (optionnel)"
-              value={company}
-              onChange={(v) => { setCompany(v); clearError("company"); }}
-              required={false}
-              error={errors.company}
-              hint={t('registerForm.companyHint') || "Optionnel - Si vous saisissez une entreprise, minimum 2 caractères"}
             />
           </div>
 

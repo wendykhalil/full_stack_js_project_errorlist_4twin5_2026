@@ -13,7 +13,6 @@ import { useTranslation } from 'react-i18next';
 const StatusPill = ({ status }) => {
   const { t } = useTranslation();
   
-  // Mapping des statuts vers les styles et traductions
   const statusConfig = {
     "Actif": {
       style: "bg-indigo-100 text-indigo-700",
@@ -43,7 +42,6 @@ const BudgetBar = ({ used, total, color }) => {
   const { t } = useTranslation();
   const pct = Math.round((used / total) * 100) || 0;
 
-  // Définir les couleurs en fonction du statut
   const getColorClass = () => {
     switch(color) {
       case 'completed':
@@ -85,7 +83,6 @@ const BudgetBar = ({ used, total, color }) => {
 const ProjectCard = ({ title, client, location, start, status, used, total }) => {
   const { t } = useTranslation();
   
-  // Déterminer la couleur en fonction du statut
   const getStatusColor = () => {
     switch(status) {
       case "Terminé":
@@ -98,7 +95,7 @@ const ProjectCard = ({ title, client, location, start, status, used, total }) =>
   };
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow sm:p-6">
       <div className="flex items-start justify-between">
         <div>
           <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
@@ -127,7 +124,6 @@ const ProjectCard = ({ title, client, location, start, status, used, total }) =>
 export default function ArtisanProjects() {
   const { t } = useTranslation();
 
-  // Données des projets (simulées)
   const projects = [
     {
       id: 1,
@@ -172,27 +168,27 @@ export default function ArtisanProjects() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <>
+      <div className="space-y-6 lg:space-y-8">
         {/* Header */}
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-3xl font-semibold text-slate-900">
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl lg:text-4xl">
               {t('artisanProjects.title')}
             </h1>
-            <p className="mt-2 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-slate-500 sm:text-base">
               {t('artisanProjects.subtitle')}
             </p>
           </div>
 
-          <button className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+          <button className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 w-full sm:w-auto">
             <Plus className="h-4 w-4" /> 
             {t('artisanProjects.newProjectButton')}
           </button>
         </div>
 
         {/* Filters */}
-        <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
           <div className="flex flex-col gap-4 md:flex-row">
             <div className="relative flex-1">
               <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -217,7 +213,7 @@ export default function ArtisanProjects() {
 
         {/* Projects Grid */}
         {projects.length > 0 ? (
-          <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {projects.map((project) => (
               <ProjectCard
                 key={project.id}
@@ -232,13 +228,14 @@ export default function ArtisanProjects() {
             ))}
           </div>
         ) : (
-          <div className="mt-12 text-center">
+          <div className="text-center py-12">
             <p className="text-slate-500">Aucun projet trouvé</p>
           </div>
         )}
         
+        {/* Footer */}
         <SimpleFooter />
       </div>
-    </div>
+    </>
   );
 }

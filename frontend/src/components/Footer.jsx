@@ -1,11 +1,11 @@
 import React from "react";
-import { 
-  HardHat, 
-  Facebook, 
-  Linkedin, 
-  Twitter, 
-  Mail, 
-  Phone, 
+import {
+  HardHat,
+  Facebook,
+  Linkedin,
+  Twitter,
+  Mail,
+  Phone,
   MapPin,
   ArrowRight
 } from "lucide-react";
@@ -18,13 +18,13 @@ export default function Footer() {
   const navigate = useNavigate();
 
   return (
-    <footer className="bg-white border-t border-slate-200 mt-9 dark:bg-slate-900 dark:border-slate-800">
-      <div className="mx-auto p-5 md:p-6 lg:p-8">
+    <footer className="w-full bg-white border-t border-slate-200 dark:bg-slate-900 dark:border-slate-800">
+      <div className="mx-auto w-full max-w-7xl 2xl:max-w-[90vw] px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
           {/* Company Info */}
           <div className="space-y-4">
-            <div 
-              onClick={() => navigate('/')} 
+            <div
+              onClick={() => navigate('/')}
               className="flex items-center gap-2 cursor-pointer group"
             >
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-sm group-hover:bg-indigo-700 transition-colors">
@@ -32,31 +32,31 @@ export default function Footer() {
               </div>
               <span className="text-xl font-bold text-slate-900 dark:text-white">BMP.tn</span>
             </div>
-            
+
             <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
               {t('footer.description')}
             </p>
-            
+
             <div className="flex items-center gap-3 pt-2">
-              <a 
-                href="https://facebook.com" 
-                target="_blank" 
+              <a
+                href="https://facebook.com"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600 hover:bg-indigo-600 hover:text-white transition-all duration-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-indigo-600 dark:hover:text-white"
               >
                 <Facebook className="h-4 w-4" />
               </a>
-              <a 
-                href="https://linkedin.com" 
-                target="_blank" 
+              <a
+                href="https://linkedin.com"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600 hover:bg-indigo-600 hover:text-white transition-all duration-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-indigo-600 dark:hover:text-white"
               >
                 <Linkedin className="h-4 w-4" />
               </a>
-              <a 
-                href="https://twitter.com" 
-                target="_blank" 
+              <a
+                href="https://twitter.com"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600 hover:bg-indigo-600 hover:text-white transition-all duration-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-indigo-600 dark:hover:text-white"
               >
@@ -169,4 +169,4 @@ export default function Footer() {
       </div>
     </footer>
   );
-}
+} 

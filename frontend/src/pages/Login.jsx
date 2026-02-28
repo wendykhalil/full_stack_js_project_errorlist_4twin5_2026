@@ -24,6 +24,25 @@ export default function Login() {
     /^[+\d\s]{6,}$/.test(emailOrPhone.trim()) && !emailOrPhone.includes("@");
 
   const googleBtnRef = useRef(null);
+  // State to hold Google button width based on screen size
+  const [googleWidth, setGoogleWidth] = useState(360);
+
+  useEffect(() => {
+    // Adjust Google button width on resize for better responsiveness
+    const updateWidth = () => {
+      if (window.innerWidth < 640) {
+        setGoogleWidth(250);  // mobile
+      } else if (window.innerWidth < 1024) {
+        setGoogleWidth(300);  // tablet
+      } else {
+        setGoogleWidth(360);  // desktop / 4k
+      }
+    };
+
+    updateWidth();
+    window.addEventListener("resize", updateWidth);
+    return () => window.removeEventListener("resize", updateWidth);
+  }, []);
 
   useEffect(() => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -51,20 +70,20 @@ export default function Login() {
 
       if (googleBtnRef.current) {
         googleBtnRef.current.innerHTML = "";
+        // Use the dynamic width from state
         g.accounts.id.renderButton(googleBtnRef.current, {
           type: "standard",
           theme: "outline",
           size: "large",
           text: "signin_with",
           shape: "pill",
-          width: 360,
+          width: googleWidth,  // responsive width
         });
       }
     } catch {
-      // ✅ CORRIGÉ: Supprimé le paramètre '_' inutilisé
-      // Ignorer les erreurs d'initialisation de Google
+      // Ignore Google initialization errors
     }
-  }, [loginWithGoogle, navigate, t]);
+  }, [loginWithGoogle, navigate, t, googleWidth]); // re-run when googleWidth changes
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -112,34 +131,35 @@ export default function Login() {
 
   return (
     <>
-      {/* Language Switcher - fixed top right */}
-      <div className="fixed top-4 right-4 z-50">
+      {/* Language Switcher - responsive positioning */}
+      <div className="fixed top-2 right-2 sm:top-4 sm:right-4 z-50">
         <LanguageSwitcher />
       </div>
 
-      <div className="relative flex h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-slate-50 via-indigo-50/60 to-slate-100 px-4">
-        {/* Background shapes */}
+      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-slate-50 via-indigo-50/60 to-slate-100 px-4 py-6 sm:px-6 lg:px-8">
+        {/* Background shapes (same) */}
         <div className="pointer-events-none absolute inset-0 opacity-[0.35] [background-image:radial-gradient(circle_at_1px_1px,rgba(99,102,241,0.18)_1px,transparent_0)] [background-size:22px_22px]" />
         <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-indigo-300/50 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-24 -right-24 h-80 w-80 rounded-full bg-sky-300/50 blur-3xl" />
         <div className="pointer-events-none absolute top-1/3 right-1/4 h-64 w-64 rounded-full bg-purple-300/45 blur-3xl" />
 
-        <div className="relative w-full max-w-lg">
+        {/* Responsive card container */}
+        <div className="relative w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl">
           {/* Logo */}
           <div className="text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-indigo-700 text-white shadow-sm">
               <HardHat className="h-7 w-7" />
             </div>
-            <h1 className="mt-6 text-3xl font-semibold tracking-tight text-slate-900">
+            <h1 className="mt-6 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl">
               {t('login.welcomeTitle')}
             </h1>
-            <p className="mt-2 text-base text-slate-600">
+            <p className="mt-2 text-sm text-slate-600 sm:text-base md:text-lg">
               {t('login.welcomeSubtitle')}
             </p>
           </div>
 
-          {/* Card */}
-          <div className="mt-8 rounded-3xl border border-slate-200/80 bg-white/90 p-8 shadow-lg shadow-slate-200/60 backdrop-blur">
+          {/* Card - responsive padding */}
+          <div className="mt-8 rounded-3xl border border-slate-200/80 bg-white/90 p-6 shadow-lg shadow-slate-200/60 backdrop-blur sm:p-8 md:p-10">
             {info && (
               <div className="mb-5 rounded-2xl border border-indigo-200 bg-indigo-50 px-5 py-4 text-sm text-indigo-800">
                 {info}
@@ -162,7 +182,7 @@ export default function Login() {
                     type="text"
                     autoComplete="username"
                     placeholder="mohamed@gmail.com ou +216 22 345 678"
-                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 pr-24 text-base focus:border-indigo-500 focus:outline-none"
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base focus:border-indigo-500 focus:outline-none sm:py-3.5"
                     required
                   />
                   {emailOrPhone.trim().length > 0 && (
@@ -193,7 +213,7 @@ export default function Login() {
                   type="password"
                   autoComplete="current-password"
                   placeholder={t('login.passwordPlaceholder')}
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-base focus:border-indigo-500 focus:outline-none"
+                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base focus:border-indigo-500 focus:outline-none sm:py-3.5"
                   required
                 />
               </div>
@@ -226,13 +246,13 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={loading}
-                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-700 py-3.5 text-base font-semibold text-white hover:bg-indigo-800 disabled:opacity-60 transition-opacity"
+                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-700 py-3 text-base font-semibold text-white hover:bg-indigo-800 disabled:opacity-60 transition-opacity sm:py-3.5 sm:text-lg"
               >
                 {loading ? t('login.loggingIn') : t('login.loginButton')}
                 <ArrowRight className="h-4 w-4" />
               </button>
 
-              {/* Forgot password link - moved below login button */}
+              {/* Forgot password */}
               <div className="text-center">
                 <button
                   type="button"
@@ -243,11 +263,11 @@ export default function Login() {
                 </button>
               </div>
 
-              {/* Google login */}
+              {/* Google login - responsive button */}
               {import.meta.env.VITE_GOOGLE_CLIENT_ID && (
                 <div className="pt-2">
                   <div className="flex justify-center">
-                    <div ref={googleBtnRef} />
+                    <div ref={googleBtnRef} className="w-full max-w-[360px]" />
                   </div>
                   <p className="mt-2 text-center text-xs text-slate-500">
                     {t('login.googleLoginHint')}

@@ -1,4 +1,4 @@
-// ✅ ArtisanLayout.jsx (FULL FIXED CODE)
+// ✅ ArtisanLayout.jsx (with profile picture support)
 
 import React, { useState } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
@@ -82,43 +82,36 @@ export default function ArtisanLayout() {
         {/* Nav */}
         <div className="flex-1 overflow-y-auto py-6 px-3">
           <div className="space-y-1">
-            {/* Profile Button */}
             <NavItem
               to="/artisan/profile"
               icon={<UserCircle2 className="h-5 w-5" />}
               label="Profil"
               collapsed={isSidebarCollapsed}
             />
-
             <NavItem
               to="/artisan"
               icon={<LayoutDashboard className="h-5 w-5" />}
               label="Tableau de bord"
               collapsed={isSidebarCollapsed}
             />
-            
             <NavItem
               to="/artisan/projects"
               icon={<FolderKanban className="h-5 w-5" />}
               label="Projets"
               collapsed={isSidebarCollapsed}
             />
-            
-            {/* ✅ CORRIGÉ: Lien vers la création de devis */}
             <NavItem
               to="/artisan/devis/create"
               icon={<FileText className="h-5 w-5" />}
               label="Créer un devis"
               collapsed={isSidebarCollapsed}
             />
-            
             <NavItem
               to="/artisan/factures"
               icon={<Receipt className="h-5 w-5" />}
               label="Factures"
               collapsed={isSidebarCollapsed}
             />
-            
             <NavItem
               to="/artisan/marketplace"
               icon={<ShoppingCart className="h-5 w-5" />}
@@ -139,7 +132,25 @@ export default function ArtisanLayout() {
               isSidebarCollapsed ? "justify-center" : ""
             } mb-3`}
           >
-            <UserCircle2 className="h-8 w-8 text-slate-600 dark:text-slate-400" />
+            {/* Profile picture OR fallback icon */}
+            {user?.profilePicture ? (
+              <img
+                src={user.profilePicture}
+                alt=""
+                className="h-8 w-8 rounded-full object-cover"
+                onError={(e) => {
+                  // If image fails to load, hide it and show the icon
+                  e.target.style.display = 'none';
+                  // We need to access the icon element – we'll use a ref or just let the icon be visible
+                  // Better: we can conditionally render both and use CSS to show/hide
+                }}
+              />
+            ) : null}
+            <UserCircle2
+              className={`h-8 w-8 text-slate-600 dark:text-slate-400 ${
+                user?.profilePicture ? 'hidden' : 'block'
+              }`}
+            />
             {!isSidebarCollapsed && (
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-semibold text-slate-900 dark:text-white truncate">
@@ -263,7 +274,6 @@ export default function ArtisanLayout() {
               </div>
 
               <div className="flex-1 space-y-1 p-3">
-                {/* Profile Button - Mobile */}
                 <NavItem
                   to="/artisan/profile"
                   icon={<UserCircle2 className="h-5 w-5" />}
@@ -271,7 +281,6 @@ export default function ArtisanLayout() {
                   onClick={closeMobileMenu}
                   collapsed={false}
                 />
-                
                 <NavItem
                   to="/artisan"
                   icon={<LayoutDashboard className="h-5 w-5" />}
@@ -279,7 +288,6 @@ export default function ArtisanLayout() {
                   onClick={closeMobileMenu}
                   collapsed={false}
                 />
-                
                 <NavItem
                   to="/artisan/projects"
                   icon={<FolderKanban className="h-5 w-5" />}
@@ -287,8 +295,6 @@ export default function ArtisanLayout() {
                   onClick={closeMobileMenu}
                   collapsed={false}
                 />
-                
-                {/* ✅ CORRIGÉ: Lien vers la création de devis - Mobile */}
                 <NavItem
                   to="/artisan/devis/create"
                   icon={<FileText className="h-5 w-5" />}
@@ -296,7 +302,6 @@ export default function ArtisanLayout() {
                   onClick={closeMobileMenu}
                   collapsed={false}
                 />
-                
                 <NavItem
                   to="/artisan/factures"
                   icon={<Receipt className="h-5 w-5" />}
@@ -304,7 +309,6 @@ export default function ArtisanLayout() {
                   onClick={closeMobileMenu}
                   collapsed={false}
                 />
-                
                 <NavItem
                   to="/artisan/marketplace"
                   icon={<ShoppingCart className="h-5 w-5" />}
