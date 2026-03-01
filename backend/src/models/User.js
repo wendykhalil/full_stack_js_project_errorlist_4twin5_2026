@@ -46,7 +46,7 @@ resetPasswordTokenExpiresAt: { type: Date, default: null },
 
     role: {
       type: String,
-      enum: ["ARTISAN", "PRESCRIPTEUR", "SUPPLIER", "ADMIN"],
+      enum: ["REGISTER_ROLE","ARTISAN","PRESCRIPTEUR","SUPPLIER","ADMIN"],
       required: true,
     },
 

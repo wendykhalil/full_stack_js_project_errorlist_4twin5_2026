@@ -1,7 +1,10 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import RealtimeNotifications from "./components/RealtimeNotifications";
 
 import Login from "./pages/Login";
+import PhoneLogin from "./pages/PhoneLogin";
+import RegisterRole from "./pages/RegisterRole";
 import VerifyEmail from "./pages/VerifyEmail";
 import Unauthorized from "./pages/Unauthorized";
 
@@ -11,7 +14,7 @@ import { Roles } from "./auth/role";
 import AdminLayout from "./layouts/AdminLayout";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
-import AdminAuthLogs from "./pages/AdminAuthLogs";
+import AdminActivityLogs from "./pages/AdminActivityLogs";
 
 // REGISTER
 import RegisterChooseRole from "./pages/RegisterChooseRole";
@@ -44,10 +47,15 @@ import Profile from "./pages/Profile";
 export default function App() {
     return (
         <BrowserRouter>
+            <RealtimeNotifications />
             <Routes>
                 {/* Routes publiques */}
                 <Route path="/" element={<Navigate to="/login" replace />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/login-phone" element={<PhoneLogin />} />
+                <Route path="/register-role" element={<RegisterRole />} />
+                {/* backward-compatible */}
+                <Route path="/register-role-sms" element={<RegisterRole />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/verify-email" element={<VerifyEmail />} />
@@ -76,7 +84,7 @@ export default function App() {
                         <Route index element={<AdminDashboard />} />
                         <Route path="profile" element={<Profile />} />
                         <Route path="users" element={<AdminUsers />} />
-                        <Route path="logs" element={<AdminAuthLogs />} />
+                        <Route path="activity" element={<AdminActivityLogs />} />
                         <Route
                             path="transactions"
                             element={<div className="mx-auto max-w-6xl py-10">Transactions (à faire)</div>}

@@ -4,6 +4,7 @@ const authRoutes = require('../modules/auth/auth.routes');
 const { authRequired } = require('../middleware/authMiddleware');
 const { requireRoles } = require('../middleware/roleMiddleware');
 const AuthLog = require('../models/AuthLog');
+const ActivityLog = require('../models/ActivityLog');
 
 const router = express.Router();
 
@@ -39,6 +40,30 @@ router.get('/admin/auth-logs', authRequired, requireRoles('ADMIN'), async (req, 
         .populate('user', 'firstName lastName email role')
         .lean(),
       AuthLog.countDocuments(),
+    ]);
+
+    res.json({ page, limit, total, items });
+  } catch (err) {
+    next(err);
+  }
+});
+
+
+// Admin: activity logs (profile updates, password changes, sms login, etc.)
+router.get('/admin/activity-logs', authRequired, requireRoles('ADMIN'), async (req, res, next) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page || '1', 10) || 1);
+    const limit = Math.min(200, Math.max(10, parseInt(req.query.limit || '50', 10) || 50));
+    const skip = (page - 1) * limit;
+
+    const [items, total] = await Promise.all([
+      ActivityLog.find()
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate('user', 'firstName lastName email phone role')
+        .lean(),
+      ActivityLog.countDocuments(),
     ]);
 
     res.json({ page, limit, total, items });

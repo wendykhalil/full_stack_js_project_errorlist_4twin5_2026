@@ -98,9 +98,9 @@ export default function AdminLayout() {
               collapsed={isSidebarCollapsed}
             />
             <NavItem
-              to="/admin/logs"
+              to="/admin/activity"
               icon={<History className="h-5 w-5" />}
-              label="Logs"
+              label="Activity"
               collapsed={isSidebarCollapsed}
             />
             <NavItem
@@ -271,9 +271,9 @@ export default function AdminLayout() {
                   collapsed={false}
                 />
                 <NavItem
-                  to="/admin/logs"
+                  to="/admin/activity"
                   icon={<History className="h-5 w-5" />}
-                  label="Logs"
+                  label="Activity"
                   onClick={closeMobileMenu}
                   collapsed={false}
                 />

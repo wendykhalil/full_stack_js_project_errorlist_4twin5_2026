@@ -24,6 +24,12 @@ export function AuthProvider({ children }) {
     else localStorage.removeItem(LS_USER);
   }
 
+  // Expose a generic setter so other login methods (e.g., SMS OTP) can update
+  // the in-memory auth state immediately (avoids redirecting back to /login).
+  function setSession(nextToken, nextUser) {
+    persist(nextToken, nextUser);
+  }
+
   async function login(email, password) {
     const data = await apiFetch('/auth/login', { method: 'POST', body: { email, password } });
     persist(data.token, data.user);
@@ -33,7 +39,7 @@ export function AuthProvider({ children }) {
   async function loginWithGoogle(credential, role) {
     const data = await apiFetch('/auth/google', { method: 'POST', body: { credential, ...(role ? { role } : {}) } });
     persist(data.token, data.user);
-    return data.user;
+    return data; // { token, user, needsRole }
   }
 
   async function register(payload) {
@@ -77,6 +83,7 @@ export function AuthProvider({ children }) {
   token, user, isAuthenticated,
   login, loginWithGoogle, register, refreshMe,
   updateProfile, changePassword, logout,
+  setSession,
   forgotPassword, resetPassword
 })
   );

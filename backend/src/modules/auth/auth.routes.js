@@ -10,6 +10,10 @@ router.post('/resend-verification', controller.resendVerification);
 router.post('/login', controller.login);
 router.post('/google', controller.googleLogin);
 router.post('/logout', authRequired, controller.logout);
+router.post('/phone/start', controller.phoneStart);
+router.post('/phone/verify', controller.phoneVerify);
+router.post('/set-role', authRequired, controller.setRole);
+
 router.get('/me', authRequired, controller.me);
 router.patch('/profile', authRequired, controller.updateProfile);
 router.post('/change-password', authRequired, controller.changePassword);

@@ -4,7 +4,9 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
 const User = require('../../models/User');
+const { startPhoneVerification, checkPhoneVerification } = require('../../utils/twilioVerify');
 
+const REGISTER_ROLE = 'REGISTER_ROLE';
 const ROLE_ENUM = ['ARTISAN', 'PRESCRIPTEUR', 'SUPPLIER', 'ADMIN'];
 
 // ✅ Lazy / safe Google client creation
@@ -54,6 +56,14 @@ async function sendVerificationEmail({ email, token }) {
   `;
   await sendMail({ to: email, subject, text, html });
   return link;
+}
+
+function signJwt(user, extra = {}) {
+  return jwt.sign(
+    { sub: String(user._id), role: user.role, ...extra },
+    process.env.JWT_SECRET,
+    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+  );
 }
 
 function sanitizeUser(userDoc) {
@@ -144,13 +154,9 @@ async function login({ email, password }) {
     const e = new Error('Account is not active'); e.statusCode = 403; throw e;
   }
 
-  const token = jwt.sign(
-    { sub: String(user._id), role: user.role },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
-  );
+  const token = signJwt(user);
 
-  return { token, user: sanitizeUser(user) };
+return { token, user: sanitizeUser(user) };
 }
 
 async function me(userId) {
@@ -223,6 +229,7 @@ async function googleLogin({ credential, role }) {
   }
 
   // role is optional. If user exists, we keep their role.
+  // For NEW users, we always start with REGISTER_ROLE so they choose once in the UI.
   if (role && !ROLE_ENUM.includes(role)) {
     const e = new Error('Invalid role'); e.statusCode = 400; throw e;
   }
@@ -258,7 +265,7 @@ async function googleLogin({ credential, role }) {
       lastName,
       email,
       phone: '',
-      role: role || 'PRESCRIPTEUR',
+      role: 'REGISTER_ROLE',
       authProvider: 'GOOGLE',
       googleSub: sub || null,
       emailVerified: emailVerified || true,
@@ -291,13 +298,10 @@ async function googleLogin({ credential, role }) {
     const e = new Error('Account is not active'); e.statusCode = 403; throw e;
   }
 
-  const token = jwt.sign(
-    { sub: String(user._id), role: user.role },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
-  );
+  const token = signJwt(user);
 
-  return { token, user: sanitizeUser(user) };
+  const needsRole = String(user.role || '') === 'REGISTER_ROLE';
+  return { token, user: sanitizeUser(user), needsRole };
 }
 
 async function updateProfile(userId, { firstName, lastName, phone }) {
@@ -428,15 +432,85 @@ async function resetPassword({ token, newPassword }) {
   return { ok: true, message: 'Mot de passe mis à jour. Vous pouvez vous connecter.' };
 }
 
+async function phoneStart({ phone }) {
+  const cleanPhone = String(phone || '').trim();
+  if (!cleanPhone) {
+    const e = new Error('Phone required'); e.statusCode = 400; throw e;
+  }
+
+  const user = await User.findOne({ phone: cleanPhone });
+  if (!user) {
+    const e = new Error("Phone number doesn't exist"); e.statusCode = 404; throw e;
+  }
+
+  if (user.status === 'BLOCKED') {
+    const until = user.blockedUntil ? ` jusqu'au ${user.blockedUntil.toLocaleDateString('fr-TN')}` : '';
+    const e = new Error(`Compte bloqué${until}`);
+    e.statusCode = 403;
+    throw e;
+  }
+
+  await startPhoneVerification(cleanPhone);
+  return { ok: true, message: 'SMS sent' };
+}
+
+async function phoneVerify({ phone, code }) {
+  const cleanPhone = String(phone || '').trim();
+  const cleanCode = String(code || '').trim();
+  if (!cleanPhone || !cleanCode) {
+    const e = new Error('Phone and code are required'); e.statusCode = 400; throw e;
+  }
+
+  const user = await User.findOne({ phone: cleanPhone });
+  if (!user) {
+    const e = new Error("Phone number doesn't exist"); e.statusCode = 404; throw e;
+  }
+
+  const check = await checkPhoneVerification(cleanPhone, cleanCode);
+  if (check.status !== 'approved') {
+    const e = new Error('Invalid code'); e.statusCode = 401; throw e;
+  }
+
+  // If user still needs to pick a role, issue a short-lived token
+  if (user.role === REGISTER_ROLE) {
+    const token = signJwt(user, { needsRole: true });
+    return { token, user: sanitizeUser(user), needsRole: true };
+  }
+
+  const token = signJwt(user);
+  return { token, user: sanitizeUser(user) };
+}
+
+async function setRole(userId, { role }) {
+  if (!ROLE_ENUM.includes(role)) {
+    const e = new Error('Invalid role'); e.statusCode = 400; throw e;
+  }
+  const user = await User.findById(userId);
+  if (!user) {
+    const e = new Error('User not found'); e.statusCode = 404; throw e;
+  }
+
+  user.role = role;
+  // If user came from a phone-first flow, ensure account is active
+  if (!user.status) user.status = 'ACTIVE';
+  await user.save();
+
+  const token = signJwt(user);
+  return { ok: true, token, user: sanitizeUser(user) };
+}
+
 module.exports = {
   register,
   login,
-  googleLogin,
   me,
   verifyEmail,
   resendVerification,
+  googleLogin,
   updateProfile,
   changePassword,
   forgotPassword,
   resetPassword,
+  phoneStart,
+  phoneVerify,
+  setRole,
 };

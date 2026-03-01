@@ -58,8 +58,12 @@ export default function Login() {
           try {
             setError("");
             setLoading(true);
-            const u = await loginWithGoogle(resp.credential);
-            navigate(roleToBasePath(u.role), { replace: true });
+            const res = await loginWithGoogle(resp.credential);
+            if (res?.needsRole) {
+              navigate('/register-role', { replace: true, state: { from: 'google' } });
+              return;
+            }
+            navigate(roleToBasePath(res.user.role), { replace: true });
           } catch (e) {
             setError(e.message || t('login.googleError'));
           } finally {
@@ -260,6 +264,17 @@ export default function Login() {
                   className="text-sm font-medium text-indigo-600 hover:underline"
                 >
                   {t('login.forgotPassword')}
+                </button>
+              </div>
+
+              {/* SMS login */}
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => navigate("/login-phone")}
+                  className="text-sm font-medium text-indigo-600 hover:underline"
+                >
+                  Login with SMS code
                 </button>
               </div>
 
