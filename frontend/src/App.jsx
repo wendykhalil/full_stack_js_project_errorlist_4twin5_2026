@@ -1,5 +1,6 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import TawkToChat from "./components/TawkToChat";
 import RealtimeNotifications from "./components/RealtimeNotifications";
 
 import Login from "./pages/Login";
@@ -47,6 +48,10 @@ import Profile from "./pages/Profile";
 export default function App() {
     return (
         <BrowserRouter>
+          <TawkToChat />
+
+            {/* Widget Tawk.to - visible sur toutes les pages */}
+           
             <RealtimeNotifications />
             <Routes>
                 {/* Routes publiques */}
