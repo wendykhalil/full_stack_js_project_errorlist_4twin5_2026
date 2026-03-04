@@ -1,0 +1,578 @@
+{
+  "footer": {
+    "description": "The first digital platform in Tunisia connecting artisans, prescribers and suppliers in the building sector.",
+    "quickLinks": {
+      "title": "Quick Links",
+      "about": "About",
+      "contact": "Contact",
+      "blog": "Blog",
+      "faq": "FAQ"
+    },
+    "legal": {
+      "title": "Legal Information",
+      "terms": "Terms of Use",
+      "privacy": "Privacy Policy",
+      "cookies": "Cookie Management",
+      "legal": "Legal Notice"
+    },
+    
+  "artisanLayout": {
+    "brand": "BMP.tn",
+    "role": "Artisan",
+    "profile": "Profile",
+    "dashboard": "Dashboard",
+    "projects": "Projects",
+    "createQuote": "Create quote",
+    "invoices": "Invoices",
+    "marketplace": "Marketplace",
+    "logout": "Logout"
+  },
+
+    "contact": {
+      "title": "Contact",
+      "address": "BMP Building, Construction Street, 1000 Tunis, Tunisia",
+      "phone": "+216 71 123 456"
+    },
+    "newsletter": {
+      "title": "Newsletter",
+      "placeholder": "Your email",
+      "button": "OK"
+    },
+    "copyright": "© {{year}} BMP.tn - All rights reserved.",
+    "copyrightExtra": "Digital platform for the building sector in Tunisia.",
+    "version": "Version {{version}}",
+    "madeWith": "Made with ♥ in Tunisia"
+  },
+  "artisanDashboard": {
+    "title": "Dashboard",
+    "subtitle": "Overview of your activity",
+    "welcome": {
+      "title": "Welcome 👋",
+      "description": "Simplified dashboard. Use quick actions to get started."
+    },
+    "quickActions": {
+      "title": "Quick Actions",
+      "newProject": "New Project",
+      "createQuote": "Create Quote",
+      "newInvoice": "New Invoice",
+      "order": "Order"
+    },
+    "recentProjects": {
+      "title": "Recent Projects",
+      "viewAll": "View all",
+      "project1": {
+        "title": "Villa Ben Arous",
+        "client": "Mohammed Ahmed",
+        "remaining": "37% left"
+      },
+      "project2": {
+        "title": "Apartment Tunis",
+        "client": "Fatima Ben Ali",
+        "remaining": "33% left"
+      },
+      "project3": {
+        "title": "Office Ariana",
+        "client": "Tech Solutions LLC",
+        "remaining": "100% left"
+      }
+    },
+    "status": {
+      "active": "Active",
+      "pending": "Pending"
+    },
+    "projectCard": {
+      "budget": "Budget:"
+    },
+    "recentActivity": {
+      "title": "Recent Activity",
+      "invoicePaid": "Invoice {{invoice}} paid",
+      "quoteSent": "Quote {{quote}} sent to {{client}}",
+      "orderShipped": "Order {{order}} shipped",
+      "invoiceOverdue": "Invoice {{invoice}} overdue",
+      "timeAgo": "{{hours}}h ago",
+      "yesterday": "Yesterday",
+      "daysAgo": "{{days}}d ago",
+      "clientFatima": "Fatima Ben Ali"
+    }
+  },
+  "prescripteurArtisans": {
+    "title": "Find an Artisan",
+    "subtitle": "Search for qualified artisans by specialty and region",
+    "searchPlaceholder": "Search for an artisan...",
+    "specialtyPlaceholder": "All specialties",
+    "regionPlaceholder": "All regions",
+    "contactButton": "Contact",
+    "viewProfileButton": "View profile",
+    "projectsCompleted_one": "{{count}} project completed",
+    "projectsCompleted_other": "{{count}} projects completed",
+    "yearsExperience_one": "{{count}} year of experience",
+    "yearsExperience_other": "{{count}} years of experience",
+    "specialties": {
+      "plumbing": "Plumbing",
+      "electricity": "Electrical",
+      "masonry": "Masonry"
+    },
+    "cities": {
+      "tunis": "Tunis",
+      "ariana": "Ariana",
+      "benarous": "Ben Arous"
+    }
+  },
+   "prescripteurProduits": {
+    "title": "Product Catalog",
+    "subtitle": "Discover our selection of materials and equipment",
+    "searchPlaceholder": "Search products...",
+    "categoryPlaceholder": "All categories",
+    "categories": {
+      "basicMaterials": "Basic materials",
+      "flooring": "Flooring",
+      "paint": "Paint",
+      "carpentry": "Carpentry",
+      "electricity": "Electrical",
+      "plumbing": "Plumbing"
+    },
+    "detailsButton": "Details"
+  },
+   "profile": {
+    "title": "My Profile",
+    "subtitle": "Edit your information and password.",
+    "informationSection": "Information",
+    "firstNameLabel": "First Name",
+    "firstNamePlaceholder": "First Name",
+    "lastNameLabel": "Last Name",
+    "lastNamePlaceholder": "Last Name",
+    "emailLabel": "Email",
+    "phoneLabel": "Phone",
+    "phonePlaceholder": "+216...",
+    "saveButton": "Save",
+    "savingButton": "Saving...",
+    "saveSuccess": "Profile updated ✅",
+    "saveError": "Unable to update profile",
+    "passwordSection": "Password",
+    "currentPasswordLabel": "Current Password",
+    "newPasswordLabel": "New Password",
+    "passwordPlaceholder": "••••••••",
+    "changePasswordButton": "Change Password",
+    "changingPasswordButton": "Updating...",
+    "passwordChangeSuccess": "Password updated ✅",
+    "passwordChangeError": "Unable to change password",
+    "passwordMinLengthError": "New password must be at least 6 characters.",
+    "googleInfo": "You are signed in with Google. You can set a local password here (optional)."
+  },
+   "adminLogs": {
+    "title": "Login / Logout History",
+    "subtitle": "Latest authentication activities (LOGIN / LOGOUT).",
+    "refreshButton": "Refresh",
+    "loadError": "Unable to load logs",
+    "loading": "Loading...",
+    "noData": "No logs yet.",
+    "totalLabel": "Total:",
+    "previous": "Previous",
+    "pageLabel": "Page",
+    "next": "Next",
+    "table": {
+      "date": "Date",
+      "user": "User",
+      "role": "Role",
+      "action": "Action",
+      "ip": "IP",
+      "userAgent": "User-Agent"
+    },
+    "action": {
+      "login": "Login",
+      "logout": "Logout"
+    }
+  },
+   "adminDashboard": {
+    "title": "Admin Dashboard",
+    "subtitle": "Overview of the BMP.tn platform",
+    "welcomeTitle": "Welcome 👋",
+    "welcomeDescription": "Simplified dashboard. Use the left menu to manage users and view logs."
+  },
+  "adminUsers": {
+    "title": "User Management",
+    "totalUsers_one": "{{count}} user total",
+    "totalUsers_other": "{{count}} users total",
+    "searchPlaceholder": "Search by name, email, phone…",
+    "roleFilter": {
+      "all": "All roles"
+    },
+    "roles": {
+      "artisan": "Artisan",
+      "prescripteur": "Prescriber",
+      "supplier": "Supplier",
+      "admin": "Admin"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "blocked": "Blocked"
+    },
+    "emailVerified": {
+      "verified": "Verified",
+      "pending": "Pending"
+    },
+    "actions": {
+      "block": "Block",
+      "unblock": "Unblock"
+    },
+    "tableTitle": "Users",
+    "displayedCount_one": "({{count}} displayed)",
+    "displayedCount_other": "({{count}} displayed)",
+    "table": {
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "role": "Role",
+      "status": "Status",
+      "blockedUntil": "Blocked until",
+      "emailVerified": "Email verified",
+      "registered": "Registered",
+      "actions": "Actions"
+    },
+    "loading": "Loading…",
+    "noUsersFound": "No users found.",
+    "blockModal": {
+      "title": "Block User",
+      "durationLabel": "Block duration",
+      "durations": {
+        "1h": "1 hour",
+        "3h": "3 hours",
+        "1d": "1 day",
+        "3d": "3 days",
+        "1w": "1 week",
+        "1m": "1 month"
+      },
+      "cancelButton": "Cancel",
+      "blockButton": "Block"
+    }
+  },
+   "artisanDevisCreate": {
+    "backButton": "Back",
+    "title": "Create a Quote",
+    "subtitle": "General information",
+    "formTitle": "Quote information",
+    "projectLabel": "Associated project",
+    "projectPlaceholder": "Select a project...",
+    "clientLabel": "Client",
+    "clientPlaceholder": "Client name",
+    "validUntilLabel": "Valid until",
+    "validUntilPlaceholder": "mm/dd/yyyy",
+    "notesLabel": "Notes (optional)",
+    "notesPlaceholder": "Special conditions, notes...",
+    "nextButton": "Next: Add items",
+    "projectOptions": {
+      "villa": "Villa Ben Arous",
+      "apartment": "Apartment Tunis",
+      "office": "Office Ariana"
+    }
+  },
+   "artisanFactures": {
+    "title": "Invoices",
+    "subtitle": "Track your invoices, payments, and delays",
+    "newInvoiceButton": "New Invoice",
+    "searchPlaceholder": "Search by number, client...",
+    "filterAllStatuses": "All statuses",
+    "viewButton": "View",
+    "downloadButton": "Download",
+    "amountLabel": "Amount:",
+    "status": {
+      "paid": "Paid",
+      "pending": "Pending",
+      "overdue": "Overdue"
+    }
+  },
+  "artisanFactureStep2": {
+    "title": "Create an Invoice",
+    "subtitle": "Add items",
+    "formTitle": "Invoice items",
+    "itemDescriptionPlaceholder": "Item description",
+    "unitPlaceholder": "Unit",
+    "subtotalLabel": "Subtotal:",
+    "vatLabel": "VAT ({{rate}}%):",
+    "stampLabel": "Stamp duty:",
+    "totalLabel": "Total incl. tax:",
+    "backButton": "Back",
+    "nextButton": "Next: Preview"
+  },
+  "artisanFactureStep3": {
+    "title": "Create an Invoice",
+    "subtitle": "Review and send",
+    "invoiceTitle": "INVOICE",
+    "invoiceNumber": "No. {{number}}",
+    "clientLabel": "Client",
+    "projectLabel": "Project",
+    "paymentMethodLabel": "Payment method",
+    "dateLabel": "Date: {{date}}",
+    "dueDateLabel": "Due date: {{date}}",
+    "subtotalLabel": "Subtotal:",
+    "vatLabel": "VAT ({{rate}}%):",
+    "stampLabel": "Stamp duty:",
+    "totalLabel": "Total incl. tax:",
+    "backButton": "Back",
+    "downloadButton": "Download PDF",
+    "sendButton": "Send to client"
+  },
+   "artisanMarketplace": {
+    "title": "Marketplace",
+    "subtitle": "Discover and order construction materials",
+    "searchPlaceholder": "Search products...",
+    "filterAllCategories": "All categories",
+    "categories": {
+      "materials": "Materials",
+      "paint": "Paint",
+      "carpentry": "Carpentry"
+    },
+    "cartButton": "Cart ({{count}})",
+    "addToCart": "Add to cart"
+  },
+  "artisanProjects": {
+    "title": "My Projects",
+    "subtitle": "Manage all your ongoing projects",
+    "newProjectButton": "New Project",
+    "searchPlaceholder": "Search by project name or client...",
+    "filterAllStatuses": "All statuses",
+    "budgetLabel": "Budget",
+    "usedLabel": "used",
+    "startLabel": "Start:",
+    "status": {
+      "active": "Active",
+      "pending": "Pending",
+      "completed": "Completed"
+    }
+  },
+   "forgotPassword": {
+    "title": "Forgot Password",
+    "subtitle": "Enter your email to receive a reset link",
+    "emailLabel": "Email",
+    "emailPlaceholder": "your@email.com",
+    "sendButton": "Send link",
+    "sendingButton": "Sending...",
+    "backToLogin": "Back to login",
+    "emailRequired": "Please enter your email.",
+    "linkSent": "If this email exists, a link has been sent.",
+    "sendError": "Unable to send email."
+  },
+   "fournisseurProduitNew": {
+    "title": "Product Management",
+    "subtitle": "Manage your product catalog and equipment",
+    "addButton": "Add product",
+    "stats": {
+      "activeProducts": "Active products",
+      "monthlyOrders": "Orders this month",
+      "revenue": "Revenue",
+      "catalogs": "Catalogs"
+    },
+    "formTitle": "Add a new product",
+    "productNameLabel": "Product name",
+    "productNamePlaceholder": "Ex: CEM II 42.5 Cement",
+    "categoryLabel": "Category",
+    "categoryPlaceholder": "Select...",
+    "priceLabel": "Unit price (TND)",
+    "unitLabel": "Unit",
+    "unitPlaceholder": "Select...",
+    "stockLabel": "Available stock",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Detailed product description...",
+    "imageUploadTitle": "Product image",
+    "imageUploadSubtitle": "Click to upload an image",
+    "pdfUploadTitle": "Technical sheet (PDF)",
+    "pdfUploadSubtitle": "Click to upload a PDF",
+    "cancelButton": "Cancel",
+    "submitButton": "Add product",
+    "categories": {
+      "basicMaterials": "Basic materials",
+      "flooring": "Flooring",
+      "paint": "Paint",
+      "carpentry": "Carpentry",
+      "electricity": "Electrical",
+      "plumbing": "Plumbing"
+    },
+    "units": {
+      "piece": "Piece",
+      "box": "Box",
+      "meter": "Meter",
+      "squareMeter": "Square meter",
+      "liter": "Liter",
+      "kilogram": "Kilogram"
+    }
+  },
+   "fournisseurProduits": {
+    "title": "Product Management",
+    "subtitle": "Manage your product catalog and equipment",
+    "addButton": "Add product",
+    "stats": {
+      "activeProducts": "Active products",
+      "monthlyOrders": "Orders this month",
+      "revenue": "Revenue",
+      "catalogs": "Catalogs"
+    },
+    "tableTitle": "My Products",
+    "searchPlaceholder": "Search...",
+    "table": {
+      "product": "Product",
+      "category": "Category",
+      "price": "Price",
+      "stock": "Stock",
+      "status": "Status",
+      "actions": "Actions"
+    }
+  },
+   "login": {
+    "welcomeTitle": "Welcome to BMP.tn",
+    "welcomeSubtitle": "Digital platform for the building sector",
+    "emailPhoneLabel": "Email or phone number",
+    "emailPhonePlaceholder": "your@email.com or +21626770267",
+    "emailBadge": "Email",
+    "phoneBadge": "Phone",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "••••••••",
+    "forgotPassword": "Forgot password?",
+    "loginButton": "Sign in",
+    "loggingIn": "Signing in...",
+    "googleLoginHint": "Quick login with your Google account",
+    "noAccount": "Don't have an account?",
+    "signUp": "Sign up",
+    "emailPhoneRequired": "Please enter your email or phone number.",
+    "passwordRequired": "Please enter your password.",
+    "captchaRequired": "Please confirm you are not a robot.",
+    "loginError": "Unable to log in",
+    "googleError": "Google login failed",
+    "resendButton": "Resend confirmation email",
+    "resending": "Sending...",
+    "resendSuccess": "Confirmation email resent. Check your inbox.",
+    "resendError": "Unable to resend email."
+  },
+  "registerChooseRole": {
+    "title": "Create an account",
+    "subtitle": "Choose your profile",
+    "artisan": {
+      "title": "Artisan",
+      "desc": "Manage your projects, quotes and invoices"
+    },
+    "prescriber": {
+      "title": "Prescriber",
+      "desc": "Discover products and find artisans"
+    },
+    "supplier": {
+      "title": "Supplier",
+      "desc": "Manage your product catalog"
+    },
+    "admin": {
+      "title": "Admin",
+      "desc": "Administer the platform"
+    },
+    "alreadyAccount": "Already have an account?",
+    "loginLink": "Log in"
+  },
+  "registerForm": {
+    "title": "Create an account",
+    "subtitle": "Complete your information",
+    "lastNameLabel": "Last name",
+    "lastNamePlaceholder": "Dupont",
+    "firstNameLabel": "First name",
+    "firstNamePlaceholder": "Jean",
+    "emailLabel": "Email",
+    "emailPlaceholder": "jean@example.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "••••••••",
+    "passwordHint": "8 characters min., one uppercase letter and one number.",
+    "phoneLabel": "Phone",
+    "phonePlaceholder": "Your number",
+    "companyLabel": "Company (optional)",
+    "companyPlaceholder": "Your company name",
+    "backButton": "Back",
+    "submitButton": "Create account",
+    "creatingButton": "Creating...",
+    "successMessage": "Account created. Check your email to verify, then log in.",
+    "errors": {
+      "lastNameMin": "At least 2 characters.",
+      "lastNameMax": "Maximum 60 characters.",
+      "firstNameMin": "At least 2 characters.",
+      "firstNameMax": "Maximum 60 characters.",
+      "emailRequired": "Email is required.",
+      "emailInvalid": "Invalid email address.",
+      "passwordRequired": "Password is required.",
+      "passwordMin": "At least 8 characters.",
+      "passwordUppercase": "At least one uppercase letter.",
+      "passwordNumber": "At least one number.",
+      "phoneRequired": "Phone number is required.",
+      "phoneInvalid": "Between 6 and 14 digits.",
+      "invalidRole": "Invalid role",
+      "registerError": "Unable to register"
+    },
+    "passwordStrength": {
+      "minChars": "8 characters min.",
+      "uppercase": "Uppercase",
+      "number": "Number",
+      "special": "Special character",
+      "veryWeak": "Very weak",
+      "weak": "Weak",
+      "medium": "Medium",
+      "strong": "Strong",
+      "strengthLabel": "Strength:"
+    }
+  },
+  "countries": {
+    "tn": "Tunisia",
+    "dz": "Algeria",
+    "ma": "Morocco",
+    "ly": "Libya",
+    "eg": "Egypt",
+    "mr": "Mauritania",
+    "sn": "Senegal",
+    "ci": "Ivory Coast",
+    "ng": "Nigeria",
+    "fr": "France",
+    "be": "Belgium",
+    "ch": "Switzerland",
+    "lu": "Luxembourg",
+    "de": "Germany",
+    "it": "Italy",
+    "es": "Spain",
+    "pt": "Portugal",
+    "nl": "Netherlands",
+    "uk": "United Kingdom",
+    "ae": "United Arab Emirates",
+    "sa": "Saudi Arabia",
+    "qa": "Qatar",
+    "kw": "Kuwait",
+    "lb": "Lebanon",
+    "us": "United States",
+    "mx": "Mexico",
+    "br": "Brazil",
+    "in": "India",
+    "cn": "China",
+    "jp": "Japan",
+    "au": "Australia"
+  },
+  "resetPassword": {
+    "title": "Reset password",
+    "subtitle": "Choose a new password",
+    "passwordLabel": "New password",
+    "passwordPlaceholder": "••••••••",
+    "updateButton": "Update",
+    "updatingButton": "Updating...",
+    "backToLogin": "Back to login",
+    "tokenMissing": "Missing token.",
+    "passwordMinLength": "Password must be at least 6 characters.",
+    "success": "Password updated.",
+    "error": "Unable to reset password."
+  },
+   "unauthorized": {
+    "title": "Access denied",
+    "description": "You are not authorized to access this page.",
+    "backToLogin": "Back to login"
+  },
+   "verifyEmail": {
+    "title": "Email Verification",
+    "subtitle": "Confirm your account",
+    "loadingMessage": "Verifying...",
+    "successTitle": "Success",
+    "errorTitle": "Error",
+    "successDefaultMessage": "Email verified. You can now log in.",
+    "errorDefaultMessage": "Invalid or expired link.",
+    "missingToken": "Missing token.",
+    "goToLoginButton": "Go to login"
+  }
+}

@@ -1,0 +1,580 @@
+{
+  "footer": {
+    "description": "أول منصة رقمية في تونس تربط بين الحرفيين والمستشارين والموردين في قطاع البناء.",
+    "quickLinks": {
+      "title": "روابط سريعة",
+      "about": "من نحن",
+      "contact": "اتصل بنا",
+      "blog": "المدونة",
+      "faq": "الأسئلة الشائعة"
+    },
+    "legal": {
+      "title": "معلومات قانونية",
+      "terms": "شروط الاستخدام",
+      "privacy": "سياسة الخصوصية",
+      "cookies": "إدارة ملفات تعريف الارتباط",
+      "legal": "الإشعار القانوني"
+    },
+    "contact": {
+      "title": "اتصل بنا",
+      "address": "مبنى BMP، شارع البناء، 1000 تونس، تونس",
+      "phone": "+216 71 123 456"
+    },
+    "newsletter": {
+      "title": "النشرة البريدية",
+      "placeholder": "بريدك الإلكتروني",
+      "button": "موافق"
+    },
+    "copyright": "© {{year}} BMP.tn - جميع الحقوق محفوظة.",
+    "copyrightExtra": "منصة رقمية لقطاع البناء في تونس.",
+    "version": "الإصدار {{version}}",
+    "madeWith": "صنع بحب ♥ في تونس"
+  },
+  "artisanDashboard": {
+    "title": "لوحة التحكم",
+    "subtitle": "نظرة عامة على نشاطك",
+    "welcome": {
+      "title": "مرحباً 👋",
+      "description": "لوحة تحكم مبسطة. استخدم الإجراءات السريعة للبدء."
+    },
+    "quickActions": {
+      "title": "إجراءات سريعة",
+      "newProject": "مشروع جديد",
+      "createQuote": "إنشاء عرض سعر",
+      "newInvoice": "فاتورة جديدة",
+      "order": "طلب"
+    },
+    "recentProjects": {
+      "title": "المشاريع الأخيرة",
+      "viewAll": "عرض الكل",
+      "project1": {
+        "title": "فيلا بن عروس",
+        "client": "محمد أحمد",
+        "remaining": "37% متبقي"
+      },
+      "project2": {
+        "title": "شقة تونس",
+        "client": "فاطمة بن علي",
+        "remaining": "33% متبقي"
+      },
+      "project3": {
+        "title": "مكتب أريانة",
+        "client": "Tech Solutions LLC",
+        "remaining": "100% متبقي"
+      }
+    },
+    "status": {
+      "active": "نشط",
+      "pending": "قيد الانتظار"
+    },
+    "projectCard": {
+      "budget": "الميزانية:"
+    },
+    "recentActivity": {
+      "title": "النشاط الأخير",
+      "invoicePaid": "الفاتورة {{invoice}} مدفوعة",
+      "quoteSent": "عرض السعر {{quote}} مرسل إلى {{client}}",
+      "orderShipped": "الطلب {{order}} تم شحنه",
+      "invoiceOverdue": "الفاتورة {{invoice}} متأخرة",
+      "timeAgo": "منذ {{hours}} ساعة",
+      "yesterday": "أمس",
+      "daysAgo": "منذ {{days}} يوم",
+      "clientFatima": "فاطمة بن علي"
+    }
+  },
+  "prescripteurArtisans": {
+    "title": "ابحث عن حرفي",
+    "subtitle": "ابحث عن حرفيين مؤهلين حسب التخصص والمنطقة",
+    "searchPlaceholder": "ابحث عن حرفي...",
+    "specialtyPlaceholder": "جميع التخصصات",
+    "regionPlaceholder": "جميع المناطق",
+    "contactButton": "اتصل",
+    "viewProfileButton": "عرض الملف الشخصي",
+    "projectsCompleted_one": "{{count}} مشروع مكتمل",
+    "projectsCompleted_other": "{{count}} مشاريع مكتملة",
+    "yearsExperience_one": "{{count}} سنة خبرة",
+    "yearsExperience_other": "{{count}} سنوات خبرة",
+    "specialties": {
+      "plumbing": "سباكة",
+      "electricity": "كهرباء",
+      "masonry": "بناء"
+    },
+    "cities": {
+      "tunis": "تونس",
+      "ariana": "أريانة",
+      "benarous": "بن عروس"
+    }
+  },
+  "prescripteurProduits": {
+    "title": "كتالوج المنتجات",
+    "subtitle": "اكتشف مجموعتنا من المواد والمعدات",
+    "searchPlaceholder": "ابحث عن منتجات...",
+    "categoryPlaceholder": "جميع الفئات",
+    "categories": {
+      "basicMaterials": "مواد أساسية",
+      "flooring": "أرضيات",
+      "paint": "دهان",
+      "carpentry": "نجارة",
+      "electricity": "كهرباء",
+      "plumbing": "سباكة"
+    },
+    "detailsButton": "التفاصيل"
+  },
+  "profile": {
+    "title": "ملفي الشخصي",
+    "subtitle": "تعديل معلوماتك وكلمة المرور",
+    "informationSection": "المعلومات",
+    "firstNameLabel": "الاسم الأول",
+    "firstNamePlaceholder": "الاسم الأول",
+    "lastNameLabel": "الاسم الأخير",
+    "lastNamePlaceholder": "الاسم الأخير",
+    "emailLabel": "البريد الإلكتروني",
+    "phoneLabel": "الهاتف",
+    "phonePlaceholder": "+216...",
+    "saveButton": "حفظ",
+    "savingButton": "جاري الحفظ...",
+    "saveSuccess": "تم تحديث الملف الشخصي ✅",
+    "saveError": "تعذر تحديث الملف الشخصي",
+    "passwordSection": "كلمة المرور",
+    "currentPasswordLabel": "كلمة المرور الحالية",
+    "newPasswordLabel": "كلمة المرور الجديدة",
+    "passwordPlaceholder": "••••••••",
+    "changePasswordButton": "تغيير كلمة المرور",
+    "changingPasswordButton": "جاري التحديث...",
+    "passwordChangeSuccess": "تم تحديث كلمة المرور ✅",
+    "passwordChangeError": "تعذر تغيير كلمة المرور",
+    "passwordMinLengthError": "كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل",
+    "googleInfo": "أنت متصل بحساب Google. يمكنك تعيين كلمة مرور محلية هنا (اختياري)"
+  },
+  "adminLogs": {
+    "title": "سجل تسجيل الدخول / الخروج",
+    "subtitle": "آخر أنشطة المصادقة (دخول / خروج)",
+    "refreshButton": "تحديث",
+    "loadError": "تعذر تحميل السجلات",
+    "loading": "جاري التحميل...",
+    "noData": "لا توجد سجلات بعد",
+    "totalLabel": "الإجمالي:",
+    "previous": "السابق",
+    "pageLabel": "صفحة",
+    "next": "التالي",
+    "table": {
+      "date": "التاريخ",
+      "user": "المستخدم",
+      "role": "الدور",
+      "action": "الإجراء",
+      "ip": "IP",
+      "userAgent": "متصفح"
+    },
+    "action": {
+      "login": "دخول",
+      "logout": "خروج"
+    }
+  },
+  "adminDashboard": {
+    "title": "لوحة تحكم المشرف",
+    "subtitle": "نظرة عامة على منصة BMP.tn",
+    "welcomeTitle": "مرحباً 👋",
+    "welcomeDescription": "لوحة تحكم مبسطة. استخدم القائمة اليسرى لإدارة المستخدمين وعرض السجلات"
+  },
+  "adminUsers": {
+    "title": "إدارة المستخدمين",
+    "totalUsers_one": "{{count}} مستخدم إجمالاً",
+    "totalUsers_other": "{{count}} مستخدم إجمالاً",
+    "searchPlaceholder": "البحث بالاسم أو البريد الإلكتروني أو الهاتف...",
+    "roleFilter": {
+      "all": "جميع الأدوار"
+    },
+    "roles": {
+      "artisan": "حرفي",
+      "prescripteur": "مستشار",
+      "supplier": "مورد",
+      "admin": "مشرف"
+    },
+    "status": {
+      "active": "نشط",
+      "inactive": "غير نشط",
+      "blocked": "محظور"
+    },
+    "emailVerified": {
+      "verified": "تم التحقق",
+      "pending": "قيد الانتظار"
+    },
+    "actions": {
+      "block": "حظر",
+      "unblock": "إلغاء الحظر"
+    },
+    "tableTitle": "المستخدمين",
+    "displayedCount_one": "({{count}} معروض)",
+    "displayedCount_other": "({{count}} معروضين)",
+    "table": {
+      "name": "الاسم",
+      "email": "البريد الإلكتروني",
+      "phone": "الهاتف",
+      "role": "الدور",
+      "status": "الحالة",
+      "blockedUntil": "محظور حتى",
+      "emailVerified": "البريد الإلكتروني موثق",
+      "registered": "تاريخ التسجيل",
+      "actions": "الإجراءات"
+    },
+    "loading": "جاري التحميل...",
+    "noUsersFound": "لم يتم العثور على مستخدمين",
+    "blockModal": {
+      "title": "حظر المستخدم",
+      "durationLabel": "مدة الحظر",
+      "durations": {
+        "1h": "ساعة واحدة",
+        "3h": "3 ساعات",
+        "1d": "يوم واحد",
+        "3d": "3 أيام",
+        "1w": "أسبوع واحد",
+        "1m": "شهر واحد"
+      },
+      "cancelButton": "إلغاء",
+      "blockButton": "حظر"
+    }
+  },
+  "artisanDevisCreate": {
+    "backButton": "رجوع",
+    "title": "إنشاء عرض سعر",
+    "subtitle": "معلومات عامة",
+    "formTitle": "معلومات عرض السعر",
+    "projectLabel": "المشروع المرتبط",
+    "projectPlaceholder": "اختر مشروعاً...",
+    "clientLabel": "العميل",
+    "clientPlaceholder": "اسم العميل",
+    "validUntilLabel": "صالح حتى",
+    "validUntilPlaceholder": "شهر/يوم/سنة",
+    "notesLabel": "ملاحظات (اختياري)",
+    "notesPlaceholder": "شروط خاصة، ملاحظات...",
+    "nextButton": "التالي: إضافة العناصر",
+    "projectOptions": {
+      "villa": "فيلا بن عروس",
+      "apartment": "شقة تونس",
+      "office": "مكتب أريانة"
+    }
+  },
+  "artisanFactures": {
+    "title": "الفواتير",
+    "subtitle": "تتبع فواتيرك ومدفوعاتك",
+    "newInvoiceButton": "فاتورة جديدة",
+    "searchPlaceholder": "البحث برقم الفاتورة أو اسم العميل...",
+    "filterAllStatuses": "جميع الحالات",
+    "viewButton": "عرض",
+    "downloadButton": "تحميل",
+    "amountLabel": "المبلغ:",
+    "status": {
+      "paid": "مدفوعة",
+      "pending": "قيد الانتظار",
+      "overdue": "متأخرة"
+    }
+  },
+  "artisanFactureStep2": {
+    "title": "إنشاء فاتورة",
+    "subtitle": "إضافة العناصر",
+    "formTitle": "عناصر الفاتورة",
+    "itemDescriptionPlaceholder": "وصف العنصر",
+    "unitPlaceholder": "الوحدة",
+    "subtotalLabel": "المجموع الجزئي:",
+    "vatLabel": "الضريبة ({{rate}}%):",
+    "stampLabel": "الطابع الضريبي:",
+    "totalLabel": "الإجمالي شامل الضريبة:",
+    "backButton": "رجوع",
+    "nextButton": "التالي: معاينة"
+  },
+  "artisanFactureStep3": {
+    "title": "إنشاء فاتورة",
+    "subtitle": "مراجعة وإرسال",
+    "invoiceTitle": "فاتورة",
+    "invoiceNumber": "رقم {{number}}",
+    "clientLabel": "العميل",
+    "projectLabel": "المشروع",
+    "paymentMethodLabel": "طريقة الدفع",
+    "dateLabel": "التاريخ: {{date}}",
+    "dueDateLabel": "تاريخ الاستحقاق: {{date}}",
+    "subtotalLabel": "المجموع الجزئي:",
+    "vatLabel": "الضريبة ({{rate}}%):",
+    "stampLabel": "الطابع الضريبي:",
+    "totalLabel": "الإجمالي شامل الضريبة:",
+    "backButton": "رجوع",
+    "downloadButton": "تحميل PDF",
+    "sendButton": "إرسال إلى العميل"
+  },
+  "artisanMarketplace": {
+    "title": "السوق",
+    "subtitle": "اكتشف واطلب مواد البناء",
+    "searchPlaceholder": "ابحث عن منتجات...",
+    "filterAllCategories": "جميع الفئات",
+    "categories": {
+      "materials": "مواد",
+      "paint": "دهان",
+      "carpentry": "نجارة"
+    },
+    "cartButton": "السلة ({{count}})",
+    "addToCart": "أضف إلى السلة"
+  },
+  "artisanProjects": {
+    "title": "مشاريعي",
+    "subtitle": "إدارة جميع مشاريعك الجارية",
+    "newProjectButton": "مشروع جديد",
+    "searchPlaceholder": "ابحث باسم المشروع أو العميل...",
+    "filterAllStatuses": "جميع الحالات",
+    "budgetLabel": "الميزانية",
+    "usedLabel": "مستخدم",
+    "startLabel": "البداية:",
+    "status": {
+      "active": "نشط",
+      "pending": "قيد الانتظار",
+      "completed": "مكتمل"
+    }
+  },
+  "forgotPassword": {
+    "title": "نسيت كلمة المرور",
+    "subtitle": "أدخل بريدك الإلكتروني لاستلام رابط إعادة التعيين",
+    "emailLabel": "البريد الإلكتروني",
+    "emailPlaceholder": "بريدك@example.com",
+    "sendButton": "إرسال الرابط",
+    "sendingButton": "جاري الإرسال...",
+    "backToLogin": "العودة إلى تسجيل الدخول",
+    "emailRequired": "الرجاء إدخال بريدك الإلكتروني",
+    "linkSent": "إذا كان هذا البريد موجوداً، تم إرسال الرابط",
+    "sendError": "تعذر إرسال البريد الإلكتروني"
+  },
+  "fournisseurProduitNew": {
+    "title": "إدارة المنتجات",
+    "subtitle": "إدارة كتالوج المنتجات والمعدات الخاصة بك",
+    "addButton": "إضافة منتج",
+    "stats": {
+      "activeProducts": "منتجات نشطة",
+      "monthlyOrders": "طلبات هذا الشهر",
+      "revenue": "الإيرادات",
+      "catalogs": "كتالوجات"
+    },
+    "formTitle": "إضافة منتج جديد",
+    "productNameLabel": "اسم المنتج",
+    "productNamePlaceholder": "مثال: أسمنت CEM II 42.5",
+    "categoryLabel": "الفئة",
+    "categoryPlaceholder": "اختر...",
+    "priceLabel": "السعر للوحدة (دينار)",
+    "unitLabel": "الوحدة",
+    "unitPlaceholder": "اختر...",
+    "stockLabel": "المخزون المتوفر",
+    "descriptionLabel": "الوصف",
+    "descriptionPlaceholder": "وصف تفصيلي للمنتج...",
+    "imageUploadTitle": "صورة المنتج",
+    "imageUploadSubtitle": "انقر لتحميل صورة",
+    "pdfUploadTitle": "ورقة البيانات (PDF)",
+    "pdfUploadSubtitle": "انقر لتحميل PDF",
+    "cancelButton": "إلغاء",
+    "submitButton": "إضافة المنتج",
+    "categories": {
+      "basicMaterials": "مواد أساسية",
+      "flooring": "أرضيات",
+      "paint": "دهان",
+      "carpentry": "نجارة",
+      "electricity": "كهرباء",
+      "plumbing": "سباكة"
+    },
+    "units": {
+      "piece": "قطعة",
+      "box": "علبة",
+      "meter": "متر",
+      "squareMeter": "متر مربع",
+      "liter": "لتر",
+      "kilogram": "كيلوغرام"
+    }
+  },
+  "fournisseurProduits": {
+    "title": "إدارة المنتجات",
+    "subtitle": "إدارة كتالوج المنتجات والمعدات الخاصة بك",
+    "addButton": "إضافة منتج",
+    "stats": {
+      "activeProducts": "منتجات نشطة",
+      "monthlyOrders": "طلبات هذا الشهر",
+      "revenue": "الإيرادات",
+      "catalogs": "كتالوجات"
+    },
+    "tableTitle": "منتجاتي",
+    "searchPlaceholder": "بحث...",
+    "table": {
+      "product": "المنتج",
+      "category": "الفئة",
+      "price": "السعر",
+      "stock": "المخزون",
+      "status": "الحالة",
+      "actions": "الإجراءات"
+    }
+  },
+  "login": {
+    "welcomeTitle": "مرحباً بكم في BMP.tn",
+    "welcomeSubtitle": "منصة رقمية لقطاع البناء",
+    "emailPhoneLabel": "البريد الإلكتروني أو رقم الهاتف",
+    "emailPhonePlaceholder": "بريدك@email.com أو +21626770267",
+    "emailBadge": "بريد إلكتروني",
+    "phoneBadge": "هاتف",
+    "passwordLabel": "كلمة المرور",
+    "passwordPlaceholder": "••••••••",
+    "forgotPassword": "نسيت كلمة المرور؟",
+    "loginButton": "تسجيل الدخول",
+    "loggingIn": "جاري تسجيل الدخول...",
+    "googleLoginHint": "تسجيل دخول سريع بحساب Google",
+    "noAccount": "ليس لديك حساب؟",
+    "signUp": "إنشاء حساب",
+    "emailPhoneRequired": "الرجاء إدخال بريدك الإلكتروني أو رقم الهاتف",
+    "passwordRequired": "الرجاء إدخال كلمة المرور",
+    "captchaRequired": "الرجاء تأكيد أنك لست روبوتاً",
+    "loginError": "تعذر تسجيل الدخول",
+    "googleError": "فشل تسجيل الدخول عبر Google",
+    "resendButton": "إعادة إرسال بريد التأكيد",
+    "resending": "جاري الإرسال...",
+    "resendSuccess": "تم إعادة إرسال بريد التأكيد. تحقق من صندوق الوارد الخاص بك",
+    "resendError": "تعذر إعادة إرسال البريد"
+  },
+  "registerChooseRole": {
+    "title": "إنشاء حساب",
+    "subtitle": "اختر ملفك الشخصي",
+    "artisan": {
+      "title": "حرفي",
+      "desc": "إدارة مشاريعك وعروض الأسعار والفواتير"
+    },
+    "prescriber": {
+      "title": "مستشار",
+      "desc": "اكتشف المنتجات وابحث عن الحرفيين"
+    },
+    "supplier": {
+      "title": "مورد",
+      "desc": "إدارة كتالوج المنتجات الخاصة بك"
+    },
+    "admin": {
+      "title": "مشرف",
+      "desc": "إدارة المنصة"
+    },
+    "alreadyAccount": "لديك حساب بالفعل؟",
+    "loginLink": "تسجيل الدخول"
+  },
+  "registerForm": {
+    "title": "إنشاء حساب",
+    "subtitle": "أكمل معلوماتك",
+    "lastNameLabel": "الاسم العائلي",
+    "lastNamePlaceholder": "الاسم العائلي",
+    "firstNameLabel": "الاسم الأول",
+    "firstNamePlaceholder": "الاسم الأول",
+    "emailLabel": "البريد الإلكتروني",
+    "emailPlaceholder": "example@example.com",
+    "passwordLabel": "كلمة المرور",
+    "passwordPlaceholder": "••••••••",
+    "passwordHint": "8 أحرف على الأقل، حرف كبير ورقم واحد",
+    "phoneLabel": "الهاتف",
+    "phonePlaceholder": "رقم هاتفك",
+    "companyLabel": "الشركة (اختياري)",
+    "companyPlaceholder": "اسم شركتك",
+    "backButton": "رجوع",
+    "submitButton": "إنشاء حساب",
+    "creatingButton": "جاري الإنشاء...",
+    "successMessage": "تم إنشاء الحساب. تحقق من بريدك الإلكتروني للتأكيد، ثم سجل الدخول",
+    "errors": {
+      "lastNameMin": "حرفان على الأقل",
+      "lastNameMax": "60 حرف كحد أقصى",
+      "firstNameMin": "حرفان على الأقل",
+      "firstNameMax": "60 حرف كحد أقصى",
+      "emailRequired": "البريد الإلكتروني مطلوب",
+      "emailInvalid": "عنوان بريد إلكتروني غير صالح",
+      "passwordRequired": "كلمة المرور مطلوبة",
+      "passwordMin": "8 أحرف على الأقل",
+      "passwordUppercase": "حرف كبير واحد على الأقل",
+      "passwordNumber": "رقم واحد على الأقل",
+      "phoneRequired": "رقم الهاتف مطلوب",
+      "phoneInvalid": "بين 6 و 14 رقماً",
+      "invalidRole": "دور غير صالح",
+      "registerError": "تعذر التسجيل"
+    },
+    "passwordStrength": {
+      "minChars": "8 أحرف كحد أدنى",
+      "uppercase": "حرف كبير",
+      "number": "رقم",
+      "special": "حرف خاص",
+      "veryWeak": "ضعيف جداً",
+      "weak": "ضعيف",
+      "medium": "متوسط",
+      "strong": "قوي",
+      "strengthLabel": "القوة:"
+    }
+  },
+  "countries": {
+    "tn": "تونس",
+    "dz": "الجزائر",
+    "ma": "المغرب",
+    "ly": "ليبيا",
+    "eg": "مصر",
+    "mr": "موريتانيا",
+    "sn": "السنغال",
+    "ci": "ساحل العاج",
+    "ng": "نيجيريا",
+    "fr": "فرنسا",
+    "be": "بلجيكا",
+    "ch": "سويسرا",
+    "lu": "لوكسمبورغ",
+    "de": "ألمانيا",
+    "it": "إيطاليا",
+    "es": "إسبانيا",
+    "pt": "البرتغال",
+    "nl": "هولندا",
+    "uk": "المملكة المتحدة",
+    "ae": "الإمارات العربية المتحدة",
+    "sa": "المملكة العربية السعودية",
+    "qa": "قطر",
+    "kw": "الكويت",
+    "lb": "لبنان",
+    "us": "الولايات المتحدة",
+    "mx": "المكسيك",
+    "br": "البرازيل",
+    "in": "الهند",
+    "cn": "الصين",
+    "jp": "اليابان",
+    "au": "أستراليا"
+  },
+  "resetPassword": {
+    "title": "إعادة تعيين كلمة المرور",
+    "subtitle": "اختر كلمة مرور جديدة",
+    "passwordLabel": "كلمة المرور الجديدة",
+    "passwordPlaceholder": "••••••••",
+    "updateButton": "تحديث",
+    "updatingButton": "جاري التحديث...",
+    "backToLogin": "العودة إلى تسجيل الدخول",
+    "tokenMissing": "الرمز المميز مفقود",
+    "passwordMinLength": "يجب أن تحتوي كلمة المرور على 6 أحرف على الأقل",
+    "success": "تم تحديث كلمة المرور",
+    "error": "تعذر إعادة تعيين كلمة المرور"
+  },
+  "unauthorized": {
+    "title": "وصول مرفوض",
+    "description": "ليس لديك الإذن للوصول إلى هذه الصفحة",
+    "backToLogin": "العودة إلى تسجيل الدخول"
+  },
+  
+  
+  "artisanLayout": {     
+    "brand": "BMP.tn",
+    "role": "حرفي",
+    "profile": "الملف الشخصي",
+    "dashboard": "لوحة القيادة",
+    "projects": "المشاريع",
+    "createQuote": "إنشاء عرض سعر",
+    "invoices": "الفواتير",
+    "marketplace": "السوق",
+    "logout": "تسجيل الخروج"
+  },
+
+  "verifyEmail": {
+    "title": "التحقق من البريد الإلكتروني",
+    "subtitle": "تأكيد حسابك",
+    "loadingMessage": "جاري التحقق...",
+    "successTitle": "نجاح",
+    "errorTitle": "خطأ",
+    "successDefaultMessage": "تم التحقق من البريد الإلكتروني. يمكنك الآن تسجيل الدخول",
+    "errorDefaultMessage": "رابط غير صالح أو منتهي الصلاحية",
+    "missingToken": "الرمز المميز مفقود",
+    "goToLoginButton": "الذهاب إلى تسجيل الدخول"
+  }
+  
+}

@@ -1,0 +1,518 @@
+import React, { useMemo, useState } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../auth/AuthContext";
+import { urlRoleToEnum } from "../auth/role";
+import { CheckCircle, XCircle, HardHat, User, HelpCircle, Menu, X, ArrowLeft } from "lucide-react";
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from "../components/LanguageSwitcher";
+import ThemeToggle from "../components/ThemeToggle";
+import Footer from "../components/Footer";
+
+/* ── Password strength ── */
+function PasswordStrength({ password }) {
+  const { t } = useTranslation();
+  if (!password) return null;
+  const checks = [
+    { label: t('registerForm.passwordStrength.minChars'), ok: password.length >= 8 },
+    { label: t('registerForm.passwordStrength.uppercase'), ok: /[A-Z]/.test(password) },
+    { label: t('registerForm.passwordStrength.number'), ok: /[0-9]/.test(password) },
+    { label: t('registerForm.passwordStrength.special'), ok: /[^A-Za-z0-9]/.test(password) },
+  ];
+  const score  = checks.filter((c) => c.ok).length;
+  const colors = ["bg-red-400", "bg-orange-400", "bg-yellow-400", "bg-emerald-500"];
+  const labels = [
+    t('registerForm.passwordStrength.veryWeak'),
+    t('registerForm.passwordStrength.weak'),
+    t('registerForm.passwordStrength.medium'),
+    t('registerForm.passwordStrength.strong')
+  ];
+  const bar    = colors[score - 1] ?? "bg-slate-200";
+
+  return (
+    <div className="mt-2 space-y-1.5">
+      <div className="flex gap-1">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${i < score ? bar : "bg-slate-200"}`} />
+        ))}
+      </div>
+      <p className="text-xs text-slate-500">
+        {t('registerForm.passwordStrength.strengthLabel')}{" "}
+        <span className="font-medium">{labels[score - 1] ?? "—"}</span>
+      </p>
+      <div className="flex flex-wrap gap-x-4 gap-y-0.5">
+        {checks.map((c) => (
+          <span key={c.label} className={`flex items-center gap-1 text-xs ${c.ok ? "text-emerald-600" : "text-slate-400"}`}>
+            {c.ok ? <CheckCircle className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+            {c.label}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── Field wrapper ── */
+function Field({ label, error, hint, children }) {
+  return (
+    <div className="w-full">
+      <label className="mb-2 block text-sm sm:text-base font-medium text-slate-700 dark:text-slate-300">{label}</label>
+      {children}
+      {hint && !error && <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">{hint}</p>}
+      {error && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{error}</p>}
+    </div>
+  );
+}
+
+/* ── Input ── */
+function Input({ label, placeholder, type = "text", value, onChange, error, hint, required = true }) {
+  const hasError = Boolean(error);
+  const isValid  = !hasError && value.length > 0;
+  return (
+    <Field label={label} error={error} hint={hint}>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        required={required}
+        className={`w-full rounded-xl sm:rounded-2xl border px-4 sm:px-5 py-3 sm:py-4 text-base sm:text-lg focus:outline-none transition-colors ${
+          hasError ? "border-red-400 bg-red-50 focus:border-red-500 dark:bg-red-900/20 dark:border-red-600"
+          : isValid ? "border-emerald-400 focus:border-emerald-500 dark:border-emerald-600"
+          : "border-slate-200 focus:border-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+        }`}
+      />
+    </Field>
+  );
+}
+
+/* ── Phone input ── */
+function PhoneInput({ label, countryCode, setCountryCode, phoneNumber, setPhoneNumber, error }) {
+  const { t } = useTranslation();
+
+  // Liste des pays avec clés de traduction
+  const countries = [
+    { value: "+216", labelKey: "countries.tn" },
+    { value: "+213", labelKey: "countries.dz" },
+    { value: "+212", labelKey: "countries.ma" },
+    { value: "+218", labelKey: "countries.ly" },
+    { value: "+20",  labelKey: "countries.eg" },
+    { value: "+222", labelKey: "countries.mr" },
+    { value: "+221", labelKey: "countries.sn" },
+    { value: "+225", labelKey: "countries.ci" },
+    { value: "+234", labelKey: "countries.ng" },
+    { value: "+33",  labelKey: "countries.fr" },
+    { value: "+32",  labelKey: "countries.be" },
+    { value: "+41",  labelKey: "countries.ch" },
+    { value: "+352", labelKey: "countries.lu" },
+    { value: "+49",  labelKey: "countries.de" },
+    { value: "+39",  labelKey: "countries.it" },
+    { value: "+34",  labelKey: "countries.es" },
+    { value: "+351", labelKey: "countries.pt" },
+    { value: "+31",  labelKey: "countries.nl" },
+    { value: "+44",  labelKey: "countries.uk" },
+    { value: "+971", labelKey: "countries.ae" },
+    { value: "+966", labelKey: "countries.sa" },
+    { value: "+974", labelKey: "countries.qa" },
+    { value: "+965", labelKey: "countries.kw" },
+    { value: "+961", labelKey: "countries.lb" },
+    { value: "+1",   labelKey: "countries.us" },
+    { value: "+52",  labelKey: "countries.mx" },
+    { value: "+55",  labelKey: "countries.br" },
+    { value: "+91",  labelKey: "countries.in" },
+    { value: "+86",  labelKey: "countries.cn" },
+    { value: "+81",  labelKey: "countries.jp" },
+    { value: "+61",  labelKey: "countries.au" },
+  ];
+
+  const hasError = Boolean(error);
+  const isValid  = !hasError && phoneNumber.replace(/\s+/g, "").length >= 6;
+
+  return (
+    <Field label={label} error={error}>
+      <div className="flex flex-col sm:flex-row gap-3">
+        <select
+          className="h-12 sm:h-14 w-full sm:w-48 lg:w-64 rounded-xl sm:rounded-2xl border border-slate-200 bg-white px-3 sm:px-4 text-sm sm:text-base focus:outline-none focus:border-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+          value={countryCode}
+          onChange={(e) => setCountryCode(e.target.value)}
+        >
+          {countries.map((c) => (
+            <option key={c.value} value={c.value}>
+              {t(c.labelKey)} ({c.value})
+            </option>
+          ))}
+        </select>
+        <input
+          className={`flex-1 h-12 sm:h-14 rounded-xl sm:rounded-2xl border px-4 sm:px-5 text-base sm:text-lg placeholder:text-slate-400 focus:outline-none transition-colors ${
+            hasError ? "border-red-400 bg-red-50 focus:border-red-500 dark:bg-red-900/20 dark:border-red-600"
+            : isValid ? "border-emerald-400 focus:border-emerald-500 dark:border-emerald-600"
+            : "border-slate-200 focus:border-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+          }`}
+          placeholder="Ex : 22 345 678"
+          value={phoneNumber}
+          onChange={(e) => setPhoneNumber(e.target.value.replace(/[^\d\s]/g, ""))}
+          inputMode="tel"
+          required
+        />
+      </div>
+    </Field>
+  );
+}
+
+/* ── NavLink component for mobile sidebar ── */
+const NavLink = ({ to, icon, label, onClick }) => (
+  <Link
+    to={to}
+    onClick={onClick}
+    className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700/60 dark:hover:text-slate-100"
+  >
+    <span className="flex-shrink-0">{icon}</span>
+    <span className="truncate">{label}</span>
+  </Link>
+);
+
+/* ── Main ── */
+export default function RegisterForm() {
+  const { t } = useTranslation();
+  const { role: roleParam } = useParams();
+  const navigate = useNavigate();
+  const { register } = useAuth();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const closeMobileMenu = () => setIsMobileMenuOpen(false);
+
+  const roleEnum = useMemo(() => urlRoleToEnum(roleParam), [roleParam]);
+
+  const [firstName,   setFirstName]   = useState("");
+  const [lastName,    setLastName]    = useState("");
+  const [email,       setEmail]       = useState("");
+  const [password,    setPassword]    = useState("");
+  const [countryCode, setCountryCode] = useState("+216");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [loading,     setLoading]     = useState(false);
+  const [errors,      setErrors]      = useState({});
+  const [serverError, setServerError] = useState("");
+
+  // Validation améliorée avec messages plus clairs
+  function validate() {
+    const errors = {};
+
+    // Validation Nom
+    if (!lastName.trim()) {
+      errors.lastName = t('registerForm.errors.lastNameRequired') || "Le nom est requis";
+    } else if (lastName.trim().length < 2) {
+      errors.lastName = t('registerForm.errors.lastNameMin') || "Le nom doit contenir au moins 2 caractères";
+    } else if (lastName.trim().length > 60) {
+      errors.lastName = t('registerForm.errors.lastNameMax') || "Le nom ne peut pas dépasser 60 caractères";
+    }
+
+    // Validation Prénom
+    if (!firstName.trim()) {
+      errors.firstName = t('registerForm.errors.firstNameRequired') || "Le prénom est requis";
+    } else if (firstName.trim().length < 2) {
+      errors.firstName = t('registerForm.errors.firstNameMin') || "Le prénom doit contenir au moins 2 caractères";
+    } else if (firstName.trim().length > 60) {
+      errors.firstName = t('registerForm.errors.firstNameMax') || "Le prénom ne peut pas dépasser 60 caractères";
+    }
+
+    // Validation Email
+    if (!email.trim()) {
+      errors.email = t('registerForm.errors.emailRequired') || "L'email est requis";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      errors.email = t('registerForm.errors.emailInvalid') || "Format d'email invalide (ex: nom@domaine.com)";
+    }
+
+    // Validation Mot de passe
+    if (!password) {
+      errors.password = t('registerForm.errors.passwordRequired') || "Le mot de passe est requis";
+    } else if (password.length < 8) {
+      errors.password = t('registerForm.errors.passwordMin') || "Le mot de passe doit contenir au moins 8 caractères";
+    } else if (!/[A-Z]/.test(password)) {
+      errors.password = t('registerForm.errors.passwordUppercase') || "Le mot de passe doit contenir au moins une majuscule";
+    } else if (!/[0-9]/.test(password)) {
+      errors.password = t('registerForm.errors.passwordNumber') || "Le mot de passe doit contenir au moins un chiffre";
+    }
+
+    // Validation Téléphone
+    const cleaned = phoneNumber.replace(/\s+/g, "");
+    if (!cleaned) {
+      errors.phoneNumber = t('registerForm.errors.phoneRequired') || "Le numéro de téléphone est requis";
+    } else if (!/^\d{6,14}$/.test(cleaned)) {
+      errors.phoneNumber = t('registerForm.errors.phoneInvalid') || "Le numéro de téléphone doit contenir entre 6 et 14 chiffres";
+    }
+
+    return errors;
+  }
+
+  function clearError(field) {
+    setErrors((prev) => ({ ...prev, [field]: undefined }));
+  }
+
+  async function onSubmit(e) {
+    e.preventDefault();
+    setServerError("");
+
+    if (!roleEnum) { 
+      setServerError(t('registerForm.errors.invalidRole') || "Rôle invalide"); 
+      return; 
+    }
+
+    const fieldErrors = validate();
+    if (Object.keys(fieldErrors).length > 0) {
+      setErrors(fieldErrors);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await register({
+        firstName: firstName.trim(),
+        lastName:  lastName.trim(),
+        email:     email.trim(),
+        password,
+        phone:     `${countryCode}${phoneNumber.replace(/\s+/g, "").trim()}`,
+        role:      roleEnum,
+        // company field removed
+      });
+      navigate("/login", {
+        replace: true,
+        state: { info: t('registerForm.successMessage') || "Inscription réussie ! Vous pouvez maintenant vous connecter." },
+      });
+    } catch (err) {
+      setServerError(err.message || t('registerForm.errors.registerError') || "Une erreur est survenue lors de l'inscription");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+      {/* Navbar */}
+      <nav className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/80 backdrop-blur dark:border-slate-700 dark:bg-slate-800/80">
+        <div className="mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center justify-between">
+            {/* Logo */}
+            <Link to="/" className="flex items-center gap-2 sm:gap-3">
+              <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-indigo-600 text-white">
+                <HardHat className="h-4 w-4 sm:h-5 sm:w-5" />
+              </div>
+              <div>
+                <div className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white">
+                  BMP.tn
+                </div>
+                <div className="hidden xs:block text-xs text-slate-500 dark:text-slate-400">
+                  {t('app.subtitle') || "Plateforme de construction"}
+                </div>
+              </div>
+            </Link>
+
+            {/* Desktop Navigation - Right side */}
+            <div className="hidden md:flex items-center gap-4">
+              {/* Help Link */}
+              <Link
+                to="/help"
+                className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+              >
+                <HelpCircle className="h-4 w-4" />
+                <span>Aide</span>
+              </Link>
+
+              <div className="h-6 w-px bg-slate-200 dark:bg-slate-700" />
+
+              {/* Theme Toggle */}
+              <ThemeToggle />
+
+              <div className="h-6 w-px bg-slate-200 dark:bg-slate-700" />
+
+              {/* Login Button */}
+              <Link
+                to="/login"
+                className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+              >
+                <User className="h-4 w-4" />
+                <span>Se connecter</span>
+              </Link>
+            </div>
+
+            {/* Mobile Right Side */}
+            <div className="flex items-center gap-2 md:hidden">
+              <ThemeToggle />
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="rounded-xl p-2 text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700"
+                aria-label="Toggle menu"
+              >
+                {isMobileMenuOpen ? (
+                  <X className="h-5 w-5 sm:h-6 sm:w-6" />
+                ) : (
+                  <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Mobile Sidebar - Slides from left to right */}
+      <div
+        className={`fixed inset-0 z-50 transform transition-transform duration-300 ease-in-out md:hidden ${
+          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        {/* Backdrop */}
+        <div
+          className={`absolute inset-0 bg-black/50 transition-opacity ${
+            isMobileMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
+          onClick={closeMobileMenu}
+        />
+        
+        {/* Sidebar */}
+        <div className="absolute left-0 top-0 h-full w-64 bg-white shadow-xl dark:bg-slate-800">
+          <div className="flex h-full flex-col">
+            {/* Header */}
+            <div className="border-b border-slate-200 dark:border-slate-700 p-5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white">
+                  <HardHat className="h-6 w-6" />
+                </div>
+                <div>
+                  <div className="text-sm font-semibold text-slate-900 dark:text-white">
+                    BMP.tn
+                  </div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">
+                    {t('app.subtitle') || "Plateforme de construction"}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Navigation Links */}
+            <div className="flex-1 overflow-y-auto py-4">
+              <div className="space-y-1 px-3">
+                <NavLink
+                  to="/help"
+                  icon={<HelpCircle className="h-5 w-5" />}
+                  label="Aide"
+                  onClick={closeMobileMenu}
+                />
+              </div>
+            </div>
+
+            {/* Footer with Login Button */}
+            <div className="border-t border-slate-200 dark:border-slate-700 p-4">
+              <Link
+                to="/login"
+                onClick={closeMobileMenu}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-indigo-700"
+              >
+                <User className="h-4 w-4" />
+                Se connecter
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <main className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-6 sm:py-8">
+        <form
+          onSubmit={onSubmit}
+          noValidate
+          className="w-full max-w-4xl lg:max-w-3xl xl:max-w-4xl rounded-2xl sm:rounded-3xl border border-slate-200 bg-white p-5 sm:p-8 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+        >
+          {/* Header with back arrow */}
+          <div className="mb-6 sm:mb-8 relative">
+            <button
+              type="button"
+              onClick={() => navigate("/login")}
+              className="absolute left-0 top-1/2 -translate-y-1/2 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+              aria-label="Retour à la page de connexion"
+            >
+              <ArrowLeft className="h-5 w-5 sm:h-6 sm:w-6 text-slate-600 dark:text-slate-400" />
+            </button>
+            <div className="text-center">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight text-slate-900 dark:text-white">
+                {t('registerForm.title') || "Créer vos compte"}
+              </h1>
+              <p className="mt-1 text-sm sm:text-base lg:text-lg text-slate-500 dark:text-slate-400">
+                {t('registerForm.subtitle')}
+              </p>
+            </div>
+          </div>
+
+          {/* Form fields in column layout on full screen */}
+          <div className="flex flex-col space-y-5">
+            {/* Nom et Prénom - side by side on larger screens */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <Input
+                label={t('registerForm.lastNameLabel')}
+                placeholder=" Ex : Ben Salah"
+                value={lastName}
+                onChange={(v) => { setLastName(v); clearError("lastName"); }}
+                error={errors.lastName}
+              />
+
+              <Input
+                label={t('registerForm.firstNameLabel')}
+                placeholder="Ex : Mohamed"
+                value={firstName}
+                onChange={(v) => { setFirstName(v); clearError("firstName"); }}
+                error={errors.firstName}
+              />
+            </div>
+
+            {/* Email */}
+            <Input
+              label={t('registerForm.emailLabel')}
+              placeholder="Ex : mohamed.bensalah@gmail.com"
+              type="email"
+              value={email}
+              onChange={(v) => { setEmail(v); clearError("email"); }}
+              error={errors.email}
+            />
+
+            {/* Mot de passe + strength */}
+            <div>
+              <Input
+                label={t('registerForm.passwordLabel')}
+                type="password"
+                placeholder="Votre mot de passe"
+                value={password}
+                onChange={(v) => { setPassword(v); clearError("password"); }}
+                error={errors.password}
+                hint={t('registerForm.passwordHint')}
+              />
+              <PasswordStrength password={password} />
+            </div>
+
+            {/* Téléphone */}
+            <PhoneInput
+              label={t('registerForm.phoneLabel')}
+              countryCode={countryCode}
+              setCountryCode={setCountryCode}
+              phoneNumber={phoneNumber}
+              setPhoneNumber={(v) => { setPhoneNumber(v); clearError("phoneNumber"); }}
+              error={errors.phoneNumber}
+            />
+          </div>
+
+          {/* Server error */}
+          {serverError && (
+            <div className="mt-6 rounded-xl sm:rounded-2xl border border-red-200 bg-red-50 px-4 sm:px-5 py-3 sm:py-4 text-xs sm:text-sm text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-400">
+              {serverError}
+            </div>
+          )}
+
+          <div className="mt-6 sm:mt-8">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-xl sm:rounded-2xl bg-indigo-700 py-3 sm:py-4 text-base sm:text-lg font-semibold text-white hover:bg-indigo-800 disabled:opacity-60"
+            >
+              {loading ? t('registerForm.creatingButton') : t('registerForm.submitButton')}
+            </button>
+          </div>
+        </form>
+      </main>
+      <Footer />
+    </div>
+  );
+}
