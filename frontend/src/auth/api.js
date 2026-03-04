@@ -1,6 +1,7 @@
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
   export async function apiFetch(path, { token, method = 'GET', body } = {}) {
+<<<<<<< HEAD
     const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
     const res = await fetch(`${API_URL}${path}`, {
       method,
@@ -9,6 +10,15 @@
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: body ? (isFormData ? body : JSON.stringify(body)) : undefined,
+=======
+    const res = await fetch(`${API_URL}${path}`, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: body ? JSON.stringify(body) : undefined,
+>>>>>>> 647f7778898b6e789d224d02d48bccf97d15a8c9
     });
 
     const text = await res.text();

@@ -36,7 +36,10 @@ import ArtisanMarketplace from "./pages/ArtisanMarketplace";
 import PrescripteurLayout from "./layouts/PrescripteurLayout";
 import PrescripteurProduits from "./pages/PrescripteurProduits";
 import PrescripteurArtisans from "./pages/PrescripteurArtisans";
+<<<<<<< HEAD
 import PrescripteurProjects from "./pages/PrescripteurProjects";
+=======
+>>>>>>> 647f7778898b6e789d224d02d48bccf97d15a8c9
 
 // FOURNISSEUR
 import FournisseurLayout from "./layouts/FournisseurLayout";
@@ -119,7 +122,10 @@ export default function App() {
                         <Route index element={<PrescripteurProduits />} />
                         <Route path="profile" element={<Profile />} />
                         <Route path="artisans" element={<PrescripteurArtisans />} />
+<<<<<<< HEAD
                         <Route path="projects" element={<PrescripteurProjects />} />
+=======
+>>>>>>> 647f7778898b6e789d224d02d48bccf97d15a8c9
                     </Route>
                 </Route>
 
