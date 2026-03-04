@@ -15,7 +15,6 @@ const projectSchema = new mongoose.Schema(
       maxlength: 120,
     },
 
-<<<<<<< HEAD
     description: {
       type: String,
       trim: true,
@@ -79,12 +78,6 @@ const projectSchema = new mongoose.Schema(
       type: String,
       enum: ["ACTIVE", "PENDING", "COMPLETED"],
       default: "PENDING",
-=======
-    status: {
-      type: String,
-      enum: ["ONGOING", "COMPLETED", "CANCELED"],
-      default: "ONGOING",
->>>>>>> 647f7778898b6e789d224d02d48bccf97d15a8c9
     },
   },
   { timestamps: true }

@@ -1,10 +1,6 @@
 import React, { useState } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
-<<<<<<< HEAD
 import { LayoutDashboard, Users, PackageSearch, FolderKanban, LogOut, Menu, X, Bell, UserCircle2, ChevronLeft, ChevronRight } from "lucide-react";
-=======
-import { LayoutDashboard, Users, PackageSearch, LogOut, Menu, X, Bell, UserCircle2, ChevronLeft, ChevronRight } from "lucide-react";
->>>>>>> 647f7778898b6e789d224d02d48bccf97d15a8c9
 import { useAuth } from "../auth/AuthContext";
 import ThemeToggle from "../components/ThemeToggle";
 import LanguageSwitcher from "../components/LanguageSwitcher";
@@ -54,10 +50,7 @@ export default function PrescripteurLayout() {
           <div className="space-y-1">
             <Tab to="/prescripteur"          icon={<PackageSearch className="h-5 w-5" />} label="Produits" collapsed={isSidebarCollapsed} />
             <Tab to="/prescripteur/artisans" icon={<Users className="h-5 w-5" />}         label="Artisans" collapsed={isSidebarCollapsed} />
-<<<<<<< HEAD
             <Tab to="/prescripteur/projects"  icon={<FolderKanban className="h-5 w-5" />}   label="Projets"  collapsed={isSidebarCollapsed} />
-=======
->>>>>>> 647f7778898b6e789d224d02d48bccf97d15a8c9
             <Tab
   to="/prescripteur/profile"
   icon={<UserCircle2 className="h-5 w-5" />}

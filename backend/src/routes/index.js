@@ -1,10 +1,7 @@
 const express = require('express');
 
 const authRoutes = require('../modules/auth/auth.routes');
-<<<<<<< HEAD
 const projectsRoutes = require('../modules/projects/projects.routes');
-=======
->>>>>>> 647f7778898b6e789d224d02d48bccf97d15a8c9
 const { authRequired } = require('../middleware/authMiddleware');
 const { requireRoles } = require('../middleware/roleMiddleware');
 const AuthLog = require('../models/AuthLog');
@@ -16,11 +13,8 @@ router.get('/health', (req, res) => res.json({ ok: true }));
 
 router.use('/auth', authRoutes);
 
-<<<<<<< HEAD
 router.use('/projects', projectsRoutes);
 
-=======
->>>>>>> 647f7778898b6e789d224d02d48bccf97d15a8c9
 router.get('/admin/ping', authRequired, requireRoles('ADMIN'), (req, res) => {
   res.json({ ok: true, role: req.user.role });
 });
