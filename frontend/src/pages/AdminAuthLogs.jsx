@@ -85,13 +85,14 @@ export default function AdminAuthLogs() {
                   <th className="px-4 py-3 font-semibold">{t('adminLogs.table.role')}</th>
                   <th className="px-4 py-3 font-semibold">{t('adminLogs.table.action')}</th>
                   <th className="px-4 py-3 font-semibold">{t('adminLogs.table.ip')}</th>
+                  <th className="px-4 py-3 font-semibold">Country</th>
                   <th className="px-4 py-3 font-semibold">{t('adminLogs.table.userAgent')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {loading ? (
                   <tr>
-                    <td className="px-4 py-6 text-slate-500" colSpan={6}>
+                    <td className="px-4 py-6 text-slate-500" colSpan={7}>
                       {t('adminLogs.loading')}
                     </td>
                   </tr>
@@ -118,6 +119,7 @@ export default function AdminAuthLogs() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-slate-700">{it.ip || "—"}</td>
+                      <td className="px-4 py-3 text-slate-700">{it.country || it.countryCode || "—"}</td>
                       <td
                         className="max-w-[360px] truncate px-4 py-3 text-slate-500"
                         title={it.userAgent || ""}
@@ -128,7 +130,7 @@ export default function AdminAuthLogs() {
                   ))
                 ) : (
                   <tr>
-                    <td className="px-4 py-6 text-slate-500" colSpan={6}>
+                    <td className="px-4 py-6 text-slate-500" colSpan={7}>
                       {t('adminLogs.noData')}
                     </td>
                   </tr>

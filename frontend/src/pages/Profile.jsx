@@ -5,7 +5,7 @@ import Footer from "../components/Footer";
 
 export default function Profile() {
   const { t } = useTranslation();
-  const { user, refreshMe, updateProfile, changePassword } = useAuth();
+  const { user, refreshMe, updateProfile, changePassword, forgotPassword } = useAuth();
 
   // Common fields
   const [firstName, setFirstName] = useState(user?.firstName || "");
@@ -35,6 +35,9 @@ export default function Profile() {
   const [pwLoading, setPwLoading] = useState(false);
   const [pwMsg, setPwMsg] = useState("");
   const [pwErr, setPwErr] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetMsg, setResetMsg] = useState("");
+  const [resetErr, setResetErr] = useState("");
 
   // Determine if user is artisan
   const isArtisan = user?.role?.toLowerCase() === 'artisan';
@@ -158,6 +161,24 @@ export default function Profile() {
       setPwErr(e2.message || t('profile.passwordChangeError'));
     } finally {
       setPwLoading(false);
+    }
+  }
+
+
+  async function onSendResetLink() {
+    setResetErr(""); setResetMsg("");
+    if (!user?.email) {
+      setResetErr("No email address is available for this account.");
+      return;
+    }
+    setResetLoading(true);
+    try {
+      await forgotPassword({ email: user.email });
+      setResetMsg("A password reset link has been sent to your email address.");
+    } catch (e2) {
+      setResetErr(e2.message || "Unable to send the password reset email.");
+    } finally {
+      setResetLoading(false);
     }
   }
 
@@ -455,7 +476,7 @@ export default function Profile() {
               </div>
             )}
 
-            <div>
+            <div className="grid gap-3 sm:flex sm:flex-wrap">
               <button
                 type="submit"
                 disabled={pwLoading}
@@ -463,7 +484,26 @@ export default function Profile() {
               >
                 {pwLoading ? t('profile.changingPasswordButton') : t('profile.changePasswordButton')}
               </button>
+              <button
+                type="button"
+                onClick={onSendResetLink}
+                disabled={resetLoading}
+                className="w-full sm:w-auto rounded-xl border border-indigo-200 bg-indigo-50 px-6 py-3 text-sm font-semibold text-indigo-700 hover:bg-indigo-100 disabled:opacity-60 sm:px-8"
+              >
+                {resetLoading ? "Sending reset email..." : "Send reset link by email"}
+              </button>
             </div>
+
+            {resetErr && (
+              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {resetErr}
+              </div>
+            )}
+            {resetMsg && (
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                {resetMsg}
+              </div>
+            )}
           </form>
         </div>
 

@@ -1,16 +1,15 @@
 const https = require('https');
 
-// Very small cache to avoid calling the geo service for every request.
-// key: ip, value: { country, countryCode, city, region, cachedAt }
 const cache = new Map();
-const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
+const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 
 function isPrivateOrLocal(ip) {
   if (!ip) return true;
-  const v = String(ip);
+  const v = String(ip).replace(/^::ffff:/, '');
   return (
     v === '::1' ||
     v === '127.0.0.1' ||
+    v === '0.0.0.0' ||
     v.startsWith('10.') ||
     v.startsWith('192.168.') ||
     v.startsWith('172.16.') ||
@@ -41,31 +40,58 @@ function getJson(url) {
   });
 }
 
-async function lookupIpGeo(ip) {
+async function lookupIpGeo(ip, fallback = {}) {
+  if ((!ip || isPrivateOrLocal(ip)) && (fallback.country || fallback.countryCode)) {
+    return {
+      country: fallback.country || 'Unknown',
+      countryCode: fallback.countryCode || '',
+      city: '',
+      region: '',
+    };
+  }
+
   if (!ip || isPrivateOrLocal(ip)) {
     return { country: 'Local', countryCode: '', city: '', region: '' };
   }
 
-  const cached = cache.get(ip);
+  const normalizedIp = String(ip).replace(/^::ffff:/, '');
+  const cached = cache.get(normalizedIp);
   if (cached && Date.now() - cached.cachedAt < CACHE_TTL_MS) {
     return { country: cached.country, countryCode: cached.countryCode, city: cached.city, region: cached.region };
   }
 
-  // Free endpoint (no key). If it fails, we simply return empty values.
-  // Note: if your server has no internet access, this will gracefully fail.
-  try {
-    const json = await getJson(`https://ipapi.co/${encodeURIComponent(ip)}/json/`);
-    const result = {
-      country: json.country_name || '',
-      countryCode: json.country_code || '',
-      city: json.city || '',
-      region: json.region || '',
-    };
-    cache.set(ip, { ...result, cachedAt: Date.now() });
-    return result;
-  } catch (_) {
-    return { country: '', countryCode: '', city: '', region: '' };
+  const providers = [
+    async () => {
+      const json = await getJson(`https://ipwho.is/${encodeURIComponent(normalizedIp)}`);
+      return {
+        country: json.country || fallback.country || '',
+        countryCode: json.country_code || fallback.countryCode || '',
+        city: json.city || '',
+        region: json.region || '',
+      };
+    },
+    async () => {
+      const json = await getJson(`https://ipapi.co/${encodeURIComponent(normalizedIp)}/json/`);
+      return {
+        country: json.country_name || fallback.country || '',
+        countryCode: json.country_code || fallback.countryCode || '',
+        city: json.city || '',
+        region: json.region || '',
+      };
+    },
+  ];
+
+  for (const provider of providers) {
+    try {
+      const result = await provider();
+      if (result.country || result.countryCode || result.city || result.region) {
+        cache.set(normalizedIp, { ...result, cachedAt: Date.now() });
+        return result;
+      }
+    } catch (_) {}
   }
+
+  return { country: fallback.country || '', countryCode: fallback.countryCode || '', city: '', region: '' };
 }
 
-module.exports = { lookupIpGeo };
+module.exports = { lookupIpGeo, isPrivateOrLocal };

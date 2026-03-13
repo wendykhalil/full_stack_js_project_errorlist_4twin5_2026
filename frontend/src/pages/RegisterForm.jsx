@@ -1,12 +1,12 @@
 import React, { useMemo, useState } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { urlRoleToEnum } from "../auth/role";
-import { CheckCircle, XCircle, HardHat, User, HelpCircle, Menu, X, ArrowLeft } from "lucide-react";
+import { CheckCircle, XCircle, ArrowLeft, UserPlus, ShieldCheck, Building2 } from "lucide-react";
 import { useTranslation } from 'react-i18next';
-import LanguageSwitcher from "../components/LanguageSwitcher";
-import ThemeToggle from "../components/ThemeToggle";
 import Footer from "../components/Footer";
+import PublicNavbar from "../components/PublicNavbar";
+import AuthShowcasePanel from "../components/AuthShowcasePanel";
 
 /* ── Password strength ── */
 function PasswordStrength({ password }) {
@@ -158,27 +158,12 @@ function PhoneInput({ label, countryCode, setCountryCode, phoneNumber, setPhoneN
   );
 }
 
-/* ── NavLink component for mobile sidebar ── */
-const NavLink = ({ to, icon, label, onClick }) => (
-  <Link
-    to={to}
-    onClick={onClick}
-    className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700/60 dark:hover:text-slate-100"
-  >
-    <span className="flex-shrink-0">{icon}</span>
-    <span className="truncate">{label}</span>
-  </Link>
-);
-
 /* ── Main ── */
 export default function RegisterForm() {
   const { t } = useTranslation();
   const { role: roleParam } = useParams();
   const navigate = useNavigate();
   const { register } = useAuth();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const closeMobileMenu = () => setIsMobileMenuOpen(false);
-
   const roleEnum = useMemo(() => urlRoleToEnum(roleParam), [roleParam]);
 
   const [firstName,   setFirstName]   = useState("");
@@ -284,233 +269,107 @@ export default function RegisterForm() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
-      {/* Navbar */}
-      <nav className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/80 backdrop-blur dark:border-slate-700 dark:bg-slate-800/80">
-        <div className="mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            {/* Logo */}
-            <Link to="/" className="flex items-center gap-2 sm:gap-3">
-              <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-indigo-600 text-white">
-                <HardHat className="h-4 w-4 sm:h-5 sm:w-5" />
-              </div>
-              <div>
-                <div className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white">
-                  BMP.tn
-                </div>
-                <div className="hidden xs:block text-xs text-slate-500 dark:text-slate-400">
-                  {t('app.subtitle') || "Plateforme de construction"}
-                </div>
-              </div>
-            </Link>
-
-            {/* Desktop Navigation - Right side */}
-            <div className="hidden md:flex items-center gap-4">
-              {/* Help Link */}
-              <Link
-                to="/help"
-                className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
-              >
-                <HelpCircle className="h-4 w-4" />
-                <span>Aide</span>
-              </Link>
-
-              <div className="h-6 w-px bg-slate-200 dark:bg-slate-700" />
-
-              {/* Theme Toggle */}
-              <ThemeToggle />
-
-              <div className="h-6 w-px bg-slate-200 dark:bg-slate-700" />
-
-              {/* Login Button */}
-              <Link
-                to="/login"
-                className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
-              >
-                <User className="h-4 w-4" />
-                <span>Se connecter</span>
-              </Link>
-            </div>
-
-            {/* Mobile Right Side */}
-            <div className="flex items-center gap-2 md:hidden">
-              <ThemeToggle />
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="rounded-xl p-2 text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700"
-                aria-label="Toggle menu"
-              >
-                {isMobileMenuOpen ? (
-                  <X className="h-5 w-5 sm:h-6 sm:w-6" />
-                ) : (
-                  <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* Mobile Sidebar - Slides from left to right */}
-      <div
-        className={`fixed inset-0 z-50 transform transition-transform duration-300 ease-in-out md:hidden ${
-          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        {/* Backdrop */}
-        <div
-          className={`absolute inset-0 bg-black/50 transition-opacity ${
-            isMobileMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-          }`}
-          onClick={closeMobileMenu}
-        />
-        
-        {/* Sidebar */}
-        <div className="absolute left-0 top-0 h-full w-64 bg-white shadow-xl dark:bg-slate-800">
-          <div className="flex h-full flex-col">
-            {/* Header */}
-            <div className="border-b border-slate-200 dark:border-slate-700 p-5">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white">
-                  <HardHat className="h-6 w-6" />
-                </div>
-                <div>
-                  <div className="text-sm font-semibold text-slate-900 dark:text-white">
-                    BMP.tn
-                  </div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400">
-                    {t('app.subtitle') || "Plateforme de construction"}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Navigation Links */}
-            <div className="flex-1 overflow-y-auto py-4">
-              <div className="space-y-1 px-3">
-                <NavLink
-                  to="/help"
-                  icon={<HelpCircle className="h-5 w-5" />}
-                  label="Aide"
-                  onClick={closeMobileMenu}
-                />
-              </div>
-            </div>
-
-            {/* Footer with Login Button */}
-            <div className="border-t border-slate-200 dark:border-slate-700 p-4">
-              <Link
-                to="/login"
-                onClick={closeMobileMenu}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-indigo-700"
-              >
-                <User className="h-4 w-4" />
-                Se connecter
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <main className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-6 sm:py-8">
-        <form
-          onSubmit={onSubmit}
-          noValidate
-          className="w-full max-w-4xl lg:max-w-3xl xl:max-w-4xl rounded-2xl sm:rounded-3xl border border-slate-200 bg-white p-5 sm:p-8 shadow-sm dark:border-slate-700 dark:bg-slate-800"
-        >
-          {/* Header with back arrow */}
-          <div className="mb-6 sm:mb-8 relative">
+    <div className="min-h-screen bg-slate-100">
+      <PublicNavbar />
+      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+        <div className="grid overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-2xl shadow-slate-300/40 lg:min-h-[760px] lg:grid-cols-[0.95fr,1.05fr]">
+          <section className="relative flex flex-col bg-white px-6 py-7 sm:px-10 sm:py-8 lg:px-14 lg:py-10">
             <button
               type="button"
-              onClick={() => navigate("/login")}
-              className="absolute left-0 top-1/2 -translate-y-1/2 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-              aria-label="Retour à la page de connexion"
+              onClick={() => navigate("/register")}
+              className="mb-8 inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
+              aria-label="Back"
             >
-              <ArrowLeft className="h-5 w-5 sm:h-6 sm:w-6 text-slate-600 dark:text-slate-400" />
+              <ArrowLeft className="h-5 w-5" />
             </button>
-            <div className="text-center">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight text-slate-900 dark:text-white">
-                {t('registerForm.title') || "Créer vos compte"}
-              </h1>
-              <p className="mt-1 text-sm sm:text-base lg:text-lg text-slate-500 dark:text-slate-400">
-                {t('registerForm.subtitle')}
-              </p>
+
+            <div className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center">
+              <div className="mb-8 text-center">
+                <p className="text-3xl font-semibold tracking-tight text-indigo-700">BMP.tn</p>
+                <h1 className="mt-4 text-2xl font-semibold text-slate-900 sm:text-3xl">{t('registerForm.title') || "Create your account"}</h1>
+                <p className="mt-3 text-sm leading-6 text-slate-500">{t('registerForm.subtitle')}</p>
+              </div>
+
+              <form onSubmit={onSubmit} noValidate className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
+                <div className="flex flex-col space-y-5">
+                  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                    <Input
+                      label={t('registerForm.lastNameLabel')}
+                      placeholder="Ex : Ben Salah"
+                      value={lastName}
+                      onChange={(v) => { setLastName(v); clearError("lastName"); }}
+                      error={errors.lastName}
+                    />
+                    <Input
+                      label={t('registerForm.firstNameLabel')}
+                      placeholder="Ex : Mohamed"
+                      value={firstName}
+                      onChange={(v) => { setFirstName(v); clearError("firstName"); }}
+                      error={errors.firstName}
+                    />
+                  </div>
+
+                  <Input
+                    label={t('registerForm.emailLabel')}
+                    placeholder="Ex : mohamed.bensalah@gmail.com"
+                    type="email"
+                    value={email}
+                    onChange={(v) => { setEmail(v); clearError("email"); }}
+                    error={errors.email}
+                  />
+
+                  <div>
+                    <Input
+                      label={t('registerForm.passwordLabel')}
+                      type="password"
+                      placeholder="Votre mot de passe"
+                      value={password}
+                      onChange={(v) => { setPassword(v); clearError("password"); }}
+                      error={errors.password}
+                      hint={t('registerForm.passwordHint')}
+                    />
+                    <PasswordStrength password={password} />
+                  </div>
+
+                  <PhoneInput
+                    label={t('registerForm.phoneLabel')}
+                    countryCode={countryCode}
+                    setCountryCode={setCountryCode}
+                    phoneNumber={phoneNumber}
+                    setPhoneNumber={(v) => { setPhoneNumber(v); clearError("phoneNumber"); }}
+                    error={errors.phoneNumber}
+                  />
+                </div>
+
+                {serverError && (
+                  <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {serverError}
+                  </div>
+                )}
+
+                <div className="mt-6">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full rounded-xl bg-indigo-600 py-3 text-base font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-60"
+                  >
+                    {loading ? t('registerForm.creatingButton') : t('registerForm.submitButton')}
+                  </button>
+                </div>
+              </form>
             </div>
-          </div>
+          </section>
 
-          {/* Form fields in column layout on full screen */}
-          <div className="flex flex-col space-y-5">
-            {/* Nom et Prénom - side by side on larger screens */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <Input
-                label={t('registerForm.lastNameLabel')}
-                placeholder=" Ex : Ben Salah"
-                value={lastName}
-                onChange={(v) => { setLastName(v); clearError("lastName"); }}
-                error={errors.lastName}
-              />
-
-              <Input
-                label={t('registerForm.firstNameLabel')}
-                placeholder="Ex : Mohamed"
-                value={firstName}
-                onChange={(v) => { setFirstName(v); clearError("firstName"); }}
-                error={errors.firstName}
-              />
-            </div>
-
-            {/* Email */}
-            <Input
-              label={t('registerForm.emailLabel')}
-              placeholder="Ex : mohamed.bensalah@gmail.com"
-              type="email"
-              value={email}
-              onChange={(v) => { setEmail(v); clearError("email"); }}
-              error={errors.email}
-            />
-
-            {/* Mot de passe + strength */}
-            <div>
-              <Input
-                label={t('registerForm.passwordLabel')}
-                type="password"
-                placeholder="Votre mot de passe"
-                value={password}
-                onChange={(v) => { setPassword(v); clearError("password"); }}
-                error={errors.password}
-                hint={t('registerForm.passwordHint')}
-              />
-              <PasswordStrength password={password} />
-            </div>
-
-            {/* Téléphone */}
-            <PhoneInput
-              label={t('registerForm.phoneLabel')}
-              countryCode={countryCode}
-              setCountryCode={setCountryCode}
-              phoneNumber={phoneNumber}
-              setPhoneNumber={(v) => { setPhoneNumber(v); clearError("phoneNumber"); }}
-              error={errors.phoneNumber}
-            />
-          </div>
-
-          {/* Server error */}
-          {serverError && (
-            <div className="mt-6 rounded-xl sm:rounded-2xl border border-red-200 bg-red-50 px-4 sm:px-5 py-3 sm:py-4 text-xs sm:text-sm text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-400">
-              {serverError}
-            </div>
-          )}
-
-          <div className="mt-6 sm:mt-8">
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-xl sm:rounded-2xl bg-indigo-700 py-3 sm:py-4 text-base sm:text-lg font-semibold text-white hover:bg-indigo-800 disabled:opacity-60"
-            >
-              {loading ? t('registerForm.creatingButton') : t('registerForm.submitButton')}
-            </button>
-          </div>
-        </form>
+          <AuthShowcasePanel
+            title="Create your BMP.tn account"
+            description="Register with the same professional experience used across login and phone number access."
+            items={[
+              { icon: UserPlus, title: "Guided registration", text: "A clean sign up flow for new users joining the BMP.tn platform." },
+              { icon: ShieldCheck, title: "Verified account access", text: "Use a valid email address and phone number to secure your account." },
+              { icon: Building2, title: "Consistent platform design", text: "Register, sign in and phone verification now share the same official interface." },
+            ]}
+          />
+        </div>
       </main>
       <Footer />
     </div>

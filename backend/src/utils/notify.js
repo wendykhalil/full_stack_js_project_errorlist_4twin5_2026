@@ -18,7 +18,7 @@ async function sendNotificationEmail({ to, subject, html, text }) {
  * Emit realtime notification to the user room and optionally email a list.
  * The payload should be UI-friendly: { type, title, message, meta, createdAt }
  */
-async function notify({ userId, payload, emailTo, toAdmins = false }) {
+async function notify({ userId, payload, emailTo, toAdmins = false, sendEmail = true }) {
   const enriched = { ...payload, createdAt: payload.createdAt || new Date().toISOString() };
 
   // realtime
@@ -27,7 +27,7 @@ async function notify({ userId, payload, emailTo, toAdmins = false }) {
 
   // email
   const toList = emailTo?.length ? emailTo : parseEmailList(process.env.NOTIFY_EMAILS);
-  if (toList.length) {
+  if (sendEmail && toList.length) {
     const subject = `[BMP.tn] ${payload.title || payload.type || 'Notification'}`;
     const text = buildPlainTextEmail({ payload, enriched });
     const html = buildHtmlEmail({ payload, enriched });

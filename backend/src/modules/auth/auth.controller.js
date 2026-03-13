@@ -2,55 +2,64 @@ const authService = require('./auth.service');
 const AuthLog = require('../../models/AuthLog');
 const ActivityLog = require('../../models/ActivityLog');
 const { notify } = require('../../utils/notify');
-const { lookupIpGeo } = require('../../utils/ipGeo');
+const { lookupIpGeo, isPrivateOrLocal } = require('../../utils/ipGeo');
 
-function getRequestMeta(req) {
-
-  const xf = req.headers['x-forwarded-for'];
-  const ip = (Array.isArray(xf) ? xf[0] : (xf || '')).toString().split(',')[0].trim() || req.ip || '';
-  const userAgent = req.get('user-agent') || '';
-  return { ip, userAgent };
+function normalizeIp(ip) {
+  const raw = String(ip || '').trim();
+  if (!raw) return '';
+  const clean = raw.split(',')[0].trim();
+  if (clean.startsWith('::ffff:')) return clean.slice(7);
+  return clean;
 }
 
+function getRequestMeta(req) {
+  const forwarded = req.headers['x-forwarded-for'];
+  const realIp = req.headers['x-real-ip'];
+  const clientIp = req.headers['x-client-ip'];
+  const fallbackIp = normalizeIp(Array.isArray(forwarded) ? forwarded[0] : forwarded) || normalizeIp(realIp) || normalizeIp(req.ip) || '';
+  const ip = (!fallbackIp || isPrivateOrLocal(fallbackIp)) ? normalizeIp(clientIp) || fallbackIp : fallbackIp;
+  const userAgent = req.get('user-agent') || '';
+  const country = String(req.headers['x-client-country'] || '').trim();
+  const countryCode = String(req.headers['x-client-country-code'] || '').trim();
+  return { ip, userAgent, country, countryCode };
+}
 
 async function logActivity(req, userId, action, details = {}) {
   try {
-    const { ip, userAgent } = getRequestMeta(req);
-    const geo = await lookupIpGeo(ip);
+    const { ip, userAgent, country: clientCountry, countryCode: clientCountryCode } = getRequestMeta(req);
+    const geo = await lookupIpGeo(ip, { country: clientCountry, countryCode: clientCountryCode });
     await ActivityLog.create({
       user: userId,
       action,
       details,
       ip,
-      country: geo.country || '',
-      countryCode: geo.countryCode || '',
+      country: geo.country || clientCountry || '',
+      countryCode: geo.countryCode || clientCountryCode || '',
       userAgent,
     });
   } catch (_) {}
 }
 
-async function notifyAdminAboutActivity({ req, userId, action, details }) {
-  // realtime broadcast to admins + optional email via NOTIFY_EMAILS
+async function notifyAdminAboutActivity({ req, userId, action, details, sendEmail = true }) {
   try {
-    const { ip, userAgent } = getRequestMeta(req);
-    const geo = await lookupIpGeo(ip);
+    const { ip, userAgent, country: clientCountry, countryCode: clientCountryCode } = getRequestMeta(req);
+    const geo = await lookupIpGeo(ip, { country: clientCountry, countryCode: clientCountryCode });
     await notify({
       toAdmins: true,
       payload: {
         type: 'activity',
         title: `Activity: ${action}`,
         message: `User performed: ${action}`,
-        meta: { userId, action, details, ip, country: geo.country || '', userAgent },
+        meta: { action, details, ip, country: geo.country || clientCountry || '', countryCode: geo.countryCode || clientCountryCode || '', userAgent },
       },
+      sendEmail,
     });
   } catch (_) {}
 }
 
-
 async function register(req, res, next) {
   try {
     const result = await authService.register(req.body);
-    // Do not log user in automatically. User must verify email then login.
     res.status(201).json({
       ok: true,
       message: 'Compte créé. Vérifiez votre email pour confirmer, puis connectez-vous.',
@@ -63,19 +72,14 @@ async function register(req, res, next) {
   }
 }
 
-
 async function login(req, res, next) {
   try {
     const result = await authService.login(req.body);
-
-    // Audit log (best-effort)
     try {
-      const { ip, userAgent } = getRequestMeta(req);
-      await AuthLog.create({ user: result.user._id, action: 'LOGIN', ip, userAgent });
-    } catch (_) {
-      // ignore logging errors
-    }
-
+      const { ip, userAgent, country: clientCountry, countryCode: clientCountryCode } = getRequestMeta(req);
+      const geo = await lookupIpGeo(ip, { country: clientCountry, countryCode: clientCountryCode });
+      await AuthLog.create({ user: result.user._id, action: 'LOGIN', ip, country: geo.country || clientCountry || '', countryCode: geo.countryCode || clientCountryCode || '', userAgent });
+    } catch (_) {}
     res.json(result);
   } catch (err) {
     res.status(err.statusCode || 500);
@@ -83,18 +87,14 @@ async function login(req, res, next) {
   }
 }
 
-
-
 async function googleLogin(req, res, next) {
   try {
     const result = await authService.googleLogin(req.body);
-
-    // Audit log (best-effort)
     try {
-      const { ip, userAgent } = getRequestMeta(req);
-      await AuthLog.create({ user: result.user._id, action: 'LOGIN_GOOGLE', ip, userAgent });
+      const { ip, userAgent, country: clientCountry, countryCode: clientCountryCode } = getRequestMeta(req);
+      const geo = await lookupIpGeo(ip, { country: clientCountry, countryCode: clientCountryCode });
+      await AuthLog.create({ user: result.user._id, action: 'LOGIN_GOOGLE', ip, country: geo.country || clientCountry || '', countryCode: geo.countryCode || clientCountryCode || '', userAgent });
     } catch (_) {}
-
     res.json(result);
   } catch (err) {
     res.status(err.statusCode || 500);
@@ -128,16 +128,14 @@ async function changePassword(req, res, next) {
 
 async function logout(req, res, next) {
   try {
-    // JWT is stateless, so "logout" here is only for auditing.
     try {
-      const { ip, userAgent } = getRequestMeta(req);
-      await AuthLog.create({ user: req.user.sub, action: 'LOGOUT', ip, userAgent });
-    } catch (_) {
-      // ignore logging errors
-    }
+      const { ip, userAgent, country: clientCountry, countryCode: clientCountryCode } = getRequestMeta(req);
+      const geo = await lookupIpGeo(ip, { country: clientCountry, countryCode: clientCountryCode });
+      await AuthLog.create({ user: req.user.sub, action: 'LOGOUT', ip, country: geo.country || clientCountry || '', countryCode: geo.countryCode || clientCountryCode || '', userAgent });
+    } catch (_) {}
 
     await logActivity(req, req.user.sub, 'LOGOUT');
-    await notifyAdminAboutActivity({ req, userId: req.user.sub, action: 'LOGOUT', details: {} });
+    await notifyAdminAboutActivity({ req, userId: req.user.sub, action: 'LOGOUT', details: {}, sendEmail: false });
 
     res.json({ ok: true });
   } catch (err) {
@@ -175,6 +173,7 @@ async function resendVerification(req, res, next) {
     next(e);
   }
 }
+
 async function forgotPassword(req, res, next) {
   try {
     const result = await authService.forgotPassword(req.body);
@@ -184,7 +183,6 @@ async function forgotPassword(req, res, next) {
     next(err);
   }
 }
-
 
 async function phoneStart(req, res, next) {
   try {
@@ -199,15 +197,14 @@ async function phoneStart(req, res, next) {
 async function phoneVerify(req, res, next) {
   try {
     const result = await authService.phoneVerify(req.body);
-
-    // best-effort logs
     try {
-      const { ip, userAgent } = getRequestMeta(req);
-      await AuthLog.create({ user: result.user._id, action: 'LOGIN', ip, userAgent });
+      const { ip, userAgent, country: clientCountry, countryCode: clientCountryCode } = getRequestMeta(req);
+      const geo = await lookupIpGeo(ip, { country: clientCountry, countryCode: clientCountryCode });
+      await AuthLog.create({ user: result.user._id, action: 'LOGIN_SMS', ip, country: geo.country || clientCountry || '', countryCode: geo.countryCode || clientCountryCode || '', userAgent });
     } catch (_) {}
 
     await logActivity(req, result.user._id, 'LOGIN_SMS', { phone: result.user.phone });
-    await notifyAdminAboutActivity({ req, userId: result.user._id, action: 'LOGIN_SMS', details: { phone: result.user.phone } });
+    await notifyAdminAboutActivity({ req, userId: result.user._id, action: 'LOGIN_SMS', details: { phone: result.user.phone }, sendEmail: false });
 
     res.json(result);
   } catch (err) {
@@ -228,7 +225,6 @@ async function setRole(req, res, next) {
   }
 }
 
-
 async function resetPassword(req, res, next) {
   try {
     const result = await authService.resetPassword(req.body);
@@ -238,7 +234,6 @@ async function resetPassword(req, res, next) {
     next(err);
   }
 }
-
 
 module.exports = {
   register, login, googleLogin, logout, me, verifyEmail, resendVerification,
