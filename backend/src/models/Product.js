@@ -22,7 +22,9 @@ const productSchema = new mongoose.Schema(
 
     stock: { type: Number, default: 0, min: 0 },
 
-    documentation: { type: String, default: "" }, // pdf link or doc text
+    imageUrls: [{ type: String }],
+
+    documentation: [{ type: String }],
 
     isApproved: { type: Boolean, default: false }, // admin validates products
   },

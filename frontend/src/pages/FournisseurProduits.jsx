@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Plus,
@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import SimpleFooter from "../components/Footer";
 import { useTranslation } from 'react-i18next';
+import { useAuth } from "../auth/AuthContext";
+import { getMyProducts, getSupplierStats, deleteProduct } from "../auth/api.js";
 
 const StatCard = ({ title, value, icon, iconBg, iconFg }) => (
   <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -50,8 +52,11 @@ const PriceCell = ({ price, unit }) => (
   </div>
 );
 
-const ActionBtn = ({ children, className = "" }) => (
-  <button className={`inline-flex h-9 w-9 items-center justify-center rounded-lg hover:bg-slate-100 ${className}`}>
+const ActionBtn = ({ children, className = "", onClick }) => (
+  <button 
+    onClick={onClick}
+    className={`inline-flex h-9 w-9 items-center justify-center rounded-lg hover:bg-slate-100 ${className}`}
+  >
     {children}
   </button>
 );
@@ -59,63 +64,74 @@ const ActionBtn = ({ children, className = "" }) => (
 export default function FournisseurProduits() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { token } = useAuth();
 
-  const rows = [
-    {
-      name: "Ciment CEM II 42.5",
-      desc: "Ciment haute résistance pour tous travaux",
-      cat: "Matériaux de base",
-      price: "12.50 TND",
-      unit: "par sac 50kg",
-      stock: { label: "En stock", tone: "green" },
-      status: { label: "Actif", tone: "indigo" },
-    },
-    {
-      name: "Carrelage Porcelaine 60x60",
-      desc: "Carrelage aspect marbre blanc",
-      cat: "Revêtements",
-      price: "25.00 TND",
-      unit: "par m²",
-      stock: { label: "En stock", tone: "green" },
-      status: { label: "Actif", tone: "indigo" },
-    },
-    {
-      name: "Peinture Acrylique Mat",
-      desc: "Peinture lessivable, finition mate",
-      cat: "Peinture",
-      price: "35.00 TND",
-      unit: "par pot 10L",
-      stock: { label: "En stock", tone: "green" },
-      status: { label: "Actif", tone: "indigo" },
-    },
-    {
-      name: "Porte Intérieure Bois",
-      desc: "Porte isoplane finition chêne",
-      cat: "Menuiserie",
-      price: "280.00 TND",
-      unit: "par unité",
-      stock: { label: "En stock", tone: "green" },
-      status: { label: "Actif", tone: "indigo" },
-    },
-    {
-      name: "Disjoncteur 32A",
-      desc: "Disjoncteur différentiel 30mA",
-      cat: "Électricité",
-      price: "45.00 TND",
-      unit: "par unité",
-      stock: { label: "En stock", tone: "green" },
-      status: { label: "Actif", tone: "indigo" },
-    },
-    {
-      name: "Lavabo Céramique",
-      desc: "Lavabo suspendu blanc brillant",
-      cat: "Sanitaire",
-      price: "120.00 TND",
-      unit: "par unité",
-      stock: { label: "Rupture", tone: "red" },
-      status: { label: "Actif", tone: "indigo" },
-    },
-  ];
+  const [products, setProducts] = useState([]);
+  const [stats, setStats] = useState({});
+  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+
+  const fetchProducts = useCallback(async () => {
+  setLoading(true);
+  setError(null);
+  try {
+    console.log('Fetching products with token:', token);
+    console.log('API URL:', `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/supplier/products?page=${page}&limit=10&search=${search}`);
+    
+    const data = await getMyProducts({ token, page, limit: 10, search });
+    console.log('Products data received:', data);
+    
+    // Check different possible response structures
+    let productsArray = [];
+    if (data?.products) {
+      productsArray = data.products;
+    } else if (data?.data?.products) {
+      productsArray = data.data.products;
+    } else if (Array.isArray(data)) {
+      productsArray = data;
+    } else if (data?.data && Array.isArray(data.data)) {
+      productsArray = data.data;
+    }
+    
+    console.log('Extracted products array:', productsArray);
+    setProducts(productsArray);
+    
+    if (page === 1) {
+      try {
+        const statsData = await getSupplierStats({ token });
+        console.log('Stats data received:', statsData);
+        setStats(statsData || {});
+      } catch (statsError) {
+        console.error('Stats fetch error:', statsError);
+        setStats({});
+      }
+    }
+  } catch (error) {
+    console.error('Products fetch error:', error);
+    setError(error.message);
+    setProducts([]);
+  } finally {
+    setLoading(false);
+  }
+}, [token, page, search]);
+
+  useEffect(() => {
+    if (token) {
+      fetchProducts();
+    }
+  }, [fetchProducts, token]);
+
+  const handleDelete = async (id) => {
+    if (!window.confirm(t('confirmDelete') || 'Delete this product?')) return;
+    try {
+      await deleteProduct({ token, id });
+      fetchProducts();
+    } catch (error) {
+      console.error('Delete error:', error);
+    }
+  };
 
   return (
     <div className="flex-1">
@@ -141,10 +157,10 @@ export default function FournisseurProduits() {
 
       {/* Stats */}
       <section className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard title={t('fournisseurProduits.stats.activeProducts')} value="42" icon={<Package />} iconBg="bg-indigo-50" iconFg="text-indigo-600" />
-        <StatCard title={t('fournisseurProduits.stats.monthlyOrders')} value="127" icon={<ShoppingCart />} iconBg="bg-emerald-50" iconFg="text-emerald-600" />
-        <StatCard title={t('fournisseurProduits.stats.revenue')} value="45,280 TND" icon={<TrendingUp />} iconBg="bg-orange-50" iconFg="text-orange-600" />
-        <StatCard title={t('fournisseurProduits.stats.catalogs')} value="3" icon={<FileText />} iconBg="bg-slate-100" iconFg="text-slate-700" />
+        <StatCard title={t('fournisseurProduits.stats.activeProducts')} value={stats?.activeProducts || 0} icon={<Package />} iconBg="bg-indigo-50" iconFg="text-indigo-600" />
+        <StatCard title={t('fournisseurProduits.stats.monthlyOrders')} value={stats?.monthlyOrders || 0} icon={<ShoppingCart />} iconBg="bg-emerald-50" iconFg="text-emerald-600" />
+        <StatCard title={t('fournisseurProduits.stats.revenue')} value={(stats?.revenue || 0).toLocaleString() + ' TND'} icon={<TrendingUp />} iconBg="bg-orange-50" iconFg="text-orange-600" />
+        <StatCard title={t('fournisseurProduits.stats.catalogs')} value={stats?.catalogs || 0} icon={<FileText />} iconBg="bg-slate-100" iconFg="text-slate-700" />
       </section>
 
       {/* Table card */}
@@ -155,64 +171,84 @@ export default function FournisseurProduits() {
           <div className="relative w-full md:w-72">
             <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
+              type="text"
               placeholder={t('fournisseurProduits.searchPlaceholder')}
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
               className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-4 text-sm focus:border-indigo-500 focus:outline-none"
             />
           </div>
         </div>
 
-        <div className="mt-6 overflow-x-auto">
-          <table className="w-full min-w-[900px] border-separate border-spacing-0">
-            <thead>
-              <tr className="text-left text-sm text-slate-500">
-                <th className="border-b border-slate-200 pb-3 font-semibold">{t('fournisseurProduits.table.product')}</th>
-                <th className="border-b border-slate-200 pb-3 font-semibold">{t('fournisseurProduits.table.category')}</th>
-                <th className="border-b border-slate-200 pb-3 text-right font-semibold">{t('fournisseurProduits.table.price')}</th>
-                <th className="border-b border-slate-200 pb-3 text-center font-semibold">{t('fournisseurProduits.table.stock')}</th>
-                <th className="border-b border-slate-200 pb-3 text-center font-semibold">{t('fournisseurProduits.table.status')}</th>
-                <th className="border-b border-slate-200 pb-3 text-right font-semibold">{t('fournisseurProduits.table.actions')}</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {rows.map((r, idx) => (
-                <tr key={idx} className="text-sm">
-                  <td className="border-b border-slate-100 py-5">
-                    <div className="font-medium text-slate-900">{r.name}</div>
-                    <div className="mt-1 text-xs text-slate-500">{r.desc}</div>
-                  </td>
-
-                  <td className="border-b border-slate-100 py-5">
-                    <Pill tone="slate">{r.cat}</Pill>
-                  </td>
-
-                  <td className="border-b border-slate-100 py-5">
-                    <PriceCell price={r.price} unit={r.unit} />
-                  </td>
-
-                  <td className="border-b border-slate-100 py-5 text-center">
-                    <Pill tone={r.stock.tone}>{r.stock.label}</Pill>
-                  </td>
-
-                  <td className="border-b border-slate-100 py-5 text-center">
-                    <Pill tone={r.status.tone}>{r.status.label}</Pill>
-                  </td>
-
-                  <td className="border-b border-slate-100 py-5 text-right">
-                    <div className="inline-flex items-center gap-2">
-                      <ActionBtn>
-                        <Pencil className="h-4 w-4 text-slate-600" />
-                      </ActionBtn>
-                      <ActionBtn className="hover:bg-red-50">
-                        <Trash2 className="h-4 w-4 text-red-600" />
-                      </ActionBtn>
-                    </div>
-                  </td>
+        {loading ? (
+          <div className="mt-6 text-center py-10">Loading...</div>
+        ) : error ? (
+          <div className="mt-6 text-center py-10 text-red-600">
+            Error loading products: {error}
+          </div>
+        ) : !products || products.length === 0 ? (
+          <div className="mt-6 text-center py-10 text-slate-500">
+            No products found. Click "Add Product" to create your first product.
+          </div>
+        ) : (
+          <div className="mt-6 overflow-x-auto">
+            <table className="w-full min-w-[900px] border-separate border-spacing-0">
+              <thead>
+                <tr className="text-left text-sm text-slate-500">
+                  <th className="border-b border-slate-200 pb-3 font-semibold">{t('fournisseurProduits.table.product')}</th>
+                  <th className="border-b border-slate-200 pb-3 font-semibold">{t('fournisseurProduits.table.category')}</th>
+                  <th className="border-b border-slate-200 pb-3 text-right font-semibold">{t('fournisseurProduits.table.price')}</th>
+                  <th className="border-b border-slate-200 pb-3 text-center font-semibold">{t('fournisseurProduits.table.stock')}</th>
+                  <th className="border-b border-slate-200 pb-3 text-center font-semibold">{t('fournisseurProduits.table.status')}</th>
+                  <th className="border-b border-slate-200 pb-3 text-right font-semibold">{t('fournisseurProduits.table.actions')}</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+
+              <tbody>
+                {Array.isArray(products) && products.map((product) => (
+                  <tr key={product._id} className="text-sm">
+                    <td className="border-b border-slate-100 py-5">
+                      <div className="font-medium text-slate-900">{product.name || 'Unnamed'}</div>
+                      <div className="mt-1 text-xs text-slate-500">{product.description || ''}</div>
+                    </td>
+
+                    <td className="border-b border-slate-100 py-5">
+                      <Pill tone="slate">{product.categoryId?.name || 'N/A'}</Pill>
+                    </td>
+
+                    <td className="border-b border-slate-100 py-5">
+                      <PriceCell price={product.price ? product.price.toFixed(2) : '0.00'} unit="TND" />
+                    </td>
+
+                    <td className="border-b border-slate-100 py-5 text-center">
+                      <Pill tone={product.stock > 0 ? "green" : "red"}>
+                        {product.stock > 0 ? "En stock" : "Rupture"}
+                      </Pill>
+                    </td>
+
+                    <td className="border-b border-slate-100 py-5 text-center">
+                      <Pill tone="indigo">{product.isApproved ? "Approuvé" : "En attente"}</Pill>
+                    </td>
+
+                    <td className="border-b border-slate-100 py-5 text-right">
+                      <div className="inline-flex items-center gap-2">
+                        <ActionBtn onClick={() => navigate(`/fournisseur/produits/edit/${product._id}`)}>
+                          <Pencil className="h-4 w-4 text-slate-600" />
+                        </ActionBtn>
+                        <ActionBtn className="hover:bg-red-50" onClick={() => handleDelete(product._id)}>
+                          <Trash2 className="h-4 w-4 text-red-600" />
+                        </ActionBtn>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
       <SimpleFooter />
     </div>

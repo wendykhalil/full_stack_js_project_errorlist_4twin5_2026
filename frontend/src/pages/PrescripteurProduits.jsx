@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Search, ChevronDown, FileText } from "lucide-react";
 import Footer from "../components/Footer";
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from "react-i18next";
+import { getCatalogProducts } from "../auth/api.js";
 
 const Card = ({ cat, title, desc, supplier, price, unit }) => {
   const { t } = useTranslation();
@@ -35,6 +36,17 @@ const Card = ({ cat, title, desc, supplier, price, unit }) => {
 
 export default function PrescripteurProduits() {
   const { t } = useTranslation();
+  const [products, setProducts] = useState([]);
+  const [search, setSearch] = useState('');
+  const [category, setCategory] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getCatalogProducts({ search, category }).then(data => {
+      setProducts(data.products);
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  }, [search, category]);
 
   return (
     <div className="flex-1">
@@ -52,76 +64,48 @@ export default function PrescripteurProduits() {
             <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
               placeholder={t('prescripteurProduits.searchPlaceholder')}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
               className="w-full rounded-xl border border-slate-200 py-3 pl-10 pr-4 text-sm focus:border-indigo-500 focus:outline-none"
             />
           </div>
 
           <div className="relative w-full md:w-64">
-            <select className="w-full appearance-none rounded-xl border border-slate-200 py-3 pl-4 pr-10 text-sm focus:border-indigo-500 focus:outline-none">
-              <option>{t('prescripteurProduits.categoryPlaceholder')}</option>
-              <option>{t('prescripteurProduits.categories.basicMaterials')}</option>
-              <option>{t('prescripteurProduits.categories.flooring')}</option>
-              <option>{t('prescripteurProduits.categories.paint')}</option>
-              <option>{t('prescripteurProduits.categories.carpentry')}</option>
-              <option>{t('prescripteurProduits.categories.electricity')}</option>
-              <option>{t('prescripteurProduits.categories.plumbing')}</option>
+            <select 
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="w-full appearance-none rounded-xl border border-slate-200 py-3 pl-4 pr-10 text-sm focus:border-indigo-500 focus:outline-none"
+            >
+              <option value="">{t('prescripteurProduits.categoryPlaceholder')}</option>
+              <option value="basicMaterials">{t('prescripteurProduits.categories.basicMaterials')}</option>
+              <option value="flooring">{t('prescripteurProduits.categories.flooring')}</option>
+              <option value="paint">{t('prescripteurProduits.categories.paint')}</option>
+              <option value="carpentry">{t('prescripteurProduits.categories.carpentry')}</option>
+              <option value="electricity">{t('prescripteurProduits.categories.electricity')}</option>
+              <option value="plumbing">{t('prescripteurProduits.categories.plumbing')}</option>
             </select>
             <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           </div>
         </div>
       </div>
 
-      {/* Cards - données statiques en français */}
-      <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card
-          cat="Matériaux de base"
-          title="Ciment CEM II 42.5"
-          desc="Ciment haute résistance pour tous travaux"
-          supplier="BatiMat Tunisie"
-          price="12.50"
-          unit="par sac 50kg"
-        />
-        <Card
-          cat="Revêtements"
-          title="Carrelage Porcelaine 60x60"
-          desc="Carrelage aspect marbre blanc"
-          supplier="Céramique Tunisie"
-          price="25.00"
-          unit="par m²"
-        />
-        <Card
-          cat="Peinture"
-          title="Peinture Acrylique Mat"
-          desc="Peinture lessivable, finition mate"
-          supplier="ColorPro"
-          price="35.00"
-          unit="par pot 10L"
-        />
-        <Card
-          cat="Menuiserie"
-          title="Porte Intérieure Bois"
-          desc="Porte isoplane finition chêne"
-          supplier="Menuiserie Moderne"
-          price="280.00"
-          unit="par unité"
-        />
-        <Card
-          cat="Électricité"
-          title="Disjoncteur 32A"
-          desc="Disjoncteur différentiel 30mA"
-          supplier="Electrotech"
-          price="45.00"
-          unit="par unité"
-        />
-        <Card
-          cat="Sanitaire"
-          title="Lavabo Céramique"
-          desc="Lavabo suspendu blanc brillant"
-          supplier="Sanitaire Pro"
-          price="120.00"
-          unit="par unité"
-        />
-      </div>
+      {loading ? (
+        <div className="mt-8 text-center py-12">Loading...</div>
+      ) : (
+        <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {products.map((product) => (
+            <Card
+              key={product._id}
+              cat={product.categoryId?.name || 'N/A'}
+              title={product.name}
+              desc={product.description}
+              supplier={product.supplierId?.companyName || 'Supplier'}
+              price={product.price.toFixed(2)}
+              unit="TND"
+            />
+          ))}
+        </div>
+      )}
       <Footer />
     </div>
   );

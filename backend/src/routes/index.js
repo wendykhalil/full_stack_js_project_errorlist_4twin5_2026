@@ -24,6 +24,12 @@ router.get('/artisan/ping', authRequired, requireRoles('ARTISAN'), (req, res) =>
 router.get('/prescripteur/ping', authRequired, requireRoles('PRESCRIPTEUR'), (req, res) => {
   res.json({ ok: true, role: req.user.role });
 });
+const supplierRoutes = require('../modules/supplier/supplier.routes');
+const catalogRoutes = require('../modules/catalog/catalog.routes');
+
+router.use('/supplier', supplierRoutes);
+router.use('/catalog', catalogRoutes);
+
 router.get('/supplier/ping', authRequired, requireRoles('SUPPLIER'), (req, res) => {
   res.json({ ok: true, role: req.user.role });
 });
@@ -150,6 +156,26 @@ router.patch('/admin/users/:id/unblock', authRequired, requireRoles('ADMIN'), as
     res.json({ ok: true, user });
   } catch (err) {
     next(err);
+  }
+});
+
+// 🔍 DEBUG ROUTE - Add this before module.exports
+router.get('/debug/all-products', authRequired, async (req, res) => {
+  try {
+    const Product = require('../models/Product');
+    const products = await Product.find({})
+      .populate('categoryId', 'name slug')
+      .populate('supplierId', 'companyName')
+      .lean();
+    
+    res.json({
+      count: products.length,
+      products: products,
+      message: 'All products in database'
+    });
+  } catch (error) {
+    console.error('Debug error:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 

@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Search, ChevronDown, ShoppingCart, Star } from "lucide-react";
 import SimpleFooter from "../components/Footer";
 import { useTranslation } from 'react-i18next';
+import { getCatalogProducts } from "../auth/api.js";
 
 const ProductCard = ({
   image,
@@ -56,6 +57,71 @@ const ProductCard = ({
 
 export default function ArtisanMarketplace() {
   const { t } = useTranslation();
+  const [products, setProducts] = useState([]);
+  const [search, setSearch] = useState('');
+  const [category, setCategory] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+  const fetchProducts = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getCatalogProducts({ search, category });
+      console.log('=== FULL API RESPONSE ===');
+      console.log('Raw data:', data);
+      console.log('Data type:', typeof data);
+      console.log('Is data an array?', Array.isArray(data));
+      console.log('Data keys:', Object.keys(data || {}));
+      
+      // Check if data has a 'data' property
+      if (data?.data) {
+        console.log('data.data:', data.data);
+        console.log('data.data keys:', Object.keys(data.data));
+        if (data.data.products) {
+          console.log('data.data.products:', data.data.products);
+        }
+      }
+      
+      // Check if data has 'products' directly
+      if (data?.products) {
+        console.log('data.products:', data.products);
+      }
+      
+      // Handle different possible response structures
+      let productsArray = [];
+      if (data?.data?.products) {
+        productsArray = data.data.products;
+        console.log('Using data.data.products');
+      } else if (data?.products) {
+        productsArray = data.products;
+        console.log('Using data.products');
+      } else if (Array.isArray(data)) {
+        productsArray = data;
+        console.log('Using data as array');
+      } else if (data?.data && Array.isArray(data.data)) {
+        productsArray = data.data;
+        console.log('Using data.data as array');
+      } else if (data?.data?.data?.products) {
+        productsArray = data.data.data.products;
+        console.log('Using nested data.data.data.products');
+      }
+      
+      console.log('Final products array:', productsArray);
+      console.log('Products array length:', productsArray.length);
+      setProducts(productsArray);
+    } catch (error) {
+      console.error('Error fetching catalog products:', error);
+      setError(error.message);
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchProducts();
+}, [search, category]);
 
   return (
     <div className="flex-1">
@@ -83,64 +149,54 @@ export default function ArtisanMarketplace() {
             <input
               type="text"
               placeholder={t('artisanMarketplace.searchPlaceholder')}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
               className="w-full rounded-xl border border-slate-200 py-3 pl-10 pr-4 text-sm focus:border-indigo-500 focus:outline-none"
             />
           </div>
 
           <div className="relative w-full md:w-60">
-            <select className="w-full appearance-none rounded-xl border border-slate-200 py-3 pl-4 pr-10 text-sm focus:border-indigo-500 focus:outline-none">
-              <option>{t('artisanMarketplace.filterAllCategories')}</option>
-              <option>{t('artisanMarketplace.categories.materials')}</option>
-              <option>{t('artisanMarketplace.categories.paint')}</option>
-              <option>{t('artisanMarketplace.categories.carpentry')}</option>
+            <select 
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="w-full appearance-none rounded-xl border border-slate-200 py-3 pl-4 pr-10 text-sm focus:border-indigo-500 focus:outline-none"
+            >
+              <option value="">{t('artisanMarketplace.filterAllCategories')}</option>
+              <option value="basic-materials">{t('artisanMarketplace.categories.materials')}</option>
+              <option value="paint">{t('artisanMarketplace.categories.paint')}</option>
+              <option value="carpentry">{t('artisanMarketplace.categories.carpentry')}</option>
             </select>
             <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           </div>
         </div>
       </div>
 
-      {/* Products Grid */}
-      <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <ProductCard
-          image="https://images.unsplash.com/photo-1581091012184-7c61e6b1e6c1"
-          category="Matériaux"
-          title="Ciment CEM II 42.5"
-          description="Ciment haute résistance"
-          supplier="BatiMat Tunisie"
-          price="12.50"
-          unit="par sac 50kg"
-        />
-
-        <ProductCard
-          image="https://images.unsplash.com/photo-1600585154340-be6161a56a0c"
-          category="Revêtements"
-          title="Carrelage Porcelaine 60x60"
-          description="Aspect marbre blanc"
-          supplier="Céramique Tunisie"
-          price="25.00"
-          unit="par m²"
-        />
-
-        <ProductCard
-          image="https://images.unsplash.com/photo-1581578731548-c64695cc6952"
-          category="Peinture"
-          title="Peinture Acrylique Mat"
-          description="Finition mate lessivable"
-          supplier="ColorPro"
-          price="35.00"
-          unit="par pot 10L"
-        />
-
-        <ProductCard
-          image="https://images.unsplash.com/photo-1582582494700-5d1d37f5d9c7"
-          category="Menuiserie"
-          title="Porte Intérieure Bois"
-          description="Finition chêne"
-          supplier="Menuiserie Moderne"
-          price="280.00"
-          unit="par unité"
-        />
-      </div>
+      {loading ? (
+        <div className="mt-8 text-center py-12">Loading products...</div>
+      ) : error ? (
+        <div className="mt-8 text-center py-12 text-red-600">
+          Error loading products: {error}
+        </div>
+      ) : products.length === 0 ? (
+        <div className="mt-8 text-center py-12 text-slate-500">
+          No products found in the marketplace.
+        </div>
+      ) : (
+        <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {products.map((product) => (
+            <ProductCard
+              key={product._id}
+              image={product.imageUrls?.[0] || 'https://via.placeholder.com/300x200?text=No+Image'}
+              category={product.categoryId?.name || 'Uncategorized'}
+              title={product.name}
+              description={product.description || 'No description'}
+              supplier={product.supplierId?.companyName || 'Unknown Supplier'}
+              price={product.price?.toFixed(2) || '0.00'}
+              unit={product.unit || 'piece'}
+            />
+          ))}
+        </div>
+      )}
       <SimpleFooter />
     </div>
   );

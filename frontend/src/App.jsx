@@ -41,9 +41,10 @@ import PrescripteurProjects from "./pages/PrescripteurProjects";
 // FOURNISSEUR
 import FournisseurLayout from "./layouts/FournisseurLayout";
 import FournisseurProduits from "./pages/FournisseurProduits";
+import FournisseurProduitNew from "./pages/FournisseurProduitNew";
+import FournisseurProduitEdit from "./pages/FournisseurProduitEdit"; // Add this import
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
-import FournisseurProduitNew from "./pages/FournisseurProduitNew";
 import Profile from "./pages/Profile";
 
 export default function App() {
@@ -127,9 +128,11 @@ export default function App() {
                 <Route element={<ProtectedRoute allowedRoles={[Roles.SUPPLIER]} />}>
                     <Route path="/fournisseur" element={<FournisseurLayout />}>
                         <Route index element={<Navigate to="produits" replace />} />
-                        <Route path="profile" element={<Profile />} />
                         <Route path="produits" element={<FournisseurProduits />} />
                         <Route path="produits/new" element={<FournisseurProduitNew />} />
+                        <Route path="produits/edit/:id" element={<FournisseurProduitEdit />} />
+                        <Route path="profile" element={<Profile />} />
+                        {/* Remove duplicate routes below */}
                     </Route>
                 </Route>
 

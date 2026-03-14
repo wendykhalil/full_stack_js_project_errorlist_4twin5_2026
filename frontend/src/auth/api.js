@@ -17,7 +17,9 @@ async function resolveClientMeta() {
   if (cached) {
     try {
       return JSON.parse(cached);
-    } catch {}
+    } catch {
+      // Ignore parsing errors and continue with fetching
+    }
   }
 
   const sources = [
@@ -45,7 +47,10 @@ async function resolveClientMeta() {
         window.sessionStorage.setItem('bmp_client_meta', JSON.stringify(meta));
         return meta;
       }
-    } catch {}
+    } catch {
+      // Geo lookup failed, continue to next source
+      // Intentionally empty - we want to try the next source
+    }
   }
 
   return { ip: '', country: '', countryCode: '' };
@@ -85,3 +90,48 @@ export async function apiFetch(path, { token, method = 'GET', body } = {}) {
 
   return data;
 }
+
+// Product API helpers for supplier & catalog
+export async function getMyProducts({ token, page = 1, limit = 10, search = '', category = '' } = {}) {
+  const params = new URLSearchParams({ page, limit });
+  if (search) params.append('search', search);
+  if (category) params.append('category', category);
+  return apiFetch(`/supplier/products?${params}`, { token });
+}
+
+export async function getSupplierStats({ token }) {
+  return apiFetch('/supplier/stats', { token });
+}
+
+export async function createProduct({ token, formData }) {
+  return apiFetch('/supplier/products', { 
+    token, 
+    method: 'POST', 
+    body: formData 
+  });
+}
+
+export async function updateProduct({ token, id, formData }) {
+  return apiFetch(`/supplier/products/${id}`, { 
+    token, 
+    method: 'PUT', 
+    body: formData 
+  });
+}
+
+export async function deleteProduct({ token, id }) {
+  return apiFetch(`/supplier/products/${id}`, { 
+    token, 
+    method: 'DELETE' 
+  });
+}
+
+export async function getCatalogProducts({ page = 1, limit = 12, search = '', category = '', approved = 'true' } = {}) {
+  const params = new URLSearchParams({ page, limit, search, category, approved });
+  return apiFetch(`/catalog/products?${params}`);
+}
+
+export async function getSupplierCategories({ token }) {
+  return apiFetch('/supplier/categories', { token });
+}
+
