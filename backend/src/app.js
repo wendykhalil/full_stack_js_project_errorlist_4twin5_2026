@@ -15,6 +15,7 @@ function createApp() {
   // Serve uploaded assets
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
+
   app.use('/api', routes);
 
   app.use(notFound);

@@ -11,6 +11,7 @@ async function bootstrap() {
   console.log('MongoDB connected');
 
   const app = createApp();
+  
   const server = http.createServer(app);
 
   // realtime (Socket.IO)

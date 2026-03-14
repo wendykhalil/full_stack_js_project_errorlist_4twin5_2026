@@ -14,13 +14,34 @@ const ProductCard = ({
   unit,
 }) => {
   const { t } = useTranslation();
+  const [imgError, setImgError] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
+  
+  console.log(`Rendering ProductCard for ${title}:`, { image, imgError, imgLoaded });
+  
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-      <img
-        src={image}
-        alt={title}
-        className="h-48 w-full rounded-xl object-cover"
-      />
+      <div className="relative h-48 w-full">
+        {!imgLoaded && !imgError && (
+          <div className="absolute inset-0 flex items-center justify-center bg-slate-100 rounded-xl">
+            <span className="text-slate-400">Loading...</span>
+          </div>
+        )}
+        <img
+          src={imgError ? 'https://via.placeholder.com/300x200?text=No+Image' : image}
+          alt={title}
+          className="h-48 w-full rounded-xl object-cover"
+          onError={() => {
+            console.log(`Image failed to load: ${image}`);
+            setImgError(true);
+          }}
+          onLoad={() => {
+            console.log(`Image loaded successfully: ${image}`);
+            setImgLoaded(true);
+          }}
+          style={{ display: imgLoaded && !imgError ? 'block' : 'none' }}
+        />
+      </div>
 
       <div className="mt-4">
         <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
@@ -64,64 +85,42 @@ export default function ArtisanMarketplace() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-  const fetchProducts = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await getCatalogProducts({ search, category });
-      console.log('=== FULL API RESPONSE ===');
-      console.log('Raw data:', data);
-      console.log('Data type:', typeof data);
-      console.log('Is data an array?', Array.isArray(data));
-      console.log('Data keys:', Object.keys(data || {}));
-      
-      // Check if data has a 'data' property
-      if (data?.data) {
-        console.log('data.data:', data.data);
-        console.log('data.data keys:', Object.keys(data.data));
-        if (data.data.products) {
-          console.log('data.data.products:', data.data.products);
+    const fetchProducts = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await getCatalogProducts({ search, category });
+        
+        // Handle different possible response structures
+        let productsArray = [];
+        if (data?.data?.products) {
+          productsArray = data.data.products;
+        } else if (data?.products) {
+          productsArray = data.products;
+        } else if (Array.isArray(data)) {
+          productsArray = data;
         }
+        
+        // Log each product's image URL
+        productsArray.forEach((product, index) => {
+          console.log(`Product ${index}:`, {
+            name: product.name,
+            imageUrl: product.imageUrls?.[0]
+          });
+        });
+        
+        setProducts(productsArray);
+      } catch (error) {
+        console.error('Error fetching catalog products:', error);
+        setError(error.message);
+        setProducts([]);
+      } finally {
+        setLoading(false);
       }
-      
-      // Check if data has 'products' directly
-      if (data?.products) {
-        console.log('data.products:', data.products);
-      }
-      
-      // Handle different possible response structures
-      let productsArray = [];
-      if (data?.data?.products) {
-        productsArray = data.data.products;
-        console.log('Using data.data.products');
-      } else if (data?.products) {
-        productsArray = data.products;
-        console.log('Using data.products');
-      } else if (Array.isArray(data)) {
-        productsArray = data;
-        console.log('Using data as array');
-      } else if (data?.data && Array.isArray(data.data)) {
-        productsArray = data.data;
-        console.log('Using data.data as array');
-      } else if (data?.data?.data?.products) {
-        productsArray = data.data.data.products;
-        console.log('Using nested data.data.data.products');
-      }
-      
-      console.log('Final products array:', productsArray);
-      console.log('Products array length:', productsArray.length);
-      setProducts(productsArray);
-    } catch (error) {
-      console.error('Error fetching catalog products:', error);
-      setError(error.message);
-      setProducts([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  fetchProducts();
-}, [search, category]);
+    fetchProducts();
+  }, [search, category]);
 
   return (
     <div className="flex-1">
@@ -183,18 +182,26 @@ export default function ArtisanMarketplace() {
         </div>
       ) : (
         <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {products.map((product) => (
-            <ProductCard
-              key={product._id}
-              image={product.imageUrls?.[0] || 'https://via.placeholder.com/300x200?text=No+Image'}
-              category={product.categoryId?.name || 'Uncategorized'}
-              title={product.name}
-              description={product.description || 'No description'}
-              supplier={product.supplierId?.companyName || 'Unknown Supplier'}
-              price={product.price?.toFixed(2) || '0.00'}
-              unit={product.unit || 'piece'}
-            />
-          ))}
+          {products.map((product) => {
+            const imageUrl = product.imageUrls?.[0] 
+              ? product.imageUrls[0]  // Fixed: removed extra /uploads
+              : 'https://via.placeholder.com/300x200?text=No+Image';
+            
+            console.log(`Rendering product ${product.name} with image:`, imageUrl);
+            
+            return (
+              <ProductCard
+                key={product._id}
+                image={imageUrl}
+                category={product.categoryId?.name || 'Uncategorized'}
+                title={product.name}
+                description={product.description || 'No description'}
+                supplier={product.supplierId?.companyName || 'Unknown Supplier'}
+                price={product.price?.toFixed(2) || '0.00'}
+                unit={product.unit || 'piece'}
+              />
+            );
+          })}
         </div>
       )}
       <SimpleFooter />
