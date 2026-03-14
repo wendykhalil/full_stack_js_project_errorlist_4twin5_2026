@@ -44,36 +44,37 @@ const createProduct = async (data, supplierId) => {
     throw new Error('Supplier ID is required');
   }
 
-  if (data.category && typeof data.category === 'string') {
-    console.log('3. Processing category:', data.category);
-    let cat;
-    
-    // Check if the category value is a valid MongoDB ObjectId
-    const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(data.category);
-    console.log('4. Is valid ObjectId?', isValidObjectId);
-    
-    if (isValidObjectId) {
-      // Try to find by ID if it's a valid ObjectId
-      cat = await Category.findById(data.category);
-      console.log('5. Category found by ID:', cat ? cat.name : 'Not found');
-    }
-    
-    // If not found by ID or not a valid ObjectId, try to find by name
-    if (!cat) {
-      cat = await Category.findOne({ 
-        name: { $regex: new RegExp('^' + data.category + '$', 'i') } 
-      });
-      console.log('6. Category found by name:', cat ? cat.name : 'Not found');
-    }
-    
-    if (!cat) {
-      console.error('❌ Invalid category:', data.category);
-      throw new Error('Invalid category');
-    }
-    data.categoryId = cat._id;
-    console.log('7. Set categoryId to:', cat._id);
-    delete data.category;
+  // Vérifier si c'est une nouvelle catégorie
+if (data.newCategory && typeof data.newCategory === 'string') {
+  console.log('Creating new category:', data.newCategory);
+  
+  // Créer un slug à partir du nom
+  const slug = data.newCategory
+    .toLowerCase()
+    .replace(/[^\w\s]/gi, '')
+    .replace(/\s+/g, '-');
+  
+  // Vérifier si la catégorie existe déjà
+  let existingCategory = await Category.findOne({ 
+    name: { $regex: new RegExp('^' + data.newCategory + '$', 'i') } 
+  });
+  
+  if (existingCategory) {
+    console.log('Category already exists:', existingCategory.name);
+    data.categoryId = existingCategory._id;
+  } else {
+    // Créer la nouvelle catégorie
+    const newCategory = new Category({
+      name: data.newCategory,
+      slug: slug
+    });
+    await newCategory.save();
+    console.log('New category created with ID:', newCategory._id);
+    data.categoryId = newCategory._id;
   }
+  
+  delete data.newCategory;
+}
 
   // Create product with supplierId
   const productData = {
@@ -96,19 +97,47 @@ const createProduct = async (data, supplierId) => {
 };
 
 // Update product (same fix)
+// Update product
 const updateProduct = async (id, data, supplierId) => {
-  if (data.category && typeof data.category === 'string') {
+  console.log('=== UPDATE PRODUCT DEBUG ===');
+  console.log('Updating product ID:', id);
+  console.log('Update data:', data);
+  
+  // Vérifier si c'est une nouvelle catégorie
+  if (data.newCategory && typeof data.newCategory === 'string') {
+    console.log('Creating new category for update:', data.newCategory);
+    
+    const slug = data.newCategory
+      .toLowerCase()
+      .replace(/[^\w\s]/gi, '')
+      .replace(/\s+/g, '-');
+    
+    let existingCategory = await Category.findOne({ 
+      name: { $regex: new RegExp('^' + data.newCategory + '$', 'i') } 
+    });
+    
+    if (existingCategory) {
+      data.categoryId = existingCategory._id;
+    } else {
+      const newCategory = new Category({
+        name: data.newCategory,
+        slug: slug
+      });
+      await newCategory.save();
+      data.categoryId = newCategory._id;
+    }
+    
+    delete data.newCategory;
+  }
+  else if (data.category && typeof data.category === 'string') {
     let cat;
     
-    // Check if the category value is a valid MongoDB ObjectId
     const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(data.category);
     
     if (isValidObjectId) {
-      // Try to find by ID if it's a valid ObjectId
       cat = await Category.findById(data.category);
     }
     
-    // If not found by ID or not a valid ObjectId, try to find by name
     if (!cat) {
       cat = await Category.findOne({ 
         name: { $regex: new RegExp('^' + data.category + '$', 'i') } 
@@ -122,13 +151,34 @@ const updateProduct = async (id, data, supplierId) => {
     delete data.category;
   }
 
+  // Récupérer le produit existant pour conserver les anciens fichiers
+  const existingProduct = await Product.findById(id);
+  if (!existingProduct) {
+    throw new Error('Product not found');
+  }
+
+  // Préparer les données de mise à jour
+  const updateData = {
+    name: data.name || existingProduct.name,
+    price: data.price || existingProduct.price,
+    stock: data.stock || existingProduct.stock,
+    description: data.description || existingProduct.description,
+    categoryId: data.categoryId || existingProduct.categoryId,
+    // Conserver les anciennes images si de nouvelles ne sont pas fournies
+    imageUrls: data.imageUrls || existingProduct.imageUrls,
+    documentation: data.documentation || existingProduct.documentation
+  };
+
   const product = await Product.findOneAndUpdate(
     { _id: id, supplierId },
-    data,
+    updateData,
     { new: true, runValidators: true }
   );
+  
   if (!product) throw new Error('Product not found or unauthorized');
   await product.populate('categoryId', 'name slug');
+  
+  console.log('Product updated successfully:', product._id);
   return product;
 };
 

@@ -1,36 +1,39 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ChevronDown, Upload, FileText } from "lucide-react";
+import { ChevronDown, Upload, FileText, Plus, X, Image, File } from "lucide-react";
 import SimpleFooter from "../components/Footer";
 import { useTranslation } from 'react-i18next';
 import { useAuth } from "../auth/AuthContext";
 import { getMyProducts, updateProduct } from "../auth/api.js";
 
-const Input = ({ label, placeholder, type = "text", value, onChange }) => (
+const Input = ({ label, placeholder, type = "text", value, onChange, required }) => (
   <div>
     <label className="mb-2 block text-sm font-semibold text-slate-900">{label}</label>
     <input
       type={type}
       placeholder={placeholder}
-      value={value}
+      value={value || ''}
       onChange={onChange}
+      required={required}
       className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
     />
   </div>
 );
 
-const Select = ({ label, placeholder, options = [], value, onChange }) => (
+const Select = ({ label, placeholder, options = [], value, onChange, required, disabled }) => (
   <div>
     <label className="mb-2 block text-sm font-semibold text-slate-900">{label}</label>
     <div className="relative">
       <select 
-        value={value} 
+        value={value || ''} 
         onChange={onChange}
-        className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
+        required={required}
+        disabled={disabled}
+        className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none disabled:opacity-50"
       >
         <option value="">{placeholder}</option>
         {options.map((opt, idx) => (
-          <option key={idx} value={opt}>{opt}</option>
+          <option key={idx} value={opt.value}>{opt.label}</option>
         ))}
       </select>
       <ChevronDown className="absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -38,27 +41,58 @@ const Select = ({ label, placeholder, options = [], value, onChange }) => (
   </div>
 );
 
-const Textarea = ({ label, placeholder, value, onChange }) => (
+const Textarea = ({ label, placeholder, value, onChange, required }) => (
   <div>
     <label className="mb-2 block text-sm font-semibold text-slate-900">{label}</label>
     <textarea
       rows={4}
       placeholder={placeholder}
-      value={value}
+      value={value || ''}
       onChange={onChange}
+      required={required}
       className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
     />
   </div>
 );
 
-const UploadBox = ({ title, subtitle, icon, onChange }) => (
+const UploadBox = ({ title, subtitle, icon, files, onRemove, existingFiles = [], onChange }) => (
   <div>
     <div className="mb-3 text-sm font-semibold text-slate-900">{title}</div>
+    
+    {/* Afficher les fichiers existants */}
+    {existingFiles.length > 0 && (
+      <div className="mb-3 space-y-2">
+        <p className="text-xs font-medium text-slate-500">Fichiers actuels :</p>
+        {existingFiles.map((file, index) => (
+          <div key={index} className="flex items-center justify-between bg-slate-50 p-2 rounded-lg">
+            <div className="flex items-center gap-2">
+              {title.includes('Image') ? 
+                <Image className="h-4 w-4 text-indigo-500" /> : 
+                <File className="h-4 w-4 text-indigo-500" />
+              }
+              <span className="text-xs text-slate-600 truncate max-w-[150px]">
+                {file.split('/').pop()}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => onRemove(index)}
+              className="text-red-500 hover:text-red-700"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        ))}
+      </div>
+    )}
+    
     <label className="flex h-28 w-full cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-white text-center hover:bg-slate-50">
       <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-100 text-slate-700">
         {icon}
       </div>
-      <div className="mt-3 text-sm text-slate-600">{subtitle}</div>
+      <div className="mt-3 text-sm text-slate-600">
+        {files.length > 0 ? `${files.length} nouveau(x) fichier(s)` : subtitle}
+      </div>
       <input type="file" multiple className="hidden" onChange={onChange} />
     </label>
   </div>
@@ -74,79 +108,211 @@ export default function FournisseurProduitEdit() {
     name: '',
     category: '',
     price: '',
-    unit: '',
     stock: '',
     description: ''
   });
+  
+  // États pour les fichiers
   const [imageFiles, setImageFiles] = useState([]);
   const [docFiles, setDocFiles] = useState([]);
+  const [existingImages, setExistingImages] = useState([]);
+  const [existingDocs, setExistingDocs] = useState([]);
+  const [imagesToDelete, setImagesToDelete] = useState([]);
+  const [docsToDelete, setDocsToDelete] = useState([]);
+  
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  
+  // États pour les catégories
+  const [categories, setCategories] = useState([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+  const [showNewCategoryInput, setShowNewCategoryInput] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [customCategories, setCustomCategories] = useState([]);
 
-  const categoryOptions = [
-    t('fournisseurProduitNew.categories.basicMaterials'),
-    t('fournisseurProduitNew.categories.flooring'),
-    t('fournisseurProduitNew.categories.paint'),
-    t('fournisseurProduitNew.categories.carpentry'),
-    t('fournisseurProduitNew.categories.electricity'),
-    t('fournisseurProduitNew.categories.plumbing')
-  ];
-
-  const unitOptions = [
-    t('fournisseurProduitNew.units.piece'),
-    t('fournisseurProduitNew.units.box'),
-    t('fournisseurProduitNew.units.meter'),
-    t('fournisseurProduitNew.units.squareMeter'),
-    t('fournisseurProduitNew.units.liter'),
-    t('fournisseurProduitNew.units.kilogram')
-  ];
-
+  // Fetch categories
   useEffect(() => {
-    const fetchProduct = async () => {
+    const fetchCategories = async () => {
       try {
-        const data = await getMyProducts({ token, search: '', page: 1, limit: 100 });
-        const product = data.products.find(p => p._id === id);
-        if (product) {
-          setFormData({
-            name: product.name,
-            category: product.categoryId?.name || '',
-            price: product.price,
-            unit: product.unit || '',
-            stock: product.stock,
-            description: product.description
-          });
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+        const response = await fetch(`${API_URL}/supplier/categories`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        const data = await response.json();
+        if (data.data) {
+          setCategories(data.data);
         }
       } catch (error) {
-        console.error(error);
+        console.error('Error fetching categories:', error);
+        setCategories([
+          { _id: 'basicMaterials', name: 'Basic Materials' },
+          { _id: 'flooring', name: 'Flooring' },
+          { _id: 'paint', name: 'Paint' },
+          { _id: 'carpentry', name: 'Carpentry' },
+          { _id: 'electricity', name: 'Electricity' },
+          { _id: 'plumbing', name: 'Plumbing' }
+        ]);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+
+    if (token) {
+      fetchCategories();
+    }
+  }, [token]);
+
+  // Fetch product
+  useEffect(() => {
+    const fetchProduct = async () => {
+      if (!id || !token) return;
+      
+      setLoading(true);
+      setError('');
+      
+      try {
+        console.log('Fetching product with ID:', id);
+        const data = await getMyProducts({ token, search: '', page: 1, limit: 100 });
+        
+        // Gérer différentes structures de données
+        let productsArray = [];
+        if (data?.products) {
+          productsArray = data.products;
+        } else if (data?.data?.products) {
+          productsArray = data.data.products;
+        } else if (Array.isArray(data)) {
+          productsArray = data;
+        } else if (data?.data && Array.isArray(data.data)) {
+          productsArray = data.data;
+        }
+        
+        const product = productsArray.find(p => p._id === id);
+        
+        if (product) {
+          setFormData({
+            name: product.name || '',
+            category: product.categoryId?._id || '',
+            price: product.price?.toString() || '',
+            stock: product.stock?.toString() || '',
+            description: product.description || ''
+          });
+          
+          // Sauvegarder les fichiers existants
+          setExistingImages(product.imageUrls || []);
+          setExistingDocs(product.documentation || []);
+        } else {
+          setError('Product not found');
+        }
+      } catch (error) {
+        console.error('Error fetching product:', error);
+        setError(error.message || 'Error loading product');
       } finally {
         setLoading(false);
       }
     };
+    
     fetchProduct();
   }, [id, token]);
+
+  // Category options
+  const categoryOptions = [
+    ...categories.map(cat => ({
+      label: cat.name,
+      value: cat._id
+    })),
+    ...customCategories.map((cat, index) => ({
+      label: cat.name,
+      value: `custom-${index}`
+    }))
+  ];
+
+  const handleAddCustomCategory = () => {
+    if (newCategoryName.trim()) {
+      setCustomCategories([
+        ...customCategories,
+        { name: newCategoryName.trim(), _id: `custom-${Date.now()}` }
+      ]);
+      setNewCategoryName('');
+      setShowNewCategoryInput(false);
+    }
+  };
+
+  const handleRemoveExistingImage = (index) => {
+    const imageToRemove = existingImages[index];
+    setImagesToDelete([...imagesToDelete, imageToRemove]);
+    setExistingImages(existingImages.filter((_, i) => i !== index));
+  };
+
+  const handleRemoveExistingDoc = (index) => {
+    const docToRemove = existingDocs[index];
+    setDocsToDelete([...docsToDelete, docToRemove]);
+    setExistingDocs(existingDocs.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
+    setError('');
+    
     try {
       const fd = new FormData();
-      fd.append('data', JSON.stringify(formData));
-      imageFiles.forEach(f => fd.append('media', f));
-      docFiles.forEach(f => fd.append('media', f));
+      
+      let categoryId = formData.category;
+      
+      const dataToSend = {
+        name: formData.name,
+        price: parseFloat(formData.price) || 0,
+        stock: parseInt(formData.stock) || 0,
+        description: formData.description,
+        // Envoyer les fichiers existants qui n'ont pas été supprimés
+        existingImages: existingImages,
+        existingDocs: existingDocs,
+        // Envoyer la liste des fichiers à supprimer
+        imagesToDelete: imagesToDelete,
+        docsToDelete: docsToDelete
+      };
+      
+      if (categoryId && categoryId.startsWith('custom-')) {
+        const index = parseInt(categoryId.replace('custom-', ''));
+        const customCat = customCategories[index];
+        dataToSend.newCategory = customCat?.name || '';
+      } else {
+        dataToSend.category = categoryId;
+      }
+      
+      fd.append('data', JSON.stringify(dataToSend));
+      
+      // Ajouter les nouveaux fichiers
+      imageFiles.forEach(f => fd.append('newMedia', f));
+      docFiles.forEach(f => fd.append('newMedia', f));
 
       await updateProduct({ token, id, formData: fd });
+      console.log('Product updated successfully');
       navigate('/fournisseur/produits');
     } catch (error) {
-      console.error(error);
+      console.error('Error updating product:', error);
+      setError(error.message || 'Error updating product');
+      alert(error.message || 'Error updating product');
     } finally {
       setSubmitting(false);
     }
   };
 
-  if (loading) {
+  if (loading || loadingCategories) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <div className="text-center">Loading...</div>
+        <div className="text-center">Loading product data...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center text-red-600">Error: {error}</div>
       </div>
     );
   }
@@ -169,36 +335,91 @@ export default function FournisseurProduitEdit() {
               placeholder={t('fournisseurProduitNew.productNamePlaceholder')}
               value={formData.name}
               onChange={(e) => setFormData({...formData, name: e.target.value})}
+              required
             />
-            <Select 
-              label={t('fournisseurProduitNew.categoryLabel')} 
-              placeholder={t('fournisseurProduitNew.categoryPlaceholder')}
-              options={categoryOptions}
-              value={formData.category}
-              onChange={(e) => setFormData({...formData, category: e.target.value})}
-            />
+            
+            {/* Catégorie avec option d'ajout */}
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-slate-900">
+                {t('fournisseurProduitNew.categoryLabel')}
+              </label>
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <select 
+                      value={formData.category} 
+                      onChange={(e) => setFormData({...formData, category: e.target.value})}
+                      required
+                      disabled={loadingCategories}
+                      className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
+                    >
+                      <option value="">{t('fournisseurProduitNew.categoryPlaceholder')}</option>
+                      {categoryOptions.map((opt, idx) => (
+                        <option key={idx} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowNewCategoryInput(true)}
+                    className="px-4 py-3 rounded-xl bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200"
+                  >
+                    <Plus className="h-5 w-5" />
+                  </button>
+                </div>
+
+                {showNewCategoryInput && (
+                  <div className="flex gap-2 mt-2">
+                    <input
+                      type="text"
+                      value={newCategoryName}
+                      onChange={(e) => setNewCategoryName(e.target.value)}
+                      placeholder="Nouvelle catégorie"
+                      className="flex-1 rounded-xl border border-slate-200 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddCustomCategory}
+                      className="px-4 py-2 rounded-xl bg-green-600 text-white hover:bg-green-700 text-sm"
+                    >
+                      Ajouter
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowNewCategoryInput(false);
+                        setNewCategoryName('');
+                      }}
+                      className="px-4 py-2 rounded-xl bg-red-50 text-red-700 hover:bg-red-100 border border-red-200"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
 
             <Input 
               label={t('fournisseurProduitNew.priceLabel')} 
               placeholder="0.00" 
               type="number" 
+              step="0.01"
+              min="0"
               value={formData.price}
               onChange={(e) => setFormData({...formData, price: e.target.value})}
-            />
-            <Select 
-              label={t('fournisseurProduitNew.unitLabel')} 
-              placeholder={t('fournisseurProduitNew.unitPlaceholder')}
-              options={unitOptions}
-              value={formData.unit}
-              onChange={(e) => setFormData({...formData, unit: e.target.value})}
+              required
             />
 
             <Input 
               label={t('fournisseurProduitNew.stockLabel')} 
               placeholder="0" 
               type="number" 
+              min="0"
               value={formData.stock}
               onChange={(e) => setFormData({...formData, stock: e.target.value})}
+              required
             />
             <div />
           </div>
@@ -209,6 +430,7 @@ export default function FournisseurProduitEdit() {
               placeholder={t('fournisseurProduitNew.descriptionPlaceholder')} 
               value={formData.description}
               onChange={(e) => setFormData({...formData, description: e.target.value})}
+              required
             />
           </div>
 
@@ -217,12 +439,18 @@ export default function FournisseurProduitEdit() {
               title={t('fournisseurProduitNew.imageUploadTitle')}
               subtitle={t('fournisseurProduitNew.imageUploadSubtitle')}
               icon={<Upload className="h-5 w-5" />}
+              files={imageFiles}
+              existingFiles={existingImages}
+              onRemove={handleRemoveExistingImage}
               onChange={(e) => setImageFiles(Array.from(e.target.files))}
             />
             <UploadBox
               title={t('fournisseurProduitNew.pdfUploadTitle')}
               subtitle={t('fournisseurProduitNew.pdfUploadSubtitle')}
               icon={<FileText className="h-5 w-5" />}
+              files={docFiles}
+              existingFiles={existingDocs}
+              onRemove={handleRemoveExistingDoc}
               onChange={(e) => setDocFiles(Array.from(e.target.files))}
             />
           </div>

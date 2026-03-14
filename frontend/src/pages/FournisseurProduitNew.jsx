@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronDown, Upload, FileText, Package, ShoppingCart, TrendingUp } from "lucide-react";
+import { ChevronDown, Upload, FileText, Package, ShoppingCart, TrendingUp, Plus, X } from "lucide-react";
 import SimpleFooter from "../components/Footer";
 import { useTranslation } from 'react-i18next';
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "../auth/AuthContext.jsx";
 import { createProduct, getSupplierStats } from "../auth/api.js";
 
 const StatCard = ({ title, value, icon, iconBg, iconFg }) => (
@@ -93,7 +93,6 @@ export default function FournisseurProduitNew() {
     name: '',
     category: '',
     price: '',
-    unit: '',
     stock: '',
     description: ''
   });
@@ -103,6 +102,11 @@ export default function FournisseurProduitNew() {
   const [stats, setStats] = useState({});
   const [categories, setCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
+  
+  // Nouveaux états pour la gestion des catégories
+  const [showNewCategoryInput, setShowNewCategoryInput] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [customCategories, setCustomCategories] = useState([]);
 
   // Fetch categories from the backend
   useEffect(() => {
@@ -139,53 +143,77 @@ export default function FournisseurProduitNew() {
     }
   }, [token]);
 
-  // Create category options from fetched categories
-  const categoryOptions = categories.map(cat => ({
-    label: cat.name,
-    value: cat._id
-  }));
-
-  const unitOptions = [
-    { label: t('fournisseurProduitNew.units.piece'), value: 'piece' },
-    { label: t('fournisseurProduitNew.units.box'), value: 'box' },
-    { label: t('fournisseurProduitNew.units.meter'), value: 'meter' },
-    { label: t('fournisseurProduitNew.units.squareMeter'), value: 'squareMeter' },
-    { label: t('fournisseurProduitNew.units.liter'), value: 'liter' },
-    { label: t('fournisseurProduitNew.units.kilogram'), value: 'kilogram' }
+  // Create category options from fetched categories + custom categories
+  const categoryOptions = [
+    ...categories.map(cat => ({
+      label: cat.name,
+      value: cat._id
+    })),
+    ...customCategories.map((cat, index) => ({
+      label: cat.name,
+      value: `custom-${index}` // Temporary ID for custom categories
+    }))
   ];
 
   useEffect(() => {
     getSupplierStats({ token }).then(setStats).catch(console.error);
   }, [token]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSubmitting(true);
-    try {
-      const fd = new FormData();
-      
-      const dataToSend = {
-        name: formData.name,
-        category: formData.category, // This sends the category ID
-        price: parseFloat(formData.price) || 0,
-        unit: formData.unit,
-        stock: parseInt(formData.stock) || 0,
-        description: formData.description
-      };
-      
-      fd.append('data', JSON.stringify(dataToSend));
-      imageFiles.forEach(f => fd.append('media', f));
-      docFiles.forEach(f => fd.append('media', f));
-
-      await createProduct({ token, formData: fd });
-      navigate('/fournisseur/produits');
-    } catch (error) {
-      console.error('Error creating product:', error);
-      alert(error.message || 'Error creating product');
-    } finally {
-      setSubmitting(false);
+  const handleAddCustomCategory = () => {
+    if (newCategoryName.trim()) {
+      setCustomCategories([
+        ...customCategories,
+        { name: newCategoryName.trim(), _id: `custom-${Date.now()}` }
+      ]);
+      setNewCategoryName('');
+      setShowNewCategoryInput(false);
     }
   };
+
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  setSubmitting(true);
+  try {
+    const fd = new FormData();
+    
+    // Déterminer si la catégorie est personnalisée ou existante
+    let categoryId = formData.category;
+    
+    const dataToSend = {
+      name: formData.name,
+      price: parseFloat(formData.price) || 0,
+      stock: parseInt(formData.stock) || 0,
+      description: formData.description
+    };
+    
+    // Si c'est une catégorie personnalisée (commence par 'custom-')
+    if (categoryId && categoryId.startsWith('custom-')) {
+      const index = parseInt(categoryId.replace('custom-', ''));
+      const customCat = customCategories[index];
+      // Envoyer le nom de la nouvelle catégorie
+      dataToSend.newCategory = customCat?.name || '';
+      console.log('Creating new category:', dataToSend.newCategory);
+    } else {
+      // Catégorie existante - envoyer l'ID
+      dataToSend.category = categoryId;
+      console.log('Using existing category ID:', categoryId);
+    }
+    
+    console.log('Data to send:', dataToSend);
+    
+    fd.append('data', JSON.stringify(dataToSend));
+    imageFiles.forEach(f => fd.append('media', f));
+    docFiles.forEach(f => fd.append('media', f));
+
+    await createProduct({ token, formData: fd });
+    navigate('/fournisseur/produits');
+  } catch (error) {
+    console.error('Error creating product:', error);
+    alert(error.message || 'Error creating product');
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   return (
     <div className="flex-1">
@@ -243,15 +271,70 @@ export default function FournisseurProduitNew() {
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               required
             />
-            <Select 
-              label={t('fournisseurProduitNew.categoryLabel')} 
-              placeholder={loadingCategories ? 'Loading categories...' : t('fournisseurProduitNew.categoryPlaceholder')}
-              options={categoryOptions}
-              value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-              required
-              disabled={loadingCategories}
-            />
+            
+            {/* Catégorie avec option d'ajout */}
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-slate-900">
+                {t('fournisseurProduitNew.categoryLabel')}
+              </label>
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <select 
+                      value={formData.category} 
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      required
+                      disabled={loadingCategories}
+                      className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none disabled:opacity-50"
+                    >
+                      <option value="">{loadingCategories ? 'Loading categories...' : t('fournisseurProduitNew.categoryPlaceholder')}</option>
+                      {categoryOptions.map((opt, idx) => (
+                        <option key={idx} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowNewCategoryInput(true)}
+                    className="px-4 py-3 rounded-xl bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200"
+                  >
+                    <Plus className="h-5 w-5" />
+                  </button>
+                </div>
+
+                {/* Input pour nouvelle catégorie */}
+                {showNewCategoryInput && (
+                  <div className="flex gap-2 mt-2">
+                    <input
+                      type="text"
+                      value={newCategoryName}
+                      onChange={(e) => setNewCategoryName(e.target.value)}
+                      placeholder="Nouvelle catégorie"
+                      className="flex-1 rounded-xl border border-slate-200 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddCustomCategory}
+                      className="px-4 py-2 rounded-xl bg-green-600 text-white hover:bg-green-700 text-sm"
+                    >
+                      Ajouter
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowNewCategoryInput(false);
+                        setNewCategoryName('');
+                      }}
+                      className="px-4 py-2 rounded-xl bg-red-50 text-red-700 hover:bg-red-100 border border-red-200"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
 
             <Input 
               label={t('fournisseurProduitNew.priceLabel')} 
@@ -263,15 +346,7 @@ export default function FournisseurProduitNew() {
               onChange={(e) => setFormData({ ...formData, price: e.target.value })}
               required
             />
-            <Select 
-              label={t('fournisseurProduitNew.unitLabel')} 
-              placeholder={t('fournisseurProduitNew.unitPlaceholder')}
-              options={unitOptions}
-              value={formData.unit}
-              onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-              required
-            />
-
+            
             <Input 
               label={t('fournisseurProduitNew.stockLabel')} 
               placeholder="0" 
