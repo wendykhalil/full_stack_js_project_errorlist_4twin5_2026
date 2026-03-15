@@ -7,14 +7,20 @@ const { requireRoles } = require('../middleware/roleMiddleware');
 const AuthLog = require('../models/AuthLog');
 const ActivityLog = require('../models/ActivityLog');
 
+// ✅ NOUVEAUX IMPORTS
+const supplierRoutes = require('../modules/supplier/supplier.routes');
+const catalogRoutes = require('../modules/catalog/catalog.routes');
+const ordersRoutes = require('../modules/orders/orders.routes');
+const messagesRoutes = require('../modules/messages/messages.routes');
+
 const router = express.Router();
 
 router.get('/health', (req, res) => res.json({ ok: true }));
 
 router.use('/auth', authRoutes);
-
 router.use('/projects', projectsRoutes);
 
+// ✅ ROUTES EXISTANTES
 router.get('/admin/ping', authRequired, requireRoles('ADMIN'), (req, res) => {
   res.json({ ok: true, role: req.user.role });
 });
@@ -24,11 +30,14 @@ router.get('/artisan/ping', authRequired, requireRoles('ARTISAN'), (req, res) =>
 router.get('/prescripteur/ping', authRequired, requireRoles('PRESCRIPTEUR'), (req, res) => {
   res.json({ ok: true, role: req.user.role });
 });
-const supplierRoutes = require('../modules/supplier/supplier.routes');
-const catalogRoutes = require('../modules/catalog/catalog.routes');
 
+// ✅ ROUTES FOURNISSEUR ET CATALOGUE (existantes)
 router.use('/supplier', supplierRoutes);
 router.use('/catalog', catalogRoutes);
+
+// ✅ NOUVELLES ROUTES POUR LA MARKETPLACE
+router.use('/orders', ordersRoutes);
+router.use('/messages', messagesRoutes);
 
 router.get('/supplier/ping', authRequired, requireRoles('SUPPLIER'), (req, res) => {
   res.json({ ok: true, role: req.user.role });
@@ -56,7 +65,6 @@ router.get('/admin/auth-logs', authRequired, requireRoles('ADMIN'), async (req, 
     next(err);
   }
 });
-
 
 // Admin: activity logs (profile updates, password changes, sms login, etc.)
 router.get('/admin/activity-logs', authRequired, requireRoles('ADMIN'), async (req, res, next) => {

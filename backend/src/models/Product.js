@@ -24,7 +24,13 @@ const productSchema = new mongoose.Schema(
 
     imageUrls: [{ type: String }],
 
-    documentation: [{ type: String }],
+    documentation: [{ type: String }], // PDFs et autres docs
+    
+    // ✅ NOUVEAU : Fiche technique (PDF ou HTML)
+    technicalSheet: {
+      type: String, // URL du PDF ou contenu HTML
+      default: ""
+    },
 
     isApproved: { type: Boolean, default: false }, // admin validates products
   },

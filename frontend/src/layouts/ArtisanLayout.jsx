@@ -1,4 +1,4 @@
-// ✅ ArtisanLayout.jsx (with profile picture support)
+// ✅ ArtisanLayout.jsx (with profile picture support and Orders link)
 
 import React, { useState } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
@@ -16,6 +16,7 @@ import {
   ChevronLeft,
   ChevronRight,
   UserCircle2,
+  Package, // ✅ NOUVEAU : icône pour les commandes
 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import ThemeToggle from "../components/ThemeToggle";
@@ -112,6 +113,13 @@ export default function ArtisanLayout() {
               label="Factures"
               collapsed={isSidebarCollapsed}
             />
+            {/* ✅ NOUVEAU : Lien vers les commandes */}
+            <NavItem
+              to="/artisan/orders"
+              icon={<Package className="h-5 w-5" />}
+              label="Mes commandes"
+              collapsed={isSidebarCollapsed}
+            />
             <NavItem
               to="/artisan/marketplace"
               icon={<ShoppingCart className="h-5 w-5" />}
@@ -139,10 +147,7 @@ export default function ArtisanLayout() {
                 alt=""
                 className="h-8 w-8 rounded-full object-cover"
                 onError={(e) => {
-                  // If image fails to load, hide it and show the icon
                   e.target.style.display = 'none';
-                  // We need to access the icon element – we'll use a ref or just let the icon be visible
-                  // Better: we can conditionally render both and use CSS to show/hide
                 }}
               />
             ) : null}
@@ -306,6 +311,14 @@ export default function ArtisanLayout() {
                   to="/artisan/factures"
                   icon={<Receipt className="h-5 w-5" />}
                   label="Factures"
+                  onClick={closeMobileMenu}
+                  collapsed={false}
+                />
+                {/* ✅ NOUVEAU : Lien vers les commandes dans le menu mobile */}
+                <NavItem
+                  to="/artisan/orders"
+                  icon={<Package className="h-5 w-5" />}
+                  label="Mes commandes"
                   onClick={closeMobileMenu}
                   collapsed={false}
                 />

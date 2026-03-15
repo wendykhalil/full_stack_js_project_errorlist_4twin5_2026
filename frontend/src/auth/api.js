@@ -135,3 +135,67 @@ export async function getSupplierCategories({ token }) {
   return apiFetch('/supplier/categories', { token });
 }
 
+// ========== ORDERS API ==========
+export async function createOrder({ token, orderData }) {
+  return apiFetch('/orders', {
+    token,
+    method: 'POST',
+    body: orderData
+  });
+}
+
+export async function getMyOrders({ token, page = 1, limit = 10, status = '' }) {
+  const params = new URLSearchParams({ page, limit });
+  if (status) params.append('status', status);
+  return apiFetch(`/orders/my-orders?${params}`, { token });
+}
+
+export async function getSupplierOrders({ token, page = 1, limit = 10, status = '' }) {
+  const params = new URLSearchParams({ page, limit });
+  if (status) params.append('status', status);
+  return apiFetch(`/orders/supplier?${params}`, { token });
+}
+
+export async function updateOrderStatus({ token, orderId, status, note = '' }) {
+  return apiFetch(`/orders/${orderId}/status`, {
+    token,
+    method: 'PATCH',
+    body: { status, note }
+  });
+}
+
+export async function addSupplierNote({ token, orderId, note }) {
+  return apiFetch(`/orders/${orderId}/note`, {
+    token,
+    method: 'POST',
+    body: { note }
+  });
+}
+
+export async function getOrderById({ token, orderId }) {
+  return apiFetch(`/orders/${orderId}`, { token });
+}
+
+// ========== MESSAGES API ==========
+export async function sendMessage({ token, messageData }) {
+  return apiFetch('/messages', {
+    token,
+    method: 'POST',
+    body: messageData
+  });
+}
+
+export async function getOrderMessages({ token, orderId }) {
+  return apiFetch(`/messages/order/${orderId}`, { token });
+}
+
+export async function markMessageAsRead({ token, messageId }) {
+  return apiFetch(`/messages/${messageId}/read`, {
+    token,
+    method: 'PATCH'
+  });
+}
+
+export async function getUnreadCount({ token }) {
+  return apiFetch('/messages/unread/count', { token });
+}

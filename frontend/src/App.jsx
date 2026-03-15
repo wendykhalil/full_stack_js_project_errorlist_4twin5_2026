@@ -31,6 +31,9 @@ import ArtisanFactureStep1 from "./pages/ArtisanFactureStep1";
 import ArtisanFactureStep2 from "./pages/ArtisanFactureStep2";
 import ArtisanFactureStep3 from "./pages/ArtisanFactureStep3";
 import ArtisanMarketplace from "./pages/ArtisanMarketplace";
+import ArtisanProductDetails from "./pages/ArtisanProductDetails"; // ✅ AJOUTER
+import ArtisanOrderRequest from "./pages/ArtisanOrderRequest"; // ✅ AJOUTER
+import ArtisanOrders from "./pages/ArtisanOrders"; // ✅ AJOUTER
 
 // PRESCRIPTEUR
 import PrescripteurLayout from "./layouts/PrescripteurLayout";
@@ -42,7 +45,10 @@ import PrescripteurProjects from "./pages/PrescripteurProjects";
 import FournisseurLayout from "./layouts/FournisseurLayout";
 import FournisseurProduits from "./pages/FournisseurProduits";
 import FournisseurProduitNew from "./pages/FournisseurProduitNew";
-import FournisseurProduitEdit from "./pages/FournisseurProduitEdit"; // Add this import
+import FournisseurProduitEdit from "./pages/FournisseurProduitEdit";
+import FournisseurOrders from "./pages/FournisseurOrders"; // ✅ AJOUTER
+import OrderDetails from "./pages/OrderDetails"; // ✅ AJOUTER
+
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Profile from "./pages/Profile";
@@ -50,10 +56,7 @@ import Profile from "./pages/Profile";
 export default function App() {
     return (
         <BrowserRouter>
-          <TawkToChat />
-
-            {/* Widget Tawk.to - visible sur toutes les pages */}
-           
+            <TawkToChat />
             <RealtimeNotifications />
             <Routes>
                 {/* Routes publiques */}
@@ -61,7 +64,6 @@ export default function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/login-phone" element={<PhoneLogin />} />
                 <Route path="/register-role" element={<RegisterRole />} />
-                {/* backward-compatible */}
                 <Route path="/register-role-sms" element={<RegisterRole />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
@@ -73,13 +75,11 @@ export default function App() {
                 <Route path="/register" element={<RegisterChooseRole />} />
                 <Route path="/register/:role" element={<RegisterForm />} />
 
-                {/* ✅ SOLUTION 1: Redirection pour /artisandeviscreate */}
+                {/* Redirections */}
                 <Route 
                     path="/artisandeviscreate" 
                     element={<Navigate to="/artisan/devis/create" replace />} 
                 />
-
-                {/* ✅ SOLUTION 2: Aussi ajouter cette redirection au cas où */}
                 <Route 
                     path="/artisan/deviscreate" 
                     element={<Navigate to="/artisan/devis/create" replace />} 
@@ -111,6 +111,11 @@ export default function App() {
                         <Route path="factures/new/step-2" element={<ArtisanFactureStep2 />} />
                         <Route path="factures/new/step-3" element={<ArtisanFactureStep3 />} />
                         <Route path="marketplace" element={<ArtisanMarketplace />} />
+                        {/* ✅ Routes pour les commandes artisan */}
+                        <Route path="product/:id" element={<ArtisanProductDetails />} />
+                        <Route path="order-request/:productId" element={<ArtisanOrderRequest />} />
+                        <Route path="orders" element={<ArtisanOrders />} />
+                        <Route path="orders/:id" element={<OrderDetails />} />
                     </Route>
                 </Route>
 
@@ -124,15 +129,16 @@ export default function App() {
                     </Route>
                 </Route>
 
-                {/* Fournisseur (protected) */}
+                {/* Fournisseur (protected) - UNE SEULE SECTION */}
                 <Route element={<ProtectedRoute allowedRoles={[Roles.SUPPLIER]} />}>
                     <Route path="/fournisseur" element={<FournisseurLayout />}>
                         <Route index element={<Navigate to="produits" replace />} />
                         <Route path="produits" element={<FournisseurProduits />} />
                         <Route path="produits/new" element={<FournisseurProduitNew />} />
                         <Route path="produits/edit/:id" element={<FournisseurProduitEdit />} />
+                        <Route path="orders" element={<FournisseurOrders />} />
+                        <Route path="orders/:id" element={<OrderDetails />} />
                         <Route path="profile" element={<Profile />} />
-                        {/* Remove duplicate routes below */}
                     </Route>
                 </Route>
 

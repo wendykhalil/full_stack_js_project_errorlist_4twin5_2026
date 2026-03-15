@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Search, ChevronDown, ShoppingCart, Star } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Search, ChevronDown, ShoppingCart, Star, Eye } from "lucide-react";
 import SimpleFooter from "../components/Footer";
 import { useTranslation } from 'react-i18next';
 import { getCatalogProducts } from "../auth/api.js";
 
 const ProductCard = ({
+  product,
   image,
   category,
   title,
@@ -12,12 +14,12 @@ const ProductCard = ({
   supplier,
   price,
   unit,
+  onDetailsClick,
+  onOrderClick
 }) => {
-  const { t } = useTranslation();
+ 
   const [imgError, setImgError] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
-  
-  console.log(`Rendering ProductCard for ${title}:`, { image, imgError, imgLoaded });
   
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -31,14 +33,8 @@ const ProductCard = ({
           src={imgError ? 'https://via.placeholder.com/300x200?text=No+Image' : image}
           alt={title}
           className="h-48 w-full rounded-xl object-cover"
-          onError={() => {
-            console.log(`Image failed to load: ${image}`);
-            setImgError(true);
-          }}
-          onLoad={() => {
-            console.log(`Image loaded successfully: ${image}`);
-            setImgLoaded(true);
-          }}
+          onError={() => setImgError(true)}
+          onLoad={() => setImgLoaded(true)}
           style={{ display: imgLoaded && !imgError ? 'block' : 'none' }}
         />
       </div>
@@ -49,7 +45,7 @@ const ProductCard = ({
         </span>
 
         <h3 className="mt-3 text-lg font-semibold text-slate-900">{title}</h3>
-        <p className="mt-1 text-sm text-slate-500">{description}</p>
+        <p className="mt-1 text-sm text-slate-500 line-clamp-2">{description}</p>
 
         <div className="mt-2 text-sm text-slate-600">{supplier}</div>
 
@@ -67,10 +63,24 @@ const ProductCard = ({
           </div>
         </div>
 
-        <button className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
-          <ShoppingCart className="h-4 w-4" />
-          {t('artisanMarketplace.addToCart')}
-        </button>
+        {/* Boutons */}
+        <div className="mt-4 flex gap-2">
+          <button
+            onClick={() => onDetailsClick(product)}
+            className="flex-1 rounded-xl border border-indigo-200 bg-indigo-50 py-2 text-sm font-semibold text-indigo-700 hover:bg-indigo-100 flex items-center justify-center gap-1"
+          >
+            <Eye className="h-4 w-4" />
+            Détails
+          </button>
+          <button
+            onClick={() => onOrderClick(product)}
+            disabled={product.stock <= 0}
+            className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-indigo-600 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <ShoppingCart className="h-4 w-4" />
+            Demander
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -78,6 +88,7 @@ const ProductCard = ({
 
 export default function ArtisanMarketplace() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
@@ -101,14 +112,6 @@ export default function ArtisanMarketplace() {
           productsArray = data;
         }
         
-        // Log each product's image URL
-        productsArray.forEach((product, index) => {
-          console.log(`Product ${index}:`, {
-            name: product.name,
-            imageUrl: product.imageUrls?.[0]
-          });
-        });
-        
         setProducts(productsArray);
       } catch (error) {
         console.error('Error fetching catalog products:', error);
@@ -121,6 +124,14 @@ export default function ArtisanMarketplace() {
 
     fetchProducts();
   }, [search, category]);
+
+  const handleDetailsClick = (product) => {
+    navigate(`/artisan/product/${product._id}`);
+  };
+
+  const handleOrderClick = (product) => {
+    navigate(`/artisan/order-request/${product._id}`);
+  };
 
   return (
     <div className="flex-1">
@@ -135,8 +146,12 @@ export default function ArtisanMarketplace() {
           </p>
         </div>
 
-        <button className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium hover:bg-slate-50">
-          🛒 {t('artisanMarketplace.cartButton', { count: 0 })}
+        <button 
+          onClick={() => navigate('/artisan/orders')}
+          className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium hover:bg-slate-50 flex items-center gap-2"
+        >
+          <ShoppingCart className="h-4 w-4" />
+          {t('artisanMarketplace.cartButton', { count: 0 })}
         </button>
       </div>
 
@@ -184,14 +199,13 @@ export default function ArtisanMarketplace() {
         <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {products.map((product) => {
             const imageUrl = product.imageUrls?.[0] 
-              ? product.imageUrls[0]  // Fixed: removed extra /uploads
+              ? product.imageUrls[0]
               : 'https://via.placeholder.com/300x200?text=No+Image';
-            
-            console.log(`Rendering product ${product.name} with image:`, imageUrl);
             
             return (
               <ProductCard
                 key={product._id}
+                product={product}
                 image={imageUrl}
                 category={product.categoryId?.name || 'Uncategorized'}
                 title={product.name}
@@ -199,6 +213,8 @@ export default function ArtisanMarketplace() {
                 supplier={product.supplierId?.companyName || 'Unknown Supplier'}
                 price={product.price?.toFixed(2) || '0.00'}
                 unit={product.unit || 'piece'}
+                onDetailsClick={handleDetailsClick}
+                onOrderClick={handleOrderClick}
               />
             );
           })}

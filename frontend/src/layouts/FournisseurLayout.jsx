@@ -1,4 +1,4 @@
-// ✅ FournisseurLayout.jsx (FULL FIXED CODE WITH LOGO - OPTIMIZED)
+// ✅ FournisseurLayout.jsx (with Orders link)
 
 import React, { useState, useMemo } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
@@ -12,6 +12,7 @@ import {
   UserCircle2,
   ChevronLeft,
   ChevronRight,
+  ShoppingBag, // ✅ NOUVEAU : icône pour les commandes
 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import ThemeToggle from "../components/ThemeToggle";
@@ -101,6 +102,13 @@ export default function FournisseurLayout() {
               label="Profil"
               collapsed={isSidebarCollapsed}
             />
+            {/* ✅ NOUVEAU : Lien vers les commandes */}
+            <Tab
+              to="/fournisseur/orders"
+              icon={<ShoppingBag className="h-5 w-5" />}
+              label="Commandes"
+              collapsed={isSidebarCollapsed}
+            />
             <Tab
               to="/fournisseur/produits"
               icon={<Package className="h-5 w-5" />}
@@ -110,7 +118,7 @@ export default function FournisseurLayout() {
             <Tab
               to="/fournisseur/produits/new"
               icon={<Plus className="h-5 w-5" />}
-              label="Nouveau"
+              label="Nouveau produit"
               collapsed={isSidebarCollapsed}
             />
           </div>
@@ -126,7 +134,7 @@ export default function FournisseurLayout() {
               isSidebarCollapsed ? "justify-center" : ""
             } mb-3`}
           >
-            {/* LOGO DU FOURNISSEUR - OPTIMISÉ AVEC useMemo */}
+            {/* LOGO DU FOURNISSEUR */}
             {supplierLogo ? (
               <img 
                 src={supplierLogo} 
@@ -283,6 +291,13 @@ export default function FournisseurLayout() {
                   label="Profil"
                   onClick={closeMobileMenu}
                 />
+                {/* ✅ NOUVEAU : Lien vers les commandes dans le menu mobile */}
+                <Tab
+                  to="/fournisseur/orders"
+                  icon={<ShoppingBag className="h-5 w-5" />}
+                  label="Commandes"
+                  onClick={closeMobileMenu}
+                />
                 <Tab
                   to="/fournisseur/produits"
                   icon={<Package className="h-5 w-5" />}
@@ -292,9 +307,15 @@ export default function FournisseurLayout() {
                 <Tab
                   to="/fournisseur/produits/new"
                   icon={<Plus className="h-5 w-5" />}
-                  label="Nouveau"
+                  label="Nouveau produit"
                   onClick={closeMobileMenu}
                 />
+                <Tab
+  to="/fournisseur/orders"
+  icon={<ShoppingBag className="h-5 w-5" />}
+  label="Commandes"
+  collapsed={isSidebarCollapsed}
+/>
               </div>
 
               <div className="border-t border-slate-200 dark:border-slate-700 p-3">

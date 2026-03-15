@@ -1,39 +1,136 @@
 const mongoose = require("mongoose");
 
-const orderItemSchema = new mongoose.Schema(
-  {
-    productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
-    quantity: { type: Number, required: true, min: 1 },
-    unitPrice: { type: Number, required: true, min: 0 },
-    lineTotal: { type: Number, required: true, min: 0 }, // quantity * unitPrice
-  },
-  { _id: false }
-);
-
 const orderSchema = new mongoose.Schema(
   {
-    artisanId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    orderNumber: {
+  type: String,
+  unique: true,
+  default: () => {
+    const date = new Date();
+    const year = date.getFullYear().toString().slice(-2);
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const random = Math.floor(Math.random() * 10000).toString().padStart(4, "0");
+    return `CMD-${year}${month}-${random}`;
+  }
+},
+    
+    // Relations
+    productId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Product",
+      required: true,
+    },
+    
+    supplierId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    
+    artisanId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
 
-    supplierId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    // Détails de la commande
+    quantity: { 
+      type: Number, 
+      required: true, 
+      min: 1 
+    },
+    
+    unitPrice: { 
+      type: Number, 
+      required: true, 
+      min: 0 
+    },
+    
+    lineTotal: { 
+      type: Number, 
+      required: true, 
+      min: 0 
+    },
 
-    // optional but VERY useful to track order costs by project
-    projectId: { type: mongoose.Schema.Types.ObjectId, ref: "Project" },
+    // Prix négocié (peut différer du prix indicatif)
+    negotiatedPrice: { 
+      type: Number, 
+      min: 0 
+    },
+    
+    // Adresse de livraison
+    deliveryAddress: {
+      street: { type: String, required: true },
+      city: { type: String, required: true },
+      postalCode: { type: String, required: true },
+      country: { type: String, default: "Tunisie" },
+      additionalInfo: { type: String, default: "" }
+    },
 
-    items: { type: [orderItemSchema], default: [] },
+    // Message de l'artisan
+    artisanMessage: { 
+      type: String, 
+      default: "" 
+    },
 
-    subTotal: { type: Number, required: true, min: 0, default: 0 },
-    taxRate: { type: Number, required: true, min: 0, default: 0.19 },
-    taxAmount: { type: Number, required: true, min: 0, default: 0 },
-
-    total: { type: Number, required: true, min: 0, default: 0 },
-
+    // Statut de la commande
     status: {
       type: String,
-      enum: ["PENDING", "CONFIRMED", "SHIPPED", "DELIVERED", "CANCELED"],
-      default: "PENDING",
+      enum: [
+        "PENDING",      // En attente
+        "ACCEPTED",     // Accepté par fournisseur
+        "REFUSED",      // Refusé par fournisseur
+        "CONTACTED",    // Contact établi
+        "PREPARING",    // En préparation
+        "SHIPPED",      // Expédié
+        "DELIVERED"     // Livré
+      ],
+      default: "PENDING"
     },
+
+    // Notes fournisseur (interne)
+    supplierNotes: { 
+      type: String, 
+      default: "" 
+    },
+
+    // Historique des statuts
+    statusHistory: [{
+      status: String,
+      changedAt: { type: Date, default: Date.now },
+      changedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      note: String
+    }],
+
+    // Dates importantes
+    requestedDate: { type: Date, default: Date.now },
+    acceptedDate: Date,
+    refusedDate: Date,
+    shippedDate: Date,
+    deliveredDate: Date,
+    
+    // Contact hors plateforme
+    externalContact: {
+      phone: String,
+      email: String,
+      notes: String
+    }
   },
   { timestamps: true }
 );
+
+// ✅ VERSION CORRIGÉE - Générer un numéro de commande unique avant la création
+orderSchema.pre("save", function () {
+  if (!this.orderNumber) {
+    const date = new Date();
+    const year = date.getFullYear().toString().slice(-2);
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const random = Math.floor(Math.random() * 10000)
+      .toString()
+      .padStart(4, "0");
+
+    this.orderNumber = `CMD-${year}${month}-${random}`;
+  }
+});
 
 module.exports = mongoose.model("Order", orderSchema);
