@@ -231,6 +231,181 @@ async function getOrderById(orderId, userId) {
 
   return order;
 }
+// Récupérer les commandes en cours d'un artisan
+// Récupérer les commandes en cours d'un artisan
+async function getArtisanActiveOrders(artisanId, { page = 1, limit = 10 }) {
+  const query = { 
+    artisanId,
+    status: { $in: ['PENDING', 'ACCEPTED', 'PREPARING', 'SHIPPED'] }
+  };
+
+  const skip = (page - 1) * limit;
+  
+  const orders = await Order.find(query)
+    .populate('productId', 'name price imageUrls')
+    .populate('supplierId', 'firstName lastName email supplierProfile')
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit)
+    .lean();
+
+  const total = await Order.countDocuments(query);
+
+  return {
+    orders,
+    pagination: { page, limit, total, pages: Math.ceil(total / limit) }
+  };
+}
+
+// Récupérer l'historique des commandes d'un artisan
+async function getArtisanOrderHistory(artisanId, { page = 1, limit = 10 }) {
+  const query = { 
+    artisanId,
+    status: { $in: ['DELIVERED', 'CANCELLED'] }
+  };
+
+  const skip = (page - 1) * limit;
+  
+  const orders = await Order.find(query)
+    .populate('productId', 'name price imageUrls')
+    .populate('supplierId', 'firstName lastName email supplierProfile')
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit)
+    .lean();
+
+  const total = await Order.countDocuments(query);
+
+  return {
+    orders,
+    pagination: { page, limit, total, pages: Math.ceil(total / limit) }
+  };
+}
+
+// Récupérer les commandes en cours d'un fournisseur
+async function getSupplierActiveOrders(supplierId, { page = 1, limit = 10 }) {
+  const query = { 
+    supplierId,
+    status: { $in: ['PENDING', 'ACCEPTED', 'PREPARING', 'SHIPPED'] }
+  };
+
+  const skip = (page - 1) * limit;
+  
+  const orders = await Order.find(query)
+    .populate('productId', 'name price imageUrls documentation technicalSheet')
+    .populate('artisanId', 'firstName lastName email phone')
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit)
+    .lean();
+
+  const total = await Order.countDocuments(query);
+
+  return {
+    orders,
+    pagination: { page, limit, total, pages: Math.ceil(total / limit) }
+  };
+}
+
+// Récupérer l'historique des commandes d'un fournisseur
+async function getSupplierOrderHistory(supplierId, { page = 1, limit = 10 }) {
+  const query = { 
+    supplierId,
+    status: { $in: ['DELIVERED', 'CANCELLED'] }
+  };
+
+  const skip = (page - 1) * limit;
+  
+  const orders = await Order.find(query)
+    .populate('productId', 'name price imageUrls documentation technicalSheet')
+    .populate('artisanId', 'firstName lastName email phone')
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit)
+    .lean();
+
+  const total = await Order.countDocuments(query);
+
+  return {
+    orders,
+    pagination: { page, limit, total, pages: Math.ceil(total / limit) }
+  };
+}
+
+// Récupérer l'historique des commandes d'un artisan
+async function getArtisanOrderHistory(artisanId, { page = 1, limit = 10 }) {
+  const query = { 
+    artisanId,
+    status: { $in: ['DELIVERED', 'CANCELLED'] }
+  };
+
+  const skip = (page - 1) * limit;
+  
+  const orders = await Order.find(query)
+    .populate('productId', 'name price imageUrls')
+    .populate('supplierId', 'firstName lastName email supplierProfile')
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit)
+    .lean();
+
+  const total = await Order.countDocuments(query);
+
+  return {
+    orders,
+    pagination: { page, limit, total, pages: Math.ceil(total / limit) }
+  };
+}
+
+// Récupérer les commandes en cours d'un fournisseur
+async function getSupplierActiveOrders(supplierId, { page = 1, limit = 10 }) {
+  const query = { 
+    supplierId,
+    status: { $in: ['PENDING', 'ACCEPTED', 'PREPARING', 'SHIPPED'] }
+  };
+
+  const skip = (page - 1) * limit;
+  
+  const orders = await Order.find(query)
+    .populate('productId', 'name price imageUrls documentation technicalSheet')
+    .populate('artisanId', 'firstName lastName email phone')
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit)
+    .lean();
+
+  const total = await Order.countDocuments(query);
+
+  return {
+    orders,
+    pagination: { page, limit, total, pages: Math.ceil(total / limit) }
+  };
+}
+
+// Récupérer l'historique des commandes d'un fournisseur
+async function getSupplierOrderHistory(supplierId, { page = 1, limit = 10 }) {
+  const query = { 
+    supplierId,
+    status: { $in: ['DELIVERED', 'CANCELLED'] }
+  };
+
+  const skip = (page - 1) * limit;
+  
+  const orders = await Order.find(query)
+    .populate('productId', 'name price imageUrls documentation technicalSheet')
+    .populate('artisanId', 'firstName lastName email phone')
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit)
+    .lean();
+
+  const total = await Order.countDocuments(query);
+
+  return {
+    orders,
+    pagination: { page, limit, total, pages: Math.ceil(total / limit) }
+  };
+}
 
 module.exports = {
   createOrder,

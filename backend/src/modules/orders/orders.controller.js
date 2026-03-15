@@ -2,7 +2,7 @@ const ordersService = require('./orders.service');
 const apiResponse = require('../../utils/apiResponse');
 
 // Artisan : Créer une demande de commande
-async function createOrder(req, res) {  // ← Enlève 'next' des paramètres
+async function createOrder(req, res) {
   try {
     console.log('Creating order with data:', req.body);
     
@@ -28,13 +28,47 @@ async function getMyOrders(req, res) {
     const orders = await ordersService.getOrdersByArtisan(req.user._id, {
       page: parseInt(page) || 1,
       limit: parseInt(limit) || 10,
-      status
+      status: status ? status.split(',') : []
     });
     return apiResponse(res, 'Commandes récupérées', orders);
   } catch (error) {
     console.error('Error fetching orders:', error);
     return res.status(error.statusCode || 500).json({ 
       message: error.message || 'Erreur lors du chargement des commandes' 
+    });
+  }
+}
+
+// Artisan : Commandes en cours
+async function getArtisanActiveOrders(req, res) {
+  try {
+    const { page, limit } = req.query;
+    const orders = await ordersService.getArtisanActiveOrders(req.user._id, {
+      page: parseInt(page) || 1,
+      limit: parseInt(limit) || 10
+    });
+    return apiResponse(res, 'Commandes en cours récupérées', orders);
+  } catch (error) {
+    console.error('Error fetching artisan active orders:', error);
+    return res.status(error.statusCode || 500).json({ 
+      message: error.message || 'Erreur lors du chargement des commandes' 
+    });
+  }
+}
+
+// Artisan : Historique des commandes
+async function getArtisanOrderHistory(req, res) {
+  try {
+    const { page, limit } = req.query;
+    const orders = await ordersService.getArtisanOrderHistory(req.user._id, {
+      page: parseInt(page) || 1,
+      limit: parseInt(limit) || 10
+    });
+    return apiResponse(res, 'Historique des commandes récupéré', orders);
+  } catch (error) {
+    console.error('Error fetching artisan order history:', error);
+    return res.status(error.statusCode || 500).json({ 
+      message: error.message || 'Erreur lors du chargement de l\'historique' 
     });
   }
 }
@@ -46,13 +80,47 @@ async function getSupplierOrders(req, res) {
     const orders = await ordersService.getOrdersBySupplier(req.user._id, {
       page: parseInt(page) || 1,
       limit: parseInt(limit) || 10,
-      status
+      status: status ? status.split(',') : []
     });
     return apiResponse(res, 'Commandes fournisseur récupérées', orders);
   } catch (error) {
     console.error('Error fetching supplier orders:', error);
     return res.status(error.statusCode || 500).json({ 
       message: error.message || 'Erreur lors du chargement des commandes' 
+    });
+  }
+}
+
+// Fournisseur : Commandes en cours
+async function getSupplierActiveOrders(req, res) {
+  try {
+    const { page, limit } = req.query;
+    const orders = await ordersService.getSupplierActiveOrders(req.user._id, {
+      page: parseInt(page) || 1,
+      limit: parseInt(limit) || 10
+    });
+    return apiResponse(res, 'Commandes en cours récupérées', orders);
+  } catch (error) {
+    console.error('Error fetching supplier active orders:', error);
+    return res.status(error.statusCode || 500).json({ 
+      message: error.message || 'Erreur lors du chargement des commandes' 
+    });
+  }
+}
+
+// Fournisseur : Historique des commandes
+async function getSupplierOrderHistory(req, res) {
+  try {
+    const { page, limit } = req.query;
+    const orders = await ordersService.getSupplierOrderHistory(req.user._id, {
+      page: parseInt(page) || 1,
+      limit: parseInt(limit) || 10
+    });
+    return apiResponse(res, 'Historique des commandes récupéré', orders);
+  } catch (error) {
+    console.error('Error fetching supplier order history:', error);
+    return res.status(error.statusCode || 500).json({ 
+      message: error.message || 'Erreur lors du chargement de l\'historique' 
     });
   }
 }
@@ -112,5 +180,10 @@ module.exports = {
   getSupplierOrders,
   updateOrderStatus,
   addSupplierNote,
-  getOrderById
+  getOrderById,
+  // Nouvelles fonctions
+  getArtisanActiveOrders,
+  getArtisanOrderHistory,
+  getSupplierActiveOrders,
+  getSupplierOrderHistory
 };

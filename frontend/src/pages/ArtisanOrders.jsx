@@ -5,18 +5,18 @@ import { useTranslation } from 'react-i18next';
 import {
   Package,
   Search,
-  Filter,
-  ChevronDown,
   Eye,
   MessageCircle,
   Calendar,
   MapPin,
   Building,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  CheckCircle
 } from 'lucide-react';
 import { getMyOrders } from '../auth/api';
 import OrderStatusBadge from '../components/OrderStatusBadge';
+import OrderTabs from '../components/OrderTabs';
 import SimpleFooter from '../components/Footer';
 
 export default function ArtisanOrders() {
@@ -24,11 +24,11 @@ export default function ArtisanOrders() {
   const navigate = useNavigate();
   const { token } = useAuth();
 
+  const [activeTab, setActiveTab] = useState('active'); // 'active' ou 'history'
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({
     page: 1,
@@ -37,21 +37,15 @@ export default function ArtisanOrders() {
     pages: 1
   });
 
-  const statusOptions = [
-    { value: '', label: 'Tous les statuts' },
-    { value: 'PENDING', label: 'En attente' },
-    { value: 'ACCEPTED', label: 'Accepté' },
-    { value: 'REFUSED', label: 'Refusé' },
-    { value: 'CONTACTED', label: 'Contact établi' },
-    { value: 'PREPARING', label: 'En préparation' },
-    { value: 'SHIPPED', label: 'Expédié' },
-    { value: 'DELIVERED', label: 'Livré' }
-  ];
-
   const fetchOrders = async () => {
     setLoading(true);
     setError(null);
     try {
+      // Appeler l'API avec le filtre approprié selon l'onglet
+      const statusFilter = activeTab === 'active' 
+        ? ['PENDING', 'ACCEPTED', 'PREPARING', 'SHIPPED'].join(',')
+        : ['DELIVERED', 'CANCELLED'].join(',');
+
       const data = await getMyOrders({
         token,
         page,
@@ -84,11 +78,13 @@ export default function ArtisanOrders() {
     if (token) {
       fetchOrders();
     }
-  }, [token, page, statusFilter]);
+  }, [token, page, activeTab]);
 
-  const handleStatusChange = (e) => {
-    setStatusFilter(e.target.value);
-    setPage(1);
+  const handleArtisanConfirmDelivery = async (orderId) => {
+    // À implémenter : appel API pour confirmer la réception
+    console.log('Confirm delivery for order:', orderId);
+    // await updateOrderStatus({ token, orderId, status: 'DELIVERED' });
+    fetchOrders();
   };
 
   const formatDate = (dateString) => {
@@ -96,9 +92,7 @@ export default function ArtisanOrders() {
     return date.toLocaleDateString('fr-TN', {
       day: '2-digit',
       month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+      year: 'numeric'
     });
   };
 
@@ -111,7 +105,7 @@ export default function ArtisanOrders() {
             {t('orders.title', 'Mes commandes')}
           </h1>
           <p className="mt-2 text-sm text-slate-500">
-            {t('orders.subtitle', "Suivez l'état de vos demandes de commandes")}
+            {t('orders.subtitle', "Suivez l'état de vos commandes")}
           </p>
         </div>
 
@@ -124,10 +118,13 @@ export default function ArtisanOrders() {
         </button>
       </div>
 
-      {/* Filters */}
-      <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="flex flex-col gap-4 md:flex-row">
-          <div className="relative flex-1">
+      {/* Tabs */}
+      <OrderTabs activeTab={activeTab} onTabChange={setActiveTab} />
+
+      {/* Search (optionnel) */}
+      {activeTab === 'active' && (
+        <div className="mt-6 mb-4">
+          <div className="relative">
             <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
@@ -137,24 +134,8 @@ export default function ArtisanOrders() {
               className="w-full rounded-xl border border-slate-200 py-3 pl-10 pr-4 text-sm focus:border-indigo-500 focus:outline-none"
             />
           </div>
-
-          <div className="relative w-full md:w-60">
-            <Filter className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <select
-              value={statusFilter}
-              onChange={handleStatusChange}
-              className="w-full appearance-none rounded-xl border border-slate-200 py-3 pl-10 pr-10 text-sm focus:border-indigo-500 focus:outline-none"
-            >
-              {statusOptions.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          </div>
         </div>
-      </div>
+      )}
 
       {/* Orders List */}
       {loading ? (
@@ -176,17 +157,23 @@ export default function ArtisanOrders() {
         <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-12 text-center">
           <Package className="mx-auto h-12 w-12 text-slate-400" />
           <h3 className="mt-4 text-lg font-semibold text-slate-900">
-            {t('orders.noOrders', 'Aucune commande')}
+            {activeTab === 'active' 
+              ? t('orders.noActiveOrders', 'Aucune commande en cours')
+              : t('orders.noHistory', 'Aucun historique de commande')}
           </h3>
           <p className="mt-2 text-sm text-slate-500">
-            {t('orders.noOrdersDesc', "Vous n'avez pas encore passé de commande.")}
+            {activeTab === 'active' 
+              ? t('orders.noActiveOrdersDesc', 'Vous n\'avez pas de commande en cours.')
+              : t('orders.noHistoryDesc', 'Vous n\'avez pas encore de commande terminée.')}
           </p>
-          <button
-            onClick={() => navigate('/artisan/marketplace')}
-            className="mt-6 rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-700"
-          >
-            {t('orders.discoverCatalog', 'Découvrir le catalogue')}
-          </button>
+          {activeTab === 'active' && (
+            <button
+              onClick={() => navigate('/artisan/marketplace')}
+              className="mt-6 rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-700"
+            >
+              {t('orders.discoverCatalog', 'Découvrir le catalogue')}
+            </button>
+          )}
         </div>
       ) : (
         <div className="mt-8 space-y-4">
@@ -258,7 +245,20 @@ export default function ArtisanOrders() {
                 </div>
               )}
 
-              {/* Actions */}
+              {/* Actions spécifiques à l'artisan */}
+              {activeTab === 'active' && order.status === 'SHIPPED' && (
+                <div className="mt-4 flex gap-2 border-t border-slate-100 pt-4">
+                  <button
+                    onClick={() => handleArtisanConfirmDelivery(order._id)}
+                    className="flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+                  >
+                    <CheckCircle className="h-4 w-4" />
+                    {t('orders.confirmDelivery', 'Confirmer la réception')}
+                  </button>
+                </div>
+              )}
+
+              {/* Boutons communs */}
               <div className="mt-4 flex gap-3 border-t border-slate-100 pt-4">
                 <button
                   onClick={() => navigate(`/artisan/orders/${order._id}`)}
