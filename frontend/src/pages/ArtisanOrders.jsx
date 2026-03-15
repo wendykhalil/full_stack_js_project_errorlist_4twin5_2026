@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { useTranslation } from 'react-i18next';
@@ -24,7 +24,7 @@ export default function ArtisanOrders() {
   const navigate = useNavigate();
   const { token } = useAuth();
 
-  const [activeTab, setActiveTab] = useState('active'); // 'active' ou 'history'
+  const [activeTab, setActiveTab] = useState('active');
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -37,14 +37,14 @@ export default function ArtisanOrders() {
     pages: 1
   });
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      // Appeler l'API avec le filtre approprié selon l'onglet
+      // Pour l'historique, inclure DELIVERED, CANCELLED ET REFUSED
       const statusFilter = activeTab === 'active' 
         ? ['PENDING', 'ACCEPTED', 'PREPARING', 'SHIPPED'].join(',')
-        : ['DELIVERED', 'CANCELLED'].join(',');
+        : ['DELIVERED', 'CANCELLED', 'REFUSED'].join(',');
 
       const data = await getMyOrders({
         token,
@@ -68,33 +68,32 @@ export default function ArtisanOrders() {
       setPagination(paginationData);
     } catch (err) {
       console.error('Error fetching orders:', err);
-      setError(err.message || 'Erreur lors du chargement des commandes');
+      setError(err.message || t('orders.loadError', 'Erreur lors du chargement des commandes'));
     } finally {
       setLoading(false);
     }
-  };
+  }, [token, page, activeTab, t]);
 
   useEffect(() => {
     if (token) {
       fetchOrders();
     }
-  }, [token, page, activeTab]);
+  }, [token, fetchOrders]);
 
-  const handleArtisanConfirmDelivery = async (orderId) => {
-    // À implémenter : appel API pour confirmer la réception
+  const handleArtisanConfirmDelivery = useCallback(async (orderId) => {
     console.log('Confirm delivery for order:', orderId);
     // await updateOrderStatus({ token, orderId, status: 'DELIVERED' });
     fetchOrders();
-  };
+  }, [fetchOrders]);
 
-  const formatDate = (dateString) => {
+  const formatDate = useCallback((dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('fr-TN', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric'
     });
-  };
+  }, []);
 
   return (
     <div className="flex-1">
@@ -121,7 +120,7 @@ export default function ArtisanOrders() {
       {/* Tabs */}
       <OrderTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
-      {/* Search (optionnel) */}
+      {/* Search */}
       {activeTab === 'active' && (
         <div className="mt-6 mb-4">
           <div className="relative">
@@ -164,7 +163,7 @@ export default function ArtisanOrders() {
           <p className="mt-2 text-sm text-slate-500">
             {activeTab === 'active' 
               ? t('orders.noActiveOrdersDesc', 'Vous n\'avez pas de commande en cours.')
-              : t('orders.noHistoryDesc', 'Vous n\'avez pas encore de commande terminée.')}
+              : t('orders.noHistoryDesc', 'Vous n\'avez pas encore de commande terminée ou refusée.')}
           </p>
           {activeTab === 'active' && (
             <button

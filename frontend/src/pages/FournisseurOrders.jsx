@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { useTranslation } from 'react-i18next';
@@ -59,14 +59,14 @@ export default function FournisseurOrders() {
   const [supplierNote, setSupplierNote] = useState('');
   const [updating, setUpdating] = useState(false);
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       // Filtrer selon l'onglet actif
       const statusFilter = activeTab === 'active' 
         ? ['PENDING', 'ACCEPTED', 'PREPARING', 'SHIPPED'].join(',')
-        : ['DELIVERED', 'CANCELLED'].join(',');
+        : ['DELIVERED', 'CANCELLED', 'REFUSED'].join(',');
 
       const data = await getSupplierOrders({
         token,
@@ -94,15 +94,15 @@ export default function FournisseurOrders() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token, page, activeTab, t]);
 
   useEffect(() => {
     if (token) {
       fetchOrders();
     }
-  }, [token, page, activeTab]);
+  }, [token, fetchOrders]);
 
-  const handleStatusChange = async (orderId, newStatus) => {
+  const handleStatusChange = useCallback(async (orderId, newStatus) => {
     try {
       setUpdating(true);
       await updateOrderStatus({
@@ -118,9 +118,9 @@ export default function FournisseurOrders() {
     } finally {
       setUpdating(false);
     }
-  };
+  }, [token, fetchOrders, t]);
 
-  const handleAddNote = async () => {
+  const handleAddNote = useCallback(async () => {
     if (!selectedOrder || !supplierNote.trim()) return;
 
     try {
@@ -140,36 +140,36 @@ export default function FournisseurOrders() {
     } finally {
       setUpdating(false);
     }
-  };
+  }, [token, selectedOrder, supplierNote, fetchOrders, t]);
 
-  const openNoteModal = (order) => {
+  const openNoteModal = useCallback((order) => {
     setSelectedOrder(order);
     setSupplierNote(order.supplierNotes || '');
     setNoteModalOpen(true);
-  };
+  }, []);
 
-  const formatDate = (dateString) => {
+  const formatDate = useCallback((dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('fr-TN', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric'
     });
-  };
+  }, []);
 
-  const getArtisanName = (order) => {
+  const getArtisanName = useCallback((order) => {
     const artisan = order.artisanId;
     if (!artisan) return t('orders.artisan', 'Artisan');
     return `${artisan.firstName || ''} ${artisan.lastName || ''}`.trim() || t('orders.artisan', 'Artisan');
-  };
+  }, [t]);
 
-  const getArtisanContact = (order) => {
+  const getArtisanContact = useCallback((order) => {
     const artisan = order.artisanId;
     return {
       phone: artisan?.phone || t('common.notSpecified', 'Non renseigné'),
       email: artisan?.email || t('common.notSpecified', 'Non renseigné')
     };
-  };
+  }, [t]);
 
   if (!token || !user) return null;
 
@@ -233,7 +233,7 @@ export default function FournisseurOrders() {
           <p className="mt-2 text-sm text-slate-500">
             {activeTab === 'active' 
               ? t('orders.noActiveOrdersDesc', 'Vous n\'avez pas de commande en cours.')
-              : t('orders.noHistoryDesc', 'Vous n\'avez pas encore de commande terminée.')}
+              : t('orders.noHistoryDesc', 'Vous n\'avez pas encore de commande terminée ou refusée.')}
           </p>
         </div>
       ) : (
