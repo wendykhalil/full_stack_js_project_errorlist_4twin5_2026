@@ -71,6 +71,31 @@ const orderSchema = new mongoose.Schema(
     artisanMessage: { 
       type: String, 
       default: "" 
+    },quantity: { 
+      type: Number, 
+      required: true, 
+      min: 1 
+    },
+    
+    unitPrice: { 
+      type: Number, 
+      required: true, 
+      min: 0 
+    },
+    
+    lineTotal: { 
+      type: Number, 
+      required: true, 
+      min: 0 
+    },
+    
+    // Adresse de livraison - rendre les sous-champs optionnels
+    deliveryAddress: {
+      street: { type: String, required: false }, // ← required: false
+      city: { type: String, required: false },   // ← required: false
+      postalCode: { type: String, required: false }, // ← required: false
+      country: { type: String, default: "Tunisie" },
+      additionalInfo: { type: String, default: "" }
     },
 
     // Statut de la commande

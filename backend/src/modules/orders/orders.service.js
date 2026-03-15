@@ -111,8 +111,10 @@ async function getOrdersBySupplier(supplierId, { page, limit, status }) {
 }
 
 // Mettre à jour le statut d'une commande
+// Mettre à jour le statut d'une commande
 async function updateOrderStatus(orderId, userId, newStatus, note = '') {
-  const order = await Order.findById(orderId);
+  // Récupérer la commande sans validation
+  const order = await Order.findById(orderId).lean(); // ← Utilise lean() pour éviter la validation
   if (!order) {
     const error = new Error('Commande non trouvée');
     error.statusCode = 404;
@@ -126,37 +128,62 @@ async function updateOrderStatus(orderId, userId, newStatus, note = '') {
     throw error;
   }
 
-  // Mettre à jour le statut
-  const oldStatus = order.status;
-  order.status = newStatus;
-  
-  // Ajouter à l'historique
-  order.statusHistory.push({
-    status: newStatus,
-    changedBy: userId,
-    note
-  });
+  // Mettre à jour en utilisant updateOne pour éviter la validation
+  await Order.updateOne(
+    { _id: orderId },
+    {
+      $set: { 
+        status: newStatus,
+        ...(newStatus === 'ACCEPTED' && { acceptedDate: new Date() }),
+        ...(newStatus === 'REFUSED' && { refusedDate: new Date() }),
+        ...(newStatus === 'SHIPPED' && { shippedDate: new Date() }),
+        ...(newStatus === 'DELIVERED' && { deliveredDate: new Date() })
+      },
+      $push: {
+        statusHistory: {
+          status: newStatus,
+          changedBy: userId,
+          note: note || ''
+        }
+      }
+    }
+  );
 
-  // Mettre à jour les dates spécifiques
-  const now = new Date();
-  switch(newStatus) {
-    case 'ACCEPTED':
-      order.acceptedDate = now;
-      break;
-    case 'REFUSED':
-      order.refusedDate = now;
-      break;
-    case 'SHIPPED':
-      order.shippedDate = now;
-      break;
-    case 'DELIVERED':
-      order.deliveredDate = now;
-      break;
+  // Récupérer la commande mise à jour
+  const updatedOrder = await Order.findById(orderId)
+    .populate('productId', 'name price imageUrls')
+    .populate('supplierId', 'firstName lastName email supplierProfile')
+    .populate('artisanId', 'firstName lastName email phone');
+
+  return updatedOrder;
+}
+
+// Ajouter une note fournisseur
+async function addSupplierNote(orderId, supplierId, note) {
+  const order = await Order.findById(orderId).lean();
+  if (!order) {
+    const error = new Error('Commande non trouvée');
+    error.statusCode = 404;
+    throw error;
   }
 
-  await order.save();
-  
-  return order;
+  if (order.supplierId.toString() !== supplierId.toString()) {
+    const error = new Error('Non autorisé');
+    error.statusCode = 403;
+    throw error;
+  }
+
+  await Order.updateOne(
+    { _id: orderId },
+    { $set: { supplierNotes: note } }
+  );
+
+  const updatedOrder = await Order.findById(orderId)
+    .populate('productId', 'name price imageUrls')
+    .populate('supplierId', 'firstName lastName email supplierProfile')
+    .populate('artisanId', 'firstName lastName email phone');
+
+  return updatedOrder;
 }
 
 // Ajouter une note fournisseur

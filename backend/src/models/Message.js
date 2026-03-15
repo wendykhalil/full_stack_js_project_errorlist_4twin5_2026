@@ -20,13 +20,23 @@ const messageSchema = new mongoose.Schema(
       required: true,
     },
 
-    content: { type: String, required: true, trim: true },
+    content: { 
+      type: String, 
+      required: true, 
+      trim: true 
+    },
 
     // Pour les messages système (changement de statut, etc.)
-    isSystemMessage: { type: Boolean, default: false },
+    isSystemMessage: { 
+      type: Boolean, 
+      default: false 
+    },
 
     // Si le message a été lu
-    read: { type: Boolean, default: false },
+    read: { 
+      type: Boolean, 
+      default: false 
+    },
     readAt: Date,
 
     // Pièces jointes éventuelles
