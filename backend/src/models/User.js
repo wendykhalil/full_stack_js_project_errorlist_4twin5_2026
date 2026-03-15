@@ -11,7 +11,8 @@ const userSchema = new mongoose.Schema(
     },
 
     resetPasswordTokenHash: { type: String, default: null },
-resetPasswordTokenExpiresAt: { type: Date, default: null },
+    resetPasswordTokenExpiresAt: { type: Date, default: null },
+    
     lastName: {
       type: String,
       required: true,
@@ -56,6 +57,7 @@ resetPasswordTokenExpiresAt: { type: Date, default: null },
       enum: ["LOCAL", "GOOGLE"],
       default: "LOCAL",
     },
+    
     googleSub: {
       type: String,
       default: null,
@@ -82,13 +84,20 @@ resetPasswordTokenExpiresAt: { type: Date, default: null },
       enum: ["ACTIVE", "INACTIVE", "BLOCKED"],
       default: "ACTIVE",
     },
+    
     blockedUntil: {
       type: Date,
       default: null,
     },
+
+    // 🔴 NOUVEAU CHAMP - Référence vers le profil fournisseur
+    supplierProfile: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'SupplierProfile',
+      default: null
+    }
   },
   { timestamps: true }
 );
-
 
 module.exports = mongoose.model("User", userSchema);

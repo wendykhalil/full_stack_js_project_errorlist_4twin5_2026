@@ -184,102 +184,155 @@ export default function Profile() {
   };
 
   async function onSave(e) {
-    e.preventDefault();
-    setErr(""); 
-    setMsg("");
-    setSaving(true);
+  e.preventDefault();
+  setErr(""); 
+  setMsg("");
+  setSaving(true);
 
-    try {
-      if (typeof updateProfile !== 'function') {
-        throw new Error('updateProfile function is not available');
-      }
+  try {
+    if (typeof updateProfile !== 'function') {
+      throw new Error('updateProfile function is not available');
+    }
 
-      let updateData;
+    let updateData;
 
-      if (isArtisan) {
-        if (profilePictureFile) {
-          updateData = new FormData();
-          updateData.append('firstName', firstName || '');
-          updateData.append('lastName', lastName || '');
-          updateData.append('phone', phone || '');
-          updateData.append('city', city || '');
-          updateData.append('zone', zone || '');
-          updateData.append('latitude', latitude || '');
-          updateData.append('longitude', longitude || '');
-          updateData.append('yearsOfExperience', yearsOfExperience || '');
-          updateData.append('specialty', specialty || '');
-          updateData.append('serviceRadius', serviceRadius || '');
-          updateData.append('profilePicture', profilePictureFile);
-        } else {
-          updateData = {
-            firstName: firstName || '',
-            lastName: lastName || '',
-            phone: phone || '',
-            city: city || '',
-            zone: zone || '',
-            latitude: latitude || '',
-            longitude: longitude || '',
-            yearsOfExperience: yearsOfExperience || '',
-            specialty: specialty || '',
-            serviceRadius: serviceRadius || '',
-            profilePicture: profilePicture || '',
-          };
-        }
-      } else if (isSupplier) {
-        if (logoFile) {
-          updateData = new FormData();
-          updateData.append('firstName', firstName || '');
-          updateData.append('lastName', lastName || '');
-          updateData.append('phone', phone || '');
-          updateData.append('companyName', companyName || '');
-          updateData.append('companyPhone', companyPhone || '');
-          updateData.append('address', address || '');
-          updateData.append('description', description || '');
-          updateData.append('categories', JSON.stringify(selectedCategories || []));
-          updateData.append('logo', logoFile);
-        } else {
-          updateData = {
-            firstName: firstName || '',
-            lastName: lastName || '',
-            phone: phone || '',
-            companyName: companyName || '',
-            companyPhone: companyPhone || '',
-            address: address || '',
-            description: description || '',
-            categories: selectedCategories || [],
-            logo: logo || '',
-          };
-        }
+    if (isArtisan) {
+      if (profilePictureFile) {
+        updateData = new FormData();
+        updateData.append('firstName', firstName || '');
+        updateData.append('lastName', lastName || '');
+        updateData.append('phone', phone || '');
+        updateData.append('city', city || '');
+        updateData.append('zone', zone || '');
+        updateData.append('latitude', latitude || '');
+        updateData.append('longitude', longitude || '');
+        updateData.append('yearsOfExperience', yearsOfExperience || '');
+        updateData.append('specialty', specialty || '');
+        updateData.append('serviceRadius', serviceRadius || '');
+        updateData.append('profilePicture', profilePictureFile);
       } else {
         updateData = {
           firstName: firstName || '',
           lastName: lastName || '',
           phone: phone || '',
+          city: city || '',
+          zone: zone || '',
+          latitude: latitude || '',
+          longitude: longitude || '',
+          yearsOfExperience: yearsOfExperience || '',
+          specialty: specialty || '',
+          serviceRadius: serviceRadius || '',
+          profilePicture: profilePicture || '',
         };
       }
-
-      console.log('Sending update data:', updateData);
-      
-      // Appel de la fonction updateProfile
-      const updatedUser = await updateProfile(updateData);
-      console.log('Updated user:', updatedUser);
-      
-      // Rafraîchir les données utilisateur
-      await refreshMe();
-      
-      setMsg(t('profile.saveSuccess'));
-      
-      // Reset file states
-      setProfilePictureFile(null);
-      setLogoFile(null);
-      
-    } catch (e2) {
-      console.error('Save error:', e2);
-      setErr(e2.message || t('profile.saveError'));
-    } finally {
-      setSaving(false);
+    } else if (isSupplier) {
+      if (logoFile) {
+        updateData = new FormData();
+        updateData.append('firstName', firstName || '');
+        updateData.append('lastName', lastName || '');
+        updateData.append('phone', phone || '');
+        updateData.append('companyName', companyName || '');
+        updateData.append('companyPhone', companyPhone || '');
+        updateData.append('address', address || '');
+        updateData.append('description', description || '');
+        updateData.append('categories', JSON.stringify(selectedCategories || []));
+        updateData.append('logo', logoFile);
+      } else {
+        updateData = {
+          firstName: firstName || '',
+          lastName: lastName || '',
+          phone: phone || '',
+          companyName: companyName || '',
+          companyPhone: companyPhone || '',
+          address: address || '',
+          description: description || '',
+          categories: selectedCategories || [],
+          logo: logo || '',
+        };
+      }
+    } else {
+      updateData = {
+        firstName: firstName || '',
+        lastName: lastName || '',
+        phone: phone || '',
+      };
     }
+
+    console.log('Sending update data:', updateData);
+    
+    // Appel de la fonction updateProfile
+    const response = await updateProfile(updateData);
+    
+    // 🔍 LOGS DE DÉBOGAGE - Ajoute ces lignes
+    console.log('🔍 FULL RESPONSE:', response);
+    console.log('🔍 RESPONSE TYPE:', typeof response);
+    console.log('🔍 RESPONSE KEYS:', Object.keys(response || {}));
+    console.log('🔍 RESPONSE USER:', response?.user);
+    console.log('🔍 RESPONSE DATA:', response?.data);
+    
+    // ✅ CORRECTION : Mettre à jour les états avec les données reçues
+    if (response) {
+      // Essayer différentes structures possibles
+      const userData = response.user || response.data?.user || response;
+      
+      if (userData && typeof userData === 'object') {
+        console.log('✅ User data extracted:', userData);
+        
+        // Mettre à jour les champs communs
+        if (userData.firstName !== undefined) setFirstName(userData.firstName);
+        if (userData.lastName !== undefined) setLastName(userData.lastName);
+        if (userData.phone !== undefined) setPhone(userData.phone);
+        
+        // Mettre à jour les champs fournisseur
+        if (isSupplier) {
+          const supplierData = userData.supplierProfile || userData;
+          
+          if (supplierData.companyName !== undefined) setCompanyName(supplierData.companyName);
+          if (supplierData.phone !== undefined) setCompanyPhone(supplierData.phone);
+          if (supplierData.address !== undefined) setAddress(supplierData.address);
+          if (supplierData.description !== undefined) setDescription(supplierData.description);
+          if (supplierData.logo !== undefined) {
+            setLogo(supplierData.logo);
+            setLogoPreview(supplierData.logo);
+          }
+          if (supplierData.categories !== undefined) setSelectedCategories(supplierData.categories);
+        }
+        
+        // Mettre à jour les champs artisan
+        if (isArtisan) {
+          if (userData.profilePicture !== undefined) {
+            setProfilePicture(userData.profilePicture);
+            setProfilePicturePreview(userData.profilePicture);
+          }
+          if (userData.city !== undefined) setCity(userData.city);
+          if (userData.zone !== undefined) setZone(userData.zone);
+          if (userData.latitude !== undefined) setLatitude(userData.latitude);
+          if (userData.longitude !== undefined) setLongitude(userData.longitude);
+          if (userData.yearsOfExperience !== undefined) setYearsOfExperience(userData.yearsOfExperience);
+          if (userData.specialty !== undefined) setSpecialty(userData.specialty);
+          if (userData.serviceRadius !== undefined) setServiceRadius(userData.serviceRadius);
+        }
+      } else {
+        console.warn('⚠️ No valid user data in response');
+      }
+    }
+    
+    // Rafraîchir les données utilisateur
+    await refreshMe();
+    
+    setMsg(t('profile.saveSuccess'));
+    
+    // Reset file states
+    setProfilePictureFile(null);
+    setLogoFile(null);
+    
+  } catch (e2) {
+    console.error('❌ Save error:', e2);
+    setErr(e2.message || t('profile.saveError'));
+  } finally {
+    setSaving(false);
   }
+}
 
   async function onChangePassword(e) {
     e.preventDefault();

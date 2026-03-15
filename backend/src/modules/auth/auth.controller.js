@@ -102,23 +102,54 @@ async function googleLogin(req, res, next) {
   }
 }
 
+// ✅ CORRECTION ICI : Remplacer req.user.sub par req.user._id
 async function updateProfile(req, res, next) {
   try {
-    const result = await authService.updateProfile(req.user.sub, req.body);
-    await logActivity(req, req.user.sub, 'PROFILE_UPDATE', req.body);
-    await notifyAdminAboutActivity({ req, userId: req.user.sub, action: 'PROFILE_UPDATE', details: req.body });
+    console.log('=== UPDATE PROFILE DEBUG ===');
+    console.log('req.user._id:', req.user._id);
+    
+    // Vérifier si c'est un FormData
+    let profileData = req.body;
+    
+    // Si c'est un FormData, les données sont dans req.body mais pas parsées
+    // Multer va les mettre dans req.body
+    console.log('req.body:', req.body);
+    
+    // Si les données sont stringifiées dans un champ 'data'
+    if (req.body.data) {
+      try {
+        profileData = JSON.parse(req.body.data);
+        console.log('Parsed data:', profileData);
+      } catch (e) {
+        console.error('Error parsing data:', e);
+      }
+    }
+    
+    // Gérer les fichiers uploadés (si tu utilises multer)
+    if (req.file) {
+      profileData.logo = `/uploads/${req.file.filename}`;
+    }
+    
+    const result = await authService.updateProfile(req.user._id, profileData);
+    
+    await logActivity(req, req.user._id, 'PROFILE_UPDATE', profileData);
+    await notifyAdminAboutActivity({ req, userId: req.user._id, action: 'PROFILE_UPDATE', details: profileData });
+    
     res.json(result);
   } catch (err) {
-    res.status(err.statusCode || 500);
-    next(err);
+    console.error('❌ Update profile error:', err);
+    res.status(err.statusCode || 500).json({ 
+      message: err.message 
+    });
   }
 }
 
+// ✅ CORRECTION ICI aussi pour changePassword
 async function changePassword(req, res, next) {
   try {
-    const result = await authService.changePassword(req.user.sub, req.body);
-    await logActivity(req, req.user.sub, 'PASSWORD_CHANGE');
-    await notifyAdminAboutActivity({ req, userId: req.user.sub, action: 'PASSWORD_CHANGE', details: {} });
+    const result = await authService.changePassword(req.user._id, req.body);
+    await logActivity(req, req.user._id, 'PASSWORD_CHANGE');
+    await notifyAdminAboutActivity({ req, userId: req.user._id, action: 'PASSWORD_CHANGE', details: {} });
     res.json(result);
   } catch (err) {
     res.status(err.statusCode || 500);
@@ -126,16 +157,17 @@ async function changePassword(req, res, next) {
   }
 }
 
+// ✅ CORRECTION ICI pour logout
 async function logout(req, res, next) {
   try {
     try {
       const { ip, userAgent, country: clientCountry, countryCode: clientCountryCode } = getRequestMeta(req);
       const geo = await lookupIpGeo(ip, { country: clientCountry, countryCode: clientCountryCode });
-      await AuthLog.create({ user: req.user.sub, action: 'LOGOUT', ip, country: geo.country || clientCountry || '', countryCode: geo.countryCode || clientCountryCode || '', userAgent });
+      await AuthLog.create({ user: req.user._id, action: 'LOGOUT', ip, country: geo.country || clientCountry || '', countryCode: geo.countryCode || clientCountryCode || '', userAgent });
     } catch (_) {}
 
-    await logActivity(req, req.user.sub, 'LOGOUT');
-    await notifyAdminAboutActivity({ req, userId: req.user.sub, action: 'LOGOUT', details: {}, sendEmail: false });
+    await logActivity(req, req.user._id, 'LOGOUT');
+    await notifyAdminAboutActivity({ req, userId: req.user._id, action: 'LOGOUT', details: {}, sendEmail: false });
 
     res.json({ ok: true });
   } catch (err) {
@@ -144,9 +176,10 @@ async function logout(req, res, next) {
   }
 }
 
+// ✅ CORRECTION ICI pour me
 async function me(req, res, next) {
   try {
-    const user = await authService.me(req.user.sub);
+    const user = await authService.me(req.user._id);
     res.json({ user });
   } catch (err) {
     res.status(err.statusCode || 500);
@@ -213,11 +246,12 @@ async function phoneVerify(req, res, next) {
   }
 }
 
+// ✅ CORRECTION ICI pour setRole
 async function setRole(req, res, next) {
   try {
-    const result = await authService.setRole(req.user.sub, req.body);
-    await logActivity(req, req.user.sub, 'SET_ROLE', { role: result.user.role });
-    await notifyAdminAboutActivity({ req, userId: req.user.sub, action: 'SET_ROLE', details: { role: result.user.role } });
+    const result = await authService.setRole(req.user._id, req.body);
+    await logActivity(req, req.user._id, 'SET_ROLE', { role: result.user.role });
+    await notifyAdminAboutActivity({ req, userId: req.user._id, action: 'SET_ROLE', details: { role: result.user.role } });
     res.json(result);
   } catch (err) {
     res.status(err.statusCode || 500);

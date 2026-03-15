@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
 const User = require('../../models/User');
+const SupplierProfile = require('../../models/SupplierProfile'); // IMPORTANT: Ajouter cette ligne
 const { startPhoneVerification, checkPhoneVerification } = require('../../utils/twilioVerify');
 
 const REGISTER_ROLE = 'REGISTER_ROLE';
@@ -160,10 +161,13 @@ return { token, user: sanitizeUser(user) };
 }
 
 async function me(userId) {
-  const user = await User.findById(userId);
+  const user = await User.findById(userId).populate('supplierProfile');
   if (!user) {
-    const e = new Error('User not found'); e.statusCode = 404; throw e;
+    const e = new Error('User not found'); 
+    e.statusCode = 404; 
+    throw e;
   }
+  console.log('me() - User with populated profile:', user.supplierProfile);
   return sanitizeUser(user);
 }
 
@@ -304,18 +308,94 @@ async function googleLogin({ credential, role }) {
   return { token, user: sanitizeUser(user), needsRole };
 }
 
-async function updateProfile(userId, { firstName, lastName, phone }) {
+// ✅ VERSION CORRIGÉE - Met à jour User ET SupplierProfile
+// ✅ VERSION CORRIGÉE - Met à jour User ET SupplierProfile
+// ✅ VERSION CORRIGÉE - Met à jour User ET SupplierProfile
+async function updateProfile(userId, profileData) {
+  console.log('=== SERVICE UPDATE PROFILE ===');
+  console.log('userId:', userId);
+  console.log('profileData:', profileData);
+  
   const user = await User.findById(userId);
   if (!user) {
-    const e = new Error('User not found'); e.statusCode = 404; throw e;
+    console.error('User not found with ID:', userId);
+    const e = new Error('User not found');
+    e.statusCode = 404;
+    throw e;
   }
 
-  if (typeof firstName === 'string' && firstName.trim().length >= 2) user.firstName = firstName.trim();
-  if (typeof lastName === 'string' && lastName.trim().length >= 2) user.lastName = lastName.trim();
-  if (typeof phone === 'string') user.phone = phone.trim();
+  console.log('Found user:', user.email);
 
-  await user.save();
-  return { ok: true, user: sanitizeUser(user) };
+  // 1. Mettre à jour les champs de l'utilisateur
+  if (profileData.firstName && typeof profileData.firstName === 'string') {
+    user.firstName = profileData.firstName.trim();
+  }
+  if (profileData.lastName && typeof profileData.lastName === 'string') {
+    user.lastName = profileData.lastName.trim();
+  }
+  if (profileData.phone && typeof profileData.phone === 'string') {
+    user.phone = profileData.phone.trim();
+  }
+
+  // 2. Si l'utilisateur est un fournisseur, mettre à jour SupplierProfile
+  if (user.role === 'SUPPLIER') {
+    console.log('Updating supplier profile...');
+    let supplierProfile = await SupplierProfile.findOne({ userId: user._id });
+    
+    // Créer le profil s'il n'existe pas
+    if (!supplierProfile) {
+      console.log('Creating new supplier profile');
+      supplierProfile = new SupplierProfile({
+        userId: user._id,
+        companyName: profileData.companyName || '',
+        phone: profileData.companyPhone || '',
+        address: profileData.address || '',
+        description: profileData.description || '',
+        logo: profileData.logo || '',
+        categories: Array.isArray(profileData.categories) ? profileData.categories : []
+      });
+      
+      await supplierProfile.save();
+      console.log('New supplier profile saved with ID:', supplierProfile._id);
+      
+      // 🔴 CORRECTION : Lier le profil à l'utilisateur
+      user.supplierProfile = supplierProfile._id;
+      await user.save(); // Sauvegarder l'utilisateur avec la référence
+      
+    } else {
+      console.log('Updating existing supplier profile');
+      // Mettre à jour les champs existants
+      if (profileData.companyName !== undefined) supplierProfile.companyName = profileData.companyName;
+      if (profileData.companyPhone !== undefined) supplierProfile.phone = profileData.companyPhone;
+      if (profileData.address !== undefined) supplierProfile.address = profileData.address;
+      if (profileData.description !== undefined) supplierProfile.description = profileData.description;
+      if (profileData.logo !== undefined) supplierProfile.logo = profileData.logo;
+      if (profileData.categories !== undefined) {
+        supplierProfile.categories = Array.isArray(profileData.categories) 
+          ? profileData.categories 
+          : [];
+      }
+      
+      await supplierProfile.save();
+      console.log('Supplier profile updated');
+      
+      // 🔴 CORRECTION : S'assurer que la référence existe
+      if (!user.supplierProfile) {
+        user.supplierProfile = supplierProfile._id;
+        await user.save();
+      }
+    }
+  } else {
+    // Sauvegarder l'utilisateur même s'il n'est pas fournisseur
+    await user.save();
+  }
+
+  // Recharger l'utilisateur avec son profil
+  const updatedUser = await User.findById(userId).populate('supplierProfile');
+  console.log('Updated user with populated profile:', updatedUser ? updatedUser.email : 'Not found');
+  console.log('Supplier profile:', updatedUser?.supplierProfile);
+  
+  return { ok: true, user: sanitizeUser(updatedUser) };
 }
 
 async function changePassword(userId, { currentPassword, newPassword }) {
