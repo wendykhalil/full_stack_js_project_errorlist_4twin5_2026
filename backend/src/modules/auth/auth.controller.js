@@ -102,35 +102,37 @@ async function googleLogin(req, res, next) {
   }
 }
 
-// ✅ CORRECTION ICI : Remplacer req.user.sub par req.user._id
+// ✅ CORRECTION ICI : Gestion correcte des données
 async function updateProfile(req, res, next) {
   try {
     console.log('=== UPDATE PROFILE DEBUG ===');
     console.log('req.user._id:', req.user._id);
+    console.log('req.body:', req.body);
+    console.log('req.file:', req.file);
     
-    // Vérifier si c'est un FormData
+    // Récupérer les données
     let profileData = req.body;
     
-    // Si c'est un FormData, les données sont dans req.body mais pas parsées
-    // Multer va les mettre dans req.body
-    console.log('req.body:', req.body);
-    
-    // Si les données sont stringifiées dans un champ 'data'
+    // Si les données sont stringifiées dans 'data'
     if (req.body.data) {
       try {
         profileData = JSON.parse(req.body.data);
-        console.log('Parsed data:', profileData);
+        console.log('Parsed data from data field:', profileData);
       } catch (e) {
         console.error('Error parsing data:', e);
       }
     }
     
-    // Gérer les fichiers uploadés (si tu utilises multer)
+    // Ajouter le logo si uploadé
     if (req.file) {
       profileData.logo = `/uploads/${req.file.filename}`;
+      console.log('Logo uploaded:', profileData.logo);
     }
     
+    console.log('Final profile data:', profileData);
+    
     const result = await authService.updateProfile(req.user._id, profileData);
+    console.log('Update result:', result);
     
     await logActivity(req, req.user._id, 'PROFILE_UPDATE', profileData);
     await notifyAdminAboutActivity({ req, userId: req.user._id, action: 'PROFILE_UPDATE', details: profileData });
@@ -138,13 +140,13 @@ async function updateProfile(req, res, next) {
     res.json(result);
   } catch (err) {
     console.error('❌ Update profile error:', err);
+    console.error('Error stack:', err.stack);
     res.status(err.statusCode || 500).json({ 
       message: err.message 
     });
   }
 }
 
-// ✅ CORRECTION ICI aussi pour changePassword
 async function changePassword(req, res, next) {
   try {
     const result = await authService.changePassword(req.user._id, req.body);
@@ -157,7 +159,6 @@ async function changePassword(req, res, next) {
   }
 }
 
-// ✅ CORRECTION ICI pour logout
 async function logout(req, res, next) {
   try {
     try {
@@ -176,7 +177,6 @@ async function logout(req, res, next) {
   }
 }
 
-// ✅ CORRECTION ICI pour me
 async function me(req, res, next) {
   try {
     const user = await authService.me(req.user._id);
@@ -246,7 +246,6 @@ async function phoneVerify(req, res, next) {
   }
 }
 
-// ✅ CORRECTION ICI pour setRole
 async function setRole(req, res, next) {
   try {
     const result = await authService.setRole(req.user._id, req.body);

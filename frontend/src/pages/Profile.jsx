@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useAuth } from "../auth/AuthContext";
-
 import { useTranslation } from 'react-i18next';
 import Footer from "../components/Footer";
 import { 
@@ -10,12 +9,18 @@ import {
   Image, 
   Tag,
   Trash2,
-  Upload 
+  Upload,
+  Loader2,
+  AlertCircle,
+  CheckCircle
 } from "lucide-react";
 
 export default function Profile() {
   const { t } = useTranslation();
   const { user, refreshMe, updateProfile, changePassword, forgotPassword } = useAuth();
+
+  // URL de base pour les images
+  const SERVER_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
 
   // Common fields
   const [firstName, setFirstName] = useState("");
@@ -47,6 +52,7 @@ export default function Profile() {
   const logoInputRef = useRef(null);
   const [allCategories, setAllCategories] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
 
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
@@ -61,11 +67,14 @@ export default function Profile() {
   const [resetMsg, setResetMsg] = useState("");
   const [resetErr, setResetErr] = useState("");
 
+  // Flag pour éviter les réinitialisations multiples
+  const [isInitialized, setIsInitialized] = useState(false);
+
   // Determine user role
   const isArtisan = user?.role?.toLowerCase() === 'artisan';
   const isSupplier = user?.role?.toLowerCase() === 'supplier';
 
-  // Initial load - avec useCallback pour éviter les problèmes de dépendances
+  // Initial load - une seule fois au montage
   const loadUser = useCallback(async () => {
     try {
       await refreshMe();
@@ -78,10 +87,11 @@ export default function Profile() {
     loadUser();
   }, [loadUser]);
 
-  // Mettre à jour tous les champs quand user change
+  // Initialiser les champs UNE SEULE FOIS quand user est disponible
   useEffect(() => {
-    if (user) {
-      console.log("Updating form fields with user data:", user);
+    // Éviter les réinitialisations multiples
+    if (user && !isInitialized) {
+      console.log("Initializing form fields with user data:", user);
       
       // Common fields
       setFirstName(user.firstName || "");
@@ -109,19 +119,24 @@ export default function Profile() {
         setLogoPreview(user.supplierProfile.logo || "");
         setSelectedCategories(user.supplierProfile.categories || []);
       }
+      
+      setIsInitialized(true);
     }
-  }, [user]);
+  }, [user, isInitialized]);
 
   // Load categories for supplier
   useEffect(() => {
     if (isSupplier) {
       const fetchCategories = async () => {
+        setLoadingCategories(true);
         try {
           const response = await fetch('/api/categories');
           const data = await response.json();
           setAllCategories(data.data || []);
         } catch (error) {
           console.error('Error fetching categories:', error);
+        } finally {
+          setLoadingCategories(false);
         }
       };
       fetchCategories();
@@ -132,6 +147,10 @@ export default function Profile() {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setErr("L'image doit être inférieure à 5MB");
+        return;
+      }
       setProfilePictureFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -151,7 +170,15 @@ export default function Profile() {
   // Supplier logo handlers
   const handleLogoChange = (e) => {
     const file = e.target.files[0];
-    if (file && file.size < 2 * 1024 * 1024) {
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        setErr("Le logo doit être inférieur à 2MB");
+        return;
+      }
+      if (!['image/jpeg', 'image/png', 'image/gif'].includes(file.type)) {
+        setErr("Le logo doit être au format JPG, PNG ou GIF");
+        return;
+      }
       setLogoFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -159,7 +186,8 @@ export default function Profile() {
       };
       reader.readAsDataURL(file);
     } else {
-      setErr("Logo must be less than 2MB");
+      setLogoFile(null);
+      setLogoPreview(logo);
     }
   };
 
@@ -168,9 +196,11 @@ export default function Profile() {
   };
 
   const removeLogo = () => {
-    setLogoFile(null);
-    setLogoPreview("");
-    setLogo("");
+    if (window.confirm("Voulez-vous vraiment supprimer le logo ?")) {
+      setLogoFile(null);
+      setLogoPreview("");
+      setLogo("");
+    }
   };
 
   const handleCategoryToggle = (categoryId) => {
@@ -184,190 +214,138 @@ export default function Profile() {
   };
 
   async function onSave(e) {
-  e.preventDefault();
-  setErr(""); 
-  setMsg("");
-  setSaving(true);
+    e.preventDefault();
+    setErr(""); 
+    setMsg("");
+    setSaving(true);
 
-  try {
-    if (typeof updateProfile !== 'function') {
-      throw new Error('updateProfile function is not available');
-    }
+    try {
+      if (typeof updateProfile !== 'function') {
+        throw new Error('updateProfile function is not available');
+      }
 
-    let updateData;
+      let updateData;
 
-    if (isArtisan) {
-      if (profilePictureFile) {
-        updateData = new FormData();
-        updateData.append('firstName', firstName || '');
-        updateData.append('lastName', lastName || '');
-        updateData.append('phone', phone || '');
-        updateData.append('city', city || '');
-        updateData.append('zone', zone || '');
-        updateData.append('latitude', latitude || '');
-        updateData.append('longitude', longitude || '');
-        updateData.append('yearsOfExperience', yearsOfExperience || '');
-        updateData.append('specialty', specialty || '');
-        updateData.append('serviceRadius', serviceRadius || '');
-        updateData.append('profilePicture', profilePictureFile);
+      if (isArtisan) {
+        if (profilePictureFile) {
+          updateData = new FormData();
+          updateData.append('firstName', firstName);
+          updateData.append('lastName', lastName);
+          updateData.append('phone', phone);
+          updateData.append('city', city);
+          updateData.append('zone', zone);
+          updateData.append('latitude', latitude);
+          updateData.append('longitude', longitude);
+          updateData.append('yearsOfExperience', yearsOfExperience);
+          updateData.append('specialty', specialty);
+          updateData.append('serviceRadius', serviceRadius);
+          updateData.append('profilePicture', profilePictureFile);
+        } else {
+          updateData = {
+            firstName,
+            lastName,
+            phone,
+            city,
+            zone,
+            latitude,
+            longitude,
+            yearsOfExperience,
+            specialty,
+            serviceRadius,
+            profilePicture,
+          };
+        }
+      } else if (isSupplier) {
+        if (logoFile) {
+          updateData = new FormData();
+          updateData.append('firstName', firstName);
+          updateData.append('lastName', lastName);
+          updateData.append('phone', phone);
+          updateData.append('companyName', companyName);
+          updateData.append('companyPhone', companyPhone);
+          updateData.append('address', address);
+          updateData.append('description', description);
+          updateData.append('categories', JSON.stringify(selectedCategories));
+          updateData.append('logo', logoFile);
+        } else {
+          updateData = {
+            firstName,
+            lastName,
+            phone,
+            companyName,
+            companyPhone,
+            address,
+            description,
+            categories: selectedCategories,
+            logo,
+          };
+        }
       } else {
         updateData = {
-          firstName: firstName || '',
-          lastName: lastName || '',
-          phone: phone || '',
-          city: city || '',
-          zone: zone || '',
-          latitude: latitude || '',
-          longitude: longitude || '',
-          yearsOfExperience: yearsOfExperience || '',
-          specialty: specialty || '',
-          serviceRadius: serviceRadius || '',
-          profilePicture: profilePicture || '',
+          firstName,
+          lastName,
+          phone,
         };
       }
-    } else if (isSupplier) {
-      if (logoFile) {
-        updateData = new FormData();
-        updateData.append('firstName', firstName || '');
-        updateData.append('lastName', lastName || '');
-        updateData.append('phone', phone || '');
-        updateData.append('companyName', companyName || '');
-        updateData.append('companyPhone', companyPhone || '');
-        updateData.append('address', address || '');
-        updateData.append('description', description || '');
-        updateData.append('categories', JSON.stringify(selectedCategories || []));
-        updateData.append('logo', logoFile);
-      } else {
-        updateData = {
-          firstName: firstName || '',
-          lastName: lastName || '',
-          phone: phone || '',
-          companyName: companyName || '',
-          companyPhone: companyPhone || '',
-          address: address || '',
-          description: description || '',
-          categories: selectedCategories || [],
-          logo: logo || '',
-        };
-      }
-    } else {
-      updateData = {
-        firstName: firstName || '',
-        lastName: lastName || '',
-        phone: phone || '',
-      };
-    }
 
-    console.log('Sending update data:', updateData);
-    
-    // Appel de la fonction updateProfile
-    const response = await updateProfile(updateData);
-    
-    // 🔍 LOGS DE DÉBOGAGE - Ajoute ces lignes
-    console.log('🔍 FULL RESPONSE:', response);
-    console.log('🔍 RESPONSE TYPE:', typeof response);
-    console.log('🔍 RESPONSE KEYS:', Object.keys(response || {}));
-    console.log('🔍 RESPONSE USER:', response?.user);
-    console.log('🔍 RESPONSE DATA:', response?.data);
-    
-    // ✅ CORRECTION : Mettre à jour les états avec les données reçues
-    if (response) {
-      // Essayer différentes structures possibles
-      const userData = response.user || response.data?.user || response;
+      console.log('Sending update data:', updateData);
       
-      if (userData && typeof userData === 'object') {
-        console.log('✅ User data extracted:', userData);
-        
-        // Mettre à jour les champs communs
-        if (userData.firstName !== undefined) setFirstName(userData.firstName);
-        if (userData.lastName !== undefined) setLastName(userData.lastName);
-        if (userData.phone !== undefined) setPhone(userData.phone);
-        
-        // Mettre à jour les champs fournisseur
-        if (isSupplier) {
-          const supplierData = userData.supplierProfile || userData;
-          
-          if (supplierData.companyName !== undefined) setCompanyName(supplierData.companyName);
-          if (supplierData.phone !== undefined) setCompanyPhone(supplierData.phone);
-          if (supplierData.address !== undefined) setAddress(supplierData.address);
-          if (supplierData.description !== undefined) setDescription(supplierData.description);
-          if (supplierData.logo !== undefined) {
-            setLogo(supplierData.logo);
-            setLogoPreview(supplierData.logo);
-          }
-          if (supplierData.categories !== undefined) setSelectedCategories(supplierData.categories);
-        }
-        
-        // Mettre à jour les champs artisan
-        if (isArtisan) {
-          if (userData.profilePicture !== undefined) {
-            setProfilePicture(userData.profilePicture);
-            setProfilePicturePreview(userData.profilePicture);
-          }
-          if (userData.city !== undefined) setCity(userData.city);
-          if (userData.zone !== undefined) setZone(userData.zone);
-          if (userData.latitude !== undefined) setLatitude(userData.latitude);
-          if (userData.longitude !== undefined) setLongitude(userData.longitude);
-          if (userData.yearsOfExperience !== undefined) setYearsOfExperience(userData.yearsOfExperience);
-          if (userData.specialty !== undefined) setSpecialty(userData.specialty);
-          if (userData.serviceRadius !== undefined) setServiceRadius(userData.serviceRadius);
-        }
-      } else {
-        console.warn('⚠️ No valid user data in response');
-      }
+      const response = await updateProfile(updateData);
+      console.log('Update response:', response);
+      
+      // Rafraîchir les données utilisateur
+      await refreshMe();
+      
+      setMsg(t('profile.saveSuccess') || 'Profil mis à jour avec succès !');
+      
+      // Reset file states
+      setProfilePictureFile(null);
+      setLogoFile(null);
+      
+    } catch (e2) {
+      console.error('Save error:', e2);
+      setErr(e2.message || t('profile.saveError') || 'Erreur lors de la sauvegarde');
+    } finally {
+      setSaving(false);
     }
-    
-    // Rafraîchir les données utilisateur
-    await refreshMe();
-    
-    setMsg(t('profile.saveSuccess'));
-    
-    // Reset file states
-    setProfilePictureFile(null);
-    setLogoFile(null);
-    
-  } catch (e2) {
-    console.error('❌ Save error:', e2);
-    setErr(e2.message || t('profile.saveError'));
-  } finally {
-    setSaving(false);
   }
-}
 
   async function onChangePassword(e) {
     e.preventDefault();
-    setPwErr(""); setPwMsg("");
+    setPwErr(""); 
+    setPwMsg("");
 
     if (!newPassword || newPassword.length < 6) {
-      setPwErr(t('profile.passwordMinLengthError'));
+      setPwErr(t('profile.passwordMinLengthError') || 'Le mot de passe doit contenir au moins 6 caractères');
       return;
     }
 
     setPwLoading(true);
     try {
       await changePassword({ currentPassword, newPassword });
-      setPwMsg(t('profile.passwordChangeSuccess'));
+      setPwMsg(t('profile.passwordChangeSuccess') || 'Mot de passe modifié avec succès');
       setCurrentPassword("");
       setNewPassword("");
     } catch (e2) {
-      setPwErr(e2.message || t('profile.passwordChangeError'));
+      setPwErr(e2.message || t('profile.passwordChangeError') || 'Erreur lors du changement de mot de passe');
     } finally {
       setPwLoading(false);
     }
   }
 
   async function onSendResetLink() {
-    setResetErr(""); setResetMsg("");
+    setResetErr(""); 
+    setResetMsg("");
     if (!user?.email) {
-      setResetErr("No email address is available for this account.");
+      setResetErr("Aucune adresse email disponible pour ce compte.");
       return;
     }
     setResetLoading(true);
     try {
       await forgotPassword({ email: user.email });
-      setResetMsg("A password reset link has been sent to your email address.");
+      setResetMsg("Un lien de réinitialisation a été envoyé à votre adresse email.");
     } catch (e2) {
-      setResetErr(e2.message || "Unable to send the password reset email.");
+      setResetErr(e2.message || "Impossible d'envoyer l'email de réinitialisation.");
     } finally {
       setResetLoading(false);
     }
@@ -381,48 +359,66 @@ export default function Profile() {
         {/* Header */}
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white sm:text-3xl lg:text-4xl">
-            {t('profile.title')}
+            {t('profile.title') || 'Mon Profil'}
           </h1>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-400 sm:text-base">
-            {t('profile.subtitle')}
+            {t('profile.subtitle') || 'Gérez vos informations personnelles et professionnelles'}
           </p>
         </div>
+
+        {/* Messages */}
+        {err && (
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-4 dark:border-red-800/40 dark:bg-red-900/20">
+            <div className="flex items-center gap-2 text-red-700 dark:text-red-300">
+              <AlertCircle className="h-5 w-5" />
+              <span>{err}</span>
+            </div>
+          </div>
+        )}
+        {msg && (
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-800/40 dark:bg-emerald-900/20">
+            <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300">
+              <CheckCircle className="h-5 w-5" />
+              <span>{msg}</span>
+            </div>
+          </div>
+        )}
 
         {/* Profile info */}
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900/40 sm:p-6 lg:p-8">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-            {t('profile.informationSection')}
+            {t('profile.informationSection') || 'Informations personnelles'}
           </h2>
 
           <form onSubmit={onSave} className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
             {/* Common fields for all users */}
             <div>
               <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                {t('profile.firstNameLabel')}
+                {t('profile.firstNameLabel') || 'Prénom'}
               </label>
               <input
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
-                placeholder={t('profile.firstNamePlaceholder')}
+                placeholder={t('profile.firstNamePlaceholder') || 'Votre prénom'}
               />
             </div>
 
             <div>
               <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                {t('profile.lastNameLabel')}
+                {t('profile.lastNameLabel') || 'Nom'}
               </label>
               <input
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
-                placeholder={t('profile.lastNamePlaceholder')}
+                placeholder={t('profile.lastNamePlaceholder') || 'Votre nom'}
               />
             </div>
 
             <div className="sm:col-span-2">
               <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                {t('profile.emailLabel')}
+                {t('profile.emailLabel') || 'Email'}
               </label>
               <input
                 value={user?.email || ""}
@@ -433,13 +429,13 @@ export default function Profile() {
 
             <div className="sm:col-span-2">
               <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                {t('profile.phoneLabel')}
+                {t('profile.phoneLabel') || 'Téléphone'}
               </label>
               <input
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
-                placeholder={t('profile.phonePlaceholder')}
+                placeholder={t('profile.phonePlaceholder') || '+216 XX XXX XXX'}
               />
             </div>
 
@@ -658,9 +654,12 @@ export default function Profile() {
                     {(logoPreview || logo) && (
                       <div className="relative">
                         <img
-                          src={logoPreview || logo}
+                          src={logoPreview || (logo.startsWith('http') ? logo : `${SERVER_URL}${logo}`)}
                           alt="Company logo"
                           className="w-20 h-20 rounded-xl object-cover border border-slate-200"
+                          onError={(e) => {
+                            e.target.src = 'https://via.placeholder.com/80x80?text=Logo';
+                          }}
                         />
                         <button
                           type="button"
@@ -685,7 +684,7 @@ export default function Profile() {
                         className="w-full rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm font-medium text-indigo-700 hover:bg-indigo-100 flex items-center justify-center gap-2"
                       >
                         <Upload className="h-4 w-4" />
-                        {logoFile ? 'Changer le logo' : 'Choisir un logo'}
+                        {logoFile ? 'Changer le logo' : (logo ? 'Changer le logo' : 'Choisir un logo')}
                       </button>
                       <p className="mt-1 text-xs text-slate-400">
                         JPG, PNG, GIF seulement (max 2MB)
@@ -699,44 +698,48 @@ export default function Profile() {
                     <Tag className="inline h-4 w-4 mr-1" />
                     Catégories de produits vendus
                   </label>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {allCategories.map((cat) => (
-                      <label key={cat._id} className="flex items-center gap-2 p-3 border border-slate-200 rounded-xl cursor-pointer hover:bg-indigo-50">
-                        <input
-                          type="checkbox"
-                          checked={selectedCategories.includes(cat._id)}
-                          onChange={() => handleCategoryToggle(cat._id)}
-                          className="rounded border-slate-300 text-indigo-600"
-                        />
-                        <span className="text-sm text-slate-700">{cat.name}</span>
-                      </label>
-                    ))}
-                  </div>
-                  <p className="mt-2 text-xs text-slate-400">
-                    {selectedCategories.length} catégorie(s) sélectionnée(s)
-                  </p>
+                  {loadingCategories ? (
+                    <div className="flex justify-center py-4">
+                      <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+                    </div>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {allCategories.map((cat) => (
+                          <label key={cat._id} className="flex items-center gap-2 p-3 border border-slate-200 rounded-xl cursor-pointer hover:bg-indigo-50">
+                            <input
+                              type="checkbox"
+                              checked={selectedCategories.includes(cat._id)}
+                              onChange={() => handleCategoryToggle(cat._id)}
+                              className="rounded border-slate-300 text-indigo-600"
+                            />
+                            <span className="text-sm text-slate-700">{cat.name}</span>
+                          </label>
+                        ))}
+                      </div>
+                      <p className="mt-2 text-xs text-slate-400">
+                        {selectedCategories.length} catégorie(s) sélectionnée(s)
+                      </p>
+                    </>
+                  )}
                 </div>
               </>
-            )}
-
-            {err && (
-              <div className="sm:col-span-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                {err}
-              </div>
-            )}
-            {msg && (
-              <div className="sm:col-span-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-                {msg}
-              </div>
             )}
 
             <div className="sm:col-span-2">
               <button
                 type="submit"
                 disabled={saving}
-                className="w-full sm:w-auto rounded-xl bg-indigo-700 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-800 disabled:opacity-60 sm:px-8"
+                className="w-full sm:w-auto rounded-xl bg-indigo-700 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-800 disabled:opacity-60 flex items-center justify-center gap-2"
               >
-                {saving ? t('profile.savingButton') : t('profile.saveButton')}
+                {saving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    {t('profile.savingButton') || 'Enregistrement...'}
+                  </>
+                ) : (
+                  t('profile.saveButton') || 'Enregistrer'
+                )}
               </button>
             </div>
           </form>
@@ -745,82 +748,99 @@ export default function Profile() {
         {/* Password section - same for all roles */}
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900/40 sm:p-6 lg:p-8">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-            {t('profile.passwordSection')}
+            {t('profile.passwordSection') || 'Mot de passe'}
           </h2>
 
           {isGoogle && (
             <div className="mt-3 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-800 dark:border-indigo-800/60 dark:bg-indigo-900/30 dark:text-indigo-200">
-              {t('profile.googleInfo')}
+              {t('profile.googleInfo') || 'Vous êtes connecté avec Google. La modification du mot de passe n\'est pas disponible.'}
             </div>
           )}
 
           <form onSubmit={onChangePassword} className="mt-4 grid grid-cols-1 gap-4 sm:gap-5">
             {!isGoogle && (
-              <div>
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  {t('profile.currentPasswordLabel')}
-                </label>
-                <input
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  type="password"
-                  className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
-                  placeholder={t('profile.passwordPlaceholder')}
-                />
-              </div>
-            )}
+              <>
+                <div>
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    {t('profile.currentPasswordLabel') || 'Mot de passe actuel'}
+                  </label>
+                  <input
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    type="password"
+                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
+                    placeholder="••••••••"
+                  />
+                </div>
 
-            <div>
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                {t('profile.newPasswordLabel')}
-              </label>
-              <input
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                type="password"
-                className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
-                placeholder={t('profile.passwordPlaceholder')}
-              />
-            </div>
+                <div>
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    {t('profile.newPasswordLabel') || 'Nouveau mot de passe'}
+                  </label>
+                  <input
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    type="password"
+                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
+                    placeholder="••••••••"
+                  />
+                </div>
 
-            {pwErr && (
-              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                {pwErr}
-              </div>
-            )}
-            {pwMsg && (
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-                {pwMsg}
-              </div>
-            )}
+                {pwErr && (
+                  <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {pwErr}
+                  </div>
+                )}
+                {pwMsg && (
+                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                    {pwMsg}
+                  </div>
+                )}
+                
+                {/* Messages pour la réinitialisation du mot de passe */}
+                {resetErr && (
+                  <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {resetErr}
+                  </div>
+                )}
+                {resetMsg && (
+                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                    {resetMsg}
+                  </div>
+                )}
 
-            <div className="grid gap-3 sm:flex sm:flex-wrap">
-              <button
-                type="submit"
-                disabled={pwLoading}
-                className="w-full sm:w-auto rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 sm:px-8"
-              >
-                {pwLoading ? t('profile.changingPasswordButton') : t('profile.changePasswordButton')}
-              </button>
-              <button
-                type="button"
-                onClick={onSendResetLink}
-                disabled={resetLoading}
-                className="w-full sm:w-auto rounded-xl border border-indigo-200 bg-indigo-50 px-6 py-3 text-sm font-semibold text-indigo-700 hover:bg-indigo-100 disabled:opacity-60 sm:px-8"
-              >
-                {resetLoading ? "Sending reset email..." : "Send reset link by email"}
-              </button>
-            </div>
-
-            {resetErr && (
-              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                {resetErr}
-              </div>
-            )}
-            {resetMsg && (
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-                {resetMsg}
-              </div>
+                <div className="grid gap-3 sm:flex sm:flex-wrap">
+                  <button
+                    type="submit"
+                    disabled={pwLoading}
+                    className="w-full sm:w-auto rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 flex items-center justify-center gap-2"
+                  >
+                    {pwLoading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        {t('profile.changingPasswordButton') || 'Modification...'}
+                      </>
+                    ) : (
+                      t('profile.changePasswordButton') || 'Changer le mot de passe'
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onSendResetLink}
+                    disabled={resetLoading}
+                    className="w-full sm:w-auto rounded-xl border border-indigo-200 bg-indigo-50 px-6 py-3 text-sm font-semibold text-indigo-700 hover:bg-indigo-100 disabled:opacity-60 flex items-center justify-center gap-2"
+                  >
+                    {resetLoading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Envoi...
+                      </>
+                    ) : (
+                      "Envoyer un lien de réinitialisation"
+                    )}
+                  </button>
+                </div>
+              </>
             )}
           </form>
         </div>

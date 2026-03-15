@@ -1,6 +1,6 @@
-// ✅ FournisseurLayout.jsx (FULL FIXED CODE)
+// ✅ FournisseurLayout.jsx (FULL FIXED CODE WITH LOGO - OPTIMIZED)
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import {
   Package,
@@ -41,6 +41,26 @@ export default function FournisseurLayout() {
   const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [logoError, setLogoError] = useState(false);
+  
+  // URL de base pour les images
+  const SERVER_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+
+  // Utiliser useMemo pour calculer l'URL du logo uniquement quand user change
+  const supplierLogo = useMemo(() => {
+    if (!logoError && user?.supplierProfile?.logo) {
+      const logoUrl = user.supplierProfile.logo.startsWith('http') 
+        ? user.supplierProfile.logo 
+        : `${SERVER_URL}${user.supplierProfile.logo}`;
+      return logoUrl;
+    }
+    return null;
+  }, [user, SERVER_URL, logoError]);
+
+  const handleLogoError = () => {
+    setLogoError(true);
+  };
+
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   return (
@@ -75,14 +95,12 @@ export default function FournisseurLayout() {
 
         <div className="flex-1 overflow-y-auto py-6 px-3">
           <div className="space-y-1">
-            {/* ✅ FIX: correct route */}
             <Tab
               to="/fournisseur/profile"
               icon={<UserCircle2 className="h-5 w-5" />}
               label="Profil"
               collapsed={isSidebarCollapsed}
             />
-
             <Tab
               to="/fournisseur/produits"
               icon={<Package className="h-5 w-5" />}
@@ -108,7 +126,18 @@ export default function FournisseurLayout() {
               isSidebarCollapsed ? "justify-center" : ""
             } mb-3`}
           >
-            <UserCircle2 className="h-8 w-8 text-slate-600 dark:text-slate-400" />
+            {/* LOGO DU FOURNISSEUR - OPTIMISÉ AVEC useMemo */}
+            {supplierLogo ? (
+              <img 
+                src={supplierLogo} 
+                alt="Logo"
+                className="h-10 w-10 rounded-full object-cover border-2 border-indigo-200"
+                onError={handleLogoError}
+              />
+            ) : (
+              <UserCircle2 className="h-10 w-10 text-slate-600 dark:text-slate-400" />
+            )}
+            
             {!isSidebarCollapsed && (
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-semibold text-slate-900 dark:text-white truncate">
@@ -116,7 +145,7 @@ export default function FournisseurLayout() {
                     "Fournisseur"}
                 </div>
                 <div className="text-xs text-slate-500 dark:text-slate-400">
-                  Fournisseur
+                  {user?.supplierProfile?.companyName || "Fournisseur"}
                 </div>
               </div>
             )}
@@ -157,17 +186,31 @@ export default function FournisseurLayout() {
         {/* Mobile Header */}
         <div className="sticky top-0 z-20 w-full border-b border-slate-200 bg-white/80 backdrop-blur xl:hidden dark:border-slate-700 dark:bg-slate-800/80">
           <div className="mx-auto flex items-center justify-between p-5">
-            <div>
-              <div className="text-sm font-semibold text-slate-900 dark:text-white">
-                BMP.tn
-              </div>
-              <div className="hidden sm:block text-xs text-slate-500 dark:text-slate-400">
-                Fournisseur •{" "}
-                {[user?.firstName, user?.lastName].filter(Boolean).join(" ")}
+            <div className="flex items-center gap-3">
+              {/* LOGO DANS LE HEADER MOBILE */}
+              {supplierLogo ? (
+                <img 
+                  src={supplierLogo} 
+                  alt="Logo"
+                  className="h-8 w-8 rounded-full object-cover border border-indigo-200"
+                  onError={handleLogoError}
+                />
+              ) : (
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
+                  <Package className="h-4 w-4" />
+                </div>
+              )}
+              <div>
+                <div className="text-sm font-semibold text-slate-900 dark:text-white">
+                  BMP.tn
+                </div>
+                <div className="hidden sm:block text-xs text-slate-500 dark:text-slate-400">
+                  {user?.supplierProfile?.companyName || "Fournisseur"}
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-2">
-                  <LanguageSwitcher />
+              <LanguageSwitcher />
               <ThemeToggle />
               <button className="rounded-xl p-2 text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700">
                 <Bell className="h-5 w-5" />
@@ -187,7 +230,6 @@ export default function FournisseurLayout() {
         </div>
 
         <div className="hidden xl:flex justify-end px-6 pt-4">
-          
           <LanguageSwitcher />
           <ThemeToggle />
         </div>
@@ -208,9 +250,19 @@ export default function FournisseurLayout() {
             <div className="flex h-full flex-col">
               <div className="border-b border-slate-200 dark:border-slate-700 p-5">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white">
-                    <UserCircle2 className="h-6 w-6" />
-                  </div>
+                  {/* LOGO DANS LE MENU MOBILE */}
+                  {supplierLogo ? (
+                    <img 
+                      src={supplierLogo} 
+                      alt="Logo"
+                      className="h-10 w-10 rounded-full object-cover border-2 border-indigo-200"
+                      onError={handleLogoError}
+                    />
+                  ) : (
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white">
+                      <Package className="h-6 w-6" />
+                    </div>
+                  )}
                   <div>
                     <div className="text-sm font-semibold text-slate-900 dark:text-white">
                       {[user?.firstName, user?.lastName].filter(Boolean).join(
@@ -218,7 +270,7 @@ export default function FournisseurLayout() {
                       ) || "Fournisseur"}
                     </div>
                     <div className="text-xs text-slate-500 dark:text-slate-400">
-                      Fournisseur
+                      {user?.supplierProfile?.companyName || "Fournisseur"}
                     </div>
                   </div>
                 </div>

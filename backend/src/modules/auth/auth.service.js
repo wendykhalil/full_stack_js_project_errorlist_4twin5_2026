@@ -311,6 +311,7 @@ async function googleLogin({ credential, role }) {
 // ✅ VERSION CORRIGÉE - Met à jour User ET SupplierProfile
 // ✅ VERSION CORRIGÉE - Met à jour User ET SupplierProfile
 // ✅ VERSION CORRIGÉE - Met à jour User ET SupplierProfile
+// ✅ VERSION CORRIGÉE - Met à jour User ET SupplierProfile
 async function updateProfile(userId, profileData) {
   console.log('=== SERVICE UPDATE PROFILE ===');
   console.log('userId:', userId);
@@ -324,23 +325,37 @@ async function updateProfile(userId, profileData) {
     throw e;
   }
 
-  console.log('Found user:', user.email);
+  console.log('Found user:', user.email, 'Role:', user.role);
 
   // 1. Mettre à jour les champs de l'utilisateur
-  if (profileData.firstName && typeof profileData.firstName === 'string') {
-    user.firstName = profileData.firstName.trim();
+  if (profileData.firstName !== undefined) {
+    user.firstName = profileData.firstName.trim() || user.firstName;
   }
-  if (profileData.lastName && typeof profileData.lastName === 'string') {
-    user.lastName = profileData.lastName.trim();
+  if (profileData.lastName !== undefined) {
+    user.lastName = profileData.lastName.trim() || user.lastName;
   }
-  if (profileData.phone && typeof profileData.phone === 'string') {
-    user.phone = profileData.phone.trim();
+  if (profileData.phone !== undefined) {
+    user.phone = profileData.phone.trim() || user.phone;
   }
+
+  await user.save();
+  console.log('User saved');
 
   // 2. Si l'utilisateur est un fournisseur, mettre à jour SupplierProfile
   if (user.role === 'SUPPLIER') {
     console.log('Updating supplier profile...');
     let supplierProfile = await SupplierProfile.findOne({ userId: user._id });
+    
+    // Préparer les catégories
+    let categories = profileData.categories;
+    if (typeof categories === 'string') {
+      try {
+        categories = JSON.parse(categories);
+      } catch (e) {
+        console.error('Error parsing categories:', e);
+        categories = [];
+      }
+    }
     
     // Créer le profil s'il n'existe pas
     if (!supplierProfile) {
@@ -352,15 +367,15 @@ async function updateProfile(userId, profileData) {
         address: profileData.address || '',
         description: profileData.description || '',
         logo: profileData.logo || '',
-        categories: Array.isArray(profileData.categories) ? profileData.categories : []
+        categories: Array.isArray(categories) ? categories : []
       });
       
       await supplierProfile.save();
       console.log('New supplier profile saved with ID:', supplierProfile._id);
       
-      // 🔴 CORRECTION : Lier le profil à l'utilisateur
+      // Lier le profil à l'utilisateur
       user.supplierProfile = supplierProfile._id;
-      await user.save(); // Sauvegarder l'utilisateur avec la référence
+      await user.save();
       
     } else {
       console.log('Updating existing supplier profile');
@@ -370,24 +385,19 @@ async function updateProfile(userId, profileData) {
       if (profileData.address !== undefined) supplierProfile.address = profileData.address;
       if (profileData.description !== undefined) supplierProfile.description = profileData.description;
       if (profileData.logo !== undefined) supplierProfile.logo = profileData.logo;
-      if (profileData.categories !== undefined) {
-        supplierProfile.categories = Array.isArray(profileData.categories) 
-          ? profileData.categories 
-          : [];
+      if (categories !== undefined) {
+        supplierProfile.categories = Array.isArray(categories) ? categories : [];
       }
       
       await supplierProfile.save();
       console.log('Supplier profile updated');
       
-      // 🔴 CORRECTION : S'assurer que la référence existe
+      // S'assurer que la référence existe
       if (!user.supplierProfile) {
         user.supplierProfile = supplierProfile._id;
         await user.save();
       }
     }
-  } else {
-    // Sauvegarder l'utilisateur même s'il n'est pas fournisseur
-    await user.save();
   }
 
   // Recharger l'utilisateur avec son profil
