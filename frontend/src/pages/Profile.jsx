@@ -67,9 +67,11 @@ export default function Profile() {
   const [resetMsg, setResetMsg] = useState("");
   const [resetErr, setResetErr] = useState("");
 
-  // Flag pour éviter les réinitialisations multiples
+  // ✅ CORRECTION : Flag pour éviter les réinitialisations multiples
   const [isInitialized, setIsInitialized] = useState(false);
-
+useEffect(() => {
+  setIsInitialized(false);
+}, [user?.email]);
   // Determine user role
   const isArtisan = user?.role?.toLowerCase() === 'artisan';
   const isSupplier = user?.role?.toLowerCase() === 'supplier';
@@ -87,42 +89,64 @@ export default function Profile() {
     loadUser();
   }, [loadUser]);
 
-  // Initialiser les champs UNE SEULE FOIS quand user est disponible
+  // ✅ CORRECTION : Réinitialiser le flag quand l'utilisateur change (déconnexion/connexion)
   useEffect(() => {
-    // Éviter les réinitialisations multiples
-    if (user && !isInitialized) {
-      console.log("Initializing form fields with user data:", user);
-      
-      // Common fields
-      setFirstName(user.firstName || "");
-      setLastName(user.lastName || "");
-      setPhone(user.phone || "");
-      
-      // Artisan fields
-      setProfilePicture(user.profilePicture || "");
-      setProfilePicturePreview(user.profilePicture || "");
-      setCity(user.city || "");
-      setZone(user.zone || "");
-      setLatitude(user.latitude || "");
-      setLongitude(user.longitude || "");
-      setYearsOfExperience(user.yearsOfExperience || "");
-      setSpecialty(user.specialty || "");
-      setServiceRadius(user.serviceRadius || "");
-      
-      // Supplier fields
-      if (user.supplierProfile) {
-        setCompanyName(user.supplierProfile.companyName || "");
-        setCompanyPhone(user.supplierProfile.phone || "");
-        setAddress(user.supplierProfile.address || "");
-        setDescription(user.supplierProfile.description || "");
-        setLogo(user.supplierProfile.logo || "");
-        setLogoPreview(user.supplierProfile.logo || "");
-        setSelectedCategories(user.supplierProfile.categories || []);
-      }
-      
-      setIsInitialized(true);
+  if (!user) {
+    // Si utilisateur déconnecté, réinitialiser
+    setIsInitialized(false);
+    setFirstName("");
+    setLastName("");
+    setPhone("");
+    setProfilePicture("");
+    setProfilePicturePreview("");
+    setCity("");
+    setZone("");
+    setLatitude("");
+    setLongitude("");
+    setYearsOfExperience("");
+    setSpecialty("");
+    setServiceRadius("");
+    setCompanyName("");
+    setCompanyPhone("");
+    setAddress("");
+    setDescription("");
+    setLogo("");
+    setLogoPreview("");
+    setSelectedCategories([]);
+    return;
+  }
+
+  // Quand user existe ET qu'on n'a pas encore initialisé le formulaire
+  if (!isInitialized) {
+    console.log("Initializing form fields with user data:", user);
+
+    setFirstName(user.firstName || "");
+    setLastName(user.lastName || "");
+    setPhone(user.phone || "");
+
+    setProfilePicture(user.profilePicture || "");
+    setProfilePicturePreview(user.profilePicture || "");
+    setCity(user.city || "");
+    setZone(user.zone || "");
+    setLatitude(user.latitude || "");
+    setLongitude(user.longitude || "");
+    setYearsOfExperience(user.yearsOfExperience || "");
+    setSpecialty(user.specialty || "");
+    setServiceRadius(user.serviceRadius || "");
+
+    if (user.supplierProfile) {
+      setCompanyName(user.supplierProfile.companyName || "");
+      setCompanyPhone(user.supplierProfile.phone || "");
+      setAddress(user.supplierProfile.address || "");
+      setDescription(user.supplierProfile.description || "");
+      setLogo(user.supplierProfile.logo || "");
+      setLogoPreview(user.supplierProfile.logo || "");
+      setSelectedCategories(user.supplierProfile.categories || []);
     }
-  }, [user, isInitialized]);
+
+    setIsInitialized(true);
+  }
+}, [user, isInitialized]);
 
   // Load categories for supplier
   useEffect(() => {
@@ -292,6 +316,9 @@ export default function Profile() {
       
       const response = await updateProfile(updateData);
       console.log('Update response:', response);
+      
+      // ✅ IMPORTANT : Réinitialiser le flag pour forcer le rechargement après sauvegarde
+      setIsInitialized(false);
       
       // Rafraîchir les données utilisateur
       await refreshMe();
