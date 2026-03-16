@@ -188,15 +188,28 @@ export default function FournisseurProduitNew() {
     
     // Si c'est une catégorie personnalisée (commence par 'custom-')
     if (categoryId && categoryId.startsWith('custom-')) {
-      const index = parseInt(categoryId.replace('custom-', ''));
-      const customCat = customCategories[index];
-      // Envoyer le nom de la nouvelle catégorie
-      dataToSend.newCategory = customCat?.name || '';
-      console.log('Creating new category:', dataToSend.newCategory);
-    } else {
-      // Catégorie existante - envoyer l'ID
-      dataToSend.category = categoryId;
+      // Récupérer l'index correctement
+      const customCat = customCategories.find((_, index) => `custom-${index}` === categoryId);
+      if (customCat) {
+        dataToSend.newCategory = customCat.name;
+        console.log('Creating new category:', customCat.name);
+      } else {
+        // Fallback: chercher par ID
+        const catById = customCategories.find(c => c._id === categoryId);
+        if (catById) {
+          dataToSend.newCategory = catById.name;
+        }
+      }
+    } else if (categoryId) {
+      // ✅ Catégorie existante - envoyer l'ID dans le bon format
+      // Le backend attend probablement "categoryId" et non "category"
+      dataToSend.categoryId = categoryId;
       console.log('Using existing category ID:', categoryId);
+    } else {
+      // Si aucune catégorie n'est sélectionnée
+      alert('Veuillez sélectionner une catégorie');
+      setSubmitting(false);
+      return;
     }
     
     console.log('Data to send:', dataToSend);
