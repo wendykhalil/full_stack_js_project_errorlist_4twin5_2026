@@ -191,22 +191,39 @@ const deleteProduct = async (id, supplierId) => {
 
 // Get supplier stats
 const getStats = async (supplierId) => {
+
+  // عدد المنتجات
   const productsCount = await Product.countDocuments({ supplierId });
-  const ordersCount = await Order.countDocuments({ supplierId });
-  
-  const revenue = await Order.aggregate([
-    { $match: { supplierId } },
-    { $group: { 
-      _id: null,
-      total: { $sum: '$totalAmount' } 
-    }}
+
+  // Commandes en cours
+  const activeOrders = await Order.countDocuments({
+    supplierId,
+    status: { $in: ['PENDING', 'ACCEPTED', 'PREPARING', 'SHIPPED'] }
+  });
+
+  // Chiffre d'affaires (commandes livrées)
+  const revenueResult = await Order.aggregate([
+    {
+      $match: {
+        supplierId,
+        status: 'DELIVERED'
+      }
+    },
+    {
+      $group: {
+        _id: null,
+        total: { $sum: '$lineTotal' }
+      }
+    }
   ]);
-  
+
+  const revenue = revenueResult.length > 0 ? revenueResult[0].total : 0;
+
   return {
     activeProducts: productsCount,
-    monthlyOrders: ordersCount,
-    revenue: revenue.length > 0 ? revenue[0].total : 0,
-    catalogs: 3 // TODO: implement catalogs
+    activeOrders: activeOrders,
+    revenue: revenue,
+    catalogs: 3
   };
 };
 

@@ -102,7 +102,7 @@ export default function FournisseurProduits() {
       try {
         const statsData = await getSupplierStats({ token });
         console.log('Stats data received:', statsData);
-        setStats(statsData || {});
+        setStats(statsData?.data || {});
       } catch (statsError) {
         console.error('Stats fetch error:', statsError);
         setStats({});
@@ -158,7 +158,13 @@ export default function FournisseurProduits() {
       {/* Stats */}
       <section className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
         <StatCard title={t('fournisseurProduits.stats.activeProducts')} value={stats?.activeProducts || 0} icon={<Package />} iconBg="bg-indigo-50" iconFg="text-indigo-600" />
-        <StatCard title={t('fournisseurProduits.stats.monthlyOrders')} value={stats?.monthlyOrders || 0} icon={<ShoppingCart />} iconBg="bg-emerald-50" iconFg="text-emerald-600" />
+        <StatCard
+title={t('fournisseurProduits.stats.monthlyOrders')}
+value={stats?.activeOrders || 0}
+icon={<ShoppingCart />}
+iconBg="bg-emerald-50"
+iconFg="text-emerald-600"
+/>
         <StatCard title={t('fournisseurProduits.stats.revenue')} value={(stats?.revenue || 0).toLocaleString() + ' TND'} icon={<TrendingUp />} iconBg="bg-orange-50" iconFg="text-orange-600" />
         <StatCard title={t('fournisseurProduits.stats.catalogs')} value={stats?.catalogs || 0} icon={<FileText />} iconBg="bg-slate-100" iconFg="text-slate-700" />
       </section>
