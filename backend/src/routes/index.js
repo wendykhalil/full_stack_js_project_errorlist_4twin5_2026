@@ -2,42 +2,50 @@ const express = require('express');
 
 const authRoutes = require('../modules/auth/auth.routes');
 const projectsRoutes = require('../modules/projects/projects.routes');
-const { authRequired } = require('../middleware/authMiddleware');
-const { requireRoles } = require('../middleware/roleMiddleware');
-const AuthLog = require('../models/AuthLog');
-const ActivityLog = require('../models/ActivityLog');
-
-// ✅ NOUVEAUX IMPORTS
 const supplierRoutes = require('../modules/supplier/supplier.routes');
 const catalogRoutes = require('../modules/catalog/catalog.routes');
 const ordersRoutes = require('../modules/orders/orders.routes');
 const messagesRoutes = require('../modules/messages/messages.routes');
 
+// ✅ NOUVEAUX IMPORTS
+const artisanProfileRoutes = require('../modules/artisan/artisanProfile.routes');
+const portfolioRoutes = require('../modules/artisan/portfolio.routes');
+const searchRoutes = require('../modules/search/search.routes');
+
+const { authRequired } = require('../middleware/authMiddleware');
+const { requireRoles } = require('../middleware/roleMiddleware');
+const AuthLog = require('../models/AuthLog');
+const ActivityLog = require('../models/ActivityLog');
+
+// ✅ Créer le router APRÈS tous les imports
 const router = express.Router();
 
 router.get('/health', (req, res) => res.json({ ok: true }));
 
 router.use('/auth', authRoutes);
 router.use('/projects', projectsRoutes);
+router.use('/supplier', supplierRoutes);
+router.use('/catalog', catalogRoutes);
+router.use('/orders', ordersRoutes);
+router.use('/messages', messagesRoutes);
 
-// ✅ ROUTES EXISTANTES
+// ✅ NOUVELLES ROUTES
+router.use('/artisan/profile', artisanProfileRoutes);
+router.use('/artisan/portfolio', portfolioRoutes);
+router.use('/search', searchRoutes);
+
+// Admin routes
 router.get('/admin/ping', authRequired, requireRoles('ADMIN'), (req, res) => {
   res.json({ ok: true, role: req.user.role });
 });
+
 router.get('/artisan/ping', authRequired, requireRoles('ARTISAN'), (req, res) => {
   res.json({ ok: true, role: req.user.role });
 });
+
 router.get('/prescripteur/ping', authRequired, requireRoles('PRESCRIPTEUR'), (req, res) => {
   res.json({ ok: true, role: req.user.role });
 });
-
-// ✅ ROUTES FOURNISSEUR ET CATALOGUE (existantes)
-router.use('/supplier', supplierRoutes);
-router.use('/catalog', catalogRoutes);
-
-// ✅ NOUVELLES ROUTES POUR LA MARKETPLACE
-router.use('/orders', ordersRoutes);
-router.use('/messages', messagesRoutes);
 
 router.get('/supplier/ping', authRequired, requireRoles('SUPPLIER'), (req, res) => {
   res.json({ ok: true, role: req.user.role });
@@ -66,7 +74,7 @@ router.get('/admin/auth-logs', authRequired, requireRoles('ADMIN'), async (req, 
   }
 });
 
-// Admin: activity logs (profile updates, password changes, sms login, etc.)
+// Admin: activity logs
 router.get('/admin/activity-logs', authRequired, requireRoles('ADMIN'), async (req, res, next) => {
   try {
     const page = Math.max(1, parseInt(req.query.page || '1', 10) || 1);
@@ -92,9 +100,9 @@ router.get('/admin/activity-logs', authRequired, requireRoles('ADMIN'), async (r
 // Admin: list all users
 router.get('/admin/users', authRequired, requireRoles('ADMIN'), async (req, res, next) => {
   try {
-    const page  = Math.max(1, parseInt(req.query.page  || '1',  10) || 1);
+    const page = Math.max(1, parseInt(req.query.page || '1', 10) || 1);
     const limit = Math.min(200, Math.max(10, parseInt(req.query.limit || '50', 10) || 50));
-    const skip  = (page - 1) * limit;
+    const skip = (page - 1) * limit;
 
     const User = require('../models/User');
 
@@ -167,7 +175,7 @@ router.patch('/admin/users/:id/unblock', authRequired, requireRoles('ADMIN'), as
   }
 });
 
-// 🔍 DEBUG ROUTE - Add this before module.exports
+// 🔍 DEBUG ROUTE
 router.get('/debug/all-products', authRequired, async (req, res) => {
   try {
     const Product = require('../models/Product');

@@ -2,10 +2,11 @@ const mongoose = require("mongoose");
 
 const messageSchema = new mongoose.Schema(
   {
+    // Rendre orderId optionnel
     orderId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Order",
-      required: true,
+      required: false, // ← Changé de true à false
     },
     
     senderId: {
@@ -26,24 +27,21 @@ const messageSchema = new mongoose.Schema(
       trim: true 
     },
 
-    // Pour les messages système (changement de statut, etc.)
     isSystemMessage: { 
       type: Boolean, 
       default: false 
     },
 
-    // Si le message a été lu
     read: { 
       type: Boolean, 
       default: false 
     },
     readAt: Date,
 
-    // Pièces jointes éventuelles
     attachments: [{
       url: String,
       filename: String,
-      type: String // 'image', 'pdf', etc.
+      type: String
     }]
   },
   { timestamps: true }

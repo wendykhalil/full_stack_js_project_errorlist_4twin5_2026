@@ -1,7 +1,7 @@
 const Message = require('../../models/Message');
 const Order = require('../../models/Order');
 
-// Envoyer un message
+// Envoyer un message (lié à une commande)
 async function sendMessage({ orderId, receiverId, content, senderId, attachments = [] }) {
   try {
     // Vérifier que la commande existe
@@ -41,6 +41,29 @@ async function sendMessage({ orderId, receiverId, content, senderId, attachments
   }
 }
 
+// ✅ NOUVELLE FONCTION : Envoyer un message direct (hors commande)
+async function sendDirectMessage({ receiverId, content, senderId }) {
+  try {
+    const message = new Message({
+      senderId,
+      receiverId,
+      content,
+      read: false
+      // Pas d'orderId
+    });
+
+    await message.save();
+    
+    await message.populate('senderId', 'firstName lastName');
+    await message.populate('receiverId', 'firstName lastName');
+    
+    return message;
+  } catch (error) {
+    console.error('Error in sendDirectMessage service:', error);
+    throw error;
+  }
+}
+
 // Récupérer les messages d'une commande
 async function getOrderMessages(orderId, userId) {
   try {
@@ -66,6 +89,66 @@ async function getOrderMessages(orderId, userId) {
     return messages;
   } catch (error) {
     console.error('Error in getOrderMessages service:', error);
+    throw error;
+  }
+}
+
+// ✅ NOUVELLE FONCTION : Récupérer la conversation entre deux utilisateurs
+async function getConversation(userId1, userId2, page = 1, limit = 50) {
+  try {
+    const skip = (page - 1) * limit;
+    
+    const messages = await Message.find({
+      $or: [
+        { senderId: userId1, receiverId: userId2 },
+        { senderId: userId2, receiverId: userId1 }
+      ]
+    })
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit)
+    .populate('senderId', 'firstName lastName')
+    .populate('receiverId', 'firstName lastName');
+
+    return messages.reverse(); // Du plus ancien au plus récent
+  } catch (error) {
+    console.error('Error in getConversation service:', error);
+    throw error;
+  }
+}
+
+// ✅ NOUVELLE FONCTION : Récupérer les conversations récentes
+async function getRecentConversations(userId) {
+  try {
+    const messages = await Message.find({
+      $or: [{ senderId: userId }, { receiverId: userId }]
+    })
+    .sort({ createdAt: -1 })
+    .populate('senderId', 'firstName lastName')
+    .populate('receiverId', 'firstName lastName');
+
+    // Grouper par conversation
+    const conversations = {};
+    
+    messages.forEach(msg => {
+      const otherId = msg.senderId._id.toString() === userId.toString() 
+        ? msg.receiverId._id.toString() 
+        : msg.senderId._id.toString();
+      
+      if (!conversations[otherId]) {
+        conversations[otherId] = {
+          user: msg.senderId._id.toString() === userId.toString() ? msg.receiverId : msg.senderId,
+          lastMessage: msg,
+          unreadCount: !msg.read && msg.receiverId._id.toString() === userId.toString() ? 1 : 0
+        };
+      } else if (!msg.read && msg.receiverId._id.toString() === userId.toString()) {
+        conversations[otherId].unreadCount += 1;
+      }
+    });
+
+    return Object.values(conversations);
+  } catch (error) {
+    console.error('Error in getRecentConversations service:', error);
     throw error;
   }
 }
@@ -113,7 +196,10 @@ async function getUnreadCount(userId) {
 
 module.exports = {
   sendMessage,
+  sendDirectMessage, // ✅ NOUVEAU
   getOrderMessages,
+  getConversation,   // ✅ NOUVEAU
+  getRecentConversations, // ✅ NOUVEAU
   markAsRead,
   getUnreadCount
 };

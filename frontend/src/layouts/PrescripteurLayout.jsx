@@ -1,6 +1,20 @@
 import React, { useState } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Users, PackageSearch, FolderKanban, LogOut, Menu, X, Bell, UserCircle2, ChevronLeft, ChevronRight } from "lucide-react";
+import { 
+  LayoutDashboard, 
+  Users, 
+  PackageSearch, 
+  FolderKanban, 
+  LogOut, 
+  Menu, 
+  X, 
+  Bell, 
+  UserCircle2, 
+  ChevronLeft, 
+  ChevronRight,
+  Search,
+  MessageCircle  // ← AJOUTER
+} from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import ThemeToggle from "../components/ThemeToggle";
 import LanguageSwitcher from "../components/LanguageSwitcher";
@@ -48,15 +62,13 @@ export default function PrescripteurLayout() {
 
         <div className="flex-1 overflow-y-auto py-6 px-3">
           <div className="space-y-1">
-            <Tab to="/prescripteur"          icon={<PackageSearch className="h-5 w-5" />} label="Produits" collapsed={isSidebarCollapsed} />
-            <Tab to="/prescripteur/artisans" icon={<Users className="h-5 w-5" />}         label="Artisans" collapsed={isSidebarCollapsed} />
-            <Tab to="/prescripteur/projects"  icon={<FolderKanban className="h-5 w-5" />}   label="Projets"  collapsed={isSidebarCollapsed} />
-            <Tab
-  to="/prescripteur/profile"
-  icon={<UserCircle2 className="h-5 w-5" />}
-  label="Profil"
-  collapsed={isSidebarCollapsed}
-/>
+            <Tab to="/prescripteur" icon={<PackageSearch className="h-5 w-5" />} label="Produits" collapsed={isSidebarCollapsed} />
+            <Tab to="/prescripteur/artisans" icon={<Users className="h-5 w-5" />} label="Artisans" collapsed={isSidebarCollapsed} />
+            <Tab to="/prescripteur/projects" icon={<FolderKanban className="h-5 w-5" />} label="Projets" collapsed={isSidebarCollapsed} />
+            <Tab to="/prescripteur/search" icon={<Search className="h-5 w-5" />} label="Rechercher" collapsed={isSidebarCollapsed} />
+            <Tab to="/prescripteur/profile" icon={<UserCircle2 className="h-5 w-5" />} label="Profil" collapsed={isSidebarCollapsed} />
+            {/* ✅ AJOUT: Lien Messages */}
+            <Tab to="/prescripteur/messages" icon={<MessageCircle className="h-5 w-5" />} label="Messages" collapsed={isSidebarCollapsed} />
           </div>
         </div>
 
@@ -100,7 +112,7 @@ export default function PrescripteurLayout() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-                  <LanguageSwitcher />
+              <LanguageSwitcher />
               <ThemeToggle />
               <button className="rounded-xl p-2 text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700">
                 <Bell className="h-5 w-5" />
@@ -138,9 +150,13 @@ export default function PrescripteurLayout() {
                 </div>
               </div>
               <div className="flex-1 space-y-1 p-3">
-                <Tab to="/prescripteur/profile"  icon={<UserCircle2 className="h-5 w-5" />} label="Profil"   onClick={closeMobileMenu} />
-                <Tab to="/prescripteur"          icon={<PackageSearch className="h-5 w-5" />} label="Produits" onClick={closeMobileMenu} />
-                <Tab to="/prescripteur/artisans" icon={<Users className="h-5 w-5" />}         label="Artisans" onClick={closeMobileMenu} />
+                <Tab to="/prescripteur/profile" icon={<UserCircle2 className="h-5 w-5" />} label="Profil" onClick={closeMobileMenu} />
+                <Tab to="/prescripteur" icon={<PackageSearch className="h-5 w-5" />} label="Produits" onClick={closeMobileMenu} />
+                <Tab to="/prescripteur/artisans" icon={<Users className="h-5 w-5" />} label="Artisans" onClick={closeMobileMenu} />
+                <Tab to="/prescripteur/projects" icon={<FolderKanban className="h-5 w-5" />} label="Projets" onClick={closeMobileMenu} />
+                <Tab to="/prescripteur/search" icon={<Search className="h-5 w-5" />} label="Rechercher" onClick={closeMobileMenu} />
+                {/* ✅ AJOUT: Lien Messages dans le menu mobile */}
+                <Tab to="/prescripteur/messages" icon={<MessageCircle className="h-5 w-5" />} label="Messages" onClick={closeMobileMenu} />
               </div>
               <div className="border-t border-slate-200 dark:border-slate-700 p-3">
                 <button

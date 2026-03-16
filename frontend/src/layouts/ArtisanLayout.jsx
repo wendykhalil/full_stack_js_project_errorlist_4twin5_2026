@@ -16,8 +16,10 @@ import {
   ChevronLeft,
   ChevronRight,
   UserCircle2,
-  Package, // ✅ NOUVEAU : icône pour les commandes
+  Package,
+  MessageCircle,
 } from "lucide-react";
+import { Image as ImageIcon } from 'lucide-react';
 import { useAuth } from "../auth/AuthContext";
 import ThemeToggle from "../components/ThemeToggle";
 import LanguageSwitcher from "../components/LanguageSwitcher";
@@ -102,6 +104,12 @@ export default function ArtisanLayout() {
               collapsed={isSidebarCollapsed}
             />
             <NavItem
+              to="/artisan/portfolio"
+              icon={<ImageIcon className="h-5 w-5" />}
+              label="Portfolio"
+              collapsed={isSidebarCollapsed}
+            />
+            <NavItem
               to="/artisan/devis/create"
               icon={<FileText className="h-5 w-5" />}
               label="Créer un devis"
@@ -113,11 +121,17 @@ export default function ArtisanLayout() {
               label="Factures"
               collapsed={isSidebarCollapsed}
             />
-            {/* ✅ NOUVEAU : Lien vers les commandes */}
             <NavItem
               to="/artisan/orders"
               icon={<Package className="h-5 w-5" />}
               label="Mes commandes"
+              collapsed={isSidebarCollapsed}
+            />
+            {/* ✅ CORRIGÉ: chemin vers les messages */}
+            <NavItem
+              to="/artisan/messages"
+              icon={<MessageCircle className="h-5 w-5" />}
+              label="Messages"
               collapsed={isSidebarCollapsed}
             />
             <NavItem
@@ -140,7 +154,6 @@ export default function ArtisanLayout() {
               isSidebarCollapsed ? "justify-center" : ""
             } mb-3`}
           >
-            {/* Profile picture OR fallback icon */}
             {user?.profilePicture ? (
               <img
                 src={user.profilePicture}
@@ -184,7 +197,6 @@ export default function ArtisanLayout() {
           </button>
         </div>
 
-        {/* Collapse Button */}
         <button
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
           className="absolute -right-3 top-20 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
@@ -301,6 +313,13 @@ export default function ArtisanLayout() {
                   collapsed={false}
                 />
                 <NavItem
+                  to="/artisan/portfolio"
+                  icon={<ImageIcon className="h-5 w-5" />}
+                  label="Portfolio"
+                  onClick={closeMobileMenu}
+                  collapsed={false}
+                />
+                <NavItem
                   to="/artisan/devis/create"
                   icon={<FileText className="h-5 w-5" />}
                   label="Créer un devis"
@@ -314,11 +333,18 @@ export default function ArtisanLayout() {
                   onClick={closeMobileMenu}
                   collapsed={false}
                 />
-                {/* ✅ NOUVEAU : Lien vers les commandes dans le menu mobile */}
                 <NavItem
                   to="/artisan/orders"
                   icon={<Package className="h-5 w-5" />}
                   label="Mes commandes"
+                  onClick={closeMobileMenu}
+                  collapsed={false}
+                />
+                {/* ✅ CORRIGÉ: chemin vers les messages dans le menu mobile */}
+                <NavItem
+                  to="/artisan/messages"
+                  icon={<MessageCircle className="h-5 w-5" />}
+                  label="Messages"
                   onClick={closeMobileMenu}
                   collapsed={false}
                 />

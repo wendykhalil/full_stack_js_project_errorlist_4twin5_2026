@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import TawkToChat from "./components/TawkToChat";
 import RealtimeNotifications from "./components/RealtimeNotifications";
+import ArtisanProfile from './pages/ArtisanProfile';
 
 import Login from "./pages/Login";
 import PhoneLogin from "./pages/PhoneLogin";
@@ -31,9 +32,14 @@ import ArtisanFactureStep1 from "./pages/ArtisanFactureStep1";
 import ArtisanFactureStep2 from "./pages/ArtisanFactureStep2";
 import ArtisanFactureStep3 from "./pages/ArtisanFactureStep3";
 import ArtisanMarketplace from "./pages/ArtisanMarketplace";
-import ArtisanProductDetails from "./pages/ArtisanProductDetails"; // ✅ AJOUTER
-import ArtisanOrderRequest from "./pages/ArtisanOrderRequest"; // ✅ AJOUTER
-import ArtisanOrders from "./pages/ArtisanOrders"; // ✅ AJOUTER
+import ArtisanProductDetails from "./pages/ArtisanProductDetails";
+import ArtisanOrderRequest from "./pages/ArtisanOrderRequest";
+import ArtisanOrders from "./pages/ArtisanOrders";
+
+// Ajouter les imports pour les nouvelles pages Artisan
+import ArtisanProfileEdit from './pages/ArtisanProfileEdit';
+import ArtisanPortfolio from './pages/ArtisanPortfolio';
+import ArtisanPortfolioAdd from './pages/ArtisanPortfolioAdd';
 
 // PRESCRIPTEUR
 import PrescripteurLayout from "./layouts/PrescripteurLayout";
@@ -41,13 +47,21 @@ import PrescripteurProduits from "./pages/PrescripteurProduits";
 import PrescripteurArtisans from "./pages/PrescripteurArtisans";
 import PrescripteurProjects from "./pages/PrescripteurProjects";
 
+// Ajouter les imports pour les nouvelles pages Prescripteur
+import PrescripteurSearch from './pages/PrescripteurSearch';
+import ArtisanPublicProfile from './pages/ArtisanPublicProfile';
+
 // FOURNISSEUR
 import FournisseurLayout from "./layouts/FournisseurLayout";
 import FournisseurProduits from "./pages/FournisseurProduits";
 import FournisseurProduitNew from "./pages/FournisseurProduitNew";
 import FournisseurProduitEdit from "./pages/FournisseurProduitEdit";
-import FournisseurOrders from "./pages/FournisseurOrders"; // ✅ AJOUTER
-import OrderDetails from "./pages/OrderDetails"; // ✅ AJOUTER
+import FournisseurOrders from "./pages/FournisseurOrders";
+import OrderDetails from "./pages/OrderDetails";
+
+// ✅ IMPORTS POUR LA MESSAGERIE
+import Messages from './pages/Messages';
+import Conversation from './pages/Conversation';
 
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
@@ -103,7 +117,11 @@ export default function App() {
                 <Route element={<ProtectedRoute allowedRoles={[Roles.ARTISAN]} />}>
                     <Route path="/artisan" element={<ArtisanLayout />}>
                         <Route index element={<ArtisanDashboard />} />
-                        <Route path="profile" element={<Profile />} />
+                        <Route path="profile" element={<ArtisanProfile />} />
+                        <Route path="profile/edit" element={<ArtisanProfileEdit />} />
+                        <Route path="portfolio" element={<ArtisanPortfolio />} />
+                        <Route path="portfolio/add" element={<ArtisanPortfolioAdd />} />
+                        <Route path="portfolio/edit/:id" element={<ArtisanPortfolioAdd />} />
                         <Route path="projects" element={<ArtisanProjects />} />
                         <Route path="devis/create" element={<ArtisanDevisCreate />} />
                         <Route path="factures" element={<ArtisanFactures />} />
@@ -111,11 +129,13 @@ export default function App() {
                         <Route path="factures/new/step-2" element={<ArtisanFactureStep2 />} />
                         <Route path="factures/new/step-3" element={<ArtisanFactureStep3 />} />
                         <Route path="marketplace" element={<ArtisanMarketplace />} />
-                        {/* ✅ Routes pour les commandes artisan */}
                         <Route path="product/:id" element={<ArtisanProductDetails />} />
                         <Route path="order-request/:productId" element={<ArtisanOrderRequest />} />
                         <Route path="orders" element={<ArtisanOrders />} />
                         <Route path="orders/:id" element={<OrderDetails />} />
+                        {/* ✅ ROUTES MESSAGES POUR ARTISAN */}
+                        <Route path="messages" element={<Messages />} />
+                        <Route path="messages/:userId" element={<Conversation />} />
                     </Route>
                 </Route>
 
@@ -124,12 +144,17 @@ export default function App() {
                     <Route path="/prescripteur" element={<PrescripteurLayout />}>
                         <Route index element={<PrescripteurProduits />} />
                         <Route path="profile" element={<Profile />} />
+                        <Route path="search" element={<PrescripteurSearch />} />
+                        <Route path="artisan/:id" element={<ArtisanPublicProfile />} />
                         <Route path="artisans" element={<PrescripteurArtisans />} />
                         <Route path="projects" element={<PrescripteurProjects />} />
+                        {/* ✅ ROUTES MESSAGES POUR PRESCRIPTEUR */}
+                        <Route path="messages" element={<Messages />} />
+                        <Route path="messages/:userId" element={<Conversation />} />
                     </Route>
                 </Route>
 
-                {/* Fournisseur (protected) - UNE SEULE SECTION */}
+                {/* Fournisseur (protected) */}
                 <Route element={<ProtectedRoute allowedRoles={[Roles.SUPPLIER]} />}>
                     <Route path="/fournisseur" element={<FournisseurLayout />}>
                         <Route index element={<Navigate to="produits" replace />} />
@@ -139,10 +164,13 @@ export default function App() {
                         <Route path="orders" element={<FournisseurOrders />} />
                         <Route path="orders/:id" element={<OrderDetails />} />
                         <Route path="profile" element={<Profile />} />
+                        {/* ✅ ROUTES MESSAGES POUR FOURNISSEUR */}
+                        <Route path="messages" element={<Messages />} />
+                        <Route path="messages/:userId" element={<Conversation />} />
                     </Route>
                 </Route>
 
-                {/* Route par défaut - redirige vers login */}
+                {/* Route par défaut */}
                 <Route path="*" element={<Navigate to="/login" replace />} />
             </Routes>
         </BrowserRouter>
