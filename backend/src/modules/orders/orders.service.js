@@ -1,7 +1,9 @@
 const Order = require('../../models/Order');
 const Product = require('../../models/Product');
 const User = require('../../models/User');
+const { sendNewOrderEmailToSupplier, sendOrderStatusUpdateEmailToArtisan } = require('../../utils/orderEmail');
 
+// Créer une commande
 // Créer une commande
 // Créer une commande
 async function createOrder(orderData) {
@@ -23,6 +25,14 @@ async function createOrder(orderData) {
       throw error;
     }
 
+    // Récupérer l'artisan
+    const artisan = await User.findById(artisanId);
+    if (!artisan) {
+      const error = new Error('Artisan non trouvé');
+      error.statusCode = 404;
+      throw error;
+    }
+
     // Calculer les valeurs
     const unitPrice = product.price;
     const lineTotal = unitPrice * quantity;
@@ -35,17 +45,23 @@ async function createOrder(orderData) {
     const orderNumber = `CMD-${year}${month}-${random}`;
 
     // Créer la commande
-  const order = new Order({
-  productId,
-  supplierId: product.supplierId._id,
-  artisanId,
-  quantity,
-  unitPrice,
-  lineTotal,
-  deliveryAddress,
-  artisanMessage,
-  status: "PENDING"
-});
+    const order = new Order({
+      orderNumber,
+      productId,
+      supplierId: product.supplierId._id,
+      artisanId,
+      quantity,
+      unitPrice,
+      lineTotal,
+      deliveryAddress,
+      artisanMessage,
+      status: 'PENDING',
+      statusHistory: [{
+        status: 'PENDING',
+        changedBy: artisanId,
+        note: 'Commande créée'
+      }]
+    });
 
     await order.save();
     console.log('Order created successfully:', order._id);
@@ -57,12 +73,28 @@ async function createOrder(orderData) {
       { path: 'artisanId', select: 'firstName lastName email phone' }
     ]);
 
+    // ✅ ENVOYER EMAIL AU FOURNISSEUR
+    try {
+      await sendNewOrderEmailToSupplier(
+        order,
+        product.supplierId,
+        artisan,
+        product
+      );
+    } catch (emailError) {
+      console.error('Erreur envoi email (non bloquante):', emailError);
+      // Ne pas bloquer la création de la commande si l'email échoue
+    }
+
     return order;
   } catch (error) {
     console.error('Error in createOrder service:', error);
     throw error;
   }
 }
+
+
+  
 
 // Récupérer les commandes d'un artisan
 async function getOrdersByArtisan(artisanId, { page, limit, status }) {
@@ -112,9 +144,14 @@ async function getOrdersBySupplier(supplierId, { page, limit, status }) {
 
 // Mettre à jour le statut d'une commande
 // Mettre à jour le statut d'une commande
+// Mettre à jour le statut d'une commande
 async function updateOrderStatus(orderId, userId, newStatus, note = '') {
-  // Récupérer la commande sans validation
-  const order = await Order.findById(orderId).lean(); // ← Utilise lean() pour éviter la validation
+  // Récupérer la commande
+  const order = await Order.findById(orderId)
+    .populate('productId')
+    .populate('supplierId')
+    .populate('artisanId');
+    
   if (!order) {
     const error = new Error('Commande non trouvée');
     error.statusCode = 404;
@@ -122,13 +159,16 @@ async function updateOrderStatus(orderId, userId, newStatus, note = '') {
   }
 
   // Vérifier que l'utilisateur est le fournisseur
-  if (order.supplierId.toString() !== userId.toString()) {
+  if (order.supplierId._id.toString() !== userId.toString()) {
     const error = new Error('Non autorisé');
     error.statusCode = 403;
     throw error;
   }
 
-  // Mettre à jour en utilisant updateOne pour éviter la validation
+  // Ancien statut pour référence
+  const oldStatus = order.status;
+
+  // Mettre à jour en utilisant updateOne
   await Order.updateOne(
     { _id: orderId },
     {
@@ -143,7 +183,7 @@ async function updateOrderStatus(orderId, userId, newStatus, note = '') {
         statusHistory: {
           status: newStatus,
           changedBy: userId,
-          note: note || ''
+          note: note || `Statut changé de ${oldStatus} à ${newStatus}`
         }
       }
     }
@@ -151,9 +191,25 @@ async function updateOrderStatus(orderId, userId, newStatus, note = '') {
 
   // Récupérer la commande mise à jour
   const updatedOrder = await Order.findById(orderId)
-    .populate('productId', 'name price imageUrls')
-    .populate('supplierId', 'firstName lastName email supplierProfile')
-    .populate('artisanId', 'firstName lastName email phone');
+    .populate('productId')
+    .populate('supplierId')
+    .populate('artisanId');
+
+  // ✅ ENVOYER EMAIL À L'ARTISAN si le statut est dans la liste
+  const statusesToNotify = ['ACCEPTED', 'PREPARING', 'SHIPPED', 'DELIVERED'];
+  if (statusesToNotify.includes(newStatus)) {
+    try {
+      await sendOrderStatusUpdateEmailToArtisan(
+        updatedOrder,
+        updatedOrder.artisanId,
+        updatedOrder.supplierId,
+        updatedOrder.productId,
+        newStatus
+      );
+    } catch (emailError) {
+      console.error('Erreur envoi email statut (non bloquante):', emailError);
+    }
+  }
 
   return updatedOrder;
 }
