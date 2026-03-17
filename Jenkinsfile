@@ -1,10 +1,6 @@
 pipeline {
   agent any
 
-  tools {
-    nodejs 'Node20'
-  }
-
   stages {
     stage('Checkout') {
       steps {
@@ -34,6 +30,13 @@ pipeline {
           sh 'npm install'
           sh 'npm run build'
         }
+      }
+    }
+
+    stage('Archive Artifacts') {
+      steps {
+        archiveArtifacts artifacts: 'frontend/dist/**', fingerprint: true
+        archiveArtifacts artifacts: 'backend/coverage/**', fingerprint: true
       }
     }
   }
