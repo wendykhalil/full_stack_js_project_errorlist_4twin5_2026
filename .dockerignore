@@ -1,0 +1,10 @@
+node_modules
+.git
+coverage
+dist
+artifacts
+backend/node_modules
+backend/coverage
+backend/uploads
+frontend/node_modules
+frontend/dist

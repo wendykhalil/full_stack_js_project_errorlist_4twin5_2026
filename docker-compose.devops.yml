@@ -1,0 +1,17 @@
+version: '3.9'
+services:
+  backend:
+    build: ./backend
+    container_name: pilast-backend
+    ports:
+      - '5000:5000'
+    env_file:
+      - ./backend/.env
+
+  frontend:
+    build: ./frontend
+    container_name: pilast-frontend
+    ports:
+      - '8080:80'
+    depends_on:
+      - backend
