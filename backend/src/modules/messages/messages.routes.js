@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const messagesController = require('./messages.controller');
 const { authRequired } = require('../../middleware/authMiddleware');
+const { uploadMessageAttachments } = require('../../middleware/messageUpload');
 
 // Toutes les routes nécessitent une authentification
 router.use(authRequired);
@@ -10,7 +11,7 @@ router.use(authRequired);
 router.post('/', messagesController.sendMessage);
 
 // ✅ NOUVEAU : Envoyer un message direct
-router.post('/direct', messagesController.sendDirectMessage);
+router.post('/direct', uploadMessageAttachments.array('files', 5), messagesController.sendDirectMessage);
 
 // Récupérer les messages d'une commande
 router.get('/order/:orderId', messagesController.getOrderMessages);

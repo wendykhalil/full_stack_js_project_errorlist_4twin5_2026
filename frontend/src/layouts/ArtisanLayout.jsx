@@ -23,6 +23,8 @@ import { Image as ImageIcon } from 'lucide-react';
 import { useAuth } from "../auth/AuthContext";
 import ThemeToggle from "../components/ThemeToggle";
 import LanguageSwitcher from "../components/LanguageSwitcher";
+import logo from "../assets/bmp-logo.svg";
+import { useUnreadMessages } from "../hooks/useUnreadMessages";
 
 const NavItem = ({ to, icon, label, onClick, collapsed }) => (
   <NavLink
@@ -48,6 +50,7 @@ export default function ArtisanLayout() {
   const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const unreadCount = useUnreadMessages();
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   return (
@@ -65,8 +68,8 @@ export default function ArtisanLayout() {
           }`}
         >
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm">
-              <HardHat className="h-5 w-5" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-slate-200">
+              <img src={logo} alt="BMP.tn" className="h-7 w-7" />
             </div>
 
             {!isSidebarCollapsed && (
@@ -130,7 +133,7 @@ export default function ArtisanLayout() {
             {/* ✅ CORRIGÉ: chemin vers les messages */}
             <NavItem
               to="/artisan/messages"
-              icon={<MessageCircle className="h-5 w-5" />}
+              icon={<span className="relative inline-flex"><MessageCircle className="h-5 w-5" />{unreadCount > 0 && <span className="absolute -right-2 -top-2 min-w-[1rem] rounded-full bg-red-500 px-1 text-[10px] text-white">{unreadCount > 99 ? '99+' : unreadCount}</span>}</span>}
               label="Messages"
               collapsed={isSidebarCollapsed}
             />

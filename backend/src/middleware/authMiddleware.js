@@ -25,6 +25,8 @@ async function authRequired(req, res, next) {
     }
     
     req.user = user; // Now req.user has _id and all other fields
+    req.user.id = String(user._id);
+    req.user.sub = String(user._id);
     next();
   } catch (err) {
     console.error('Auth error:', err);

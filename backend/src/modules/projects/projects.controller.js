@@ -1,5 +1,9 @@
 const Project = require('../../models/Project');
 
+function getUserId(req) {
+  return req.user?._id || req.user?.id || req.user?.sub || req.user?.userId;
+}
+
 function toNumber(v) {
   if (v === undefined || v === null || v === '') return undefined;
   const n = Number(v);
@@ -61,7 +65,7 @@ async function createProject(req, res, next) {
     const images = mapFilesToImages(req);
 
     const doc = await Project.create({
-      artisanId: req.user.sub,
+      artisanId: getUserId(req),
       title: title.trim(),
       ...(status ? { status } : {}),
       ...(description !== undefined ? { description: String(description).trim() } : {}),
@@ -99,7 +103,7 @@ async function createProject(req, res, next) {
  */
 async function listMyProjects(req, res, next) {
   try {
-    const items = await Project.find({ artisanId: req.user.sub })
+    const items = await Project.find({ artisanId: getUserId(req) })
       .sort({ createdAt: -1 })
       .lean();
     return res.json({ ok: true, items });
@@ -134,7 +138,7 @@ async function getProjectById(req, res, next) {
     const role = req.user?.role;
 
     // ARTISAN can only access own project
-    if (role === 'ARTISAN' && String(project.artisanId?._id || project.artisanId) !== String(req.user.sub)) {
+    if (role === 'ARTISAN' && String(project.artisanId?._id || project.artisanId) !== String(getUserId(req))) {
       return res.status(403).json({ message: 'Forbidden' });
     }
 
@@ -168,7 +172,7 @@ async function updateProject(req, res, next) {
     if (!project) return res.status(404).json({ message: 'Project not found' });
 
     // only owner artisan can update
-    if (String(project.artisanId) !== String(req.user.sub)) {
+    if (String(project.artisanId) !== String(getUserId(req))) {
       return res.status(403).json({ message: 'Forbidden' });
     }
 
@@ -243,7 +247,7 @@ async function deleteProject(req, res, next) {
     const project = await Project.findById(req.params.id);
     if (!project) return res.status(404).json({ message: 'Project not found' });
 
-    if (String(project.artisanId) !== String(req.user.sub)) {
+    if (String(project.artisanId) !== String(getUserId(req))) {
       return res.status(403).json({ message: 'Forbidden' });
     }
 

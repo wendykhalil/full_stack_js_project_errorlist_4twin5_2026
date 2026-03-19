@@ -1,50 +1,53 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
+
+const attachmentSchema = new mongoose.Schema(
+  {
+    url: { type: String, trim: true },
+    filename: { type: String, trim: true },
+    storedFilename: { type: String, trim: true },
+    type: { type: String, trim: true },
+    size: { type: Number, default: 0 },
+  },
+  { _id: false }
+);
 
 const messageSchema = new mongoose.Schema(
   {
-    // Rendre orderId optionnel
     orderId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Order",
-      required: false, // ← Changé de true à false
+      ref: 'Order',
+      required: false,
     },
-    
     senderId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
       required: true,
     },
-    
     receiverId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
       required: true,
     },
-
-    content: { 
-      type: String, 
-      required: true, 
-      trim: true 
+    content: {
+      type: String,
+      required: true,
+      trim: true,
     },
-
-    isSystemMessage: { 
-      type: Boolean, 
-      default: false 
+    isSystemMessage: {
+      type: Boolean,
+      default: false,
     },
-
-    read: { 
-      type: Boolean, 
-      default: false 
+    read: {
+      type: Boolean,
+      default: false,
     },
     readAt: Date,
-
-    attachments: [{
-      url: String,
-      filename: String,
-      type: String
-    }]
+    attachments: {
+      type: [attachmentSchema],
+      default: [],
+    },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Message", messageSchema);
+module.exports = mongoose.model('Message', messageSchema);

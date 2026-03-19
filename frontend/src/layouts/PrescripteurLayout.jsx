@@ -18,6 +18,8 @@ import {
 import { useAuth } from "../auth/AuthContext";
 import ThemeToggle from "../components/ThemeToggle";
 import LanguageSwitcher from "../components/LanguageSwitcher";
+import logo from "../assets/bmp-logo.svg";
+import { useUnreadMessages } from "../hooks/useUnreadMessages";
 
 const Tab = ({ to, icon, label, onClick, collapsed }) => (
   <NavLink
@@ -41,6 +43,7 @@ export default function PrescripteurLayout() {
   const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const unreadCount = useUnreadMessages();
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   return (
@@ -48,8 +51,8 @@ export default function PrescripteurLayout() {
       <aside className={`hidden xl:flex xl:flex-col fixed left-0 top-0 h-full bg-white border-r border-slate-200 transition-all duration-300 dark:bg-slate-800 dark:border-slate-700 ${isSidebarCollapsed ? "w-20" : "w-64"}`}>
         <div className={`flex items-center h-20 border-b border-slate-200 dark:border-slate-700 ${isSidebarCollapsed ? "justify-center" : "px-5"}`}>
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm">
-              <PackageSearch className="h-5 w-5" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-slate-200">
+              <img src={logo} alt="BMP.tn" className="h-7 w-7" />
             </div>
             {!isSidebarCollapsed && (
               <div>
@@ -68,7 +71,7 @@ export default function PrescripteurLayout() {
             <Tab to="/prescripteur/search" icon={<Search className="h-5 w-5" />} label="Rechercher" collapsed={isSidebarCollapsed} />
             <Tab to="/prescripteur/profile" icon={<UserCircle2 className="h-5 w-5" />} label="Profil" collapsed={isSidebarCollapsed} />
             {/* ✅ AJOUT: Lien Messages */}
-            <Tab to="/prescripteur/messages" icon={<MessageCircle className="h-5 w-5" />} label="Messages" collapsed={isSidebarCollapsed} />
+            <Tab to="/prescripteur/messages" icon={<span className="relative inline-flex"><MessageCircle className="h-5 w-5" />{unreadCount > 0 && <span className="absolute -right-2 -top-2 min-w-[1rem] rounded-full bg-red-500 px-1 text-[10px] text-white">{unreadCount > 99 ? '99+' : unreadCount}</span>}</span>} label="Messages" collapsed={isSidebarCollapsed} />
           </div>
         </div>
 
@@ -156,7 +159,7 @@ export default function PrescripteurLayout() {
                 <Tab to="/prescripteur/projects" icon={<FolderKanban className="h-5 w-5" />} label="Projets" onClick={closeMobileMenu} />
                 <Tab to="/prescripteur/search" icon={<Search className="h-5 w-5" />} label="Rechercher" onClick={closeMobileMenu} />
                 {/* ✅ AJOUT: Lien Messages dans le menu mobile */}
-                <Tab to="/prescripteur/messages" icon={<MessageCircle className="h-5 w-5" />} label="Messages" onClick={closeMobileMenu} />
+                <Tab to="/prescripteur/messages" icon={<span className="relative inline-flex"><MessageCircle className="h-5 w-5" />{unreadCount > 0 && <span className="absolute -right-2 -top-2 min-w-[1rem] rounded-full bg-red-500 px-1 text-[10px] text-white">{unreadCount > 99 ? '99+' : unreadCount}</span>}</span>} label="Messages" onClick={closeMobileMenu} />
               </div>
               <div className="border-t border-slate-200 dark:border-slate-700 p-3">
                 <button

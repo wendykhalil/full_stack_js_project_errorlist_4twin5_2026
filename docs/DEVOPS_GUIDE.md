@@ -71,3 +71,8 @@ To make the automation repeat every time you push to `dev`, configure Jenkins as
 ## Honest limitation
 
 I prepared the repository files, but I could not execute `npm install` for the new test dependencies from this environment. So when you open the project on your machine, the first thing to do is install dependencies in `backend` and `frontend`, then run the pipeline.
+
+
+## Reliability notes
+- `frontend/package-lock.json` is pinned to the public npm registry (`registry.npmjs.org`) so Docker, Jenkins, and local Windows installs do not hang on private registry URLs.
+- Backend tests include project ownership, direct-message attachments, and document generation flows.

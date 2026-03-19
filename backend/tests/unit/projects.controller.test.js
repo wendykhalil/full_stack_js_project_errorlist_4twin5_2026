@@ -61,6 +61,32 @@ describe('projects.controller', () => {
     expect(res.statusCode).toBe(201);
   });
 
+
+  test('createProject accepts req.user.id fallback used by runtime auth payloads', async () => {
+    const req = httpMocks.createRequest({
+      method: 'POST',
+      body: { title: 'Studio', budgetTND: '5000' },
+    });
+    req.user = { id: 'artisan-id-fallback' };
+    req.files = [];
+    const res = httpMocks.createResponse();
+    const next = jest.fn();
+
+    Project.create.mockResolvedValue({ _id: 'p2' });
+    Project.findById.mockReturnValue({
+      populate: jest.fn().mockReturnThis(),
+      lean: jest.fn().mockResolvedValue({ _id: 'p2', artisanId: 'artisan-id-fallback', title: 'Studio' }),
+    });
+
+    await controller.createProject(req, res, next);
+
+    expect(Project.create).toHaveBeenCalledWith(expect.objectContaining({
+      artisanId: 'artisan-id-fallback',
+      title: 'Studio',
+    }));
+    expect(res.statusCode).toBe(201);
+  });
+
   test('listMyProjects returns only artisan projects', async () => {
     const req = httpMocks.createRequest({ method: 'GET' });
     req.user = { sub: 'artisan-1' };
