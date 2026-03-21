@@ -23,6 +23,7 @@ import { Image as ImageIcon } from 'lucide-react';
 import { useAuth } from "../auth/AuthContext";
 import ThemeToggle from "../components/ThemeToggle";
 import LanguageSwitcher from "../components/LanguageSwitcher";
+import DashboardTopbar from "../components/DashboardTopbar";
 import logo from "../assets/bmp-logo.svg";
 import { useUnreadMessages } from "../hooks/useUnreadMessages";
 
@@ -256,9 +257,8 @@ export default function ArtisanLayout() {
           </div>
         </div>
 
-        <div className="hidden xl:flex justify-end px-6 pt-4">
-          <LanguageSwitcher />
-          <ThemeToggle />
+        <div className="hidden xl:block px-6 pt-4">
+          <DashboardTopbar role="ARTISAN" unreadCount={unreadCount} />
         </div>
 
         {/* Mobile Sidebar overlay */}

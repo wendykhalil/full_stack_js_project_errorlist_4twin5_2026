@@ -40,7 +40,7 @@ const ArtisanCard = ({ artisan, onViewProfile }) => {
           </div>
           <div>
             <div className="text-base font-semibold text-slate-900">{artisan.name}</div>
-            <div className="mt-1 text-sm text-slate-500">{artisan.trade}</div>
+            <div className="mt-1 text-sm text-slate-500">{artisan.trade || 'Profil en cours de completion'}</div>
           </div>
         </div>
 
@@ -54,11 +54,11 @@ const ArtisanCard = ({ artisan, onViewProfile }) => {
 
       <div className="mt-5 flex items-center gap-2 text-sm text-slate-600">
         <MapPin className="h-4 w-4 text-slate-400" />
-        {artisan.region}
+        {artisan.region || 'Region non renseignee'}
       </div>
 
       <div className="mt-4 flex items-center justify-between text-sm text-slate-600">
-        <div>{t('prescripteurArtisans.projectsCompleted', { count: artisan.totalProjects || 0 })}</div>
+        <div>{artisan.hasCompletedProfile ? t('prescripteurArtisans.projectsCompleted', { count: artisan.totalProjects || 0 }) : 'Compte artisan actif'}</div>
         <div className="flex items-center gap-1">
           <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
           <span>4.8</span>
@@ -68,13 +68,20 @@ const ArtisanCard = ({ artisan, onViewProfile }) => {
       <div className="mt-5 h-px w-full bg-slate-200" />
 
       <div className="mt-5 flex flex-col gap-3">
-        <a
-          href={`tel:${artisan.phone}`}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-3 text-sm font-semibold text-slate-800 hover:bg-slate-50"
-        >
-          <Phone className="h-4 w-4" />
-          {t('prescripteurArtisans.contactButton')}
-        </a>
+        {artisan.phone ? (
+          <a
+            href={`tel:${artisan.phone}`}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-3 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+          >
+            <Phone className="h-4 w-4" />
+            {t('prescripteurArtisans.contactButton')}
+          </a>
+        ) : (
+          <div className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-slate-200 bg-slate-50 py-3 text-sm font-medium text-slate-500">
+            <Phone className="h-4 w-4" />
+            Numero non renseigne
+          </div>
+        )}
 
         <button
           onClick={() => onViewProfile(artisan._id)}

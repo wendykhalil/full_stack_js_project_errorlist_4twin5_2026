@@ -1,208 +1,329 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import {
+  ArrowUpRight,
+  ClipboardList,
   FolderKanban,
+  PackageCheck,
+  Plus,
   Receipt,
   ShoppingCart,
-  ArrowUpRight,
-  Plus,
-  ClipboardList,
-  FileSignature,
-  Truck,
-  CheckCircle2,
-  Clock3,
+  TrendingUp,
   AlertCircle,
+  CheckCircle2,
+  FileText,
 } from "lucide-react";
 import SimpleFooter from "../components/Footer";
-import { useTranslation } from 'react-i18next';
+import { useAuth } from "../auth/AuthContext";
+import { getArtisanDashboardSummary } from "../auth/api";
 
-const StatCard = ({ title, value, icon, iconBg = "bg-slate-100", iconFg = "text-slate-700" }) => (
-  <div className="relative rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-    <div className="flex items-start justify-between gap-4">
-      <div className="min-w-0">
-        <div className="text-sm text-slate-500">{title}</div>
-        <div className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">
-          {value}
+const currency = new Intl.NumberFormat("fr-TN", {
+  style: "currency",
+  currency: "TND",
+  maximumFractionDigits: 0,
+});
+
+const statusMeta = {
+  ACTIVE: { label: "Actif", className: "bg-blue-50 text-blue-700" },
+  PENDING: { label: "En attente", className: "bg-amber-50 text-amber-700" },
+  COMPLETED: { label: "Terminé", className: "bg-emerald-50 text-emerald-700" },
+};
+
+const activityMeta = {
+  "project-updated": { icon: FolderKanban, tone: "bg-blue-50 text-blue-700" },
+  "project-completed": { icon: CheckCircle2, tone: "bg-emerald-50 text-emerald-700" },
+  quote: { icon: FileText, tone: "bg-indigo-50 text-indigo-700" },
+  invoice: { icon: Receipt, tone: "bg-orange-50 text-orange-700" },
+  "invoice-paid": { icon: PackageCheck, tone: "bg-emerald-50 text-emerald-700" },
+  order: { icon: ShoppingCart, tone: "bg-slate-100 text-slate-700" },
+};
+
+function StatCard({ title, value, helper, icon, iconBg, iconFg }) {
+  return (
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <div className="text-sm text-slate-500">{title}</div>
+          <div className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">{value}</div>
+          <div className="mt-2 text-sm text-slate-500">{helper}</div>
+        </div>
+        <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${iconBg}`}>
+          {React.cloneElement(icon, { className: `h-6 w-6 ${iconFg}` })}
         </div>
       </div>
+    </div>
+  );
+}
+
+function ActionCard({ to, icon, label, description, iconBg, iconFg }) {
+  return (
+    <Link
+      to={to}
+      className="group flex min-h-[128px] flex-col justify-between rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+    >
       <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${iconBg}`}>
         {React.cloneElement(icon, { className: `h-6 w-6 ${iconFg}` })}
       </div>
-    </div>
-  </div>
-);
-
-const ActionCard = ({ icon, label, iconBg = "bg-slate-100", iconFg = "text-slate-700" }) => (
-  <button className="group relative flex min-h-[120px] w-full flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-    <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${iconBg} transition group-hover:scale-[1.02]`}>
-      {React.cloneElement(icon, { className: `h-6 w-6 ${iconFg}` })}
-    </div>
-    <div className="mt-4 text-sm font-semibold text-slate-900">{label}</div>
-  </button>
-);
-
-const Pill = ({ children, tone = "indigo" }) => {
-  const tones = {
-    indigo: "bg-indigo-100 text-indigo-700",
-    slate: "bg-slate-100 text-slate-600",
-  };
-  return (
-    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${tones[tone] ?? tones.indigo}`}>
-      {children}
-    </span>
+      <div>
+        <div className="text-base font-semibold text-slate-900">{label}</div>
+        <div className="mt-1 text-sm text-slate-500">{description}</div>
+      </div>
+    </Link>
   );
-};
-
-// ✅ CORRIGÉ: Ajout de useTranslation dans ProjectCard
-const ProjectCard = ({ title, client, budget, remaining, status, statusTone = "indigo" }) => {
-  const { t } = useTranslation(); // ✅ Ajouté
-  
-  return (
-    <div className="rounded-2xl bg-slate-50 p-5">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="text-base font-semibold text-slate-900">{title}</div>
-          <div className="mt-1 text-sm text-slate-600">{client}</div>
-        </div>
-        <Pill tone={statusTone}>{status}</Pill>
-      </div>
-      <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-        <div className="text-slate-600">
-          {t('artisanDashboard.projectCard.budget')} <span className="font-medium text-slate-900">{budget}</span>
-        </div>
-        <div className="text-emerald-600 font-medium">{remaining}</div>
-      </div>
-    </div>
-  );
-};
-
-// ✅ CORRIGÉ: Ajout de useTranslation et correction du conflit de noms
-const ActivityRow = ({ icon, title, time, tone = "slate" }) => {
-  
-  
-  const toneStyles = { // ✅ Renommé de 'tones' à 'toneStyles' pour éviter la confusion
-    green: { bg: "bg-emerald-50", fg: "text-emerald-700" },
-    blue: { bg: "bg-indigo-50", fg: "text-indigo-700" },
-    orange: { bg: "bg-orange-50", fg: "text-orange-700" },
-    red: { bg: "bg-red-50", fg: "text-red-700" },
-    slate: { bg: "bg-slate-100", fg: "text-slate-700" },
-  };
-  
-  const currentTone = toneStyles[tone] ?? toneStyles.slate; // ✅ Renommé pour éviter le conflit avec la fonction t
-
-  return (
-    <div className="flex items-start gap-3">
-      <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${currentTone.bg} ${currentTone.fg}`}>
-        {React.cloneElement(icon, { className: "h-5 w-5" })}
-      </div>
-      <div className="min-w-0">
-        <div className="text-sm font-semibold text-slate-900">{title}</div>
-        <div className="mt-0.5 text-xs text-slate-500">{time}</div>
-      </div>
-    </div>
-  );
-};
+}
 
 export default function ArtisanDashboard() {
-  const { t } = useTranslation();
+  const { token } = useAuth();
+  const [summary, setSummary] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+
+    async function load() {
+      try {
+        setLoading(true);
+        const data = await getArtisanDashboardSummary({ token });
+        if (active) {
+          setSummary(data);
+          setError("");
+        }
+      } catch (err) {
+        if (active) setError(err.message || "Impossible de charger le tableau de bord.");
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+
+    if (token) load();
+    return () => {
+      active = false;
+    };
+  }, [token]);
+
+  const stats = summary?.stats || {
+    totalProjects: 0,
+    activeProjects: 0,
+    documentsCount: 0,
+    inProgressOrders: 0,
+    totalBudget: 0,
+    completionRate: 0,
+    unpaidInvoicesAmount: 0,
+  };
 
   return (
     <div className="flex-1">
       <div>
-        <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
-          {t('artisanDashboard.title')}
-        </h1>
+        <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Tableau de bord artisan</h1>
         <p className="mt-2 text-sm text-slate-500">
-          {t('artisanDashboard.subtitle')}
+          Une vue en temps réel de vos projets, documents et commandes.
         </p>
       </div>
 
-      {/* Welcome card */}
-      <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-900">{t('artisanDashboard.welcome.title')}</h2>
-        <p className="mt-2 text-sm text-slate-600">{t('artisanDashboard.welcome.description')}</p>
+      <div className="mt-8 rounded-3xl border border-slate-200 bg-gradient-to-br from-blue-600 via-indigo-600 to-slate-900 p-6 text-white shadow-sm">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-2xl">
+            <div className="inline-flex rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-blue-50">
+              Pilotage de l'activité
+            </div>
+            <h2 className="mt-4 text-2xl font-semibold">Suivez l'avancement de votre activité sans données fictives</h2>
+            <p className="mt-2 text-sm text-blue-100/90">
+              Toutes les cartes ci-dessous sont alimentées par vos vraies données projets, devis, factures et commandes.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl bg-white/10 px-4 py-3 backdrop-blur">
+              <div className="text-xs uppercase tracking-[0.18em] text-blue-100/80">Progression</div>
+              <div className="mt-2 text-2xl font-semibold">{stats.completionRate}%</div>
+              <div className="mt-1 text-xs text-blue-100/80">Planning + devis + factures</div>
+            </div>
+            <div className="rounded-2xl bg-white/10 px-4 py-3 backdrop-blur">
+              <div className="text-xs uppercase tracking-[0.18em] text-blue-100/80">Budget cumulé</div>
+              <div className="mt-2 text-lg font-semibold">{currency.format(stats.totalBudget || 0)}</div>
+            </div>
+            <div className="rounded-2xl bg-white/10 px-4 py-3 backdrop-blur col-span-2 sm:col-span-1">
+              <div className="text-xs uppercase tracking-[0.18em] text-blue-100/80">Factures à suivre</div>
+              <div className="mt-2 text-lg font-semibold">{currency.format(stats.unpaidInvoicesAmount || 0)}</div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Quick Actions */}
-      <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-900">{t('artisanDashboard.quickActions.title')}</h2>
-
-        <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <ActionCard icon={<Plus />} label={t('artisanDashboard.quickActions.newProject')} iconBg="bg-indigo-50" iconFg="text-indigo-600" />
-          <ActionCard icon={<ClipboardList />} label={t('artisanDashboard.quickActions.createQuote')} iconBg="bg-orange-50" iconFg="text-orange-600" />
-          <ActionCard icon={<Receipt />} label={t('artisanDashboard.quickActions.newInvoice')} iconBg="bg-emerald-50" iconFg="text-emerald-600" />
-          <ActionCard icon={<ShoppingCart />} label={t('artisanDashboard.quickActions.order')} iconBg="bg-indigo-50" iconFg="text-indigo-600" />
+      {loading ? (
+        <div className="mt-8 rounded-3xl border border-slate-200 bg-white p-10 text-center text-slate-500 shadow-sm">
+          Chargement du tableau de bord...
         </div>
-      </section>
-
-      {/* Bottom panels */}
-      <section className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-slate-900">{t('artisanDashboard.recentProjects.title')}</h2>
-            <a href="#" className="inline-flex items-center gap-2 text-sm font-medium text-slate-700 hover:text-slate-900">
-              {t('artisanDashboard.recentProjects.viewAll')} <ArrowUpRight className="h-4 w-4" />
-            </a>
-          </div>
-
-          <div className="mt-6 space-y-4">
-            <ProjectCard 
-              title={t('artisanDashboard.recentProjects.project1.title')} 
-              client={t('artisanDashboard.recentProjects.project1.client')} 
-              budget="45,000 TND" 
-              remaining={t('artisanDashboard.recentProjects.project1.remaining')} 
-              status={t('artisanDashboard.status.active')} 
-              statusTone="indigo" 
-            />
-            <ProjectCard 
-              title={t('artisanDashboard.recentProjects.project2.title')} 
-              client={t('artisanDashboard.recentProjects.project2.client')} 
-              budget="18,000 TND" 
-              remaining={t('artisanDashboard.recentProjects.project2.remaining')} 
-              status={t('artisanDashboard.status.active')} 
-              statusTone="indigo" 
-            />
-            <ProjectCard 
-              title={t('artisanDashboard.recentProjects.project3.title')} 
-              client={t('artisanDashboard.recentProjects.project3.client')} 
-              budget="35,000 TND" 
-              remaining={t('artisanDashboard.recentProjects.project3.remaining')} 
-              status={t('artisanDashboard.status.pending')} 
-              statusTone="slate" 
-            />
-          </div>
+      ) : error ? (
+        <div className="mt-8 rounded-3xl border border-red-200 bg-red-50 p-6 text-sm text-red-700">
+          {error}
         </div>
+      ) : (
+        <>
+          <section className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+            <StatCard
+              title="Projets"
+              value={stats.totalProjects}
+              helper={`${stats.completedProjects || 0} terminés`}
+              icon={<FolderKanban />}
+              iconBg="bg-blue-50"
+              iconFg="text-blue-600"
+            />
+            <StatCard
+              title="Projets actifs"
+              value={stats.activeProjects}
+              helper={`${stats.pendingProjects || 0} en attente`}
+              icon={<TrendingUp />}
+              iconBg="bg-indigo-50"
+              iconFg="text-indigo-600"
+            />
+            <StatCard
+              title="Documents émis"
+              value={stats.documentsCount}
+              helper="Devis et factures générés"
+              icon={<Receipt />}
+              iconBg="bg-emerald-50"
+              iconFg="text-emerald-600"
+            />
+            <StatCard
+              title="Commandes en cours"
+              value={stats.inProgressOrders}
+              helper="Commandes à suivre"
+              icon={<ShoppingCart />}
+              iconBg="bg-orange-50"
+              iconFg="text-orange-600"
+            />
+          </section>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-slate-900">{t('artisanDashboard.recentActivity.title')}</h2>
+          <section className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900">Actions rapides</h2>
+                <p className="mt-1 text-sm text-slate-500">Accès direct aux pages les plus utiles pour avancer vite.</p>
+              </div>
+            </div>
 
-          <div className="mt-6 space-y-5">
-            <ActivityRow 
-              icon={<CheckCircle2 />} 
-              title={t('artisanDashboard.recentActivity.invoicePaid', { invoice: 'INV001' })} 
-              time={t('artisanDashboard.recentActivity.timeAgo', { hours: 2 })} 
-              tone="green" 
-            />
-            <ActivityRow 
-              icon={<Clock3 />} 
-              title={t('artisanDashboard.recentActivity.quoteSent', { quote: 'Q002', client: t('artisanDashboard.recentActivity.clientFatima') })} 
-              time={t('artisanDashboard.recentActivity.timeAgo', { hours: 5 })} 
-              tone="blue" 
-            />
-            <ActivityRow 
-              icon={<Truck />} 
-              title={t('artisanDashboard.recentActivity.orderShipped', { order: 'ORD002' })} 
-              time={t('artisanDashboard.recentActivity.yesterday')} 
-              tone="orange" 
-            />
-            <ActivityRow 
-              icon={<AlertCircle />} 
-              title={t('artisanDashboard.recentActivity.invoiceOverdue', { invoice: 'INV003' })} 
-              time={t('artisanDashboard.recentActivity.daysAgo', { days: 2 })} 
-              tone="red" 
-            />
-          </div>
-        </div>
-      </section>
+            <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <ActionCard
+                to="/artisan/projects"
+                icon={<Plus />}
+                label="Nouveau projet"
+                description="Créer ou mettre à jour un chantier."
+                iconBg="bg-blue-50"
+                iconFg="text-blue-600"
+              />
+              <ActionCard
+                to="/artisan/devis/create"
+                icon={<ClipboardList />}
+                label="Créer un devis"
+                description="Préparer un devis à partir d'un vrai projet."
+                iconBg="bg-indigo-50"
+                iconFg="text-indigo-600"
+              />
+              <ActionCard
+                to="/artisan/factures"
+                icon={<Receipt />}
+                label="Gérer les factures"
+                description="Suivre les documents émis et leur statut."
+                iconBg="bg-emerald-50"
+                iconFg="text-emerald-600"
+              />
+              <ActionCard
+                to="/artisan/orders"
+                icon={<ShoppingCart />}
+                label="Voir les commandes"
+                description="Contrôler les commandes et livraisons."
+                iconBg="bg-orange-50"
+                iconFg="text-orange-600"
+              />
+            </div>
+          </section>
+
+          <section className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-[1.25fr_0.95fr]">
+            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-900">Projets récents</h2>
+                  <p className="mt-1 text-sm text-slate-500">Les derniers projets réellement enregistrés dans votre compte.</p>
+                </div>
+                <Link to="/artisan/projects" className="inline-flex items-center gap-2 text-sm font-medium text-slate-700 hover:text-slate-900">
+                  Voir tout <ArrowUpRight className="h-4 w-4" />
+                </Link>
+              </div>
+
+              <div className="mt-6 space-y-4">
+                {summary?.recentProjects?.length ? (
+                  summary.recentProjects.map((project) => {
+                    const meta = statusMeta[project.status] || statusMeta.PENDING;
+                    return (
+                      <div key={project._id} className="rounded-2xl bg-slate-50 p-5">
+                        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                          <div>
+                            <div className="text-base font-semibold text-slate-900">{project.title}</div>
+                            <div className="mt-1 text-sm text-slate-500">
+                              {project.city || "Localisation non renseignée"} • {currency.format(project.budgetTND || 0)}
+                            </div>
+                          </div>
+                          <span className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${meta.className}`}>
+                            {meta.label}
+                          </span>
+                        </div>
+                        <div className="mt-4">
+                          <div className="flex items-center justify-between text-xs font-medium text-slate-500">
+                            <span>Progression calculee</span>
+                            <span>{project.progress}%</span>
+                          </div>
+                          <div className="mt-2 h-2.5 rounded-full bg-slate-200">
+                            <div className="h-2.5 rounded-full rounded-r-full bg-gradient-to-r from-blue-500 to-indigo-600" style={{ width: `${Math.max(0, Math.min(100, project.progress || 0))}%` }} />
+                          </div>
+                          <div className="mt-2 text-xs font-medium text-slate-500">{project.progressLabel || "Mise a jour recente du projet"}</div>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
+                    Aucun projet enregistré pour le moment. Créez votre premier projet pour alimenter ce tableau de bord.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900">Activité récente</h2>
+                <p className="mt-1 text-sm text-slate-500">Derniers mouvements réels détectés sur votre espace.</p>
+              </div>
+
+              <div className="mt-6 space-y-5">
+                {summary?.recentActivity?.length ? (
+                  summary.recentActivity.map((item) => {
+                    const meta = activityMeta[item.type] || { icon: AlertCircle, tone: "bg-slate-100 text-slate-700" };
+                    const Icon = meta.icon;
+                    return (
+                      <div key={item.id} className="flex items-start gap-3">
+                        <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${meta.tone}`}>
+                          <Icon className="h-5 w-5" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-sm font-semibold text-slate-900">{item.title}</div>
+                          <div className="mt-1 text-xs text-slate-500">{item.time}</div>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
+                    Pas encore d'activité à afficher.
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+        </>
+      )}
+
       <SimpleFooter />
     </div>
   );

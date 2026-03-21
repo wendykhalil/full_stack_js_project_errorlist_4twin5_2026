@@ -199,3 +199,11 @@ export async function markMessageAsRead({ token, messageId }) {
 export async function getUnreadCount({ token }) {
   return apiFetch('/messages/unread/count', { token });
 }
+
+export async function getArtisanDashboardSummary({ token }) {
+  return apiFetch('/artisan/dashboard-summary', { token });
+}
+
+export async function getAdminDashboardSummary({ token }) {
+  return apiFetch('/admin/dashboard-summary', { token });
+}

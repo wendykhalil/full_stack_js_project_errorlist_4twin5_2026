@@ -1,7 +1,38 @@
 const ArtisanProfile = require('../../models/ArtisanProfile');
 const User = require('../../models/User');
 
-// Rechercher des artisans par spécialité, région et distance
+function safeRegex(value) {
+  return new RegExp(String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+}
+
+function formatArtisan(profile, user) {
+  const firstName = user?.firstName || 'Artisan';
+  const lastName = user?.lastName || '';
+  const fullName = `${firstName} ${lastName}`.trim();
+
+  return {
+    _id: profile?._id || user?._id,
+    userId: user?._id,
+    name: fullName,
+    trade: profile?.trade || 'Profil en cours de completion',
+    region: profile?.region || profile?.address?.city || 'Region non renseignee',
+    phone: profile?.phone || user?.phone || '',
+    profileImage: profile?.profileImage || '',
+    description: profile?.description || '',
+    address: profile?.address || null,
+    location: profile?.location || null,
+    totalProjects: profile?.totalProjects || profile?.portfolio?.length || 0,
+    hasCompletedProfile: Boolean(profile),
+    distance: profile?.dist
+      ? {
+          calculated: profile.dist.calculated,
+          text: `${(profile.dist.calculated / 1000).toFixed(1)} km`,
+        }
+      : null,
+  };
+}
+
+// Rechercher des artisans par specialite, region et distance
 async function searchArtisans(filters) {
   try {
     const {
@@ -9,109 +40,141 @@ async function searchArtisans(filters) {
       region,
       latitude,
       longitude,
-      maxDistance = 20000, // 20 km par défaut (en mètres)
+      maxDistance = 20000,
       limit = 20,
-      page = 1
+      page = 1,
     } = filters;
 
-    // Construire la requête
-    let query = { isActive: true };
+    const parsedLimit = parseInt(limit, 10) || 20;
+    const parsedPage = parseInt(page, 10) || 1;
+    const hasLocation = latitude && longitude;
+    const hasProfileFilters = Boolean(specialty || region || hasLocation);
 
-    // Filtrer par spécialité
+    const profileQuery = { isActive: true };
+
     if (specialty) {
-      query.trade = { $regex: new RegExp(specialty, 'i') };
+      profileQuery.trade = { $regex: safeRegex(specialty) };
     }
 
-    // Filtrer par région (recherche textuelle)
     if (region) {
-      query.$or = [
-        { region: { $regex: new RegExp(region, 'i') } },
-        { 'address.city': { $regex: new RegExp(region, 'i') } }
+      profileQuery.$or = [
+        { region: { $regex: safeRegex(region) } },
+        { 'address.city': { $regex: safeRegex(region) } },
       ];
     }
 
-    let artisans = [];
+    let profiles = [];
     let total = 0;
 
-    // Si on a des coordonnées, faire une recherche géospatiale
-    if (latitude && longitude) {
+    if (hasLocation) {
       const coordinates = [parseFloat(longitude), parseFloat(latitude)];
-      
-      // Recherche avec géolocalisation
-      artisans = await ArtisanProfile.find({
-        ...query,
+      profiles = await ArtisanProfile.find({
+        ...profileQuery,
         location: {
           $near: {
             $geometry: {
               type: 'Point',
-              coordinates: coordinates
+              coordinates,
             },
-            $maxDistance: parseInt(maxDistance)
-          }
-        }
+            $maxDistance: parseInt(maxDistance, 10),
+          },
+        },
       })
-      .populate('userId', 'firstName lastName')
-      .limit(parseInt(limit))
-      .skip((parseInt(page) - 1) * parseInt(limit))
-      .lean();
-
-      // Compter le total (pour pagination)
-      total = await ArtisanProfile.countDocuments({
-        ...query,
-        location: {
-          $near: {
-            $geometry: {
-              type: 'Point',
-              coordinates: coordinates
-            },
-            $maxDistance: parseInt(maxDistance)
-          }
-        }
-      });
-
-    } else {
-      // Recherche sans géolocalisation
-      artisans = await ArtisanProfile.find(query)
-        .populate('userId', 'firstName lastName')
-        .limit(parseInt(limit))
-        .skip((parseInt(page) - 1) * parseInt(limit))
+        .populate('userId', 'firstName lastName phone role status')
+        .limit(parsedLimit)
+        .skip((parsedPage - 1) * parsedLimit)
         .lean();
 
-      total = await ArtisanProfile.countDocuments(query);
+      total = await ArtisanProfile.countDocuments({
+        ...profileQuery,
+        location: {
+          $near: {
+            $geometry: {
+              type: 'Point',
+              coordinates,
+            },
+            $maxDistance: parseInt(maxDistance, 10),
+          },
+        },
+      });
+
+      return {
+        artisans: profiles
+          .filter((profile) => profile.userId && profile.userId.role === 'ARTISAN' && profile.userId.status !== 'BLOCKED')
+          .map((profile) => formatArtisan(profile, profile.userId)),
+        pagination: {
+          page: parsedPage,
+          limit: parsedLimit,
+          total,
+          pages: Math.ceil(total / parsedLimit) || 1,
+        },
+        filters: {
+          specialty,
+          region,
+          hasGeolocation: true,
+        },
+      };
     }
 
-    // Formater les résultats
-    const formattedArtisans = artisans.map(artisan => ({
-      _id: artisan._id,
-      userId: artisan.userId._id,
-      name: `${artisan.userId.firstName} ${artisan.userId.lastName}`,
-      trade: artisan.trade,
-      region: artisan.region,
-      phone: artisan.phone,
-      profileImage: artisan.profileImage,
-      description: artisan.description,
-      address: artisan.address,
-      location: artisan.location,
-      totalProjects: artisan.totalProjects,
-      distance: artisan.dist ? {
-        calculated: artisan.dist.calculated,
-        text: `${(artisan.dist.calculated / 1000).toFixed(1)} km`
-      } : null
-    }));
+    const activeArtisans = await User.find({
+      role: 'ARTISAN',
+      status: { $ne: 'BLOCKED' },
+    })
+      .select('firstName lastName phone role status')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const userIds = activeArtisans.map((user) => user._id);
+    const profileDocs = await ArtisanProfile.find({ userId: { $in: userIds }, isActive: true })
+      .lean();
+
+    const profileByUserId = new Map(profileDocs.map((profile) => [String(profile.userId), profile]));
+
+    let merged = activeArtisans
+      .map((user) => ({ user, profile: profileByUserId.get(String(user._id)) || null }))
+      .filter(({ user, profile }) => {
+        if (specialty && !profile) return false;
+        if (specialty && profile && !safeRegex(specialty).test(profile.trade || '')) return false;
+
+        if (region) {
+          const regionRegex = safeRegex(region);
+          const haystacks = [
+            profile?.region,
+            profile?.address?.city,
+            user.firstName,
+            user.lastName,
+            `${user.firstName} ${user.lastName}`,
+          ].filter(Boolean);
+          if (!haystacks.some((value) => regionRegex.test(value))) return false;
+        }
+
+        return true;
+      });
+
+    if (!hasProfileFilters) {
+      merged.sort((a, b) => {
+        if (a.profile && !b.profile) return -1;
+        if (!a.profile && b.profile) return 1;
+        return `${a.user.firstName} ${a.user.lastName}`.localeCompare(`${b.user.firstName} ${b.user.lastName}`);
+      });
+    }
+
+    total = merged.length;
+    const paginated = merged.slice((parsedPage - 1) * parsedLimit, parsedPage * parsedLimit);
 
     return {
-      artisans: formattedArtisans,
+      artisans: paginated.map(({ profile, user }) => formatArtisan(profile, user)),
       pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
+        page: parsedPage,
+        limit: parsedLimit,
         total,
-        pages: Math.ceil(total / parseInt(limit))
+        pages: Math.ceil(total / parsedLimit) || 1,
       },
       filters: {
         specialty,
         region,
-        hasGeolocation: !!(latitude && longitude)
-      }
+        hasGeolocation: false,
+      },
     };
   } catch (error) {
     console.error('Error in searchArtisans service:', error);
@@ -128,23 +191,23 @@ async function getNearbyArtisans(latitude, longitude, maxDistance = 20000) {
         $near: {
           $geometry: {
             type: 'Point',
-            coordinates: [parseFloat(longitude), parseFloat(latitude)]
+            coordinates: [parseFloat(longitude), parseFloat(latitude)],
           },
-          $maxDistance: parseInt(maxDistance)
-        }
-      }
+          $maxDistance: parseInt(maxDistance, 10),
+        },
+      },
     })
-    .populate('userId', 'firstName lastName')
-    .limit(50)
-    .lean();
+      .populate('userId', 'firstName lastName')
+      .limit(50)
+      .lean();
 
-    return artisans.map(artisan => ({
+    return artisans.map((artisan) => ({
       _id: artisan._id,
       name: `${artisan.userId.firstName} ${artisan.userId.lastName}`,
       trade: artisan.trade,
       region: artisan.region,
       profileImage: artisan.profileImage,
-      distance: artisan.dist ? (artisan.dist.calculated / 1000).toFixed(1) : null
+      distance: artisan.dist ? (artisan.dist.calculated / 1000).toFixed(1) : null,
     }));
   } catch (error) {
     console.error('Error in getNearbyArtisans service:', error);
@@ -154,5 +217,5 @@ async function getNearbyArtisans(latitude, longitude, maxDistance = 20000) {
 
 module.exports = {
   searchArtisans,
-  getNearbyArtisans
+  getNearbyArtisans,
 };

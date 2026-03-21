@@ -92,22 +92,19 @@ async function updateArtisanLocation(userId, coordinates) {
 // Obtenir le profil public d'un artisan (pour prescripteur)
 async function getPublicArtisanProfile(identifier) {
   try {
-    console.log('🔍 Searching for artisan with identifier:', identifier);
-    
-    // Essayer de trouver par _id d'abord (profil)
+    console.log('Searching public artisan profile with identifier:', identifier);
+
     let profile = await ArtisanProfile.findById(identifier)
-      .populate('userId', 'firstName lastName')
+      .populate('userId', 'firstName lastName email phone role status')
       .populate({
         path: 'portfolio',
         match: { isPublic: true },
         options: { sort: { date: -1 } }
       });
 
-    // Si pas trouvé par _id, essayer par userId
     if (!profile) {
-      console.log('Not found by _id, trying by userId...');
       profile = await ArtisanProfile.findOne({ userId: identifier })
-        .populate('userId', 'firstName lastName')
+        .populate('userId', 'firstName lastName email phone role status')
         .populate({
           path: 'portfolio',
           match: { isPublic: true },
@@ -115,28 +112,48 @@ async function getPublicArtisanProfile(identifier) {
         });
     }
 
-    if (!profile) {
-      console.log('❌ Artisan not found with identifier:', identifier);
+    if (profile && profile.userId) {
+      return {
+        _id: profile._id,
+        userId: profile.userId._id,
+        name: `${profile.userId.firstName} ${profile.userId.lastName}`,
+        trade: profile.trade,
+        region: profile.region,
+        phone: profile.phone || profile.userId.phone || '',
+        description: profile.description,
+        profileImage: profile.profileImage,
+        address: profile.address,
+        portfolio: profile.portfolio,
+        totalProjects: profile.portfolio?.length || 0,
+        hasCompletedProfile: true,
+      };
+    }
+
+    const user = await User.findOne({
+      _id: identifier,
+      role: 'ARTISAN',
+      status: { $ne: 'BLOCKED' },
+    }).select('firstName lastName email phone role status');
+
+    if (!user) {
       const error = new Error('Artisan non trouvé');
       error.statusCode = 404;
       throw error;
     }
 
-    console.log('✅ Artisan found:', profile._id);
-    console.log('Portfolio projects:', profile.portfolio?.length || 0);
-
     return {
-      _id: profile._id,
-      userId: profile.userId._id,
-      name: `${profile.userId.firstName} ${profile.userId.lastName}`,
-      trade: profile.trade,
-      region: profile.region,
-      phone: profile.phone,
-      description: profile.description,
-      profileImage: profile.profileImage,
-      address: profile.address,
-      portfolio: profile.portfolio,
-      totalProjects: profile.portfolio?.length || 0
+      _id: user._id,
+      userId: user._id,
+      name: `${user.firstName} ${user.lastName}`,
+      trade: 'Profil en cours de completion',
+      region: 'Region non renseignee',
+      phone: user.phone || '',
+      description: '',
+      profileImage: '',
+      address: null,
+      portfolio: [],
+      totalProjects: 0,
+      hasCompletedProfile: false,
     };
   } catch (error) {
     console.error('Error in getPublicArtisanProfile service:', error);

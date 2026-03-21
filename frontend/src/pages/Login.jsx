@@ -1,13 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Phone } from "lucide-react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { ArrowLeft, Phone, UserPlus } from "lucide-react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { apiFetch } from "../auth/api";
 import { roleToBasePath } from "../auth/role";
 import logo from "../assets/bmp-logo.svg";
 import PublicNavbar from "../components/PublicNavbar";
 import Footer from "../components/Footer";
-import AuthShowcasePanel from "../components/AuthShowcasePanel";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -24,9 +23,9 @@ export default function Login() {
 
   useEffect(() => {
     const updateWidth = () => {
-      if (window.innerWidth < 640) setGoogleWidth(220);
-      else if (window.innerWidth < 1024) setGoogleWidth(250);
-      else setGoogleWidth(280);
+      if (window.innerWidth < 420) setGoogleWidth(250);
+      else if (window.innerWidth < 640) setGoogleWidth(290);
+      else setGoogleWidth(360);
     };
     updateWidth();
     window.addEventListener("resize", updateWidth);
@@ -98,88 +97,133 @@ export default function Login() {
   const showResend = error?.toLowerCase().includes("verif") || error?.toLowerCase().includes("email not");
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col">
+    <div className="min-h-screen bg-slate-50 flex flex-col">
       <PublicNavbar />
-      <main className="mx-auto flex w-full max-w-7xl flex-1 items-center px-4 py-4 sm:px-6 lg:px-8 lg:py-5">
-        <div className="grid w-full overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-2xl shadow-slate-300/40 lg:min-h-[calc(100vh-12rem)] lg:max-h-[760px] lg:grid-cols-[0.96fr,1.04fr]">
-          <section className="relative flex flex-col bg-white px-5 py-5 sm:px-8 sm:py-6 lg:px-12 lg:py-7">
+
+      <main className="relative flex flex-1 items-center justify-center overflow-hidden px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.16),_transparent_24%),radial-gradient(circle_at_bottom,_rgba(14,165,233,0.12),_transparent_25%)]" />
+
+        <div className="relative z-10 w-full max-w-[32rem]">
+          <div className="mb-4 text-center">
+            <img src={logo} alt="BMP.tn logo" className="mx-auto h-12 w-12 rounded-2xl border border-slate-200 bg-white p-1 shadow-sm ring-1 ring-blue-100" />
+            <p className="mt-4 text-3xl font-semibold tracking-tight text-slate-950">Sign in</p>
+            <p className="mt-2 text-sm text-slate-500">Simple, secure and centered access to your BMP.tn workspace.</p>
+          </div>
+
+          <div className="rounded-[1.9rem] border border-slate-200 bg-white px-5 py-5 shadow-2xl shadow-slate-200/70 sm:px-7 sm:py-6">
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="mb-5 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
+              className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
               aria-label="Go back"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
 
-            <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center">
-              <div className="mb-6 text-center">
-                <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-3xl bg-indigo-50 shadow-sm">
-                  <img src={logo} alt="BMP.tn logo" className="h-10 w-10" />
-                </div>
-                <p className="text-2xl font-semibold tracking-tight text-indigo-700">BMP.tn</p>
-                <h1 className="mt-3 text-2xl font-semibold text-slate-900 sm:text-[1.75rem]">Sign in to your account</h1>
-                <p className="mt-2 text-sm leading-5 text-slate-500">Use your approved credentials to access the BMP.tn workspace.</p>
+            {info && <div className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{info}</div>}
+
+            <form onSubmit={onSubmit} noValidate className="space-y-4">
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Email or mobile phone number</label>
+                <input
+                  value={emailOrPhone}
+                  onChange={(e) => {
+                    setEmailOrPhone(e.target.value);
+                    setError("");
+                  }}
+                  type="text"
+                  autoComplete="username"
+                  placeholder="Enter your email or phone"
+                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3.5 text-base text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                  required
+                />
               </div>
 
-              {info && <div className="mb-4 rounded-2xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-800">{info}</div>}
-
-              <form onSubmit={onSubmit} noValidate className="space-y-4">
-                <div>
-                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Username or email</label>
-                  <input value={emailOrPhone} onChange={(e) => { setEmailOrPhone(e.target.value); setError(""); }} type="text" autoComplete="username" placeholder="Enter your email or phone" className="w-full rounded-xl border border-indigo-100 bg-indigo-50/80 px-4 py-3 text-base text-slate-900 outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-100" required />
+              <div>
+                <div className="mb-1.5 flex items-center justify-between gap-4">
+                  <label className="block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Password</label>
+                  <button type="button" onClick={() => navigate("/forgot-password")} className="text-sm font-medium text-slate-700 transition hover:text-blue-700">Forgot password?</button>
                 </div>
+                <input
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setError("");
+                  }}
+                  type="password"
+                  autoComplete="current-password"
+                  placeholder="Enter your password"
+                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3.5 text-base text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                  required
+                />
+              </div>
 
-                <div>
-                  <div className="mb-1.5 flex items-center justify-between gap-4">
-                    <label className="block text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Password</label>
-                    <button type="button" onClick={() => navigate("/forgot-password")} className="text-sm font-medium text-indigo-700 transition hover:text-indigo-800">Forgot password?</button>
+              {error && <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>}
+
+              {showResend && (
+                <div className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <span>Your email address may still need verification.</span>
+                    <button
+                      type="button"
+                      onClick={resendVerification}
+                      disabled={resendState.loading}
+                      className="inline-flex items-center justify-center rounded-full border border-blue-200 bg-white px-4 py-2 font-medium text-blue-700 transition hover:bg-blue-100 disabled:opacity-60"
+                    >
+                      {resendState.loading ? "Sending..." : "Resend verification"}
+                    </button>
                   </div>
-                  <input value={password} onChange={(e) => { setPassword(e.target.value); setError(""); }} type="password" autoComplete="current-password" placeholder="Enter your password" className="w-full rounded-xl border border-indigo-100 bg-indigo-50/80 px-4 py-3 text-base text-slate-900 outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-100" required />
+                  {resendState.message && <div className="mt-2 text-sm">{resendState.message}</div>}
                 </div>
+              )}
 
-                {error && <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>}
+              <button
+                disabled={loading}
+                className="inline-flex w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-3.5 text-base font-semibold text-white transition hover:bg-blue-500 disabled:opacity-60"
+              >
+                {loading ? "Loading..." : "Continue"}
+              </button>
+            </form>
 
-                {showResend && (
-                  <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                      <span>Your email address may still need verification.</span>
-                      <button type="button" onClick={resendVerification} disabled={resendState.loading} className="inline-flex items-center justify-center rounded-full bg-white px-4 py-2 font-medium text-amber-900 transition hover:bg-amber-100 disabled:opacity-60">
-                        {resendState.loading ? "Sending..." : "Resend verification"}
-                      </button>
-                    </div>
-                    {resendState.message && <div className="mt-2 text-sm">{resendState.message}</div>}
-                  </div>
-                )}
-
-                <button disabled={loading} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 text-base font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-60">
-                  {loading ? "Loading..." : "Login"}
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              </form>
-
-              <div className="my-4 flex items-center gap-4">
-                <div className="h-px flex-1 bg-indigo-100" />
-                <span className="text-xs font-semibold text-indigo-400">or sign in with</span>
-                <div className="h-px flex-1 bg-indigo-100" />
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="flex items-center justify-center rounded-xl border border-indigo-100 bg-white px-3 py-2.5 sm:col-span-2 min-h-[52px]">
-                  <div ref={googleBtnRef} />
-                </div>
-                <button type="button" onClick={() => navigate("/login-phone")} className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 sm:col-span-2">
-                  <Phone className="h-4 w-4" />
-                  Sign in with phone
-                </button>
-              </div>
+            <div className="my-4 flex items-center gap-4">
+              <div className="h-px flex-1 bg-slate-200" />
+              <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">or</span>
+              <div className="h-px flex-1 bg-slate-200" />
             </div>
-          </section>
 
-          <AuthShowcasePanel />
+            <div className="grid gap-3">
+              <div className="flex min-h-[54px] items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2.5">
+                <div ref={googleBtnRef} />
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate("/login-phone")}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-medium text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+              >
+                <Phone className="h-4 w-4" />
+                Sign in with phone
+              </button>
+            </div>
+
+            <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+              <p className="text-center text-sm text-slate-500">New to BMP.tn?</p>
+              <Link
+                to="/register"
+                className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-blue-200 bg-white px-4 py-3.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-50"
+              >
+                <UserPlus className="h-4 w-4" />
+                Create your BMP account
+              </Link>
+            </div>
+
+            <p className="mt-4 text-xs leading-5 text-slate-500">
+              By continuing, you agree to BMP.tn account access policies and secure authentication rules.
+            </p>
+          </div>
         </div>
       </main>
-      <Footer />
+
+      <Footer compact />
     </div>
   );
 }

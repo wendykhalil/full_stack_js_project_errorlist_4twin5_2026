@@ -126,7 +126,7 @@ export default function ArtisanPublicProfile() {
           <AlertCircle className="mx-auto h-12 w-12 text-red-500" />
           <p className="mt-2 text-red-600">{error || 'Artisan non trouvé'}</p>
           <button
-            onClick={() => navigate('/prescripteur/search')}
+            onClick={() => navigate('/prescripteur/artisans')}
             className="mt-4 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
           >
             Retour à la recherche
@@ -140,7 +140,7 @@ export default function ArtisanPublicProfile() {
     <div className="flex-1 max-w-6xl mx-auto">
       {/* Navigation */}
       <button
-        onClick={() => navigate('/prescripteur/search')}
+        onClick={() => navigate('/prescripteur/artisans')}
         className="mb-6 inline-flex items-center gap-2 text-slate-600 hover:text-indigo-600"
       >
         <ChevronLeft className="h-5 w-5" />
@@ -175,21 +175,19 @@ export default function ArtisanPublicProfile() {
               <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex items-center gap-2 text-slate-600">
                   <Briefcase className="h-5 w-5 text-indigo-500" />
-                  <span className="font-medium">{artisan.trade}</span>
+                  <span className="font-medium">{artisan.trade || 'Profil en cours de completion'}</span>
                 </div>
                 <div className="flex items-center gap-2 text-slate-600">
                   <MapPin className="h-5 w-5 text-indigo-500" />
-                  <span>{artisan.region}</span>
+                  <span>{artisan.region || 'Region non renseignee'}</span>
                 </div>
                 <div className="flex items-center gap-2 text-slate-600">
                   <Phone className="h-5 w-5 text-indigo-500" />
-                  <a href={`tel:${artisan.phone}`} className="hover:text-indigo-600">
-                    {artisan.phone}
-                  </a>
+                  {artisan.phone ? (<a href={`tel:${artisan.phone}`} className="hover:text-indigo-600">{artisan.phone}</a>) : (<span className="text-slate-400">Non renseigne</span>)}
                 </div>
                 <div className="flex items-center gap-2 text-slate-600">
                   <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
-                  <span>4.8 (12 avis)</span>
+                  <span>{artisan.hasCompletedProfile ? 'Portfolio public disponible' : 'Compte artisan actif'}</span>
                 </div>
               </div>
 
@@ -197,6 +195,12 @@ export default function ArtisanPublicProfile() {
               {artisan.description && (
                 <div className="mt-6 p-4 bg-slate-50 rounded-xl">
                   <p className="text-slate-700">{artisan.description}</p>
+                </div>
+              )}
+
+              {!artisan.hasCompletedProfile && (
+                <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                  Cet artisan a deja un compte sur la plateforme. Son portfolio est encore en cours de completion, mais vous pouvez deja lui envoyer un message.
                 </div>
               )}
 

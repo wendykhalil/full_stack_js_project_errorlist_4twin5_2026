@@ -16,6 +16,7 @@ import {
 import { useAuth } from "../auth/AuthContext";
 import ThemeToggle from "../components/ThemeToggle";
 import LanguageSwitcher from "../components/LanguageSwitcher";
+import DashboardTopbar from "../components/DashboardTopbar";
 
 const NavItem = ({ to, icon, label, onClick, collapsed }) => (
   <NavLink
@@ -209,10 +210,8 @@ export default function AdminLayout() {
           </div>
         </div>
 
-        {/* Desktop top bar (language + theme) - visible on xl */}
-        <div className="hidden xl:flex justify-end px-6 pt-4">
-          <LanguageSwitcher />
-          <ThemeToggle />
+        <div className="hidden xl:block px-6 pt-4">
+          <DashboardTopbar role="ADMIN" />
         </div>
 
         {/* Mobile Sidebar overlay */}

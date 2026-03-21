@@ -18,6 +18,7 @@ import {
 import { useAuth } from "../auth/AuthContext";
 import ThemeToggle from "../components/ThemeToggle";
 import LanguageSwitcher from "../components/LanguageSwitcher";
+import DashboardTopbar from "../components/DashboardTopbar";
 import logo from "../assets/bmp-logo.svg";
 import { useUnreadMessages } from "../hooks/useUnreadMessages";
 
@@ -130,9 +131,8 @@ export default function PrescripteurLayout() {
           </div>
         </div>
 
-        <div className="hidden xl:flex justify-end px-6 pt-4">
-          <LanguageSwitcher />
-          <ThemeToggle />
+        <div className="hidden xl:block px-6 pt-4">
+          <DashboardTopbar role="PRESCRIPTEUR" unreadCount={unreadCount} />
         </div>
 
         <div className={`fixed inset-0 z-30 transform transition-transform duration-300 ease-in-out xl:hidden ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
