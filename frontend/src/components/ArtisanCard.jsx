@@ -14,6 +14,19 @@ export default function ArtisanCard({ artisan, onContact }) {
   const navigate = useNavigate();
   const [imageError, setImageError] = useState(false);
 
+  const artisanRating = Number(artisan?.rating ?? artisan?.avgRating ?? 4.8);
+  const normalizedArtisanRating = Number.isFinite(artisanRating) ? Math.max(0, Math.min(5, artisanRating)) : 4.8;
+  const artisanStarCount = Math.round(normalizedArtisanRating);
+
+  const renderArtisanStars = () => {
+    return [0, 1, 2, 3, 4].map((index) => (
+      <Star
+        key={`artisan-star-${index}`}
+        className={`h-4 w-4 ${index < artisanStarCount ? 'fill-yellow-400 text-yellow-400' : 'text-slate-300'}`}
+      />
+    ));
+  };
+
   const handleClick = () => {
     navigate(`/prescripteur/artisan/${artisan._id}`);
   };
@@ -89,8 +102,8 @@ export default function ArtisanCard({ artisan, onContact }) {
               <span className="text-slate-500 ml-1">projets</span>
             </div>
             <div className="flex items-center gap-1">
-              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-              <span className="text-sm font-medium">4.8</span>
+              {renderArtisanStars()}
+              <span className="text-sm font-medium">{normalizedArtisanRating.toFixed(1)}</span>
             </div>
           </div>
         </div>

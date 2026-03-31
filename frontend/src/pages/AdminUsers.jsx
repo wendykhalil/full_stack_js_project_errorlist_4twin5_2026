@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { Search, ChevronDown, Loader2, ShieldOff, ShieldCheck, X } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
+import { setUserSubscription } from '../auth/api';
 import { useTranslation } from 'react-i18next';
 
 // Les constantes de durée restent inchangées
@@ -149,7 +150,31 @@ export default function AdminUsers() {
       if (!r.ok) throw new Error(`Erreur ${r.status}`);
       const data = await r.json();
       setUsers((prev) => prev.map((u) => u._id === data.user._id ? { ...u, ...data.user } : u));
-    } catch (e) { alert(e.message); }
+    } catch (e) {
+      alert(e.message);
+    }
+  }
+
+  const [subLoading, setSubLoading] = useState(null);
+
+  async function handleSubscriptionChange(user) {
+    if (user.role !== 'ARTISAN') {
+      alert('Abonnement applicable seulement aux artisans');
+      return;
+    }
+
+    setSubLoading(user._id);
+    try {
+      const target = user.subscriptionStatus === 'ACTIVE' ? { plan: 'FREE', status: 'CANCELED' } : { plan: 'PRO', status: 'ACTIVE' };
+      await setUserSubscription({ token, userId: user._id, ...target });
+      await fetchUsers();
+      alert(`Abonnement mis à jour pour ${user.firstName} ${user.lastName}`);
+    } catch (e) {
+      console.error('Erreur mise à jour abonnement', e);
+      alert(e.message);
+    } finally {
+      setSubLoading(null);
+    }
   }
 
   const filtered = useMemo(() => {
@@ -243,7 +268,7 @@ export default function AdminUsers() {
               {/* Mobile/Tablet view - Stacked cards (below 1267px) */}
               <div className="block 2xl:hidden">
                 <div className="divide-y divide-slate-100 dark:divide-slate-700">
-                  {filtered.map((u, index) => {
+                  {filtered.map((u) => {
                     const isBlocked = u.status === "BLOCKED";
                     const isAdmin = u.role === "ADMIN";
                     return (
@@ -262,6 +287,14 @@ export default function AdminUsers() {
                           <div>
                             <span className="text-slate-500 dark:text-slate-400">Téléphone:</span>
                             <span className="ml-1 text-slate-700 dark:text-slate-300">{u.phone || "—"}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-500 dark:text-slate-400">Abonnement:</span>
+                            <span className="ml-1">
+                              <Pill tone={u.subscriptionStatus === 'ACTIVE' ? 'green' : 'slate'}>
+                                {u.subscriptionPlan || 'FREE'} / {u.subscriptionStatus || 'INACTIVE'}
+                              </Pill>
+                            </span>
                           </div>
                           <div>
                             <span className="text-slate-500 dark:text-slate-400">Statut:</span>
@@ -332,6 +365,7 @@ export default function AdminUsers() {
                       <th className="px-4 py-3 whitespace-nowrap">{t('adminUsers.table.email')}</th>
                       <th className="px-4 py-3 whitespace-nowrap">{t('adminUsers.table.phone')}</th>
                       <th className="px-4 py-3 whitespace-nowrap">{t('adminUsers.table.role')}</th>
+                      <th className="px-4 py-3 whitespace-nowrap">Abonnement</th>
                       <th className="px-4 py-3 whitespace-nowrap">{t('adminUsers.table.status')}</th>
                       <th className="px-4 py-3 whitespace-nowrap">{t('adminUsers.table.blockedUntil')}</th>
                       <th className="px-4 py-3 whitespace-nowrap">{t('adminUsers.table.emailVerified')}</th>
@@ -363,6 +397,11 @@ export default function AdminUsers() {
                             <Pill>{t(`adminUsers.roles.${u.role?.toLowerCase()}`)}</Pill>
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap">
+                            <Pill tone={u.subscriptionStatus === 'ACTIVE' ? 'green' : 'slate'}>
+                              {u.subscriptionPlan || 'FREE'} / {u.subscriptionStatus || 'INACTIVE'}
+                            </Pill>
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap">
                             <Pill tone={u.status === "ACTIVE" ? "green" : u.status === "INACTIVE" ? "slate" : "red"}>
                               {t(`adminUsers.status.${u.status?.toLowerCase()}`)}
                             </Pill>
@@ -381,22 +420,40 @@ export default function AdminUsers() {
                           <td className="px-4 py-3 whitespace-nowrap">
                             {isAdmin ? (
                               <span className="text-xs text-slate-300 dark:text-slate-600">—</span>
-                            ) : isBlocked ? (
-                              <button
-                                onClick={() => handleUnblock(u._id)}
-                                className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-100 transition-colors dark:border-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-400 dark:hover:bg-emerald-900/60"
-                              >
-                                <ShieldCheck className="h-3.5 w-3.5" />
-                                {t('adminUsers.actions.unblock')}
-                              </button>
                             ) : (
-                              <button
-                                onClick={() => setBlockTarget(u)}
-                                className="inline-flex items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-2.5 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100 transition-colors dark:border-red-800 dark:bg-red-900/40 dark:text-red-400 dark:hover:bg-red-900/60"
-                              >
-                                <ShieldOff className="h-3.5 w-3.5" />
-                                {t('adminUsers.actions.block')}
-                              </button>
+                              <div className="flex flex-col gap-2">
+                                {isBlocked ? (
+                                  <button
+                                    onClick={() => handleUnblock(u._id)}
+                                    className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-100 transition-colors dark:border-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-400 dark:hover:bg-emerald-900/60"
+                                  >
+                                    <ShieldCheck className="h-3.5 w-3.5" />
+                                    {t('adminUsers.actions.unblock')}
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => setBlockTarget(u)}
+                                    className="inline-flex items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-2.5 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100 transition-colors dark:border-red-800 dark:bg-red-900/40 dark:text-red-400 dark:hover:bg-red-900/60"
+                                  >
+                                    <ShieldOff className="h-3.5 w-3.5" />
+                                    {t('adminUsers.actions.block')}
+                                  </button>
+                                )}
+
+                                <button
+                                  onClick={() => handleSubscriptionChange(u)}
+                                  disabled={subLoading === u._id}
+                                  className="inline-flex items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100 transition-colors dark:border-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300 dark:hover:bg-indigo-900/60"
+                                >
+                                  {subLoading === u._id ? (
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                  ) : u.subscriptionStatus === 'ACTIVE' ? (
+                                    'Désactiver abonnement'
+                                  ) : (
+                                    'Activer abonnement'
+                                  )}
+                                </button>
+                              </div>
                             )}
                           </td>
                         </tr>

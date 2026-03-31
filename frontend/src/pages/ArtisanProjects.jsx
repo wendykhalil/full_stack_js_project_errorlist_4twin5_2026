@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import SimpleFooter from "../components/Footer";
 import { useTranslation } from "react-i18next";
-import { apiFetch } from "../auth/api";
+import { apiFetch, getMySubscription } from "../auth/api";
 import { useAuth } from "../auth/AuthContext";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
@@ -384,6 +384,11 @@ export default function ArtisanProjects() {
   const [images, setImages] = useState([]);
   const [editing, setEditing] = useState(null);
 
+  const [subscription, setSubscription] = useState({ plan: 'FREE', status: 'INACTIVE' });
+  const [checkingSubscription, setCheckingSubscription] = useState(true);
+
+  const isSubscribed = subscription?.plan && subscription.plan !== 'FREE' && subscription.status === 'ACTIVE';
+
   async function load() {
     try {
       setLoading(true);
@@ -401,6 +406,26 @@ export default function ArtisanProjects() {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const loadSubscription = async () => {
+      if (!token) {
+        setCheckingSubscription(false);
+        return;
+      }
+      try {
+        const res = await getMySubscription({ token });
+        const subs = res?.data || { plan: 'FREE', status: 'INACTIVE' };
+        setSubscription(subs);
+      } catch (err) {
+        console.error('Erreur récupération abonnement:', err);
+        setSubscription({ plan: 'FREE', status: 'INACTIVE' });
+      } finally {
+        setCheckingSubscription(false);
+      }
+    };
+    loadSubscription();
+  }, [token]);
 
   const filtered = useMemo(() => {
     const qq = q.trim().toLowerCase();
@@ -492,8 +517,15 @@ export default function ArtisanProjects() {
           </div>
 
           <button
-            onClick={() => setIsCreateOpen(true)}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700"
+            onClick={() => {
+              if (!isSubscribed) {
+                alert(t('subscription.required', 'Vous devez avoir un abonnement actif pour créer des projets.'));
+                return;
+              }
+              setIsCreateOpen(true);
+            }}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50"
+            disabled={checkingSubscription}
           >
             <Plus className="h-4 w-4" />
             {t("artisanProjects.newProjectButton")}
@@ -598,8 +630,15 @@ export default function ArtisanProjects() {
 
                       <div className="mt-5 flex items-center justify-end gap-2">
                         <button
-                          onClick={() => openEdit(p)}
+                          onClick={() => {
+                            if (!isSubscribed) {
+                              alert(t('subscription.required', 'Vous devez avoir un abonnement actif pour modifier des projets.'));
+                              return;
+                            }
+                            openEdit(p);
+                          }}
                           className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                          disabled={checkingSubscription}
                         >
                           <Pencil className="h-4 w-4" />
                           Edit

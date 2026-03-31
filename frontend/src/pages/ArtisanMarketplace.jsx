@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Search, ChevronDown, ShoppingCart, Star, Eye } from "lucide-react";
 import SimpleFooter from "../components/Footer";
 import { useTranslation } from 'react-i18next';
-import { getCatalogProducts } from "../auth/api.js";
+import { getCatalogProducts, rateCatalogProduct, getMySubscription } from "../auth/api.js";
+import { useAuth } from "../auth/AuthContext";
 
 const ProductCard = ({
   product,
@@ -15,11 +16,43 @@ const ProductCard = ({
   price,
   unit,
   onDetailsClick,
-  onOrderClick
+  onOrderClick,
+  onRate
 }) => {
  
   const [imgError, setImgError] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
+
+  const productRating = Number(product?.rating ?? product?.avgRating ?? 4.5);
+  const normalizedRating = Number.isFinite(productRating) ? Math.max(0, Math.min(5, productRating)) : 4.5;
+  const starCount = Math.round(normalizedRating);
+
+  const [selectedRating, setSelectedRating] = useState(0);
+
+  const renderProductStars = () => {
+    return [0, 1, 2, 3, 4].map((index) => (
+      <Star
+        key={`product-star-${index}`}
+        className={`h-4 w-4 ${index < starCount ? 'fill-orange-500 text-orange-500' : 'text-slate-300'}`}
+      />
+    ));
+  };
+
+  const renderRatingPicker = () => {
+    return [1, 2, 3, 4, 5].map((value) => (
+      <button
+        key={`pick-${value}`}
+        type="button"
+        onClick={() => {
+          setSelectedRating(value);
+          onRate?.(product._id, value);
+        }}
+        className={`p-1 ${selectedRating >= value ? 'text-orange-500' : 'text-slate-300'}`}
+      >
+        <Star className="h-4 w-4" />
+      </button>
+    ));
+  };
   
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -57,9 +90,15 @@ const ProductCard = ({
             <div className="text-xs text-slate-500">{unit}</div>
           </div>
 
-          <div className="flex items-center gap-1 text-sm text-orange-500">
-            <Star className="h-4 w-4 fill-orange-500" />
-            4.5
+          <div className="flex flex-col items-end gap-1 text-sm text-orange-500">
+            <div className="flex items-center gap-1">
+              {renderProductStars()}
+              <span className="text-slate-800 ml-1">{normalizedRating.toFixed(1)}</span>
+            </div>
+            <div className="flex items-center gap-1" title="Cliquez pour noter">
+              {renderRatingPicker()}
+              <span className="text-xs text-slate-500">Noter</span>
+            </div>
           </div>
         </div>
 
@@ -94,6 +133,31 @@ export default function ArtisanMarketplace() {
   const [category, setCategory] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { token } = useAuth();
+  const [subscription, setSubscription] = useState({ plan: 'FREE', status: 'INACTIVE' });
+  const [checkingSubscription, setCheckingSubscription] = useState(true);
+
+  useEffect(() => {
+    const loadSubscription = async () => {
+      if (!token) {
+        setCheckingSubscription(false);
+        return;
+      }
+      try {
+        const res = await getMySubscription({ token });
+        const subs = res?.data || { plan: 'FREE', status: 'INACTIVE' };
+        setSubscription(subs);
+      } catch (err) {
+        console.error('Erreur récupération abonnement:', err);
+        setSubscription({ plan: 'FREE', status: 'INACTIVE' });
+      } finally {
+        setCheckingSubscription(false);
+      }
+    };
+    loadSubscription();
+  }, [token]);
+
+  const isSubscribed = subscription?.plan && subscription.plan !== 'FREE' && subscription.status === 'ACTIVE';
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -130,7 +194,28 @@ export default function ArtisanMarketplace() {
   };
 
   const handleOrderClick = (product) => {
+    if (!isSubscribed) {
+      alert(t('subscription.required', 'Vous devez avoir un abonnement actif pour commander des produits.'));
+      navigate('/artisan/subscription');
+      return;
+    }
     navigate(`/artisan/order-request/${product._id}`);
+  };
+
+  const handleRateProduct = async (productId, rating) => {
+    try {
+      const data = await rateCatalogProduct({ productId, rating, token });
+      setProducts((prev) =>
+        prev.map((p) =>
+          p._id === productId
+            ? { ...p, rating: data?.data?.rating ?? p.rating, ratingCount: data?.data?.ratingCount ?? p.ratingCount }
+            : p
+        )
+      );
+    } catch (err) {
+      console.error('Failed to rate product', err);
+      alert(err.message || 'Erreur lors de l\'envoi de la note');
+    }
   };
 
   return (
@@ -147,7 +232,14 @@ export default function ArtisanMarketplace() {
         </div>
 
         <button 
-          onClick={() => navigate('/artisan/orders')}
+          onClick={() => {
+            if (!isSubscribed) {
+              alert(t('subscription.required', 'Vous devez avoir un abonnement actif pour accéder à vos commandes.'));
+              navigate('/artisan/subscription');
+              return;
+            }
+            navigate('/artisan/orders');
+          }}
           className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium hover:bg-slate-50 flex items-center gap-2"
         >
           <ShoppingCart className="h-4 w-4" />
@@ -215,6 +307,7 @@ export default function ArtisanMarketplace() {
                 unit={product.unit || 'piece'}
                 onDetailsClick={handleDetailsClick}
                 onOrderClick={handleOrderClick}
+                onRate={handleRateProduct}
               />
             );
           })}

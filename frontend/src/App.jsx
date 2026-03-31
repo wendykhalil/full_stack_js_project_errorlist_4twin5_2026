@@ -35,6 +35,8 @@ import ArtisanMarketplace from "./pages/ArtisanMarketplace";
 import ArtisanProductDetails from "./pages/ArtisanProductDetails";
 import ArtisanOrderRequest from "./pages/ArtisanOrderRequest";
 import ArtisanOrders from "./pages/ArtisanOrders";
+import ArtisanSubscription from './pages/ArtisanSubscription';
+import RequireSubscription from './components/RequireSubscription';
 
 // Ajouter les imports pour les nouvelles pages Artisan
 import ArtisanProfileEdit from './pages/ArtisanProfileEdit';
@@ -57,6 +59,8 @@ import FournisseurProduits from "./pages/FournisseurProduits";
 import FournisseurProduitNew from "./pages/FournisseurProduitNew";
 import FournisseurProduitEdit from "./pages/FournisseurProduitEdit";
 import FournisseurOrders from "./pages/FournisseurOrders";
+import FournisseurMarketplace from "./pages/FournisseurMarketplace";
+import FournisseurProductDetails from "./pages/FournisseurProductDetails";
 import OrderDetails from "./pages/OrderDetails";
 
 // ✅ IMPORTS POUR LA MESSAGERIE
@@ -117,8 +121,12 @@ export default function App() {
                 <Route element={<ProtectedRoute allowedRoles={[Roles.ARTISAN]} />}>
                     <Route path="/artisan" element={<ArtisanLayout />}>
                         <Route index element={<ArtisanDashboard />} />
-                        <Route path="profile" element={<ArtisanProfile />} />
+                            <Route path="profile" element={<ArtisanProfile />} />
                         <Route path="profile/edit" element={<ArtisanProfileEdit />} />
+                        <Route path="subscription" element={<ArtisanSubscription />} />
+                        <Route path="marketplace" element={<ArtisanMarketplace />} />
+
+                        <Route path="" element={<ArtisanDashboard />} />
                         <Route path="portfolio" element={<ArtisanPortfolio />} />
                         <Route path="portfolio/add" element={<ArtisanPortfolioAdd />} />
                         <Route path="portfolio/edit/:id" element={<ArtisanPortfolioAdd />} />
@@ -128,14 +136,12 @@ export default function App() {
                         <Route path="factures/new" element={<ArtisanFactureStep1 />} />
                         <Route path="factures/new/step-2" element={<ArtisanFactureStep2 />} />
                         <Route path="factures/new/step-3" element={<ArtisanFactureStep3 />} />
-                        <Route path="marketplace" element={<ArtisanMarketplace />} />
                         <Route path="product/:id" element={<ArtisanProductDetails />} />
-                        <Route path="order-request/:productId" element={<ArtisanOrderRequest />} />
-                        <Route path="orders" element={<ArtisanOrders />} />
-                        <Route path="orders/:id" element={<OrderDetails />} />
-                        {/* ✅ ROUTES MESSAGES POUR ARTISAN */}
-                        <Route path="messages" element={<Messages />} />
-                        <Route path="messages/:userId" element={<Conversation />} />
+                        <Route path="order-request/:productId" element={<RequireSubscription><ArtisanOrderRequest /></RequireSubscription>} />
+                        <Route path="orders" element={<RequireSubscription><ArtisanOrders /></RequireSubscription>} />
+                        <Route path="orders/:id" element={<RequireSubscription><OrderDetails /></RequireSubscription>} />
+                        <Route path="messages" element={<RequireSubscription><Messages /></RequireSubscription>} />
+                        <Route path="messages/:userId" element={<RequireSubscription><Conversation /></RequireSubscription>} />
                     </Route>
                 </Route>
 
@@ -161,6 +167,8 @@ export default function App() {
                         <Route path="produits" element={<FournisseurProduits />} />
                         <Route path="produits/new" element={<FournisseurProduitNew />} />
                         <Route path="produits/edit/:id" element={<FournisseurProduitEdit />} />
+                        <Route path="marketplace" element={<FournisseurMarketplace />} />
+                        <Route path="product/:id" element={<FournisseurProductDetails />} />
                         <Route path="orders" element={<FournisseurOrders />} />
                         <Route path="orders/:id" element={<OrderDetails />} />
                         <Route path="profile" element={<Profile />} />

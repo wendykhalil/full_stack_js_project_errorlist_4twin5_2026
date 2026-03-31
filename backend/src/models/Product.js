@@ -25,6 +25,19 @@ const productSchema = new mongoose.Schema(
     imageUrls: [{ type: String }],
 
     documentation: [{ type: String }], // PDFs et autres docs
+
+    rating: {
+      type: Number,
+      min: 0,
+      max: 5,
+      default: 0
+    },
+
+    ratingCount: {
+      type: Number,
+      min: 0,
+      default: 0
+    },
     
     // ✅ NOUVEAU : Fiche technique (PDF ou HTML)
     technicalSheet: {

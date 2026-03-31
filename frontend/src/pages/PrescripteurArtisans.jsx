@@ -22,6 +22,19 @@ const ArtisanCard = ({ artisan, onViewProfile }) => {
   const { t } = useTranslation();
   const [imageError, setImageError] = useState(false);
 
+  const artisanRating = Number(artisan?.rating ?? artisan?.avgRating ?? 4.8);
+  const normalizedArtisanRating = Number.isFinite(artisanRating) ? Math.max(0, Math.min(5, artisanRating)) : 4.8;
+  const artisanStarCount = Math.round(normalizedArtisanRating);
+
+  const renderArtisanStars = () => {
+    return [0, 1, 2, 3, 4].map((index) => (
+      <Star
+        key={`prescripteur-artisan-star-${index}`}
+        className={`h-4 w-4 ${index < artisanStarCount ? 'fill-yellow-400 text-yellow-400' : 'text-slate-300'}`}
+      />
+    ));
+  };
+
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-lg transition-shadow">
       <div className="flex items-start justify-between gap-4">
@@ -60,8 +73,8 @@ const ArtisanCard = ({ artisan, onViewProfile }) => {
       <div className="mt-4 flex items-center justify-between text-sm text-slate-600">
         <div>{artisan.hasCompletedProfile ? t('prescripteurArtisans.projectsCompleted', { count: artisan.totalProjects || 0 }) : 'Compte artisan actif'}</div>
         <div className="flex items-center gap-1">
-          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-          <span>4.8</span>
+          {renderArtisanStars()}
+          <span>{normalizedArtisanRating.toFixed(1)}</span>
         </div>
       </div>
 

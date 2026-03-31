@@ -131,8 +131,28 @@ export async function getCatalogProducts({ page = 1, limit = 12, search = '', ca
   return apiFetch(`/catalog/products?${params}`);
 }
 
+export async function rateCatalogProduct({ productId, rating, token }) {
+  return apiFetch(`/catalog/products/${productId}/rate`, {
+    token,
+    method: 'POST',
+    body: { rating }
+  });
+}
+
 export async function getSupplierCategories({ token }) {
   return apiFetch('/supplier/categories', { token });
+}
+
+export async function getMySubscription({ token }) {
+  return apiFetch('/subscriptions/me', { token });
+}
+
+export async function setUserSubscription({ token, userId, plan, status }) {
+  return apiFetch(`/subscriptions/${userId}/authorize`, {
+    token,
+    method: 'POST',
+    body: { plan, status }
+  });
 }
 
 // ========== ORDERS API ==========

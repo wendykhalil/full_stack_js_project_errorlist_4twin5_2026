@@ -14,6 +14,7 @@ import {
   ChevronRight,
   ShoppingBag, // ✅ NOUVEAU : icône pour les commandes
   MessageCircle,
+  Eye,
 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import ThemeToggle from "../components/ThemeToggle";
@@ -112,6 +113,12 @@ export default function FournisseurLayout() {
               to="/fournisseur/orders"
               icon={<ShoppingBag className="h-5 w-5" />}
               label="Commandes"
+              collapsed={isSidebarCollapsed}
+            />
+            <Tab
+              to="/fournisseur/marketplace"
+              icon={<Eye className="h-5 w-5" />}
+              label="Marketplace"
               collapsed={isSidebarCollapsed}
             />
             <Tab

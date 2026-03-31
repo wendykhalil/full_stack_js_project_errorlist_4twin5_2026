@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'; // Ajout de useCallback
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { getMySubscription } from '../auth/api';
 
 import {
   Package,
@@ -25,6 +26,9 @@ export default function ArtisanPortfolio() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [deleting, setDeleting] = useState(null);
+  const [subscription, setSubscription] = useState(null);
+  const [checkingSubscription, setCheckingSubscription] = useState(true);
+  const isSubscribed = subscription?.plan && subscription.plan !== 'FREE' && subscription.status === 'ACTIVE';
 
   // Utilisation de useCallback pour mémoriser la fonction
   const fetchProjects = useCallback(async () => {
@@ -54,7 +58,30 @@ export default function ArtisanPortfolio() {
     fetchProjects();
   }, [fetchProjects]); // fetchProjects est maintenant stable
 
+  useEffect(() => {
+    const fetchSubscription = async () => {
+      if (!token) return;
+      setCheckingSubscription(true);
+      try {
+        const subRes = await getMySubscription({ token });
+        setSubscription(subRes?.data || { plan: 'FREE', status: 'ACTIVE' });
+      } catch (err) {
+        console.error('Error fetching subscription:', err);
+        setSubscription({ plan: 'FREE', status: 'ACTIVE' });
+      } finally {
+        setCheckingSubscription(false);
+      }
+    };
+
+    fetchSubscription();
+  }, [token]);
+
   const handleDelete = async (projectId) => {
+    if (!isSubscribed) {
+      alert('Abonnement actif requis pour supprimer un projet. Contactez l\'administrateur.');
+      return;
+    }
+
     if (!window.confirm('Voulez-vous vraiment supprimer ce projet ?')) return;
 
     setDeleting(projectId);
@@ -103,12 +130,21 @@ export default function ArtisanPortfolio() {
 
         <button
           onClick={() => navigate('/artisan/portfolio/add')}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white hover:bg-indigo-700"
+          disabled={!isSubscribed}
+          className={`inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white ${isSubscribed ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-slate-300 cursor-not-allowed'}`}
         >
           <Plus className="h-4 w-4" />
-          Ajouter un projet
+          {isSubscribed ? 'Ajouter un projet' : 'Abonnement requis'}
         </button>
       </div>
+
+      {!isSubscribed && !checkingSubscription && (
+        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
+          <p>
+            Abonnement actif requis pour ajouter/modifier/supprimer un projet. Contactez l'administrateur pour activer votre accès.
+          </p>
+        </div>
+      )}
 
       {/* Projects List */}
       {loading ? (
@@ -136,10 +172,11 @@ export default function ArtisanPortfolio() {
             Vous n'avez pas encore ajouté de projet à votre portfolio.
           </p>
           <button
-            onClick={() => navigate('/artisan/portfolio/add')}
-            className="mt-6 rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-700"
+            onClick={() => isSubscribed ? navigate('/artisan/portfolio/add') : null}
+            disabled={!isSubscribed}
+            className={`mt-6 rounded-xl px-6 py-3 text-sm font-semibold text-white ${isSubscribed ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-slate-300 cursor-not-allowed'}`}
           >
-            Ajouter mon premier projet
+            {isSubscribed ? 'Ajouter mon premier projet' : 'Abonnement requis'}
           </button>
         </div>
       ) : (
@@ -198,15 +235,16 @@ export default function ArtisanPortfolio() {
                   </button>
                   <button
                     onClick={() => navigate(`/artisan/portfolio/edit/${project._id}`)}
-                    className="flex-1 flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 rounded-lg"
+                    disabled={!isSubscribed}
+                    className={`flex-1 flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium rounded-lg ${isSubscribed ? 'text-slate-600 hover:bg-slate-50' : 'text-slate-400 bg-slate-100 cursor-not-allowed'}`}
                   >
                     <Edit className="h-3 w-3" />
                     Modifier
                   </button>
                   <button
                     onClick={() => handleDelete(project._id)}
-                    disabled={deleting === project._id}
-                    className="flex-1 flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg disabled:opacity-50"
+                    disabled={!isSubscribed || deleting === project._id}
+                    className={`flex-1 flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium rounded-lg ${isSubscribed ? 'text-red-600 hover:bg-red-50' : 'text-slate-400 bg-slate-100 cursor-not-allowed'}`}
                   >
                     {deleting === project._id ? (
                       <Loader2 className="h-3 w-3 animate-spin" />

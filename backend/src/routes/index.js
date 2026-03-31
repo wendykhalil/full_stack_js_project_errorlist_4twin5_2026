@@ -12,6 +12,7 @@ const documentsRoutes = require('../modules/documents/documents.routes');
 const artisanProfileRoutes = require('../modules/artisan/artisanProfile.routes');
 const portfolioRoutes = require('../modules/artisan/portfolio.routes');
 const searchRoutes = require('../modules/search/search.routes');
+const subscriptionRoutes = require('../modules/subscription/subscription.routes');
 
 const { authRequired } = require('../middleware/authMiddleware');
 const { requireRoles } = require('../middleware/roleMiddleware');
@@ -134,6 +135,7 @@ router.use('/documents', documentsRoutes);
 // ✅ NOUVELLES ROUTES
 router.use('/artisan/profile', artisanProfileRoutes);
 router.use('/artisan/portfolio', portfolioRoutes);
+router.use('/subscriptions', subscriptionRoutes);
 router.use('/search', searchRoutes);
 
 // Admin routes
@@ -207,23 +209,49 @@ router.get('/admin/users', authRequired, requireRoles('ADMIN'), async (req, res,
     const skip = (page - 1) * limit;
 
     const User = require('../models/User');
+      const Subscription = require('../models/Subscription');
 
-    const [users, total] = await Promise.all([
-      User.find({}, 'firstName lastName email phone role status emailVerified blockedUntil createdAt')
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .lean(),
-      User.countDocuments(),
-    ]);
+      const users = await User.aggregate([
+        { $sort: { createdAt: -1 } },
+        { $project: {
+            firstName: 1,
+            lastName: 1,
+            email: 1,
+            phone: 1,
+            role: 1,
+            status: 1,
+            emailVerified: 1,
+            blockedUntil: 1,
+            createdAt: 1,
+          }
+        },
+        {
+          $lookup: {
+            from: Subscription.collection.name,
+            localField: '_id',
+            foreignField: 'userId',
+            as: 'subscription',
+          }
+        },
+        { $unwind: { path: '$subscription', preserveNullAndEmptyArrays: true } },
+        { $addFields: {
+            subscriptionPlan: { $ifNull: ['$subscription.plan', 'FREE'] },
+            subscriptionStatus: { $ifNull: ['$subscription.status', 'INACTIVE'] },
+          }
+        },
+        { $project: { subscription: 0 } },
+        { $skip: skip },
+        { $limit: limit },
+      ]);
 
-    res.json({ ok: true, page, limit, total, users });
-  } catch (err) {
-    next(err);
-  }
-});
+      const total = await User.countDocuments();
 
-// Admin: block a user
+      res.json({ page, limit, total, users });
+    } catch (err) {
+      next(err);
+    }
+  });
+
 router.patch('/admin/users/:id/block', authRequired, requireRoles('ADMIN'), async (req, res, next) => {
   try {
     const User = require('../models/User');

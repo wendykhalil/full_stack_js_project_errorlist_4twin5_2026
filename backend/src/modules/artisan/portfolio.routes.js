@@ -5,6 +5,7 @@ const path = require('path');
 const portfolioController = require('./portfolio.controller');
 const { authRequired } = require('../../middleware/authMiddleware');
 const { requireRoles } = require('../../middleware/roleMiddleware');
+const { requireActiveSubscription } = require('../../middleware/subscriptionMiddleware');
 
 // Configuration multer pour les images multiples
 const storage = multer.diskStorage({
@@ -33,6 +34,7 @@ const upload = multer({
 router.post('/',
   authRequired,
   requireRoles('ARTISAN'),
+  requireActiveSubscription,
   upload.array('images', 10),
   portfolioController.addProject
 );
@@ -52,6 +54,7 @@ router.get('/:id',
 router.patch('/:id',
   authRequired,
   requireRoles('ARTISAN'),
+  requireActiveSubscription,
   upload.array('images', 10),
   portfolioController.updateProject
 );
@@ -59,6 +62,7 @@ router.patch('/:id',
 router.delete('/:id',
   authRequired,
   requireRoles('ARTISAN'),
+  requireActiveSubscription,
   portfolioController.deleteProject
 );
 

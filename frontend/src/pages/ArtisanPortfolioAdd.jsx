@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { getMySubscription } from '../auth/api';
 
 import {
   ChevronLeft,
@@ -24,6 +25,8 @@ export default function ArtisanPortfolioAdd() {
 
   const [checkingProfile, setCheckingProfile] = useState(true);
   const [hasProfile, setHasProfile] = useState(false);
+  const [checkingSubscription, setCheckingSubscription] = useState(true);
+  const [subscription, setSubscription] = useState(null);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -38,32 +41,39 @@ export default function ArtisanPortfolioAdd() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const isSubscribed = subscription?.plan && subscription?.plan !== 'FREE' && subscription?.status === 'ACTIVE';
 
   // Vérifier si l'artisan a un profil
   useEffect(() => {
-    const checkProfile = async () => {
+    const checkProfileAndSubscription = async () => {
       try {
         const response = await fetch('http://localhost:5000/api/artisan/profile/my-profile', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
-        
-        if (response.ok) {
-          setHasProfile(true);
-        } else {
-          setHasProfile(false);
-        }
+
+        setHasProfile(response.ok);
       } catch (err) {
         console.error('Error checking profile:', err);
         setHasProfile(false);
       } finally {
         setCheckingProfile(false);
       }
+
+      try {
+        const subRes = await getMySubscription({ token });
+        setSubscription(subRes?.data || { plan: 'FREE', status: 'ACTIVE' });
+      } catch (err) {
+        console.error('Error checking subscription:', err);
+        setSubscription({ plan: 'FREE', status: 'ACTIVE' });
+      } finally {
+        setCheckingSubscription(false);
+      }
     };
 
     if (token) {
-      checkProfile();
+      checkProfileAndSubscription();
     }
   }, [token]);
 
@@ -93,6 +103,12 @@ export default function ArtisanPortfolioAdd() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!isSubscribed) {
+      setError('Abonnement actif requis pour ajouter un projet. Contactez l\'administrateur pour activer votre abonnement.');
+      return;
+    }
+
     setError('');
     setSuccess('');
     setSubmitting(true);
@@ -144,7 +160,7 @@ export default function ArtisanPortfolioAdd() {
     }
   };
 
-  if (checkingProfile) {
+  if (checkingProfile || checkingSubscription) {
     return (
       <div className="flex-1 flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
@@ -168,6 +184,30 @@ export default function ArtisanPortfolioAdd() {
             className="mt-6 rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-700"
           >
             Compléter mon profil
+          </button>
+        </div>
+        <SimpleFooter />
+      </div>
+    );
+  }
+
+  if (!isSubscribed) {
+    return (
+      <div className="flex-1 max-w-3xl mx-auto">
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-8 text-center">
+          <AlertCircle className="mx-auto h-12 w-12 text-red-600" />
+          <h2 className="mt-4 text-xl font-semibold text-slate-900">
+            Abonnement requis
+          </h2>
+          <p className="mt-2 text-slate-600">
+            Vous devez souscrire un abonnement actif pour ajouter des projets au portfolio.
+            Contactez l'administrateur pour obtenir l'autorisation.
+          </p>
+          <button
+            onClick={() => navigate('/artisan/profile')}
+            className="mt-6 rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-700"
+          >
+            Voir mon profil
           </button>
         </div>
         <SimpleFooter />

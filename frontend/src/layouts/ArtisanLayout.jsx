@@ -1,6 +1,6 @@
 // ✅ ArtisanLayout.jsx (with profile picture support and Orders link)
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import {
   Bell,
@@ -18,9 +18,11 @@ import {
   UserCircle2,
   Package,
   MessageCircle,
+  ShieldCheck,
 } from "lucide-react";
 import { Image as ImageIcon } from 'lucide-react';
 import { useAuth } from "../auth/AuthContext";
+import { getMySubscription } from '../auth/api';
 import ThemeToggle from "../components/ThemeToggle";
 import LanguageSwitcher from "../components/LanguageSwitcher";
 import DashboardTopbar from "../components/DashboardTopbar";
@@ -48,11 +50,43 @@ const NavItem = ({ to, icon, label, onClick, collapsed }) => (
 
 export default function ArtisanLayout() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, token, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [subscription, setSubscription] = useState({ plan: 'FREE', status: 'INACTIVE' });
+  const [checkingSubscription, setCheckingSubscription] = useState(true);
   const unreadCount = useUnreadMessages();
+  const isSubscribed = subscription?.plan && subscription.plan !== 'FREE' && subscription.status === 'ACTIVE';
+
+  useEffect(() => {
+    const loadSubscription = async () => {
+      if (!token) {
+        setCheckingSubscription(false);
+        return;
+      }
+      try {
+        const res = await getMySubscription({ token });
+        const subs = res?.data || { plan: 'FREE', status: 'INACTIVE' };
+        setSubscription(subs);
+      } catch (err) {
+        console.error('Erreur récupération abonnement:', err);
+        setSubscription({ plan: 'FREE', status: 'INACTIVE' });
+      } finally {
+        setCheckingSubscription(false);
+      }
+    };
+    loadSubscription();
+  }, [token]);
+
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
+
+  if (checkingSubscription) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-slate-500">Chargement des droits d'abonnement...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-slate-50 dark:bg-slate-900">
@@ -96,6 +130,19 @@ export default function ArtisanLayout() {
               collapsed={isSidebarCollapsed}
             />
             <NavItem
+              to="/artisan/marketplace"
+              icon={<ShoppingCart className="h-5 w-5" />}
+              label="Marketplace"
+              collapsed={isSidebarCollapsed}
+            />
+            <NavItem
+              to="/artisan/subscription"
+              icon={<ShieldCheck className="h-5 w-5" />}
+              label="Abonnement"
+              collapsed={isSidebarCollapsed}
+            />
+
+            <NavItem
               to="/artisan"
               icon={<LayoutDashboard className="h-5 w-5" />}
               label="Tableau de bord"
@@ -131,17 +178,10 @@ export default function ArtisanLayout() {
               label="Mes commandes"
               collapsed={isSidebarCollapsed}
             />
-            {/* ✅ CORRIGÉ: chemin vers les messages */}
             <NavItem
               to="/artisan/messages"
               icon={<span className="relative inline-flex"><MessageCircle className="h-5 w-5" />{unreadCount > 0 && <span className="absolute -right-2 -top-2 min-w-[1rem] rounded-full bg-red-500 px-1 text-[10px] text-white">{unreadCount > 99 ? '99+' : unreadCount}</span>}</span>}
               label="Messages"
-              collapsed={isSidebarCollapsed}
-            />
-            <NavItem
-              to="/artisan/marketplace"
-              icon={<ShoppingCart className="h-5 w-5" />}
-              label="Marketplace"
               collapsed={isSidebarCollapsed}
             />
           </div>
@@ -302,62 +342,77 @@ export default function ArtisanLayout() {
                   collapsed={false}
                 />
                 <NavItem
-                  to="/artisan"
-                  icon={<LayoutDashboard className="h-5 w-5" />}
-                  label="Tableau de bord"
-                  onClick={closeMobileMenu}
-                  collapsed={false}
-                />
-                <NavItem
-                  to="/artisan/projects"
-                  icon={<FolderKanban className="h-5 w-5" />}
-                  label="Projets"
-                  onClick={closeMobileMenu}
-                  collapsed={false}
-                />
-                <NavItem
-                  to="/artisan/portfolio"
-                  icon={<ImageIcon className="h-5 w-5" />}
-                  label="Portfolio"
-                  onClick={closeMobileMenu}
-                  collapsed={false}
-                />
-                <NavItem
-                  to="/artisan/devis/create"
-                  icon={<FileText className="h-5 w-5" />}
-                  label="Créer un devis"
-                  onClick={closeMobileMenu}
-                  collapsed={false}
-                />
-                <NavItem
-                  to="/artisan/factures"
-                  icon={<Receipt className="h-5 w-5" />}
-                  label="Factures"
-                  onClick={closeMobileMenu}
-                  collapsed={false}
-                />
-                <NavItem
-                  to="/artisan/orders"
-                  icon={<Package className="h-5 w-5" />}
-                  label="Mes commandes"
-                  onClick={closeMobileMenu}
-                  collapsed={false}
-                />
-                {/* ✅ CORRIGÉ: chemin vers les messages dans le menu mobile */}
-                <NavItem
-                  to="/artisan/messages"
-                  icon={<MessageCircle className="h-5 w-5" />}
-                  label="Messages"
-                  onClick={closeMobileMenu}
-                  collapsed={false}
-                />
-                <NavItem
                   to="/artisan/marketplace"
                   icon={<ShoppingCart className="h-5 w-5" />}
                   label="Marketplace"
                   onClick={closeMobileMenu}
                   collapsed={false}
                 />
+                <NavItem
+                  to="/artisan/subscription"
+                  icon={<ShieldCheck className="h-5 w-5" />}
+                  label="Abonnement"
+                  onClick={closeMobileMenu}
+                  collapsed={false}
+                />
+
+                {isSubscribed ? (
+                  <>
+                    <NavItem
+                      to="/artisan"
+                      icon={<LayoutDashboard className="h-5 w-5" />}
+                      label="Tableau de bord"
+                      onClick={closeMobileMenu}
+                      collapsed={false}
+                    />
+                    <NavItem
+                      to="/artisan/projects"
+                      icon={<FolderKanban className="h-5 w-5" />}
+                      label="Projets"
+                      onClick={closeMobileMenu}
+                      collapsed={false}
+                    />
+                    <NavItem
+                      to="/artisan/portfolio"
+                      icon={<ImageIcon className="h-5 w-5" />}
+                      label="Portfolio"
+                      onClick={closeMobileMenu}
+                      collapsed={false}
+                    />
+                    <NavItem
+                      to="/artisan/devis/create"
+                      icon={<FileText className="h-5 w-5" />}
+                      label="Créer un devis"
+                      onClick={closeMobileMenu}
+                      collapsed={false}
+                    />
+                    <NavItem
+                      to="/artisan/factures"
+                      icon={<Receipt className="h-5 w-5" />}
+                      label="Factures"
+                      onClick={closeMobileMenu}
+                      collapsed={false}
+                    />
+                    <NavItem
+                      to="/artisan/orders"
+                      icon={<Package className="h-5 w-5" />}
+                      label="Mes commandes"
+                      onClick={closeMobileMenu}
+                      collapsed={false}
+                    />
+                    <NavItem
+                      to="/artisan/messages"
+                      icon={<MessageCircle className="h-5 w-5" />}
+                      label="Messages"
+                      onClick={closeMobileMenu}
+                      collapsed={false}
+                    />
+                  </>
+                ) : (
+                  <div className="rounded-lg border border-yellow-100 bg-yellow-50 px-3 py-2 text-xs text-yellow-700">
+                    Abonnement requis pour plus de fonctionnalités.
+                  </div>
+                )}
               </div>
 
               <div className="border-t border-slate-200 dark:border-slate-700 p-3">
