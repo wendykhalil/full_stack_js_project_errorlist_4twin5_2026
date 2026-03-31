@@ -5,6 +5,7 @@ import SimpleFooter from "../components/Footer";
 import { useTranslation } from 'react-i18next';
 import { getCatalogProducts, rateCatalogProduct, getMySubscription } from "../auth/api.js";
 import { useAuth } from "../auth/AuthContext";
+import SubscriptionAlert from '../components/SubscriptionAlert';
 
 const ProductCard = ({
   product,
@@ -136,6 +137,7 @@ export default function ArtisanMarketplace() {
   const { token } = useAuth();
   const [subscription, setSubscription] = useState({ plan: 'FREE', status: 'INACTIVE' });
   const [checkingSubscription, setCheckingSubscription] = useState(true);
+  const [showSubscriptionAlert, setShowSubscriptionAlert] = useState(false);
 
   useEffect(() => {
     const loadSubscription = async () => {
@@ -195,8 +197,7 @@ export default function ArtisanMarketplace() {
 
   const handleOrderClick = (product) => {
     if (!isSubscribed) {
-      alert(t('subscription.required', 'Vous devez avoir un abonnement actif pour commander des produits.'));
-      navigate('/artisan/subscription');
+      setShowSubscriptionAlert(true);
       return;
     }
     navigate(`/artisan/order-request/${product._id}`);
@@ -314,6 +315,18 @@ export default function ArtisanMarketplace() {
         </div>
       )}
       <SimpleFooter />
+
+      <SubscriptionAlert
+        isVisible={showSubscriptionAlert}
+        onClose={() => setShowSubscriptionAlert(false)}
+        title="Abonnement requis"
+        message="Pour commander des produits et accéder à toutes les fonctionnalités, vous devez avoir un abonnement actif."
+        actionText="Voir les abonnements"
+        onAction={() => {
+          setShowSubscriptionAlert(false);
+          navigate('/artisan/subscription');
+        }}
+      />
     </div>
   );
 }

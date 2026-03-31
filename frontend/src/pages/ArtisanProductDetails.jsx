@@ -12,6 +12,7 @@ import { useAuth } from '../auth/AuthContext';
 import { getMySubscription } from '../auth/api';
 import TechnicalSheetViewer from '../components/TechnicalSheetViewer';
 import SimpleFooter from '../components/Footer';
+import SubscriptionAlert from '../components/SubscriptionAlert';
 
 export default function ArtisanProductDetails() {
   const { t } = useTranslation();
@@ -25,6 +26,7 @@ export default function ArtisanProductDetails() {
   const [selectedImage, setSelectedImage] = useState(0);
   const [subscription, setSubscription] = useState({ plan: 'FREE', status: 'INACTIVE' });
   const [checkingSubscription, setCheckingSubscription] = useState(true);
+  const [showSubscriptionAlert, setShowSubscriptionAlert] = useState(false);
 
   useEffect(() => {
     const loadSubscription = async () => {
@@ -221,8 +223,7 @@ export default function ArtisanProductDetails() {
               <button
                 onClick={() => {
                   if (!isSubscribed) {
-                    alert(t('subscription.required', 'Vous devez avoir un abonnement actif pour commander des produits.'));
-                    navigate('/artisan/subscription');
+                    setShowSubscriptionAlert(true);
                     return;
                   }
                   navigate(`/artisan/order-request/${product._id}`);
@@ -238,6 +239,18 @@ export default function ArtisanProductDetails() {
         </div>
       </div>
       <SimpleFooter />
+
+      <SubscriptionAlert
+        isVisible={showSubscriptionAlert}
+        onClose={() => setShowSubscriptionAlert(false)}
+        title="Abonnement requis"
+        message="Pour commander ce produit et accéder à toutes les fonctionnalités, vous devez avoir un abonnement actif."
+        actionText="Voir les abonnements"
+        onAction={() => {
+          setShowSubscriptionAlert(false);
+          navigate('/artisan/subscription');
+        }}
+      />
     </div>
   );
 }

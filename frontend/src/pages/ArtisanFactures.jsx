@@ -4,6 +4,8 @@ import { Search, Plus, FileText, Receipt, Download, FileSpreadsheet } from "luci
 import { useAuth } from "../auth/AuthContext";
 import { exportDocumentExcel, exportDocumentPdf } from "../utils/documentExport";
 import SimpleFooter from "../components/Footer";
+import { getMySubscription } from "../auth/api";
+import SubscriptionAlert from '../components/SubscriptionAlert';
 
 function DocRow({ type, item, onCreateInvoice }) {
   const icon = type === 'quote' ? <FileText className="h-5 w-5" /> : <Receipt className="h-5 w-5" />;
@@ -34,6 +36,11 @@ export default function ArtisanFactures() {
   const [documents, setDocuments] = useState({ quotes: [], invoices: [] });
   const [search, setSearch] = useState('');
   const [error, setError] = useState('');
+  const [subscription, setSubscription] = useState({ plan: 'FREE', status: 'INACTIVE' });
+  const [checkingSubscription, setCheckingSubscription] = useState(true);
+  const [showSubscriptionAlert, setShowSubscriptionAlert] = useState(false);
+
+  const isSubscribed = subscription?.plan && subscription.plan !== 'FREE' && subscription.status === 'ACTIVE';
 
   const fetchDocs = async () => {
     try {
@@ -49,10 +56,34 @@ export default function ArtisanFactures() {
 
   useEffect(() => { if (token) fetchDocs(); }, [token]);
 
+  useEffect(() => {
+    const loadSubscription = async () => {
+      if (!token) {
+        setCheckingSubscription(false);
+        return;
+      }
+      try {
+        const res = await getMySubscription({ token });
+        const subs = res?.data || { plan: 'FREE', status: 'INACTIVE' };
+        setSubscription(subs);
+      } catch (err) {
+        console.error('Erreur récupération abonnement:', err);
+        setSubscription({ plan: 'FREE', status: 'INACTIVE' });
+      } finally {
+        setCheckingSubscription(false);
+      }
+    };
+    loadSubscription();
+  }, [token]);
+
   const filteredQuotes = useMemo(() => documents.quotes.filter((item) => JSON.stringify(item).toLowerCase().includes(search.toLowerCase())), [documents.quotes, search]);
   const filteredInvoices = useMemo(() => documents.invoices.filter((item) => JSON.stringify(item).toLowerCase().includes(search.toLowerCase())), [documents.invoices, search]);
 
   const createInvoice = async (quote) => {
+    if (!isSubscribed) {
+      setShowSubscriptionAlert(true);
+      return;
+    }
     try {
       const response = await fetch('http://localhost:5000/api/documents/invoices', {
         method: 'POST',

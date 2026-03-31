@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Search,
   Calendar,
@@ -17,6 +18,7 @@ import SimpleFooter from "../components/Footer";
 import { useTranslation } from "react-i18next";
 import { apiFetch, getMySubscription } from "../auth/api";
 import { useAuth } from "../auth/AuthContext";
+import SubscriptionAlert from '../components/SubscriptionAlert';
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 const ASSET_BASE = API_URL.replace(/\/api\/?$/, "");
@@ -370,6 +372,7 @@ function toFormData(values, files) {
 export default function ArtisanProjects() {
   const { t } = useTranslation();
   const { token } = useAuth();
+  const navigate = useNavigate();
 
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -386,6 +389,7 @@ export default function ArtisanProjects() {
 
   const [subscription, setSubscription] = useState({ plan: 'FREE', status: 'INACTIVE' });
   const [checkingSubscription, setCheckingSubscription] = useState(true);
+  const [showSubscriptionAlert, setShowSubscriptionAlert] = useState(false);
 
   const isSubscribed = subscription?.plan && subscription.plan !== 'FREE' && subscription.status === 'ACTIVE';
 
@@ -519,7 +523,7 @@ export default function ArtisanProjects() {
           <button
             onClick={() => {
               if (!isSubscribed) {
-                alert(t('subscription.required', 'Vous devez avoir un abonnement actif pour créer des projets.'));
+                setShowSubscriptionAlert(true);
                 return;
               }
               setIsCreateOpen(true);
@@ -632,7 +636,7 @@ export default function ArtisanProjects() {
                         <button
                           onClick={() => {
                             if (!isSubscribed) {
-                              alert(t('subscription.required', 'Vous devez avoir un abonnement actif pour modifier des projets.'));
+                              setShowSubscriptionAlert(true);
                               return;
                             }
                             openEdit(p);
@@ -730,6 +734,18 @@ export default function ArtisanProjects() {
       </main>
 
       <SimpleFooter />
+
+      <SubscriptionAlert
+        isVisible={showSubscriptionAlert}
+        onClose={() => setShowSubscriptionAlert(false)}
+        title="Abonnement requis"
+        message="Pour créer et modifier des projets, vous devez avoir un abonnement actif."
+        actionText="Voir les abonnements"
+        onAction={() => {
+          setShowSubscriptionAlert(false);
+          navigate('/artisan/subscription');
+        }}
+      />
     </div>
   );
 }

@@ -16,6 +16,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import SimpleFooter from '../components/Footer';
+import SubscriptionAlert from '../components/SubscriptionAlert';
 
 export default function ArtisanPortfolio() {
   
@@ -28,6 +29,7 @@ export default function ArtisanPortfolio() {
   const [deleting, setDeleting] = useState(null);
   const [subscription, setSubscription] = useState(null);
   const [checkingSubscription, setCheckingSubscription] = useState(true);
+  const [showSubscriptionAlert, setShowSubscriptionAlert] = useState(false);
   const isSubscribed = subscription?.plan && subscription.plan !== 'FREE' && subscription.status === 'ACTIVE';
 
   // Utilisation de useCallback pour mémoriser la fonction
@@ -129,22 +131,20 @@ export default function ArtisanPortfolio() {
         </div>
 
         <button
-          onClick={() => navigate('/artisan/portfolio/add')}
-          disabled={!isSubscribed}
+          onClick={() => {
+            if (!isSubscribed) {
+              setShowSubscriptionAlert(true);
+              return;
+            }
+            navigate('/artisan/portfolio/add');
+          }}
+          disabled={checkingSubscription}
           className={`inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white ${isSubscribed ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-slate-300 cursor-not-allowed'}`}
         >
           <Plus className="h-4 w-4" />
           {isSubscribed ? 'Ajouter un projet' : 'Abonnement requis'}
         </button>
       </div>
-
-      {!isSubscribed && !checkingSubscription && (
-        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
-          <p>
-            Abonnement actif requis pour ajouter/modifier/supprimer un projet. Contactez l'administrateur pour activer votre accès.
-          </p>
-        </div>
-      )}
 
       {/* Projects List */}
       {loading ? (
@@ -261,6 +261,18 @@ export default function ArtisanPortfolio() {
       )}
 
       <SimpleFooter />
+
+      <SubscriptionAlert
+        isVisible={showSubscriptionAlert}
+        onClose={() => setShowSubscriptionAlert(false)}
+        title="Abonnement requis"
+        message="Pour ajouter des projets à votre portfolio, vous devez avoir un abonnement actif."
+        actionText="Voir les abonnements"
+        onAction={() => {
+          setShowSubscriptionAlert(false);
+          navigate('/artisan/subscription');
+        }}
+      />
     </div>
   );
 }

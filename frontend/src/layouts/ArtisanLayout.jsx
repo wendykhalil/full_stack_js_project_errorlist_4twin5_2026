@@ -432,6 +432,35 @@ export default function ArtisanLayout() {
           </div>
         </div>
 
+        {/* Subscription Alert */}
+        {!isSubscribed && !checkingSubscription && (
+          <div className="bg-amber-50 border-b border-amber-200 px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex-shrink-0">
+                  <ShieldCheck className="h-5 w-5 text-amber-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-amber-800">
+                    Abonnement requis pour certaines fonctionnalités
+                  </p>
+                  <p className="text-sm text-amber-700">
+                    Vous pouvez consulter le contenu mais certaines actions nécessitent un abonnement actif.
+                  </p>
+                </div>
+              </div>
+              <div className="flex-shrink-0">
+                <button
+                  onClick={() => navigate('/artisan/subscription')}
+                  className="rounded-md bg-amber-600 px-3 py-2 text-sm font-medium text-white hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
+                >
+                  Voir les abonnements
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <main className="flex-1 p-5">
           <Outlet />
         </main>
