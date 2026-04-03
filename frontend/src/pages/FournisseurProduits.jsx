@@ -9,11 +9,13 @@ import {
   FileText,
   Pencil,
   Trash2,
+  Bot,
 } from "lucide-react";
 import SimpleFooter from "../components/Footer";
 import { useTranslation } from 'react-i18next';
 import { useAuth } from "../auth/AuthContext";
-import { getMyProducts, getSupplierStats, deleteProduct } from "../auth/api.js";
+import { getMyProducts, getSupplierStats, deleteProduct, createProduct } from "../auth/api.js";
+import AIProductAssistantModal from '../components/ai-assistant-product/AIProductAssistantModal';
 
 const StatCard = ({ title, value, icon, iconBg, iconFg }) => (
   <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -72,55 +74,38 @@ export default function FournisseurProduits() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
+  const [isAIOpen, setIsAIOpen] = useState(false);
 
   const fetchProducts = useCallback(async () => {
-  setLoading(true);
-  setError(null);
-  try {
-    console.log('Fetching products with token:', token);
-    console.log('API URL:', `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/supplier/products?page=${page}&limit=10&search=${search}`);
-    
-    const data = await getMyProducts({ token, page, limit: 10, search });
-    console.log('Products data received:', data);
-    
-    // Check different possible response structures
-    let productsArray = [];
-    if (data?.products) {
-      productsArray = data.products;
-    } else if (data?.data?.products) {
-      productsArray = data.data.products;
-    } else if (Array.isArray(data)) {
-      productsArray = data;
-    } else if (data?.data && Array.isArray(data.data)) {
-      productsArray = data.data;
-    }
-    
-    console.log('Extracted products array:', productsArray);
-    setProducts(productsArray);
-    
-    if (page === 1) {
-      try {
-        const statsData = await getSupplierStats({ token });
-        console.log('Stats data received:', statsData);
-        setStats(statsData?.data || {});
-      } catch (statsError) {
-        console.error('Stats fetch error:', statsError);
-        setStats({});
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getMyProducts({ token, page, limit: 10, search });
+      let productsArray = [];
+      if (data?.products) productsArray = data.products;
+      else if (data?.data?.products) productsArray = data.data.products;
+      else if (Array.isArray(data)) productsArray = data;
+      else if (data?.data && Array.isArray(data.data)) productsArray = data.data;
+      setProducts(productsArray);
+      
+      if (page === 1) {
+        try {
+          const statsData = await getSupplierStats({ token });
+          setStats(statsData?.data || {});
+        } catch {
+          setStats({});
+        }
       }
+    } catch (error) {
+      setError(error.message);
+      setProducts([]);
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error('Products fetch error:', error);
-    setError(error.message);
-    setProducts([]);
-  } finally {
-    setLoading(false);
-  }
-}, [token, page, search]);
+  }, [token, page, search]);
 
   useEffect(() => {
-    if (token) {
-      fetchProducts();
-    }
+    if (token) fetchProducts();
   }, [fetchProducts, token]);
 
   const handleDelete = async (id) => {
@@ -135,7 +120,7 @@ export default function FournisseurProduits() {
 
   return (
     <div className="flex-1">
-      {/* Title + CTA */}
+      {/* Title + CTAs */}
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
@@ -146,25 +131,29 @@ export default function FournisseurProduits() {
           </p>
         </div>
 
-        <button
-          onClick={() => navigate("/fournisseur/produits/new")}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-700 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-800"
-        >
-          <Plus className="h-4 w-4" />
-          {t('fournisseurProduits.addButton')}
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => navigate("/fournisseur/produits/new")}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-700 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-800"
+          >
+            <Plus className="h-4 w-4" />
+            {t('fournisseurProduits.addButton')}
+          </button>
+
+          <button
+            onClick={() => setIsAIOpen(true)}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:from-purple-700 hover:to-indigo-700"
+          >
+            <Bot className="h-4 w-4" />
+            Assistant IA
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
       <section className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
         <StatCard title={t('fournisseurProduits.stats.activeProducts')} value={stats?.activeProducts || 0} icon={<Package />} iconBg="bg-indigo-50" iconFg="text-indigo-600" />
-        <StatCard
-title={t('fournisseurProduits.stats.monthlyOrders')}
-value={stats?.activeOrders || 0}
-icon={<ShoppingCart />}
-iconBg="bg-emerald-50"
-iconFg="text-emerald-600"
-/>
+        <StatCard title={t('fournisseurProduits.stats.monthlyOrders')} value={stats?.activeOrders || 0} icon={<ShoppingCart />} iconBg="bg-emerald-50" iconFg="text-emerald-600" />
         <StatCard title={t('fournisseurProduits.stats.revenue')} value={(stats?.revenue || 0).toLocaleString() + ' TND'} icon={<TrendingUp />} iconBg="bg-orange-50" iconFg="text-orange-600" />
         <StatCard title={t('fournisseurProduits.stats.catalogs')} value={stats?.catalogs || 0} icon={<FileText />} iconBg="bg-slate-100" iconFg="text-slate-700" />
       </section>
@@ -173,17 +162,13 @@ iconFg="text-emerald-600"
       <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <h2 className="text-lg font-semibold text-slate-900">{t('fournisseurProduits.tableTitle')}</h2>
-
           <div className="relative w-full md:w-72">
             <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
               placeholder={t('fournisseurProduits.searchPlaceholder')}
               value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
+              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-4 text-sm focus:border-indigo-500 focus:outline-none"
             />
           </div>
@@ -192,9 +177,7 @@ iconFg="text-emerald-600"
         {loading ? (
           <div className="mt-6 text-center py-10">Loading...</div>
         ) : error ? (
-          <div className="mt-6 text-center py-10 text-red-600">
-            Error loading products: {error}
-          </div>
+          <div className="mt-6 text-center py-10 text-red-600">Error loading products: {error}</div>
         ) : !products || products.length === 0 ? (
           <div className="mt-6 text-center py-10 text-slate-500">
             No products found. Click "Add Product" to create your first product.
@@ -212,51 +195,74 @@ iconFg="text-emerald-600"
                   <th className="border-b border-slate-200 pb-3 text-right font-semibold">{t('fournisseurProduits.table.actions')}</th>
                 </tr>
               </thead>
-
               <tbody>
-                {Array.isArray(products) && products.map((product) => (
-                  <tr key={product._id} className="text-sm">
-                    <td className="border-b border-slate-100 py-5">
-                      <div className="font-medium text-slate-900">{product.name || 'Unnamed'}</div>
-                      <div className="mt-1 text-xs text-slate-500">{product.description || ''}</div>
-                    </td>
-
-                    <td className="border-b border-slate-100 py-5">
-                      <Pill tone="slate">{product.categoryId?.name || 'N/A'}</Pill>
-                    </td>
-
-                    <td className="border-b border-slate-100 py-5">
-                      <PriceCell price={product.price ? product.price.toFixed(2) : '0.00'} unit="TND" />
-                    </td>
-
-                    <td className="border-b border-slate-100 py-5 text-center">
-                      <Pill tone={product.stock > 0 ? "green" : "red"}>
-                        {product.stock > 0 ? "En stock" : "Rupture"}
-                      </Pill>
-                    </td>
-
-                    <td className="border-b border-slate-100 py-5 text-center">
-                      <Pill tone="indigo">{product.isApproved ? "Approuvé" : "En attente"}</Pill>
-                    </td>
-
-                    <td className="border-b border-slate-100 py-5 text-right">
-                      <div className="inline-flex items-center gap-2">
-                        <ActionBtn onClick={() => navigate(`/fournisseur/produits/edit/${product._id}`)}>
-                          <Pencil className="h-4 w-4 text-slate-600" />
-                        </ActionBtn>
-                        <ActionBtn className="hover:bg-red-50" onClick={() => handleDelete(product._id)}>
-                          <Trash2 className="h-4 w-4 text-red-600" />
-                        </ActionBtn>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
+  {Array.isArray(products) && products.map((product) => (
+    <tr key={product._id} className="text-sm">
+      <td className="border-b border-slate-100 py-5">
+        <div className="font-medium text-slate-900">{product.name || 'Unnamed'}</div>
+        <div className="mt-1 text-xs text-slate-500">{product.description || ''}</div>
+      </td>
+      <td className="border-b border-slate-100 py-5">
+        <Pill tone="slate">{product.categoryId?.name || 'N/A'}</Pill>
+      </td>
+      <td className="border-b border-slate-100 py-5">
+        <PriceCell price={product.price ? product.price.toFixed(2) : '0.00'} unit="TND" />
+      </td>
+      <td className="border-b border-slate-100 py-5 text-center">
+        <Pill tone={product.stock > 0 ? "green" : "red"}>{product.stock > 0 ? "En stock" : "Rupture"}</Pill>
+      </td>
+      <td className="border-b border-slate-100 py-5 text-center">
+        <Pill tone="indigo">{product.isApproved ? "Approuvé" : "En attente"}</Pill>
+      </td>
+      <td className="border-b border-slate-100 py-5 text-right">
+        <div className="inline-flex items-center gap-2">
+          <ActionBtn onClick={() => navigate(`/fournisseur/produits/edit/${product._id}`)}>
+            <Pencil className="h-4 w-4 text-slate-600" />
+          </ActionBtn>
+          <ActionBtn className="hover:bg-red-50" onClick={() => handleDelete(product._id)}>
+            <Trash2 className="h-4 w-4 text-red-600" />
+          </ActionBtn>
+        </div>
+      </td>
+    </tr>
+  ))}
+</tbody>
             </table>
           </div>
         )}
       </section>
+
       <SimpleFooter />
+
+      <AIProductAssistantModal
+        isOpen={isAIOpen}
+        onClose={() => setIsAIOpen(false)}
+        onSubmit={async (productData) => {
+          try {
+            const fd = new FormData();
+            const dataToSend = {
+              name: productData.name,
+              price: productData.price,
+              stock: productData.stock,
+              description: productData.description
+            };
+            if (productData.categoryId) dataToSend.categoryId = productData.categoryId;
+            if (productData.newCategory) dataToSend.newCategory = productData.newCategory;
+            fd.append('data', JSON.stringify(dataToSend));
+            productData.images.forEach(img => fd.append('media', img));
+            if (productData.documentation && productData.documentation.length > 0) {
+  productData.documentation.forEach(doc => fd.append('media', doc));
+}
+            await createProduct({ token, formData: fd });
+            setIsAIOpen(false);
+            fetchProducts();
+            return { success: true };
+          } catch (error) {
+            throw new Error(error.message || "Failed to create product");
+          }
+        }}
+        token={token}
+      />
     </div>
   );
 }
