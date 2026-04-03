@@ -13,12 +13,14 @@ import {
   Image as ImageIcon,
   Phone,
   Layers3,
+  Bot,  // ← ADDED: Modification 1
 } from "lucide-react";
 import SimpleFooter from "../components/Footer";
 import { useTranslation } from "react-i18next";
 import { apiFetch, getMySubscription } from "../auth/api";
 import { useAuth } from "../auth/AuthContext";
 import SubscriptionAlert from '../components/SubscriptionAlert';
+import AIAssistantModal from '../components/ai-assistant/AIAssistantModal'; // ← ADDED: Modification 2
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 const ASSET_BASE = API_URL.replace(/\/api\/?$/, "");
@@ -66,7 +68,7 @@ function SuggestInput({ label, value, onChange, placeholder, listId, options = [
   );
 }
 
-function MaterialsPicker({ value = [], onChange, t }) {
+function MaterialsPicker({ value = [], onChange,  }) {
   const [input, setInput] = useState("");
 
   const add = (raw) => {
@@ -134,7 +136,7 @@ function MaterialsPicker({ value = [], onChange, t }) {
         ))}
       </datalist>
 
-      <p className="mt-2 text-xs text-slate-500">"Vous pouvez ajouter jusqu’à 12 matériaux."</p>
+      <p className="mt-2 text-xs text-slate-500">"Vous pouvez ajouter jusqu'à 12 matériaux."</p>
     </div>
   );
 }
@@ -390,6 +392,7 @@ export default function ArtisanProjects() {
   const [subscription, setSubscription] = useState({ plan: 'FREE', status: 'INACTIVE' });
   const [checkingSubscription, setCheckingSubscription] = useState(true);
   const [showSubscriptionAlert, setShowSubscriptionAlert] = useState(false);
+  const [isAIOpen, setIsAIOpen] = useState(false); // ← ADDED: Modification 3
 
   const isSubscribed = subscription?.plan && subscription.plan !== 'FREE' && subscription.status === 'ACTIVE';
 
@@ -520,20 +523,38 @@ export default function ArtisanProjects() {
             <p className="mt-1 text-slate-600">{t("artisanProjects.subtitle")}</p>
           </div>
 
-          <button
-            onClick={() => {
-              if (!isSubscribed) {
-                setShowSubscriptionAlert(true);
-                return;
-              }
-              setIsCreateOpen(true);
-            }}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50"
-            disabled={checkingSubscription}
-          >
-            <Plus className="h-4 w-4" />
-            {t("artisanProjects.newProjectButton")}
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                if (!isSubscribed) {
+                  setShowSubscriptionAlert(true);
+                  return;
+                }
+                setIsCreateOpen(true);
+              }}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50"
+              disabled={checkingSubscription}
+            >
+              <Plus className="h-4 w-4" />
+              {t("artisanProjects.newProjectButton")}
+            </button>
+
+            {/* ← ADDED: Modification 4 - AI Assistant Button */}
+            <button
+              onClick={() => {
+                if (!isSubscribed) {
+                  setShowSubscriptionAlert(true);
+                  return;
+                }
+                setIsAIOpen(true);
+              }}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50"
+              disabled={checkingSubscription}
+            >
+              <Bot className="h-4 w-4" />
+              Assistant IA
+            </button>
+          </div>
         </div>
 
         <div className="mt-6 grid gap-4 md:grid-cols-3">
@@ -746,6 +767,36 @@ export default function ArtisanProjects() {
           navigate('/artisan/subscription');
         }}
       />
+
+      {/* ← ADDED: Modification 5 - AI Assistant Modal */}
+      {/* AI Assistant Modal */}
+<AIAssistantModal
+  isOpen={isAIOpen}
+  onClose={() => setIsAIOpen(false)}
+  onSubmit={async (projectData) => {
+    try {
+      const fd = new FormData();
+      Object.entries(projectData).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          if (key === 'materials' && Array.isArray(value)) {
+            value.forEach(m => fd.append('materials', m));
+          } else if (key === 'images' && Array.isArray(value)) {
+            value.forEach(file => fd.append('images', file));
+          } else {
+            fd.append(key, value);
+          }
+        }
+      });
+      
+      await apiFetch("/projects", { token, method: "POST", body: fd });
+      setIsAIOpen(false);
+      await load();
+      return { success: true };
+    } catch (error) {
+      throw new Error(error.message || "Failed to create project");
+    }
+  }}
+/>
     </div>
   );
 }

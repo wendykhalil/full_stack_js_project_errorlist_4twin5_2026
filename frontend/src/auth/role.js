@@ -12,7 +12,7 @@ export function roleToBasePath(role) {
     case Roles.ARTISAN:
       return '/artisan';
     case Roles.PRESCRIPTEUR:
-      return '/prescripteur';
+      return '/prescripteur/profile';
     case Roles.SUPPLIER:
       return '/fournisseur';
     default:
