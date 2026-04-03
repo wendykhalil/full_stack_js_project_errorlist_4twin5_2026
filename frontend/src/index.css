@@ -67,3 +67,42 @@
 [dir="rtl"] .space-x-4 > :not([hidden]) ~ :not([hidden]) {
   --tw-space-x-reverse: 1;
 }
+/* Accessibility preferences */
+:root.a11y-large-text {
+  font-size: 18px;
+}
+
+:root.a11y-high-contrast body {
+  background: #ffffff;
+  color: #000000;
+}
+
+:root.a11y-high-contrast .bg-white,
+:root.a11y-high-contrast .bg-slate-50,
+:root.a11y-high-contrast .bg-\[\#eef3fb\],
+:root.a11y-high-contrast .bg-\[\#f8fafc\] {
+  background-color: #ffffff !important;
+}
+
+:root.a11y-high-contrast .text-slate-300,
+:root.a11y-high-contrast .text-slate-400,
+:root.a11y-high-contrast .text-slate-500,
+:root.a11y-high-contrast .text-slate-600,
+:root.a11y-high-contrast .text-slate-700,
+:root.a11y-high-contrast .text-slate-900 {
+  color: #000000 !important;
+}
+
+:root.a11y-high-contrast .border-slate-200,
+:root.a11y-high-contrast .border-slate-700,
+:root.a11y-high-contrast .border-slate-800 {
+  border-color: #000000 !important;
+}
+
+:root.a11y-reduced-motion *,
+:root.a11y-reduced-motion *::before,
+:root.a11y-reduced-motion *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}

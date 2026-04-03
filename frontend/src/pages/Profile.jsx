@@ -305,11 +305,20 @@ useEffect(() => {
           };
         }
       } else {
-        updateData = {
-          firstName,
-          lastName,
-          phone,
-        };
+        if (profilePictureFile) {
+          updateData = new FormData();
+          updateData.append('firstName', firstName);
+          updateData.append('lastName', lastName);
+          updateData.append('phone', phone);
+          updateData.append('profilePicture', profilePictureFile);
+        } else {
+          updateData = {
+            firstName,
+            lastName,
+            phone,
+            profilePicture,
+          };
+        }
       }
 
       console.log('Sending update data:', updateData);
@@ -389,7 +398,7 @@ useEffect(() => {
             {t('profile.title') || 'Mon Profil'}
           </h1>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-400 sm:text-base">
-            {t('profile.subtitle') || 'Gérez vos informations personnelles et professionnelles'}
+            {t('profile.subtitle') || 'Gérez vos informations personnelles'}
           </p>
         </div>
 
@@ -466,48 +475,50 @@ useEffect(() => {
               />
             </div>
 
-            {/* Artisan‑only fields */}
+            {/* Profile image for non-supplier users */}
+            {!isSupplier && (
+              <div className="sm:col-span-2">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  Photo de profil
+                </label>
+                <div className="mt-2 flex items-center gap-4">
+                  {profilePicturePreview && (
+                    <img
+                      src={profilePicturePreview}
+                      alt="Profile preview"
+                      className="h-16 w-16 rounded-full object-cover border border-slate-200"
+                    />
+                  )}
+                  <div className="flex-1">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      accept="image/*"
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={triggerFileInput}
+                      className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                    >
+                      {profilePictureFile ? "Changer l'image" : "Choisir une image"}
+                    </button>
+                    {profilePictureFile && (
+                      <span className="ml-2 text-xs text-slate-500">
+                        {profilePictureFile.name}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <p className="mt-1 text-xs text-slate-400">
+                  Formats acceptés: JPG, PNG, GIF. Taille max: 5 Mo.
+                </p>
+              </div>
+            )}
+
             {isArtisan && (
               <>
-                <div className="sm:col-span-2">
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Photo de profil
-                  </label>
-                  <div className="mt-2 flex items-center gap-4">
-                    {profilePicturePreview && (
-                      <img
-                        src={profilePicturePreview}
-                        alt="Profile preview"
-                        className="h-16 w-16 rounded-full object-cover border border-slate-200"
-                      />
-                    )}
-                    <div className="flex-1">
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleFileChange}
-                        accept="image/*"
-                        className="hidden"
-                      />
-                      <button
-                        type="button"
-                        onClick={triggerFileInput}
-                        className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
-                      >
-                        {profilePictureFile ? 'Changer l\'image' : 'Choisir une image'}
-                      </button>
-                      {profilePictureFile && (
-                        <span className="ml-2 text-xs text-slate-500">
-                          {profilePictureFile.name}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <p className="mt-1 text-xs text-slate-400">
-                    Formats acceptés: JPG, PNG, GIF. Taille max: 5 Mo.
-                  </p>
-                </div>
-
                 <div>
                   <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
                     Ville
@@ -615,7 +626,7 @@ useEffect(() => {
               </>
             )}
 
-            {/* Supplier‑only fields */}
+            /* Supplier‑only fields */}
             {isSupplier && (
               <>
                 <div className="sm:col-span-2">
@@ -750,6 +761,7 @@ useEffect(() => {
                     </>
                   )}
                 </div>
+                )}
               </>
             )}
 
@@ -785,7 +797,7 @@ useEffect(() => {
           )}
 
           <form onSubmit={onChangePassword} className="mt-4 grid grid-cols-1 gap-4 sm:gap-5">
-            {!isGoogle && (
+            {!isGoogle ? (
               <>
                 <div>
                   <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -823,8 +835,6 @@ useEffect(() => {
                     {pwMsg}
                   </div>
                 )}
-                
-                {/* Messages pour la réinitialisation du mot de passe */}
                 {resetErr && (
                   <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                     {resetErr}
@@ -868,7 +878,7 @@ useEffect(() => {
                   </button>
                 </div>
               </>
-            )}
+            ) : null}
           </form>
         </div>
 

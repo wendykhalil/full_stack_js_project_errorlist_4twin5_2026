@@ -1,62 +1,36 @@
-// ✅ ArtisanLayout.jsx (with profile picture support and Orders link)
-
-import React, { useState, useEffect } from "react";
-import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
-  Bell,
-  HardHat,
-  LayoutDashboard,
-  FolderKanban,
   FileText,
-  Receipt,
-  ShoppingCart,
-  LogOut,
-  Menu,
-  X,
-  ChevronLeft,
-  ChevronRight,
-  UserCircle2,
-  Package,
+  FolderKanban,
+  Image as ImageIcon,
+  LayoutDashboard,
   MessageCircle,
+  Package,
+  Receipt,
   ShieldCheck,
+  ShoppingCart,
+  UserCircle2,
 } from "lucide-react";
-import { Image as ImageIcon } from 'lucide-react';
 import { useAuth } from "../auth/AuthContext";
-import { getMySubscription } from '../auth/api';
-import ThemeToggle from "../components/ThemeToggle";
-import LanguageSwitcher from "../components/LanguageSwitcher";
-import DashboardTopbar from "../components/DashboardTopbar";
-import logo from "../assets/bmp-logo.svg";
+import { getMySubscription } from "../auth/api";
+import RoleWorkspace from "../components/RoleWorkspace";
 import { useUnreadMessages } from "../hooks/useUnreadMessages";
 
-const NavItem = ({ to, icon, label, onClick, collapsed }) => (
-  <NavLink
-    to={to}
-    onClick={onClick}
-    end={to === "/artisan"}
-    className={({ isActive }) =>
-      `flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors ${
-        isActive
-          ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400"
-          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700/60 dark:hover:text-slate-100"
-      } ${collapsed ? "justify-center" : ""}`
-    }
-    title={collapsed ? label : undefined}
-  >
-    <span className="flex-shrink-0">{icon}</span>
-    {!collapsed && <span className="truncate">{label}</span>}
-  </NavLink>
-);
+const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "");
+
+function resolveAssetUrl(path) {
+  if (!path) return "";
+  if (path.startsWith("http") || path.startsWith("data:")) return path;
+  return `${API_BASE}${path.startsWith("/") ? "" : "/"}${path}`;
+}
 
 export default function ArtisanLayout() {
   const navigate = useNavigate();
   const { user, token, logout } = useAuth();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [subscription, setSubscription] = useState({ plan: 'FREE', status: 'INACTIVE' });
+  const [subscription, setSubscription] = useState({ plan: "FREE", status: "INACTIVE" });
   const [checkingSubscription, setCheckingSubscription] = useState(true);
   const unreadCount = useUnreadMessages();
-  const isSubscribed = subscription?.plan && subscription.plan !== 'FREE' && subscription.status === 'ACTIVE';
 
   useEffect(() => {
     const loadSubscription = async () => {
@@ -66,11 +40,10 @@ export default function ArtisanLayout() {
       }
       try {
         const res = await getMySubscription({ token });
-        const subs = res?.data || { plan: 'FREE', status: 'INACTIVE' };
-        setSubscription(subs);
+        setSubscription(res?.data || { plan: "FREE", status: "INACTIVE" });
       } catch (err) {
-        console.error('Erreur récupération abonnement:', err);
-        setSubscription({ plan: 'FREE', status: 'INACTIVE' });
+        console.error("Erreur récupération abonnement:", err);
+        setSubscription({ plan: "FREE", status: "INACTIVE" });
       } finally {
         setCheckingSubscription(false);
       }
@@ -78,393 +51,76 @@ export default function ArtisanLayout() {
     loadSubscription();
   }, [token]);
 
-  const closeMobileMenu = () => setIsMobileMenuOpen(false);
-
   if (checkingSubscription) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="text-slate-500">Chargement des droits d'abonnement...</div>
+      <div className="flex h-screen items-center justify-center bg-[#eef3fb] dark:bg-slate-950">
+        <div className="rounded-3xl border border-slate-200 bg-white px-6 py-5 text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
+          Chargement des droits d'abonnement...
+        </div>
       </div>
     );
   }
 
+  const messageIcon = (
+    <span className="relative inline-flex">
+      <MessageCircle className="h-5 w-5" />
+      {unreadCount > 0 ? (
+        <span className="absolute -right-2 -top-2 min-w-[1rem] rounded-full bg-red-500 px-1 text-[10px] text-white">
+          {unreadCount > 99 ? "99+" : unreadCount}
+        </span>
+      ) : null}
+    </span>
+  );
+
+  const navItems = [
+    { to: "/artisan/profile", label: "Profil", icon: <UserCircle2 className="h-5 w-5" /> },
+    { to: "/artisan/marketplace", label: "Marketplace", icon: <ShoppingCart className="h-5 w-5" /> },
+    { to: "/artisan/subscription", label: "Abonnement", icon: <ShieldCheck className="h-5 w-5" /> },
+    { to: "/artisan", label: "Tableau de bord", icon: <LayoutDashboard className="h-5 w-5" />, end: true },
+    { to: "/artisan/projects", label: "Projets", icon: <FolderKanban className="h-5 w-5" /> },
+    { to: "/artisan/portfolio", label: "Portfolio", icon: <ImageIcon className="h-5 w-5" /> },
+    { to: "/artisan/devis/create", label: "Creer un devis", icon: <FileText className="h-5 w-5" /> },
+    { to: "/artisan/factures", label: "Factures", icon: <Receipt className="h-5 w-5" /> },
+    { to: "/artisan/orders", label: "Mes commandes", icon: <Package className="h-5 w-5" /> },
+    { to: "/artisan/messages", label: "Messages", icon: messageIcon },
+  ];
+
+  const artisanAvatarUrl = resolveAssetUrl(user?.profilePicture || "");
+
+  const avatar = artisanAvatarUrl ? (
+    <img
+      src={artisanAvatarUrl}
+      alt=""
+      className="h-10 w-10 rounded-2xl object-cover"
+      onError={(event) => {
+        event.currentTarget.style.display = "none";
+      }}
+    />
+  ) : (
+    <UserCircle2 className="h-10 w-10 text-slate-500 dark:text-slate-300" />
+  );
+
+  const footerMeta = "Artisan";
+
+  const settingsItems = [
+    { to: "/artisan/profile", label: "Profile", icon: <UserCircle2 className="h-4 w-4" /> },
+    { to: "/artisan/profile", label: "Reset password", icon: <ShieldCheck className="h-4 w-4" /> },
+  ];
+
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-900">
-      {/* Desktop Sidebar */}
-      <aside
-        className={`hidden xl:flex xl:flex-col fixed left-0 top-0 h-full bg-white border-r border-slate-200 transition-all duration-300 dark:bg-slate-800 dark:border-slate-700 ${
-          isSidebarCollapsed ? "w-20" : "w-64"
-        }`}
-      >
-        {/* Brand */}
-        <div
-          className={`flex items-center h-20 border-b border-slate-200 dark:border-slate-700 ${
-            isSidebarCollapsed ? "justify-center" : "px-5"
-          }`}
-        >
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-slate-200">
-              <img src={logo} alt="BMP.tn" className="h-7 w-7" />
-            </div>
-
-            {!isSidebarCollapsed && (
-              <div>
-                <div className="text-sm font-semibold text-slate-900 dark:text-white">
-                  BMP.tn
-                </div>
-                <div className="text-xs text-slate-500 dark:text-slate-400">
-                  Artisan
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Nav */}
-        <div className="flex-1 overflow-y-auto py-6 px-3">
-          <div className="space-y-1">
-            <NavItem
-              to="/artisan/profile"
-              icon={<UserCircle2 className="h-5 w-5" />}
-              label="Profil"
-              collapsed={isSidebarCollapsed}
-            />
-            <NavItem
-              to="/artisan/marketplace"
-              icon={<ShoppingCart className="h-5 w-5" />}
-              label="Marketplace"
-              collapsed={isSidebarCollapsed}
-            />
-            <NavItem
-              to="/artisan/subscription"
-              icon={<ShieldCheck className="h-5 w-5" />}
-              label="Abonnement"
-              collapsed={isSidebarCollapsed}
-            />
-
-            <NavItem
-              to="/artisan"
-              icon={<LayoutDashboard className="h-5 w-5" />}
-              label="Tableau de bord"
-              collapsed={isSidebarCollapsed}
-            />
-            <NavItem
-              to="/artisan/projects"
-              icon={<FolderKanban className="h-5 w-5" />}
-              label="Projets"
-              collapsed={isSidebarCollapsed}
-            />
-            <NavItem
-              to="/artisan/portfolio"
-              icon={<ImageIcon className="h-5 w-5" />}
-              label="Portfolio"
-              collapsed={isSidebarCollapsed}
-            />
-            <NavItem
-              to="/artisan/devis/create"
-              icon={<FileText className="h-5 w-5" />}
-              label="Créer un devis"
-              collapsed={isSidebarCollapsed}
-            />
-            <NavItem
-              to="/artisan/factures"
-              icon={<Receipt className="h-5 w-5" />}
-              label="Factures"
-              collapsed={isSidebarCollapsed}
-            />
-            <NavItem
-              to="/artisan/orders"
-              icon={<Package className="h-5 w-5" />}
-              label="Mes commandes"
-              collapsed={isSidebarCollapsed}
-            />
-            <NavItem
-              to="/artisan/messages"
-              icon={<span className="relative inline-flex"><MessageCircle className="h-5 w-5" />{unreadCount > 0 && <span className="absolute -right-2 -top-2 min-w-[1rem] rounded-full bg-red-500 px-1 text-[10px] text-white">{unreadCount > 99 ? '99+' : unreadCount}</span>}</span>}
-              label="Messages"
-              collapsed={isSidebarCollapsed}
-            />
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div
-          className={`border-t border-slate-200 dark:border-slate-700 p-3 ${
-            isSidebarCollapsed ? "text-center" : ""
-          }`}
-        >
-          <div
-            className={`flex items-center gap-3 ${
-              isSidebarCollapsed ? "justify-center" : ""
-            } mb-3`}
-          >
-            {user?.profilePicture ? (
-              <img
-                src={user.profilePicture}
-                alt=""
-                className="h-8 w-8 rounded-full object-cover"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                }}
-              />
-            ) : null}
-            <UserCircle2
-              className={`h-8 w-8 text-slate-600 dark:text-slate-400 ${
-                user?.profilePicture ? 'hidden' : 'block'
-              }`}
-            />
-            {!isSidebarCollapsed && (
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-semibold text-slate-900 dark:text-white truncate">
-                  {[user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
-                    "Artisan"}
-                </div>
-                <div className="text-xs text-slate-500 dark:text-slate-400">
-                  Artisan
-                </div>
-              </div>
-            )}
-          </div>
-
-          <button
-            onClick={() => {
-              logout();
-              navigate("/login", { replace: true });
-            }}
-            className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 ${
-              isSidebarCollapsed ? "justify-center" : ""
-            }`}
-            title={isSidebarCollapsed ? "Déconnexion" : undefined}
-          >
-            <LogOut className="h-4 w-4 flex-shrink-0" />
-            {!isSidebarCollapsed && <span>Déconnexion</span>}
-          </button>
-        </div>
-
-        <button
-          onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          className="absolute -right-3 top-20 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
-        >
-          {isSidebarCollapsed ? (
-            <ChevronRight className="h-4 w-4" />
-          ) : (
-            <ChevronLeft className="h-4 w-4" />
-          )}
-        </button>
-      </aside>
-
-      {/* Main */}
-      <div
-        className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${
-          isSidebarCollapsed ? "xl:ml-20" : "xl:ml-64"
-        }`}
-      >
-        {/* Mobile Header */}
-        <div className="sticky top-0 z-20 w-full border-b border-slate-200 bg-white/80 backdrop-blur xl:hidden dark:border-slate-700 dark:bg-slate-800/80">
-          <div className="mx-auto flex items-center justify-between p-5">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white">
-                <HardHat className="h-5 w-5" />
-              </div>
-              <div className="hidden sm:block">
-                <div className="text-sm font-semibold text-slate-900 dark:text-white">
-                  BMP.tn
-                </div>
-                <div className="text-xs text-slate-500 dark:text-slate-400">
-                  Artisan •{" "}
-                  {[user?.firstName, user?.lastName].filter(Boolean).join(" ")}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <LanguageSwitcher />
-              <ThemeToggle />
-              <button className="rounded-xl p-2 text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700">
-                <Bell className="h-5 w-5" />
-              </button>
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="rounded-xl p-2 text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700"
-              >
-                {isMobileMenuOpen ? (
-                  <X className="h-6 w-6" />
-                ) : (
-                  <Menu className="h-6 w-6" />
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div className="hidden xl:block px-6 pt-4">
-          <DashboardTopbar role="ARTISAN" unreadCount={unreadCount} />
-        </div>
-
-        {/* Mobile Sidebar overlay */}
-        <div
-          className={`fixed inset-0 z-30 transform transition-transform duration-300 ease-in-out xl:hidden ${
-            isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
-        >
-          <div
-            className={`absolute inset-0 bg-black/50 transition-opacity ${
-              isMobileMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-            }`}
-            onClick={closeMobileMenu}
-          />
-          <div className="absolute left-0 top-0 h-full w-64 bg-white shadow-xl dark:bg-slate-800">
-            <div className="flex h-full flex-col">
-              <div className="border-b border-slate-200 dark:border-slate-700 p-5">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white">
-                    <HardHat className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-semibold text-slate-900 dark:text-white">
-                      {[user?.firstName, user?.lastName].filter(Boolean).join(
-                        " "
-                      ) || "Artisan"}
-                    </div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400">
-                      Artisan
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex-1 space-y-1 p-3">
-                <NavItem
-                  to="/artisan/profile"
-                  icon={<UserCircle2 className="h-5 w-5" />}
-                  label="Profil"
-                  onClick={closeMobileMenu}
-                  collapsed={false}
-                />
-                <NavItem
-                  to="/artisan/marketplace"
-                  icon={<ShoppingCart className="h-5 w-5" />}
-                  label="Marketplace"
-                  onClick={closeMobileMenu}
-                  collapsed={false}
-                />
-                <NavItem
-                  to="/artisan/subscription"
-                  icon={<ShieldCheck className="h-5 w-5" />}
-                  label="Abonnement"
-                  onClick={closeMobileMenu}
-                  collapsed={false}
-                />
-
-                {isSubscribed ? (
-                  <>
-                    <NavItem
-                      to="/artisan"
-                      icon={<LayoutDashboard className="h-5 w-5" />}
-                      label="Tableau de bord"
-                      onClick={closeMobileMenu}
-                      collapsed={false}
-                    />
-                    <NavItem
-                      to="/artisan/projects"
-                      icon={<FolderKanban className="h-5 w-5" />}
-                      label="Projets"
-                      onClick={closeMobileMenu}
-                      collapsed={false}
-                    />
-                    <NavItem
-                      to="/artisan/portfolio"
-                      icon={<ImageIcon className="h-5 w-5" />}
-                      label="Portfolio"
-                      onClick={closeMobileMenu}
-                      collapsed={false}
-                    />
-                    <NavItem
-                      to="/artisan/devis/create"
-                      icon={<FileText className="h-5 w-5" />}
-                      label="Créer un devis"
-                      onClick={closeMobileMenu}
-                      collapsed={false}
-                    />
-                    <NavItem
-                      to="/artisan/factures"
-                      icon={<Receipt className="h-5 w-5" />}
-                      label="Factures"
-                      onClick={closeMobileMenu}
-                      collapsed={false}
-                    />
-                    <NavItem
-                      to="/artisan/orders"
-                      icon={<Package className="h-5 w-5" />}
-                      label="Mes commandes"
-                      onClick={closeMobileMenu}
-                      collapsed={false}
-                    />
-                    <NavItem
-                      to="/artisan/messages"
-                      icon={<MessageCircle className="h-5 w-5" />}
-                      label="Messages"
-                      onClick={closeMobileMenu}
-                      collapsed={false}
-                    />
-                  </>
-                ) : (
-                  <div className="rounded-lg border border-yellow-100 bg-yellow-50 px-3 py-2 text-xs text-yellow-700">
-                    Abonnement requis pour plus de fonctionnalités.
-                  </div>
-                )}
-              </div>
-
-              <div className="border-t border-slate-200 dark:border-slate-700 p-3">
-                <button
-                  onClick={() => {
-                    logout();
-                    navigate("/login", { replace: true });
-                    closeMobileMenu();
-                  }}
-                  className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30"
-                >
-                  <LogOut className="h-5 w-5" />
-                  Déconnexion
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Subscription Alert */}
-        {!isSubscribed && !checkingSubscription && (
-          <div className="bg-amber-50 border-b border-amber-200 px-4 py-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex-shrink-0">
-                  <ShieldCheck className="h-5 w-5 text-amber-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-amber-800">
-                    Abonnement requis pour certaines fonctionnalités
-                  </p>
-                  <p className="text-sm text-amber-700">
-                    Vous pouvez consulter le contenu mais certaines actions nécessitent un abonnement actif.
-                  </p>
-                </div>
-              </div>
-              <div className="flex-shrink-0">
-                <button
-                  onClick={() => navigate('/artisan/subscription')}
-                  className="rounded-md bg-amber-600 px-3 py-2 text-sm font-medium text-white hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
-                >
-                  Voir les abonnements
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <main className="flex-1 p-5">
-          <Outlet />
-        </main>
-      </div>
-    </div>
+    <RoleWorkspace
+      role="ARTISAN"
+      roleLabel="Artisan"
+      user={user}
+      unreadCount={unreadCount}
+      navItems={navItems}
+      footerMeta={footerMeta}
+      avatar={avatar}
+      settingsItems={settingsItems}
+      onLogout={() => {
+        logout();
+        navigate("/login", { replace: true });
+      }}
+    />
   );
 }

@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 
 const Stepper = ({ step }) => (
@@ -36,12 +36,12 @@ const Input = ({ label, placeholder }) => (
   </div>
 );
 
-const Select = ({ label, placeholder }) => (
+const Select = ({ label, placeholder, value, onChange, children }) => (
   <div>
     <label className="mb-2 block text-sm font-medium text-slate-700">{label}</label>
     <div className="relative">
-      <select className="w-full appearance-none rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none">
-        <option>{placeholder}</option>
+      <select value={value} onChange={onChange} className="w-full appearance-none rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none">
+        {children || <option>{placeholder}</option>}
       </select>
       <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
     </div>
@@ -62,10 +62,28 @@ const Textarea = ({ label, placeholder }) => (
 export default function ArtisanFactureStep1() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { state } = useLocation();
+  const [projects, setProjects] = useState([]);
+  const [projectId, setProjectId] = useState(state?.projectId || '');
+
+  useEffect(() => {
+    const token = window.localStorage.getItem('bmptn_token');
+    const run = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/projects/my', { headers: { Authorization: `Bearer ${token}` } });
+        const data = await response.json();
+        setProjects(data?.items || []);
+      } catch {
+        setProjects([]);
+      }
+    };
+    if (token) run();
+  }, []);
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-10">
       <h1 className="text-3xl font-semibold text-slate-900">{t('artisanFactureStep1.title')}</h1>
+      {state?.projectTitle ? <p className="mt-3 inline-flex rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">Projet sélectionné: {state.projectTitle}</p> : null}
       <p className="mt-1 text-sm text-slate-500">{t('artisanFactureStep1.subtitle')}</p>
 
       <Stepper step={1} />
@@ -77,7 +95,14 @@ export default function ArtisanFactureStep1() {
           <Select 
             label={t('artisanFactureStep1.projectLabel')} 
             placeholder={t('artisanFactureStep1.projectPlaceholder')} 
-          />
+            value={projectId}
+            onChange={(e) => setProjectId(e.target.value)}
+          >
+            <option value="">{t('artisanFactureStep1.projectPlaceholder')}</option>
+            {projects.map((project) => (
+              <option key={project._id} value={project._id}>{project.title}</option>
+            ))}
+          </Select>
           <Select 
             label={t('artisanFactureStep1.quoteBasedLabel')} 
             placeholder={t('artisanFactureStep1.quoteBasedPlaceholder')} 
@@ -105,7 +130,7 @@ export default function ArtisanFactureStep1() {
         </div>
 
         <button
-          onClick={() => navigate("/artisan/factures/new/step-2")}
+          onClick={() => navigate("/artisan/factures/new/step-2", { state: { projectId, projectTitle: projects.find((project) => project._id === projectId)?.title || state?.projectTitle || "" } })}
           className="mt-6 w-full rounded-xl bg-indigo-700 py-4 font-semibold text-white hover:bg-indigo-800"
         >
           {t('artisanFactureStep1.nextButton')}

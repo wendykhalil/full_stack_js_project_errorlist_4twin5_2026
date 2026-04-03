@@ -1,8 +1,15 @@
 import React from "react";
-import { ArrowUpRight, Mail, MapPin, Phone } from "lucide-react";
+import { Facebook, Instagram, Linkedin, Mail, MapPin, Phone, Youtube } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import logo from "../assets/bmp-logo.svg";
+
+const socials = [
+  { icon: Facebook, href: "#", label: "Facebook" },
+  { icon: Instagram, href: "#", label: "Instagram" },
+  { icon: Linkedin, href: "#", label: "LinkedIn" },
+  { icon: Youtube, href: "#", label: "YouTube" },
+];
 
 export default function Footer({ compact = false }) {
   const { t } = useTranslation();
@@ -11,39 +18,17 @@ export default function Footer({ compact = false }) {
 
   if (compact) {
     return (
-      <footer className="border-t border-slate-200 bg-white/95">
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-4 rounded-[1.75rem] border border-slate-200 bg-gradient-to-r from-slate-950 via-slate-900 to-blue-950 px-5 py-4 text-slate-200 shadow-xl shadow-slate-200/60 sm:flex-row sm:items-center sm:justify-between">
+      <footer className="px-0 pb-0 pt-8">
+        <div className="w-full rounded-[28px] border-[6px] border-white bg-[#171b24] px-6 py-6 text-slate-300 shadow-2xl">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-3">
-              <div className="overflow-hidden rounded-2xl border border-white/10 bg-white shadow-sm">
-                <img src={logo} alt="BMP.tn logo" className="h-11 w-11" />
-              </div>
+              <img src={logo} alt="BMP.tn" className="h-10 w-10 rounded-full bg-white p-2" />
               <div>
-                <div className="text-base font-semibold text-white">BMP.tn</div>
-                <div className="text-xs text-slate-400">Professional access for artisans, suppliers and prescribers</div>
+                <div className="text-lg font-semibold text-white">BMP.tn</div>
+                <div className="text-sm text-slate-400">Construction digital platform</div>
               </div>
             </div>
-
-            <div className="flex flex-wrap gap-2">
-              <Link
-                to="/register"
-                className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-500"
-              >
-                Create account
-                <ArrowUpRight className="h-4 w-4" />
-              </Link>
-              <Link
-                to="/login"
-                className="inline-flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
-              >
-                Sign in
-              </Link>
-            </div>
-          </div>
-
-          <div className="mt-3 flex flex-col gap-1 px-1 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-            <div>{t("footer.copyright", { year: currentYear })}</div>
-            <div>{t("footer.version", { version: "1.0.0" })}</div>
+            <div className="text-sm text-slate-400">{t("footer.copyright", { year: currentYear })}</div>
           </div>
         </div>
       </footer>
@@ -51,73 +36,78 @@ export default function Footer({ compact = false }) {
   }
 
   return (
-    <footer className="mt-8 border-t border-slate-200 bg-white">
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-        <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 text-slate-200 shadow-2xl shadow-slate-200/70">
-          <div className="grid gap-6 px-6 py-7 sm:px-8 lg:grid-cols-[1.15fr,0.85fr,0.9fr] lg:px-10 lg:py-8">
-            <div>
-              <button type="button" onClick={() => navigate("/")} className="flex items-center gap-3 text-left">
-                <div className="overflow-hidden rounded-2xl border border-white/10 bg-white shadow-sm">
-                  <img src={logo} alt="BMP.tn logo" className="h-11 w-11" />
-                </div>
-                <div>
-                  <div className="text-lg font-semibold text-white">BMP.tn</div>
-                  <div className="text-[11px] uppercase tracking-[0.24em] text-slate-400">Professional access</div>
-                </div>
-              </button>
-
-              <p className="mt-4 max-w-xl text-sm leading-6 text-slate-300">{t("footer.description")}</p>
-
-              <div className="mt-5 flex flex-wrap gap-3">
-                <Link
-                  to="/register"
-                  className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-500"
-                >
-                  Create account
-                  <ArrowUpRight className="h-4 w-4" />
-                </Link>
-                <Link
-                  to="/login"
-                  className="inline-flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
-                >
-                  Sign in
-                </Link>
+    <footer className="px-0 py-8">
+      <div className="w-full rounded-[30px] border-[6px] border-white bg-[#171b24] px-8 py-10 text-slate-300 shadow-[0_24px_60px_rgba(15,23,42,0.25)]">
+        <div className="grid gap-10 lg:grid-cols-[1.4fr,1fr,1fr,1fr]">
+          <div>
+            <button type="button" onClick={() => navigate("/")} className="flex items-center gap-3 text-left">
+              <img src={logo} alt="BMP.tn logo" className="h-11 w-11 rounded-full bg-white p-2" />
+              <div>
+                <div className="text-2xl font-semibold leading-none text-white">BMP.tn</div>
               </div>
-            </div>
+            </button>
 
-            <div>
-              <h3 className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Quick links</h3>
-              <div className="mt-4 grid gap-2 text-sm">
-                <Link to="/" className="text-slate-300 transition hover:text-white">Home</Link>
-                <Link to="/login" className="text-slate-300 transition hover:text-white">Sign in</Link>
-                <Link to="/login-phone" className="text-slate-300 transition hover:text-white">Phone access</Link>
-                <Link to="/register" className="text-slate-300 transition hover:text-white">Create account</Link>
+            <p className="mt-5 max-w-sm text-base leading-7 text-slate-300">
+              {t("footer.description")}
+            </p>
+
+            <div className="mt-6 flex flex-wrap gap-3">
+              {socials.map(({ icon: Icon, href, label }) => (
+                <a
+                  key={label}
+                  href={href}
+                  aria-label={label}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-slate-700/70 text-slate-200 transition hover:bg-blue-600 hover:text-white"
+                >
+                  <Icon className="h-4 w-4" />
+                </a>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-semibold text-white">Use Cases</h3>
+            <div className="mt-5 grid gap-3 text-sm text-slate-400">
+              <Link to="/register" className="transition hover:text-white">Create account</Link>
+              <Link to="/login" className="transition hover:text-white">Login access</Link>
+              <Link to="/register" className="transition hover:text-white">Join marketplace</Link>
+              <Link to="/register" className="transition hover:text-white">Professional onboarding</Link>
+              <Link to="/login-phone" className="transition hover:text-white">Phone access</Link>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-semibold text-white">Company</h3>
+            <div className="mt-5 grid gap-3 text-sm text-slate-400">
+              <Link to="/register" className="transition hover:text-white">Our platform</Link>
+              <Link to="/login" className="transition hover:text-white">Business areas</Link>
+              <Link to="/register-role" className="transition hover:text-white">Career access</Link>
+              <Link to="/register" className="transition hover:text-white">Marketplace growth</Link>
+              <Link to="/login" className="transition hover:text-white">History</Link>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-semibold text-white">Contact</h3>
+            <div className="mt-5 space-y-4 text-sm text-slate-400">
+              <div className="flex items-start gap-3">
+                <Phone className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                <span>Phone: +216 00 000 000</span>
               </div>
-            </div>
-
-            <div>
-              <h3 className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Contact</h3>
-              <div className="mt-4 space-y-3 text-sm text-slate-300">
-                <div className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                  <MapPin className="mt-0.5 h-4 w-4 text-blue-300" />
-                  <span>{t("footer.contact.address")}</span>
-                </div>
-                <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                  <Phone className="h-4 w-4 text-blue-300" />
-                  <span>{t("footer.contact.phone")}</span>
-                </div>
-                <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                  <Mail className="h-4 w-4 text-blue-300" />
-                  <a href="mailto:contact@bmp.tn" className="transition hover:text-white">contact@bmp.tn</a>
-                </div>
+              <div className="flex items-start gap-3">
+                <Mail className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                <span>Email: contact@bmptn.com</span>
+              </div>
+              <div className="flex items-start gap-3">
+                <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                <span>Address: Tunisia</span>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="mt-4 flex flex-col gap-2 px-1 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-          <div>{t("footer.copyright", { year: currentYear })}</div>
-          <div>{t("footer.version", { version: "1.0.0" })}</div>
+        <div className="mt-8 border-t border-slate-700 pt-6 text-center text-sm text-slate-500">
+          © Copyright {currentYear} BMP.tn
         </div>
       </div>
     </footer>

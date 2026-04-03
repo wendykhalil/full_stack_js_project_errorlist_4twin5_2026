@@ -17,6 +17,7 @@ import {
   Phone
 } from 'lucide-react';
 import SimpleFooter from '../components/Footer';
+import Pagination from '../components/Pagination';
 
 const ArtisanCard = ({ artisan, onViewProfile }) => {
   const { t } = useTranslation();
@@ -360,27 +361,7 @@ export default function PrescripteurArtisans() {
           </div>
 
           {/* Pagination */}
-          {pagination.pages > 1 && (
-            <div className="mt-8 flex items-center justify-center gap-2">
-              <button
-                onClick={() => searchArtisans(pagination.page - 1)}
-                disabled={pagination.page === 1}
-                className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50"
-              >
-                Précédent
-              </button>
-              <span className="px-4 py-2 text-sm text-slate-600">
-                Page {pagination.page} sur {pagination.pages}
-              </span>
-              <button
-                onClick={() => searchArtisans(pagination.page + 1)}
-                disabled={pagination.page === pagination.pages}
-                className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50"
-              >
-                Suivant
-              </button>
-            </div>
-          )}
+          
         </>
       )}
 
@@ -504,6 +485,12 @@ export default function PrescripteurArtisans() {
           </div>
         </div>
       )}
+
+            <Pagination
+        page={pagination.page}
+        pages={pagination.pages}
+        onPageChange={(nextPage) => searchArtisans(nextPage)}
+      />
 
       <SimpleFooter />
     </div>

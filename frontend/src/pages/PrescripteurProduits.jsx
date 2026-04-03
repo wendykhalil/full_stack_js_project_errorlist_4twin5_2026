@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Search, ChevronDown, FileText } from "lucide-react";
 import Footer from "../components/Footer";
+import Pagination from "../components/Pagination";
 import { useTranslation } from "react-i18next";
 import { getCatalogProducts } from "../auth/api.js";
 
@@ -22,7 +23,7 @@ const Card = ({ cat, title, desc, supplier, price, unit }) => {
 
       <div className="mt-6 flex items-end justify-between">
         <div>
-          <div className="text-xl font-semibold text-indigo-700">{price} TND</div>
+          <div className="text-xl font-semibold text-indigo-700">{Number.isFinite(Number(price)) ? Number(price).toFixed(2) : '0.00'} TND</div>
           <div className="text-xs text-slate-500">{unit}</div>
         </div>
 
@@ -40,13 +41,26 @@ export default function PrescripteurProduits() {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const perPage = 9;
 
   useEffect(() => {
+    setPage(1);
     getCatalogProducts({ search, category }).then(data => {
-      setProducts(data.products);
+      const nextProducts = Array.isArray(data?.products)
+        ? data.products
+        : Array.isArray(data?.data)
+          ? data.data
+          : Array.isArray(data)
+            ? data
+            : [];
+      setProducts(nextProducts);
       setLoading(false);
     }).catch(() => setLoading(false));
   }, [search, category]);
+
+  const pages = Math.max(1, Math.ceil(products.length / perPage));
+  const paginatedProducts = products.slice((page - 1) * perPage, page * perPage);
 
   return (
     <div className="flex-1">
@@ -92,21 +106,25 @@ export default function PrescripteurProduits() {
       {loading ? (
         <div className="mt-8 text-center py-12">Loading...</div>
       ) : (
-        <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {products.map((product) => (
-            <Card
-              key={product._id}
-              cat={product.categoryId?.name || 'N/A'}
-              title={product.name}
-              desc={product.description}
-              supplier={product.supplierId?.companyName || 'Supplier'}
-              price={product.price.toFixed(2)}
-              unit="TND"
-            />
-          ))}
-        </div>
+        <>
+          <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {paginatedProducts.map((product) => (
+              <Card
+                key={product._id}
+                cat={product.categoryId?.name || 'N/A'}
+                title={product.name}
+                desc={product.description}
+                supplier={product.supplierId?.companyName || 'Supplier'}
+                price={product?.price}
+                unit="TND"
+              />
+            ))}
+          </div>
+          <Pagination page={page} pages={pages} onPageChange={setPage} />
+        </>
       )}
       <Footer />
     </div>
   );
 }
+

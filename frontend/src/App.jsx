@@ -70,12 +70,14 @@ import Conversation from './pages/Conversation';
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Profile from "./pages/Profile";
+import AppErrorBoundary from "./components/AppErrorBoundary";
 
 export default function App() {
     return (
+        <AppErrorBoundary>
         <BrowserRouter>
-            <TawkToChat />
-            <RealtimeNotifications />
+            <AppErrorBoundary><TawkToChat /></AppErrorBoundary>
+            <AppErrorBoundary><RealtimeNotifications /></AppErrorBoundary>
             <Routes>
                 {/* Routes publiques */}
                 <Route path="/" element={<Navigate to="/login" replace />} />
@@ -182,5 +184,6 @@ export default function App() {
                 <Route path="*" element={<Navigate to="/login" replace />} />
             </Routes>
         </BrowserRouter>
+        </AppErrorBoundary>
     );
 }

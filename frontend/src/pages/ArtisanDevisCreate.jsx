@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, FileSignature, Plus, Trash2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import SimpleFooter from "../components/Footer";
 
@@ -8,9 +8,10 @@ const emptyLine = { description: "", quantity: 1, unitPrice: 0 };
 
 export default function ArtisanDevisCreate() {
   const navigate = useNavigate();
+  const { state } = useLocation();
   const { token } = useAuth();
   const [projects, setProjects] = useState([]);
-  const [projectId, setProjectId] = useState("");
+  const [projectId, setProjectId] = useState(state?.projectId || "");
   const [lines, setLines] = useState([{ ...emptyLine }]);
   const [loading, setLoading] = useState(false);
   const [info, setInfo] = useState("");
@@ -30,6 +31,13 @@ export default function ArtisanDevisCreate() {
     };
     if (token) run();
   }, [token]);
+
+
+  useEffect(() => {
+    if (state?.projectId && projects.some((project) => project._id === state.projectId)) {
+      setProjectId(state.projectId);
+    }
+  }, [projects, state]);
 
   const totals = useMemo(() => {
     const subTotal = lines.reduce((sum, line) => sum + Number(line.quantity || 0) * Number(line.unitPrice || 0), 0);
@@ -81,6 +89,7 @@ export default function ArtisanDevisCreate() {
             <div>
               <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Créer un devis</h1>
               <p className="mt-1 text-sm text-slate-500">Générez un devis directement à partir de l'identifiant du projet.</p>
+              {state?.projectTitle ? <p className="mt-2 inline-flex rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">Projet sélectionné: {state.projectTitle}</p> : null}
             </div>
           </div>
 
