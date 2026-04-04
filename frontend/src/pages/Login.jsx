@@ -1,12 +1,22 @@
 import React, { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Phone, UserPlus } from "lucide-react";
+import { 
+  ArrowLeft, 
+  Phone, 
+  UserPlus, 
+  Mail, 
+  Lock, 
+  Building2,
+  Eye,
+  EyeOff,
+  Menu,
+  X,
+  ChevronDown
+} from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { apiFetch } from "../auth/api";
 import { roleToBasePath } from "../auth/role";
 import logo from "../assets/bmp-logo.svg";
-import PublicNavbar from "../components/PublicNavbar";
-import Footer from "../components/Footer";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -14,12 +24,21 @@ export default function Login() {
   const { login, loginWithGoogle } = useAuth();
   const [emailOrPhone, setEmailOrPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [info] = useState(() => location.state?.info || "");
   const [resendState, setResendState] = useState({ loading: false, message: "" });
   const [googleWidth, setGoogleWidth] = useState(320);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
   const googleBtnRef = useRef(null);
+
+  const roles = [
+    { name: "Artisan", path: "/register/artisan", icon: "🔨" },
+    { name: "Prescripteur", path: "/register/prescripteur", icon: "📐" },
+    { name: "Fournisseur", path: "/register/fournisseur", icon: "🏭" }
+  ];
 
   useEffect(() => {
     const updateWidth = () => {
@@ -71,7 +90,7 @@ export default function Login() {
     e.preventDefault();
     setError("");
     const value = emailOrPhone.trim();
-    if (!value) return setError("Username or email is required");
+    if (!value) return setError("Email or phone number is required");
     if (!password) return setError("Password is required");
     setLoading(true);
     try {
@@ -97,133 +116,399 @@ export default function Login() {
   const showResend = error?.toLowerCase().includes("verif") || error?.toLowerCase().includes("email not");
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      <PublicNavbar />
-
-      <main className="relative flex flex-1 items-center justify-center overflow-hidden px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.16),_transparent_24%),radial-gradient(circle_at_bottom,_rgba(14,165,233,0.12),_transparent_25%)]" />
-
-        <div className="relative z-10 w-full max-w-[32rem]">
-          <div className="mb-4 text-center">
-            <img src={logo} alt="BMP.tn logo" className="mx-auto h-12 w-12 rounded-2xl border border-slate-200 bg-white p-1 shadow-sm ring-1 ring-blue-100" />
-            <p className="mt-4 text-3xl font-semibold tracking-tight text-slate-950">Sign in</p>
-            <p className="mt-2 text-sm text-slate-500">Simple, secure and centered access to your BMP.tn workspace.</p>
-          </div>
-
-          <div className="rounded-[1.9rem] border border-slate-200 bg-white px-5 py-5 shadow-2xl shadow-slate-200/70 sm:px-7 sm:py-6">
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
-              aria-label="Go back"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-
-            {info && <div className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{info}</div>}
-
-            <form onSubmit={onSubmit} noValidate className="space-y-4">
-              <div>
-                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Email or mobile phone number</label>
-                <input
-                  value={emailOrPhone}
-                  onChange={(e) => {
-                    setEmailOrPhone(e.target.value);
-                    setError("");
-                  }}
-                  type="text"
-                  autoComplete="username"
-                  placeholder="Enter your email or phone"
-                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3.5 text-base text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                  required
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
+      {/* Professional Navbar with Role Dropdown */}
+      <nav className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center justify-between lg:h-20">
+            {/* Logo */}
+            <Link to="/" className="flex items-center gap-2 group shrink-0">
+              <div className="relative">
+                <img 
+                  src={logo} 
+                  alt="BMP.tn" 
+                  className="h-8 w-8 lg:h-10 lg:w-10 rounded-xl shadow-sm transition-transform group-hover:scale-105" 
                 />
+                <div className="absolute -inset-1 rounded-xl bg-blue-500/20 blur-lg opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+              <span className="text-xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent lg:text-2xl">
+                BMP.tn
+              </span>
+            </Link>
+
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex md:items-center md:gap-6 lg:gap-8">
+              {/* Role Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setRoleDropdownOpen(!roleDropdownOpen)}
+                  className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 transition-all hover:bg-slate-100 hover:text-blue-600 lg:text-base"
+                >
+                  <span>Join as</span>
+                  <ChevronDown className={`h-4 w-4 transition-transform ${roleDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {roleDropdownOpen && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-10" 
+                      onClick={() => setRoleDropdownOpen(false)}
+                    />
+                    <div className="absolute left-0 mt-2 w-48 rounded-xl border border-slate-200 bg-white shadow-lg z-20 overflow-hidden">
+                      {roles.map((role) => (
+                        <Link
+                          key={role.name}
+                          to={role.path}
+                          className="flex items-center gap-2 px-4 py-3 text-sm text-slate-700 transition-colors hover:bg-blue-50 hover:text-blue-600"
+                          onClick={() => setRoleDropdownOpen(false)}
+                        >
+                          <span>{role.icon}</span>
+                          <span>{role.name}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
 
-              <div>
-                <div className="mb-1.5 flex items-center justify-between gap-4">
-                  <label className="block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Password</label>
-                  <button type="button" onClick={() => navigate("/forgot-password")} className="text-sm font-medium text-slate-700 transition hover:text-blue-700">Forgot password?</button>
-                </div>
-                <input
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    setError("");
-                  }}
-                  type="password"
-                  autoComplete="current-password"
-                  placeholder="Enter your password"
-                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3.5 text-base text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                  required
-                />
-              </div>
-
-              {error && <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>}
-
-              {showResend && (
-                <div className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <span>Your email address may still need verification.</span>
-                    <button
-                      type="button"
-                      onClick={resendVerification}
-                      disabled={resendState.loading}
-                      className="inline-flex items-center justify-center rounded-full border border-blue-200 bg-white px-4 py-2 font-medium text-blue-700 transition hover:bg-blue-100 disabled:opacity-60"
-                    >
-                      {resendState.loading ? "Sending..." : "Resend verification"}
-                    </button>
-                  </div>
-                  {resendState.message && <div className="mt-2 text-sm">{resendState.message}</div>}
-                </div>
-              )}
-
-              <button
-                disabled={loading}
-                className="inline-flex w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-3.5 text-base font-semibold text-white transition hover:bg-blue-500 disabled:opacity-60"
+              <Link to="/about" className="text-sm font-medium text-slate-600 transition-colors hover:text-blue-600 lg:text-base">
+                About
+              </Link>
+              <Link to="/contact" className="text-sm font-medium text-slate-600 transition-colors hover:text-blue-600 lg:text-base">
+                Contact
+              </Link>
+              <Link 
+                to="/register" 
+                className="rounded-full bg-gradient-to-r from-blue-600 to-blue-500 px-5 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:from-blue-700 hover:to-blue-600 hover:shadow-md lg:px-6 lg:py-2.5 lg:text-base"
               >
-                {loading ? "Loading..." : "Continue"}
-              </button>
-            </form>
-
-            <div className="my-4 flex items-center gap-4">
-              <div className="h-px flex-1 bg-slate-200" />
-              <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">or</span>
-              <div className="h-px flex-1 bg-slate-200" />
-            </div>
-
-            <div className="grid gap-3">
-              <div className="flex min-h-[54px] items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2.5">
-                <div ref={googleBtnRef} />
-              </div>
-              <button
-                type="button"
-                onClick={() => navigate("/login-phone")}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-medium text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-              >
-                <Phone className="h-4 w-4" />
-                Sign in with phone
-              </button>
-            </div>
-
-            <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-              <p className="text-center text-sm text-slate-500">New to BMP.tn?</p>
-              <Link
-                to="/register"
-                className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-blue-200 bg-white px-4 py-3.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-50"
-              >
-                <UserPlus className="h-4 w-4" />
-                Create your BMP account
+                Get Started
               </Link>
             </div>
 
-            <p className="mt-4 text-xs leading-5 text-slate-500">
-              By continuing, you agree to BMP.tn account access policies and secure authentication rules.
-            </p>
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="rounded-lg p-2 text-slate-600 transition-colors hover:bg-slate-100 md:hidden"
+            >
+              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
           </div>
         </div>
-      </main>
 
-      <Footer compact />
+        {/* Mobile Navigation */}
+        {mobileMenuOpen && (
+          <div className="border-t border-slate-200 bg-white md:hidden">
+            <div className="space-y-1 px-4 py-3">
+              <div className="border-b border-slate-100 pb-2">
+                <p className="px-3 py-2 text-xs font-semibold uppercase text-slate-500">Join as</p>
+                {roles.map((role) => (
+                  <Link
+                    key={role.name}
+                    to={role.path}
+                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-700 transition-colors hover:bg-blue-50 hover:text-blue-600"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <span>{role.icon}</span>
+                    <span>{role.name}</span>
+                  </Link>
+                ))}
+              </div>
+              <Link 
+                to="/about" 
+                className="block rounded-lg px-3 py-2 text-sm text-slate-600 transition-colors hover:bg-blue-50 hover:text-blue-600"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                About
+              </Link>
+              <Link 
+                to="/contact" 
+                className="block rounded-lg px-3 py-2 text-sm text-slate-600 transition-colors hover:bg-blue-50 hover:text-blue-600"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Contact
+              </Link>
+              <Link 
+                to="/register" 
+                className="block rounded-lg bg-blue-600 px-3 py-2 text-center text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Get Started
+              </Link>
+            </div>
+          </div>
+        )}
+      </nav>
+
+      {/* Main Content */}
+      <div className="relative min-h-[calc(100vh-4rem)]">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/20 via-transparent to-orange-50/20" />
+        
+        <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
+          <div className="mx-auto max-w-md">
+            {/* Back Button */}
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="group mb-6 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition-all hover:bg-slate-50 hover:text-blue-600"
+            >
+              <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
+              Back
+            </button>
+
+            {/* Login Card */}
+            <div className="rounded-2xl bg-white/90 backdrop-blur-sm border border-slate-200/80 shadow-xl">
+              <div className="p-6 sm:p-8">
+                {/* Header */}
+                <div className="mb-6 text-center">
+                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-blue-500 shadow-lg">
+                    <Building2 className="h-7 w-7 text-white" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-slate-900">Welcome Back</h2>
+                  <p className="mt-2 text-sm text-slate-600">
+                    Sign in to your BMP.tn account
+                  </p>
+                </div>
+
+                {/* Info Message */}
+                {info && (
+                  <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+                    <p className="text-sm text-emerald-700">{info}</p>
+                  </div>
+                )}
+
+                {/* Login Form */}
+                <form onSubmit={onSubmit} className="space-y-5">
+                  {/* Email/Phone Field */}
+                  <div>
+                    <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+                      Email or Phone Number
+                    </label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                      <input
+                        value={emailOrPhone}
+                        onChange={(e) => {
+                          setEmailOrPhone(e.target.value);
+                          setError("");
+                        }}
+                        type="text"
+                        autoComplete="username"
+                        placeholder="Enter your email or phone"
+                        className="w-full rounded-xl border border-slate-300 bg-white pl-10 pr-4 py-3 text-base text-slate-900 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Password Field with Show/Hide */}
+                  <div>
+                    <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+                      Password
+                    </label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                      <input
+                        value={password}
+                        onChange={(e) => {
+                          setPassword(e.target.value);
+                          setError("");
+                        }}
+                        type={showPassword ? "text" : "password"}
+                        autoComplete="current-password"
+                        placeholder="Enter your password"
+                        className="w-full rounded-xl border border-slate-300 bg-white pl-10 pr-12 py-3 text-base text-slate-900 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-blue-600"
+                      >
+                        {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Forgot Password Link */}
+                  <div className="text-right">
+                    <button
+                      type="button"
+                      onClick={() => navigate("/forgot-password")}
+                      className="text-sm font-medium text-blue-600 transition-colors hover:text-blue-700 hover:underline"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
+
+                  {/* Error Message */}
+                  {error && (
+                    <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3">
+                      <p className="text-sm text-rose-700">{error}</p>
+                    </div>
+                  )}
+
+                  {/* Resend Verification */}
+                  {showResend && (
+                    <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <span className="text-sm text-blue-800">
+                          Need to verify your email?
+                        </span>
+                        <button
+                          type="button"
+                          onClick={resendVerification}
+                          disabled={resendState.loading}
+                          className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-blue-700 shadow-sm transition-all hover:bg-blue-100 disabled:opacity-60"
+                        >
+                          {resendState.loading ? "Sending..." : "Resend verification"}
+                        </button>
+                      </div>
+                      {resendState.message && (
+                        <p className="mt-2 text-sm text-blue-700">{resendState.message}</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Submit Button */}
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-4 py-3.5 text-base font-semibold text-white shadow-lg transition-all hover:from-blue-700 hover:to-blue-600 hover:shadow-xl disabled:opacity-60"
+                  >
+                    {loading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                        Signing in...
+                      </div>
+                    ) : (
+                      "Sign In"
+                    )}
+                  </button>
+                </form>
+
+                {/* Divider */}
+                <div className="my-6 flex items-center gap-4">
+                  <div className="h-px flex-1 bg-slate-200" />
+                  <span className="text-xs font-medium uppercase text-slate-400">Or continue with</span>
+                  <div className="h-px flex-1 bg-slate-200" />
+                </div>
+
+                {/* Alternative Login Methods */}
+                <div className="space-y-3">
+                  {/* Google Button */}
+                  <div className="flex min-h-[54px] items-center justify-center rounded-xl border border-slate-200 bg-white p-2 transition-all hover:border-blue-300 hover:shadow-md">
+                    <div ref={googleBtnRef} />
+                  </div>
+
+                  {/* Phone Login Button */}
+                  <button
+                    type="button"
+                    onClick={() => navigate("/login-phone")}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition-all hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+                  >
+                    <Phone className="h-4 w-4" />
+                    Sign in with phone number
+                  </button>
+                </div>
+
+                {/* Sign Up Section */}
+                <div className="mt-6 rounded-xl bg-slate-50 p-4">
+                  <p className="text-center text-sm text-slate-600">
+                    Don't have an account?{' '}
+                    <Link
+                      to="/register"
+                      className="font-semibold text-blue-600 transition-colors hover:text-blue-700"
+                    >
+                      Create one now
+                    </Link>
+                  </p>
+                </div>
+
+                {/* Terms */}
+                <p className="mt-4 text-center text-xs text-slate-500">
+                  By signing in, you agree to BMP.tn's{' '}
+                  <Link to="/terms" className="text-blue-600 hover:underline">
+                    Terms of Service
+                  </Link>{' '}
+                  and{' '}
+                  <Link to="/privacy" className="text-blue-600 hover:underline">
+                    Privacy Policy
+                  </Link>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Professional Footer */}
+      <footer className="border-t border-slate-200 bg-white mt-auto">
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
+            {/* Brand Column */}
+            <div className="col-span-1 md:col-span-2">
+              <div className="flex items-center gap-2">
+                <img src={logo} alt="BMP.tn" className="h-8 w-8 rounded-lg" />
+                <span className="text-lg font-bold text-slate-900">BMP.tn</span>
+              </div>
+              <p className="mt-4 text-sm text-slate-600 max-w-md">
+                Tunisia's leading construction and engineering platform connecting artisans, prescripteurs, and suppliers.
+              </p>
+              <p className="mt-4 text-xs text-slate-500">
+                © {new Date().getFullYear()} BMP.tn. All rights reserved.
+              </p>
+            </div>
+
+            {/* Quick Links */}
+            <div>
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-900">
+                Platform
+              </h3>
+              <ul className="mt-4 space-y-2">
+                <li>
+                  <Link to="/about" className="text-sm text-slate-600 transition-colors hover:text-blue-600">
+                    About Us
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/how-it-works" className="text-sm text-slate-600 transition-colors hover:text-blue-600">
+                    How it Works
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/pricing" className="text-sm text-slate-600 transition-colors hover:text-blue-600">
+                    Pricing
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Support */}
+            <div>
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-900">
+                Support
+              </h3>
+              <ul className="mt-4 space-y-2">
+                <li>
+                  <Link to="/contact" className="text-sm text-slate-600 transition-colors hover:text-blue-600">
+                    Contact Us
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/privacy" className="text-sm text-slate-600 transition-colors hover:text-blue-600">
+                    Privacy Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/terms" className="text-sm text-slate-600 transition-colors hover:text-blue-600">
+                    Terms of Service
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

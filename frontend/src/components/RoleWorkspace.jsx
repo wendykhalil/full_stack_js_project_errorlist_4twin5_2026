@@ -122,6 +122,7 @@ export default function RoleWorkspace({
 
   return (
     <div className="min-h-screen bg-[#eef3fb] dark:bg-slate-950">
+      {/* Sidebar - Fixed on left */}
       <aside
         className={`fixed inset-y-0 left-0 z-30 hidden border-r border-slate-200 bg-white transition-all duration-300 xl:flex xl:flex-col dark:border-slate-800 dark:bg-slate-900 ${
           isSidebarCollapsed ? "w-20" : "w-60"
@@ -138,7 +139,9 @@ export default function RoleWorkspace({
         </button>
       </aside>
 
+      {/* Main Content Area */}
       <div className={`min-h-screen transition-all duration-300 ${isSidebarCollapsed ? "xl:ml-20" : "xl:ml-60"}`}>
+        {/* Mobile Header - Sticky */}
         <header className="sticky top-0 z-20 border-b border-slate-200 bg-white xl:hidden dark:border-slate-800 dark:bg-slate-900">
           <div className="flex items-center justify-between px-4 py-3">
             <div className="flex items-center gap-2">
@@ -163,10 +166,12 @@ export default function RoleWorkspace({
           </div>
         </header>
 
-        <div className="hidden xl:block">
+        {/* Desktop Top Bar - STICKY FIXED */}
+        <div className="sticky top-0 z-20 hidden xl:block">
           <DashboardTopbar role={role} unreadCount={unreadCount} />
         </div>
 
+        {/* Mobile Menu Overlay */}
         <div className={`fixed inset-0 z-40 xl:hidden ${isMobileMenuOpen ? "pointer-events-auto" : "pointer-events-none"}`}>
           <div
             className={`absolute inset-0 bg-slate-950/45 transition-opacity ${isMobileMenuOpen ? "opacity-100" : "opacity-0"}`}
@@ -177,6 +182,7 @@ export default function RoleWorkspace({
           </div>
         </div>
 
+        {/* Page Content */}
         <main className="px-4 py-5 sm:px-5 xl:px-6">
           <Outlet />
         </main>

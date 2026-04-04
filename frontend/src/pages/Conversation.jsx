@@ -1,7 +1,23 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
-import { ChevronLeft, Send, User, Loader2, AlertCircle, Paperclip, Mic, FileText, Image as ImageIcon } from 'lucide-react';
+import { 
+  ChevronLeft, 
+  Send, 
+  User, 
+  Loader2, 
+  AlertCircle, 
+  Paperclip, 
+  Mic, 
+  FileText, 
+  Image as ImageIcon,
+  Phone,
+  Video,
+  MoreVertical,
+  CheckCheck,
+  Check,
+  MessageCircle
+} from 'lucide-react';
 import SimpleFooter from '../components/Footer';
 
 function AttachmentPreview({ attachment, own }) {
@@ -135,57 +151,209 @@ export default function Conversation() {
     setRecording(true);
   };
 
-  if (loading) return <div className="flex-1 flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-indigo-600" /></div>;
-  if (error) return <div className="flex-1 flex items-center justify-center"><div className="text-center"><AlertCircle className="mx-auto h-12 w-12 text-red-500" /><p className="mt-2 text-red-600">{error}</p></div></div>;
+  if (loading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+          <p className="text-sm text-slate-500">Chargement de la conversation...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="mx-auto h-12 w-12 text-red-500" />
+          <p className="mt-2 text-red-600">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+          >
+            Réessayer
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex-1 flex flex-col h-[calc(100vh-2rem)]">
-      <div className="bg-white border-b border-slate-200 p-4 flex items-center gap-4">
-        <button onClick={() => navigate(`${getBasePath()}/messages`)} className="p-2 hover:bg-slate-100 rounded-lg"><ChevronLeft className="h-5 w-5 text-slate-600" /></button>
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center overflow-hidden">{otherUser?.profileImage ? <img src={otherUser.profileImage} alt="" className="w-full h-full object-cover" /> : <User className="h-5 w-5 text-indigo-600" />}</div>
-          <div>
-            <h2 className="font-semibold text-slate-900">{otherUser ? `${otherUser.firstName} ${otherUser.lastName}` : 'Utilisateur'}</h2>
+    <div className="flex min-h-screen flex-col">
+      {/* Main Conversation Container */}
+      <div className="flex-1 px-4 py-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex h-[calc(100vh-200px)] max-w-7xl flex-col rounded-2xl border border-slate-200 bg-white shadow-sm">
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-slate-200 bg-gradient-to-r from-white to-slate-50/50 px-5 py-4">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigate(`${getBasePath()}/messages`)}
+                className="group flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition-all hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
+              >
+                <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
+              </button>
+              
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-indigo-100 to-indigo-50">
+                    {otherUser?.profileImage ? (
+                      <img src={otherUser.profileImage} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <User className="h-5 w-5 text-indigo-600" />
+                    )}
+                  </div>
+                  <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-white"></div>
+                </div>
+                <div>
+                  <h2 className="font-semibold text-slate-900">
+                    {otherUser ? `${otherUser.firstName} ${otherUser.lastName}` : 'Utilisateur'}
+                  </h2>
+                  <p className="text-xs text-slate-400">En ligne</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600">
+                <Phone className="h-4 w-4" />
+              </button>
+              <button className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600">
+                <Video className="h-4 w-4" />
+              </button>
+              <button className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600">
+                <MoreVertical className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Messages Area */}
+          <div className="flex-1 overflow-y-auto bg-gradient-to-b from-slate-50 to-white p-6">
+            {messages.length === 0 ? (
+              <div className="flex h-full flex-col items-center justify-center text-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
+                  <MessageCircle className="h-8 w-8 text-slate-400" />
+                </div>
+                <h3 className="mt-4 text-lg font-semibold text-slate-900">Aucun message</h3>
+                <p className="mt-1 text-sm text-slate-500">
+                  Envoyez un message pour démarrer la conversation
+                </p>
+              </div>
+            ) : (
+              Object.entries(groupedMessages).map(([date, msgs]) => (
+                <div key={date}>
+                  <div className="relative my-6 flex justify-center">
+                    <div className="absolute inset-x-0 top-1/2 h-px bg-slate-200"></div>
+                    <span className="relative bg-white px-3 text-xs font-medium text-slate-400">
+                      {date}
+                    </span>
+                  </div>
+                  {msgs.map((msg) => {
+                    const isOwn = msg.senderId?._id === user?._id;
+                    return (
+                      <div key={msg._id} className={`mb-5 flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 shadow-sm ${
+                          isOwn 
+                            ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white' 
+                            : 'bg-white text-slate-900 border border-slate-200'
+                        }`}>
+                          {msg.content && (
+                            <p className="whitespace-pre-wrap text-sm leading-relaxed">{msg.content}</p>
+                          )}
+                          {(msg.attachments || []).map((attachment, index) => (
+                            <AttachmentPreview key={`${msg._id}-${index}`} attachment={attachment} own={isOwn} />
+                          ))}
+                          <div className={`mt-1.5 flex items-center justify-end gap-1 text-[10px] ${
+                            isOwn ? 'text-indigo-200' : 'text-slate-400'
+                          }`}>
+                            <span>
+                              {new Date(msg.createdAt).toLocaleTimeString('fr-TN', { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                            {isOwn && (
+                              <span>
+                                {msg.read ? (
+                                  <CheckCheck className="h-3 w-3" />
+                                ) : (
+                                  <Check className="h-3 w-3" />
+                                )}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ))
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Input Area */}
+          <div className="border-t border-slate-200 bg-white p-4">
+            {selectedFiles.length > 0 && (
+              <div className="mb-3 flex flex-wrap gap-2">
+                {selectedFiles.map((file, index) => (
+                  <span key={`${file.name}-${index}`} className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5 text-xs text-slate-600">
+                    {file.type.startsWith('image/') ? <ImageIcon className="h-3 w-3" /> : <FileText className="h-3 w-3" />}
+                    {file.name.length > 30 ? file.name.substring(0, 27) + '...' : file.name}
+                  </span>
+                ))}
+              </div>
+            )}
+            
+            <form onSubmit={submitMessage} className="flex items-center gap-2">
+              <input
+                ref={inputRef}
+                type="text"
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                placeholder="Écrivez votre message..."
+                className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
+                disabled={sending}
+              />
+              
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                className="hidden"
+                onChange={(e) => setSelectedFiles(Array.from(e.target.files || []))}
+              />
+              
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition-all hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
+              >
+                <Paperclip className="h-4 w-4" />
+              </button>
+              
+              <button
+                type="button"
+                onClick={toggleRecording}
+                className={`flex h-10 w-10 items-center justify-center rounded-xl border transition-all ${
+                  recording 
+                    ? 'border-red-300 bg-red-50 text-red-600' 
+                    : 'border-slate-200 bg-white text-slate-600 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600'
+                }`}
+              >
+                <Mic className="h-4 w-4" />
+              </button>
+              
+              <button
+                type="submit"
+                disabled={(!newMessage.trim() && selectedFiles.length === 0) || sending}
+                className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-sm transition-all hover:from-indigo-700 hover:to-indigo-600 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              </button>
+            </form>
           </div>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 bg-slate-50">
-        {messages.length === 0 ? <div className="flex items-center justify-center h-full text-slate-500 text-center">Aucun message</div> : Object.entries(groupedMessages).map(([date, msgs]) => (
-          <div key={date}>
-            <div className="text-center my-4"><span className="bg-slate-200 text-slate-600 text-xs px-3 py-1 rounded-full">{date}</span></div>
-            {msgs.map((msg) => {
-              const isOwn = msg.senderId?._id === user?._id;
-              return (
-                <div key={msg._id} className={`flex mb-4 ${isOwn ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[78%] rounded-2xl px-4 py-2 ${isOwn ? 'bg-indigo-600 text-white' : 'bg-white text-slate-900 border border-slate-200'}`}>
-                    {msg.content && <p className="text-sm whitespace-pre-wrap">{msg.content}</p>}
-                    {(msg.attachments || []).map((attachment, index) => <AttachmentPreview key={`${msg._id}-${index}`} attachment={attachment} own={isOwn} />)}
-                    <div className={`flex items-center justify-end gap-1 mt-1 text-xs ${isOwn ? 'text-indigo-200' : 'text-slate-400'}`}><span>{new Date(msg.createdAt).toLocaleTimeString('fr-TN', { hour: '2-digit', minute: '2-digit' })}</span>{isOwn && <span>{msg.read ? '✓✓' : '✓'}</span>}</div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ))}
-        <div ref={messagesEndRef} />
-      </div>
-
-      <div className="bg-white border-t border-slate-200 p-4 space-y-3">
-        {selectedFiles.length > 0 && (
-          <div className="flex flex-wrap gap-2 text-xs text-slate-600">
-            {selectedFiles.map((file, index) => <span key={`${file.name}-${index}`} className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1">{file.type.startsWith('image/') ? <ImageIcon className="h-3 w-3" /> : <FileText className="h-3 w-3" />}{file.name}</span>)}
-          </div>
-        )}
-        <form onSubmit={submitMessage} className="flex gap-2">
-          <input ref={inputRef} type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="Écrivez votre message..." className="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none" disabled={sending} />
-          <input ref={fileInputRef} type="file" multiple className="hidden" onChange={(e) => setSelectedFiles(Array.from(e.target.files || []))} />
-          <button type="button" onClick={() => fileInputRef.current?.click()} className="rounded-xl border border-slate-200 px-3 py-3 text-slate-700 hover:bg-slate-50"><Paperclip className="h-5 w-5" /></button>
-          <button type="button" onClick={toggleRecording} className={`rounded-xl border px-3 py-3 ${recording ? 'border-red-300 bg-red-50 text-red-600' : 'border-slate-200 text-slate-700 hover:bg-slate-50'}`}><Mic className="h-5 w-5" /></button>
-          <button type="submit" disabled={(!newMessage.trim() && selectedFiles.length === 0) || sending} className="bg-indigo-600 text-white px-4 py-3 rounded-xl hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed">{sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}</button>
-        </form>
-      </div>
-
+      {/* Footer */}
       <SimpleFooter />
     </div>
   );

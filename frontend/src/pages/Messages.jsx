@@ -6,7 +6,9 @@ import {
   User,
   ChevronRight,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Inbox,
+  Clock
 } from 'lucide-react';
 import SimpleFooter from '../components/Footer';
 
@@ -81,15 +83,18 @@ export default function Messages() {
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+          <p className="text-sm text-slate-500">Chargement des messages...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex-1 flex items-center justify-center">
+      <div className="flex min-h-[60vh] items-center justify-center">
         <div className="text-center">
           <AlertCircle className="mx-auto h-12 w-12 text-red-500" />
           <p className="mt-2 text-red-600">{error}</p>
@@ -105,19 +110,32 @@ export default function Messages() {
   }
 
   return (
-    <div className="flex-1 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-semibold text-slate-900 mb-2">
-        Messages
-      </h1>
-      <p className="text-sm text-slate-500 mb-8">
-        Vos conversations avec les artisans et fournisseurs
-      </p>
+    <div className="space-y-8">
+      {/* Header */}
+      <div>
+        <div className="flex items-center gap-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 shadow-md">
+            <MessageCircle className="h-6 w-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900">Messages</h1>
+            <p className="mt-1 text-slate-500">
+              Vos conversations avec les artisans et fournisseurs
+            </p>
+          </div>
+        </div>
+      </div>
 
+      {/* Messages List */}
       {conversations.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
-          <MessageCircle className="mx-auto h-12 w-12 text-slate-400" />
-          <p className="mt-2 text-slate-500">Aucune conversation</p>
-          <p className="text-sm text-slate-400 mt-1">
+        <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
+            <Inbox className="h-8 w-8 text-slate-400" />
+          </div>
+          <h3 className="mt-4 text-lg font-semibold text-slate-900">
+            Aucune conversation
+          </h3>
+          <p className="mt-2 text-sm text-slate-500">
             Les messages que vous échangez apparaîtront ici
           </p>
         </div>
@@ -127,48 +145,58 @@ export default function Messages() {
             <button
               key={conv.user._id}
               onClick={() => handleConversationClick(conv.user._id)}
-              className="w-full bg-white rounded-2xl border border-slate-200 p-4 hover:shadow-md transition-shadow flex items-center gap-4"
+              className="group w-full rounded-2xl border border-slate-200 bg-white p-5 text-left transition-all hover:shadow-md hover:-translate-y-0.5"
             >
-              <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                {conv.user.profileImage ? (
-                  <img 
-                    src={conv.user.profileImage} 
-                    alt="" 
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <User className="h-6 w-6 text-indigo-600" />
-                )}
-              </div>
-              
-              <div className="flex-1 text-left">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-slate-900">
-                    {conv.user.firstName} {conv.user.lastName}
-                  </h3>
-                  <span className="text-xs text-slate-400">
-                    {formatDate(conv.lastMessage.createdAt)}
-                  </span>
+              <div className="flex items-center gap-4">
+                {/* Avatar */}
+                <div className="relative flex-shrink-0">
+                  <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-indigo-100 to-indigo-50">
+                    {conv.user.profileImage ? (
+                      <img 
+                        src={conv.user.profileImage} 
+                        alt="" 
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <User className="h-7 w-7 text-indigo-500" />
+                    )}
+                  </div>
+                  {conv.unreadCount > 0 && (
+                    <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm">
+                      {conv.unreadCount > 9 ? '9+' : conv.unreadCount}
+                    </div>
+                  )}
                 </div>
                 
-                <p className="text-sm text-slate-600 line-clamp-1 mt-1">
-                  {conv.lastMessage.content}
-                </p>
-              </div>
-
-              {conv.unreadCount > 0 && (
-                <div className="bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {conv.unreadCount}
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                      {conv.user.firstName} {conv.user.lastName}
+                    </h3>
+                    <div className="flex items-center gap-1 text-xs text-slate-400">
+                      <Clock className="h-3 w-3" />
+                      <span>{formatDate(conv.lastMessage.createdAt)}</span>
+                    </div>
+                  </div>
+                  
+                  <p className="mt-1 text-sm text-slate-500 line-clamp-1">
+                    {conv.lastMessage.content}
+                  </p>
                 </div>
-              )}
-              
-              <ChevronRight className="h-5 w-5 text-slate-400" />
+                
+                {/* Arrow */}
+                <ChevronRight className="h-5 w-5 text-slate-300 transition-all group-hover:translate-x-0.5 group-hover:text-indigo-500" />
+              </div>
             </button>
           ))}
         </div>
       )}
 
-      <SimpleFooter />
+      {/* Extra margin bottom via spacing */}
+      <div className="pb-8">
+        <SimpleFooter />
+      </div>
     </div>
   );
 }

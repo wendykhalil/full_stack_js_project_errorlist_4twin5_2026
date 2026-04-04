@@ -13,6 +13,14 @@ import {
   Navigation,
   Save,
   User,
+  Briefcase,
+  Phone,
+  MapPinned,
+  Building2,
+  Key,
+  Send,
+  Shield,
+  Sparkles
 } from 'lucide-react';
 import SimpleFooter from '../components/Footer';
 
@@ -132,7 +140,8 @@ export default function ArtisanProfile() {
             },
             body: JSON.stringify({ latitude, longitude }),
           });
-          setSuccess('Localisation mise à jour');
+          setSuccess('Localisation mise à jour avec succès');
+          setTimeout(() => setSuccess(''), 3000);
         } catch (err) {
           console.error('Error updating location:', err);
         } finally {
@@ -142,6 +151,7 @@ export default function ArtisanProfile() {
       (err) => {
         console.error('Geolocation error:', err);
         setError("Impossible d'obtenir votre position");
+        setTimeout(() => setError(''), 3000);
         setUpdatingLocation(false);
       },
     );
@@ -152,6 +162,7 @@ export default function ArtisanProfile() {
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) {
       setError("L'image doit être inférieure à 5MB");
+      setTimeout(() => setError(''), 3000);
       return;
     }
     setImageFile(file);
@@ -196,9 +207,11 @@ export default function ArtisanProfile() {
 
       await refreshMe();
       setSuccess('Profil mis à jour avec succès !');
+      setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
       console.error('Error saving profile:', err);
       setError(err.message);
+      setTimeout(() => setError(''), 3000);
     } finally {
       setSaving(false);
     }
@@ -220,8 +233,10 @@ export default function ArtisanProfile() {
       setPwMsg('Mot de passe modifié avec succès');
       setCurrentPassword('');
       setNewPassword('');
+      setTimeout(() => setPwMsg(''), 3000);
     } catch (err) {
       setPwErr(err.message || 'Erreur lors du changement de mot de passe');
+      setTimeout(() => setPwErr(''), 3000);
     } finally {
       setPwLoading(false);
     }
@@ -238,8 +253,10 @@ export default function ArtisanProfile() {
     try {
       await forgotPassword({ email: user.email });
       setResetMsg('Un lien de réinitialisation a été envoyé à votre adresse email.');
+      setTimeout(() => setResetMsg(''), 3000);
     } catch (err) {
       setResetErr(err.message || "Impossible d'envoyer l'email de réinitialisation.");
+      setTimeout(() => setResetErr(''), 3000);
     } finally {
       setResetLoading(false);
     }
@@ -247,151 +264,395 @@ export default function ArtisanProfile() {
 
   if (loading) {
     return (
-      <div className="flex flex-1 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+      <div className="flex min-h-[60vh] flex-1 items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+          <p className="text-sm text-slate-500">Chargement de votre profil...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto flex-1 max-w-6xl">
-      <button onClick={() => navigate('/artisan')} className="mb-6 inline-flex items-center gap-2 text-slate-600 hover:text-indigo-600">
-        <ChevronLeft className="h-5 w-5" /> Retour au tableau de bord
-      </button>
-
-      <h1 className="mb-2 text-3xl font-semibold text-slate-900">Mon profil d'artisan</h1>
-      <p className="mb-8 text-sm text-slate-500">Complétez votre profil pour être visible par les prescripteurs</p>
-
-      {error ? (
-        <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
-          <div className="flex items-center gap-2"><AlertCircle className="h-5 w-5" /><span>{error}</span></div>
+    <div className="mx-auto max-w-5xl flex-1 space-y-6">
+      {/* Header with back button */}
+      <div className="flex items-center justify-between">
+        <button
+          onClick={() => navigate('/artisan')}
+          className="group inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition-all hover:bg-slate-100 hover:text-indigo-600"
+        >
+          <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
+          Retour au tableau de bord
+        </button>
+        <div className="flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-700">
+          <Shield className="h-3 w-3" />
+          Profil Artisan
         </div>
-      ) : null}
-      {success ? (
-        <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-700">
-          <div className="flex items-center gap-2"><CheckCircle className="h-5 w-5" /><span>{success}</span></div>
+      </div>
+
+      {/* Page Title */}
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900">Mon profil d'artisan</h1>
+        <p className="mt-2 text-sm text-slate-500">
+          Complétez votre profil pour être visible par les prescripteurs et augmenter vos opportunités
+        </p>
+      </div>
+
+      {/* Messages */}
+      {error && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+          <div className="flex items-center gap-2 text-red-700">
+            <AlertCircle className="h-5 w-5" />
+            <span className="text-sm">{error}</span>
+          </div>
         </div>
-      ) : null}
+      )}
+      {success && (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+          <div className="flex items-center gap-2 text-emerald-700">
+            <CheckCircle className="h-5 w-5" />
+            <span className="text-sm">{success}</span>
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-slate-900"><Camera className="h-5 w-5" /> Photo de profil</h2>
-          <div className="flex flex-col items-start gap-6 md:flex-row md:items-center">
-            <div>
-              {imagePreview ? (
-                <img src={imagePreview} alt="Profile preview" className="h-28 w-28 rounded-full border-2 border-indigo-200 object-cover" />
-              ) : (
-                <div className="flex h-28 w-28 items-center justify-center rounded-full bg-indigo-100">
-                  <User className="h-14 w-14 text-indigo-600" />
+        {/* Profile Picture Section */}
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white px-6 py-4">
+            <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900">
+              <Camera className="h-5 w-5 text-indigo-600" />
+              Photo de profil
+            </h2>
+            <p className="mt-1 text-xs text-slate-500">Ajoutez une photo pour personnaliser votre profil</p>
+          </div>
+          <div className="p-6">
+            <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
+              <div className="relative">
+                {imagePreview ? (
+                  <img
+                    src={imagePreview}
+                    alt="Profile preview"
+                    className="h-28 w-28 rounded-full object-cover ring-4 ring-indigo-100"
+                  />
+                ) : (
+                  <div className="flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br from-indigo-100 to-indigo-50">
+                    <User className="h-14 w-14 text-indigo-400" />
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 text-center sm:text-left">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleImageChange}
+                  accept="image/*"
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-indigo-700 hover:shadow-md"
+                >
+                  <Camera className="h-4 w-4" />
+                  Choisir une photo
+                </button>
+                <p className="mt-2 text-xs text-slate-400">JPG, PNG, GIF. Max 5MB.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Personal Information */}
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white px-6 py-4">
+            <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900">
+              <User className="h-5 w-5 text-indigo-600" />
+              Informations personnelles
+            </h2>
+            <p className="mt-1 text-xs text-slate-500">Ces informations seront visibles par les prescripteurs</p>
+          </div>
+          <div className="p-6">
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">Prénom</label>
+                <input
+                  type="text"
+                  value={user?.firstName || ''}
+                  disabled
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-500"
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">Nom</label>
+                <input
+                  type="text"
+                  value={user?.lastName || ''}
+                  disabled
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-500"
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  Métier <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={profile.trade}
+                  onChange={(e) => setProfile({ ...profile, trade: e.target.value })}
+                  required
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
+                >
+                  <option value="">Sélectionnez un métier</option>
+                  {tradeOptions.map((option) => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  Téléphone <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="tel"
+                    value={profile.phone}
+                    onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                    required
+                    placeholder="+216 XX XXX XXX"
+                    className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
+                  />
                 </div>
-              )}
+              </div>
+              <div className="sm:col-span-2">
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">Description / Bio</label>
+                <textarea
+                  value={profile.description}
+                  onChange={(e) => setProfile({ ...profile, description: e.target.value })}
+                  rows="4"
+                  placeholder="Décrivez votre expérience, vos compétences, vos spécialités..."
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
+                />
+                <p className="mt-1 text-xs text-slate-400">Maximum 500 caractères</p>
+              </div>
             </div>
-            <div className="flex-1">
-              <input type="file" ref={fileInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
-              <button type="button" onClick={() => fileInputRef.current?.click()} className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
-                Choisir une photo
+          </div>
+        </div>
+
+        {/* Location Section */}
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white px-6 py-4">
+            <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900">
+              <MapPin className="h-5 w-5 text-indigo-600" />
+              Localisation
+            </h2>
+            <p className="mt-1 text-xs text-slate-500">Votre position aide les prescripteurs à vous trouver</p>
+          </div>
+          <div className="p-6">
+            <div className="mb-5">
+              <button
+                type="button"
+                onClick={getCurrentLocation}
+                disabled={updatingLocation}
+                className="inline-flex items-center gap-2 rounded-xl bg-indigo-50 px-4 py-2.5 text-sm font-medium text-indigo-700 transition-all hover:bg-indigo-100 hover:shadow-sm disabled:opacity-50"
+              >
+                <Navigation className="h-4 w-4" />
+                {updatingLocation ? 'Obtention de la position...' : 'Mettre à jour ma position'}
               </button>
-              <p className="mt-2 text-xs text-slate-500">JPG, PNG, GIF. Max 5MB.</p>
             </div>
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  Région <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <MapPinned className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    value={profile.region}
+                    onChange={(e) => setProfile({ ...profile, region: e.target.value })}
+                    required
+                    placeholder="Ex: Tunis, Sousse, Sfax..."
+                    className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">Ville</label>
+                <input
+                  type="text"
+                  value={profile.address.city}
+                  onChange={(e) => setProfile({ ...profile, address: { ...profile.address, city: e.target.value } })}
+                  placeholder="Ex: Lac 2"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">Rue / Quartier</label>
+                <input
+                  type="text"
+                  value={profile.address.street}
+                  onChange={(e) => setProfile({ ...profile, address: { ...profile.address, street: e.target.value } })}
+                  placeholder="Ex: Rue de la Liberté"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">Code postal</label>
+                <input
+                  type="text"
+                  value={profile.address.postalCode}
+                  onChange={(e) => setProfile({ ...profile, address: { ...profile.address, postalCode: e.target.value } })}
+                  placeholder="Ex: 1000"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
+                />
+              </div>
+            </div>
+            {profile.location.latitude !== 0 && (
+              <div className="mt-4 rounded-xl bg-slate-50 p-3">
+                <p className="text-xs text-slate-500">
+                  <span className="font-medium">Position enregistrée:</span>{' '}
+                  {profile.location.latitude.toFixed(6)}°, {profile.location.longitude.toFixed(6)}°
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-slate-900"><User className="h-5 w-5" /> Informations personnelles</h2>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Prénom</label>
-              <input type="text" value={user?.firstName || ''} disabled className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500" />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Nom</label>
-              <input type="text" value={user?.lastName || ''} disabled className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500" />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Métier *</label>
-              <select value={profile.trade} onChange={(e) => setProfile({ ...profile, trade: e.target.value })} required className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none">
-                <option value="">Sélectionnez un métier</option>
-                {tradeOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Téléphone *</label>
-              <input type="tel" value={profile.phone} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} required placeholder="+216 XX XXX XXX" className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none" />
-            </div>
-            <div className="md:col-span-2">
-              <label className="mb-1 block text-sm font-medium text-slate-700">Description / Bio</label>
-              <textarea value={profile.description} onChange={(e) => setProfile({ ...profile, description: e.target.value })} rows="4" placeholder="Décrivez votre expérience, vos compétences..." className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none" />
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-slate-900"><MapPin className="h-5 w-5" /> Localisation</h2>
-          <div className="mb-4">
-            <button type="button" onClick={getCurrentLocation} disabled={updatingLocation} className="flex items-center gap-2 rounded-xl bg-indigo-50 px-4 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-100">
-              <Navigation className="h-4 w-4" /> {updatingLocation ? 'Obtention...' : 'Mettre à jour ma position'}
-            </button>
-          </div>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Région *</label>
-              <input type="text" value={profile.region} onChange={(e) => setProfile({ ...profile, region: e.target.value })} required placeholder="Ex: Tunis, Sousse, Sfax..." className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none" />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Ville</label>
-              <input type="text" value={profile.address.city} onChange={(e) => setProfile({ ...profile, address: { ...profile.address, city: e.target.value } })} placeholder="Ex: Lac 2" className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none" />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Rue / Quartier</label>
-              <input type="text" value={profile.address.street} onChange={(e) => setProfile({ ...profile, address: { ...profile.address, street: e.target.value } })} placeholder="Ex: Rue de la Liberté" className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none" />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Code postal</label>
-              <input type="text" value={profile.address.postalCode} onChange={(e) => setProfile({ ...profile, address: { ...profile.address, postalCode: e.target.value } })} placeholder="Ex: 1000" className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none" />
-            </div>
-          </div>
-          {profile.location.latitude !== 0 ? (
-            <div className="mt-4 rounded-xl bg-slate-50 p-3 text-sm text-slate-600">
-              <span className="font-medium">Position:</span> Lat: {profile.location.latitude.toFixed(6)}, Lng: {profile.location.longitude.toFixed(6)}
-            </div>
-          ) : null}
-        </div>
-
+        {/* Action Buttons */}
         <div className="flex gap-4">
-          <button type="button" onClick={() => navigate('/artisan')} className="flex-1 rounded-xl border border-slate-200 bg-white py-4 text-sm font-semibold text-slate-800 hover:bg-slate-50">Annuler</button>
-          <button type="submit" disabled={saving} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 py-4 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50">
-            {saving ? (<><Loader2 className="h-4 w-4 animate-spin" /> Enregistrement...</>) : (<><Save className="h-4 w-4" /> Enregistrer</>)}
+          <button
+            type="button"
+            onClick={() => navigate('/artisan')}
+            className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:shadow-sm"
+          >
+            Annuler
+          </button>
+          <button
+            type="submit"
+            disabled={saving}
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:from-indigo-700 hover:to-indigo-600 hover:shadow-md disabled:opacity-50"
+          >
+            {saving ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Enregistrement...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4" />
+                Enregistrer les modifications
+              </>
+            )}
           </button>
         </div>
       </form>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-slate-900"><Lock className="h-5 w-5" /> Reset password</h2>
-        <div className="grid gap-6 lg:grid-cols-2">
-          <div className="space-y-4">
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Mot de passe actuel</label>
-              <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none" placeholder="Votre mot de passe actuel" />
+      {/* Security Section */}
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white px-6 py-4">
+          <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900">
+            <Lock className="h-5 w-5 text-indigo-600" />
+            Sécurité du compte
+          </h2>
+          <p className="mt-1 text-xs text-slate-500">Gérez votre mot de passe et la sécurité de votre compte</p>
+        </div>
+        <div className="p-6">
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* Change Password Section */}
+            <div className="space-y-4">
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">Mot de passe actuel</label>
+                <div className="relative">
+                  <Key className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
+                    placeholder="Votre mot de passe actuel"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">Nouveau mot de passe</label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
+                    placeholder="Minimum 6 caractères"
+                  />
+                </div>
+              </div>
+              {pwErr && (
+                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">
+                  {pwErr}
+                </div>
+              )}
+              {pwMsg && (
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-700">
+                  {pwMsg}
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={onChangePassword}
+                disabled={pwLoading}
+                className="w-full rounded-xl bg-slate-800 px-4 py-2.5 text-sm font-semibold text-white transition-all hover:bg-slate-700 hover:shadow-md disabled:opacity-50"
+              >
+                {pwLoading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Mise à jour...
+                  </span>
+                ) : (
+                  'Changer le mot de passe'
+                )}
+              </button>
             </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Nouveau mot de passe</label>
-              <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none" placeholder="Minimum 6 caractères" />
-            </div>
-            {pwErr ? <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{pwErr}</div> : null}
-            {pwMsg ? <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{pwMsg}</div> : null}
-            <button type="button" onClick={onChangePassword} disabled={pwLoading} className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50">
-              {pwLoading ? 'Mise à jour...' : 'Changer le mot de passe'}
-            </button>
-          </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-            <div className="flex items-center gap-2 text-slate-900"><Mail className="h-4 w-4" /><span className="font-semibold">Lien de réinitialisation</span></div>
-            <p className="mt-2 text-sm text-slate-600">Envoyer un email de réinitialisation à <span className="font-medium">{user?.email || 'votre adresse email'}</span>.</p>
-            {resetErr ? <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{resetErr}</div> : null}
-            {resetMsg ? <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{resetMsg}</div> : null}
-            <button type="button" onClick={onSendResetLink} disabled={resetLoading} className="mt-4 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-100 disabled:opacity-50">
-              {resetLoading ? 'Envoi...' : 'Envoyer le lien'}
-            </button>
+            {/* Reset Password Link Section */}
+            <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-5">
+              <div className="flex items-center gap-2 text-slate-900">
+                <Mail className="h-4 w-4 text-indigo-600" />
+                <span className="font-semibold">Lien de réinitialisation</span>
+              </div>
+              <p className="mt-2 text-sm text-slate-600">
+                Envoyer un email de réinitialisation à{' '}
+                <span className="font-medium text-indigo-600">{user?.email || 'votre adresse email'}</span>
+              </p>
+              {resetErr && (
+                <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">
+                  {resetErr}
+                </div>
+              )}
+              {resetMsg && (
+                <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-700">
+                  {resetMsg}
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={onSendResetLink}
+                disabled={resetLoading}
+                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:shadow-sm disabled:opacity-50"
+              >
+                {resetLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Envoi...
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4" />
+                    Envoyer le lien
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>
