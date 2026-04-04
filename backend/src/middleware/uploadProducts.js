@@ -1,27 +1,11 @@
-const path = require('path');
-const fs = require('fs');
 const multer = require('multer');
 
-const uploadDir = path.join(process.cwd(), 'uploads', 'products');
-fs.mkdirSync(uploadDir, { recursive: true });
-
-const storage = multer.diskStorage({
-  destination: function (_req, _file, cb) {
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    const ext = path.extname(file.originalname || '').toLowerCase();
-    const safeExts = ['.png', '.jpg', '.jpeg', '.webp', '.pdf'];
-    const safeExt = safeExts.includes(ext) ? ext : '.jpg';
-    const name = `${Date.now()}-${Math.round(Math.random() * 1e9)}${safeExt}`;
-    cb(null, name);
-  },
-});
+const storage = multer.memoryStorage();
 
 function fileFilter(req, file, cb) {
   const mimetypes = {
     image: ['image/png', 'image/jpeg', 'image/webp'],
-    doc: ['application/pdf']
+    doc: ['application/pdf'],
   };
   const ok = mimetypes.image.includes(file.mimetype) || mimetypes.doc.includes(file.mimetype);
   if (!ok) return cb(new Error('Only images (png/jpg/webp) and PDF allowed.'));
@@ -33,8 +17,8 @@ const uploadProductMedia = multer({
   fileFilter,
   limits: {
     files: 10,
-    fileSize: 10 * 1024 * 1024, // 10MB
+    fileSize: 10 * 1024 * 1024,
   },
-}).array('media', 10); // media[] for images/docs
+}).array('media', 10);
 
-module.exports = { uploadProductMedia, uploadDir };
+module.exports = { uploadProductMedia };

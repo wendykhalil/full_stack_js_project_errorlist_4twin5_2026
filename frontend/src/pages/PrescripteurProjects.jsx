@@ -24,6 +24,22 @@ import { useAuth } from "../auth/AuthContext";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 const ASSET_BASE = API_URL.replace(/\/api\/?$/, "");
 
+
+function resolveAssetUrl(path) {
+  if (!path) return "";
+  const value = String(path).trim();
+  if (!value) return "";
+  if (/^https?:\/\//i.test(value) || value.startsWith("data:")) return value;
+  if (value.startsWith("//")) return `https:${value}`;
+  return value.startsWith("/") ? `${ASSET_BASE}${value}` : `${ASSET_BASE}/${value}`;
+}
+
+function normalizeImageUrl(image) {
+  if (!image) return "";
+  if (typeof image === "string") return resolveAssetUrl(image);
+  return resolveAssetUrl(image.url || image.path || image.secure_url || "");
+}
+
 const STATUS_META = {
   ACTIVE: { tone: "bg-indigo-100 text-indigo-700", key: "artisanProjects.status.active", fallback: "Active" },
   PENDING: { tone: "bg-orange-100 text-orange-700", key: "artisanProjects.status.pending", fallback: "Pending" },
@@ -52,10 +68,13 @@ const StatusPill = ({ status }) => {
 
 function ActionMenu({ open, onToggle, onView, onMessage, onCall, canMessage, canCall }) {
   return (
-    <div className="relative">
+    <div className="relative" onClick={(e) => e.stopPropagation()}>
       <button
         type="button"
-        onClick={onToggle}
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggle();
+        }}
         className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-50"
         aria-label="Project actions"
       >
@@ -64,12 +83,12 @@ function ActionMenu({ open, onToggle, onView, onMessage, onCall, canMessage, can
 
       {open ? (
         <div className="absolute right-0 top-12 z-20 w-48 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl">
-          <button onClick={onView} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50">
+          <button onClick={(e) => { e.stopPropagation(); onView(); }} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50">
             <Eye className="h-4 w-4" />
             Voir détails
           </button>
           <button
-            onClick={onMessage}
+            onClick={(e) => { e.stopPropagation(); onMessage(); }}
             disabled={!canMessage}
             className={`flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm ${
               canMessage ? "text-slate-700 hover:bg-slate-50" : "cursor-not-allowed text-slate-400"
@@ -79,7 +98,7 @@ function ActionMenu({ open, onToggle, onView, onMessage, onCall, canMessage, can
             Message
           </button>
           <button
-            onClick={onCall}
+            onClick={(e) => { e.stopPropagation(); onCall(); }}
             disabled={!canCall}
             className={`flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm ${
               canCall ? "text-slate-700 hover:bg-slate-50" : "cursor-not-allowed text-slate-400"
@@ -104,7 +123,7 @@ function DetailsModal({ open, onClose, project, onMessage }) {
   };
 
   const images = Array.isArray(project.images) ? project.images.filter(Boolean) : [];
-  const cover = images[0]?.url ? `${ASSET_BASE}${images[0].url}` : null;
+  const cover = normalizeImageUrl(images[0]);
   const artisanFullName =
     `${project.artisanId?.firstName || ""} ${project.artisanId?.lastName || ""}`.trim() ||
     project.artisanName ||
@@ -145,7 +164,7 @@ function DetailsModal({ open, onClose, project, onMessage }) {
                 <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
                   {images.slice(0, 8).map((img, idx) => (
                     <div key={`${img.url || "img"}-${idx}`} className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
-                      <img src={`${ASSET_BASE}${img.url}`} alt={img.originalName || "project"} className="h-28 w-full object-cover" />
+                      <img src={normalizeImageUrl(img)} alt={img.originalName || "project"} className="h-28 w-full object-cover" />
                     </div>
                   ))}
                 </div>
@@ -237,7 +256,7 @@ function DetailsModal({ open, onClose, project, onMessage }) {
 function ProjectCard({ project, onView, onMessage, activeMenuId, setActiveMenuId }) {
   const { t } = useTranslation();
   const name = `${project.artisanId?.firstName || ""} ${project.artisanId?.lastName || ""}`.trim() || "—";
-  const cover = project.images?.[0]?.url ? `${ASSET_BASE}${project.images[0].url}` : null;
+  const cover = normalizeImageUrl(project.images?.[0]);
   const menuOpen = activeMenuId === project._id;
 
   return (

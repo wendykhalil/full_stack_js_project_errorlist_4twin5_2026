@@ -337,6 +337,9 @@ async function updateProfile(userId, profileData) {
   if (profileData.phone !== undefined) {
     user.phone = profileData.phone.trim() || user.phone;
   }
+  if (profileData.profilePicture !== undefined) {
+    user.profilePicture = String(profileData.profilePicture || '').trim();
+  }
 
   await user.save();
   console.log('User saved');

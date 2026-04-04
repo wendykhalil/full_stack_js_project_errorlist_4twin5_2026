@@ -1,4 +1,5 @@
 const Project = require('../../models/Project');
+const { uploadBufferToCloudinary } = require('../../config/cloudinary');
 
 function getUserId(req) {
   return req.user?._id || req.user?.id || req.user?.sub || req.user?.userId;
@@ -26,15 +27,25 @@ function toStringArray(v) {
     .filter(Boolean);
 }
 
-function mapFilesToImages(req) {
+async function mapFilesToImages(req) {
   const files = req.files || [];
-  return files.map((f) => ({
-    url: `/uploads/projects/${f.filename}`,
-    filename: f.filename,
-    originalName: f.originalname,
-    mimetype: f.mimetype,
-    size: f.size,
-  }));
+  const results = [];
+
+  for (const f of files) {
+    const uploaded = await uploadBufferToCloudinary(f.buffer, {
+      folder: 'bmp/projects/images',
+      resourceType: 'image',
+    });
+    results.push({
+      url: uploaded.secure_url,
+      filename: uploaded.public_id || '',
+      originalName: f.originalname,
+      mimetype: f.mimetype,
+      size: f.size,
+    });
+  }
+
+  return results;
 }
 
 /**
@@ -62,7 +73,7 @@ async function createProject(req, res, next) {
       return res.status(400).json({ message: 'Title is required' });
     }
 
-    const images = mapFilesToImages(req);
+    const images = await mapFilesToImages(req);
 
     const doc = await Project.create({
       artisanId: getUserId(req),
@@ -225,7 +236,7 @@ async function updateProject(req, res, next) {
     if (String(clearImages).toLowerCase() === 'true') {
       project.images = [];
     }
-    const newImages = mapFilesToImages(req);
+    const newImages = await mapFilesToImages(req);
     if (newImages.length) {
       project.images = [...(project.images || []), ...newImages].slice(0, 12);
     }

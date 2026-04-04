@@ -626,7 +626,7 @@ useEffect(() => {
               </>
             )}
 
-            /* Supplier‑only fields */}
+            {/* Supplier-only fields */}
             {isSupplier && (
               <>
                 <div className="sm:col-span-2">
@@ -761,7 +761,6 @@ useEffect(() => {
                     </>
                   )}
                 </div>
-                )}
               </>
             )}
 

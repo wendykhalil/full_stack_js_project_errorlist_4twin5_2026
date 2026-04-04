@@ -3,6 +3,7 @@ const AuthLog = require('../../models/AuthLog');
 const ActivityLog = require('../../models/ActivityLog');
 const { notify } = require('../../utils/notify');
 const { lookupIpGeo, isPrivateOrLocal } = require('../../utils/ipGeo');
+const { uploadBufferToCloudinary } = require('../../config/cloudinary');
 
 function normalizeIp(ip) {
   const raw = String(ip || '').trim();
@@ -108,12 +109,10 @@ async function updateProfile(req, res, next) {
     console.log('=== UPDATE PROFILE DEBUG ===');
     console.log('req.user._id:', req.user._id);
     console.log('req.body:', req.body);
-    console.log('req.file:', req.file);
-    
-    // Récupérer les données
+    console.log('req.files:', req.files);
+
     let profileData = req.body;
-    
-    // Si les données sont stringifiées dans 'data'
+
     if (req.body.data) {
       try {
         profileData = JSON.parse(req.body.data);
@@ -122,11 +121,24 @@ async function updateProfile(req, res, next) {
         console.error('Error parsing data:', e);
       }
     }
-    
-    // Ajouter le logo si uploadé
-    if (req.file) {
-      profileData.logo = `/uploads/${req.file.filename}`;
-      console.log('Logo uploaded:', profileData.logo);
+
+    const logoFile = req.files?.logo?.[0];
+    const profilePictureFile = req.files?.profilePicture?.[0];
+
+    if (logoFile) {
+      const uploadedLogo = await uploadBufferToCloudinary(logoFile.buffer, {
+        folder: 'bmp/profile/logos',
+      });
+      profileData.logo = uploadedLogo.secure_url;
+      console.log('Logo uploaded to Cloudinary:', profileData.logo);
+    }
+
+    if (profilePictureFile) {
+      const uploadedProfilePicture = await uploadBufferToCloudinary(profilePictureFile.buffer, {
+        folder: 'bmp/profile/pictures',
+      });
+      profileData.profilePicture = uploadedProfilePicture.secure_url;
+      console.log('Profile picture uploaded to Cloudinary:', profileData.profilePicture);
     }
     
     console.log('Final profile data:', profileData);

@@ -1,22 +1,6 @@
-const path = require('path');
-const fs = require('fs');
 const multer = require('multer');
 
-const uploadDir = path.join(process.cwd(), 'uploads', 'projects');
-fs.mkdirSync(uploadDir, { recursive: true });
-
-const storage = multer.diskStorage({
-  destination: function (_req, _file, cb) {
-    cb(null, uploadDir);
-  },
-  filename: function (_req, file, cb) {
-    // keep it simple & safe: <timestamp>-<random>.<ext>
-    const ext = path.extname(file.originalname || '').toLowerCase();
-    const safeExt = ['.png', '.jpg', '.jpeg', '.webp'].includes(ext) ? ext : '.jpg';
-    const name = `${Date.now()}-${Math.round(Math.random() * 1e9)}${safeExt}`;
-    cb(null, name);
-  },
-});
+const storage = multer.memoryStorage();
 
 function fileFilter(_req, file, cb) {
   const ok = ['image/png', 'image/jpeg', 'image/webp'].includes(file.mimetype);
@@ -29,8 +13,8 @@ const uploadProjectImages = multer({
   fileFilter,
   limits: {
     files: 6,
-    fileSize: 5 * 1024 * 1024, // 5MB
+    fileSize: 5 * 1024 * 1024,
   },
 }).array('images', 6);
 
-module.exports = { uploadProjectImages, uploadDir };
+module.exports = { uploadProjectImages };

@@ -1,6 +1,19 @@
 const portfolioService = require('./portfolio.service');
 const apiResponse = require('../../utils/apiResponse');
 const Portfolio = require('../../models/Portfolio'); // ← AJOUTER CETTE LIGNE
+const { uploadBufferToCloudinary } = require('../../config/cloudinary');
+
+async function uploadPortfolioImages(files = []) {
+  const uploaded = [];
+  for (const file of files) {
+    const result = await uploadBufferToCloudinary(file.buffer, {
+      folder: 'bmp/portfolio/images',
+      resourceType: 'image',
+    });
+    uploaded.push(result.secure_url);
+  }
+  return uploaded;
+}
 
 // Ajouter un projet
 async function addProject(req, res) {
@@ -9,7 +22,7 @@ async function addProject(req, res) {
     console.log('Project data:', req.body);
 
     // Récupérer les images uploadées
-    const images = req.files ? req.files.map(f => `/uploads/${f.filename}`) : [];
+    const images = await uploadPortfolioImages(req.files || []);
 
     const project = await portfolioService.addPortfolioProject(
       req.user._id,
@@ -77,7 +90,7 @@ async function getProject(req, res) {
 async function updateProject(req, res) {
   try {
     const { id } = req.params;
-    const images = req.files ? req.files.map(f => `/uploads/${f.filename}`) : [];
+    const images = await uploadPortfolioImages(req.files || []);
 
     const project = await portfolioService.updateProject(
       id,

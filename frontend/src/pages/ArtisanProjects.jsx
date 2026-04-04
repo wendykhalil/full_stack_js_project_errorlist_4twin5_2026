@@ -30,6 +30,22 @@ import Pagination from "../components/Pagination";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 const ASSET_BASE = API_URL.replace(/\/api\/?$/, "");
 
+
+function resolveAssetUrl(path) {
+  if (!path) return "";
+  const value = String(path).trim();
+  if (!value) return "";
+  if (/^https?:\/\//i.test(value) || value.startsWith("data:")) return value;
+  if (value.startsWith("//")) return `https:${value}`;
+  return value.startsWith("/") ? `${ASSET_BASE}${value}` : `${ASSET_BASE}/${value}`;
+}
+
+function normalizeImageUrl(image) {
+  if (!image) return "";
+  if (typeof image === "string") return resolveAssetUrl(image);
+  return resolveAssetUrl(image.url || image.path || image.secure_url || "");
+}
+
 const STATUS_META = {
   ACTIVE: { tone: "bg-indigo-100 text-indigo-700", key: "artisanProjects.status.active" },
   PENDING: { tone: "bg-orange-100 text-orange-700", key: "artisanProjects.status.pending" },
@@ -252,8 +268,8 @@ function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t 
 
 function ProjectDetails({ project }) {
   if (!project) return null;
-  const gallery = (project.images || []).map((image) => image?.url).filter(Boolean);
-  const cover = gallery[0] ? `${ASSET_BASE}${gallery[0]}` : null;
+  const gallery = (project.images || []).map(normalizeImageUrl).filter(Boolean);
+  const cover = gallery[0] || null;
   return (
     <div className="space-y-6">
       <div className="grid gap-6 lg:grid-cols-[420px,1fr]">
@@ -265,7 +281,7 @@ function ProjectDetails({ project }) {
             <div className="grid grid-cols-3 gap-3">
               {gallery.slice(0, 6).map((url, idx) => (
                 <div key={url + idx} className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
-                  <img src={`${ASSET_BASE}${url}`} alt={`${project.title} ${idx + 1}`} className="h-24 w-full object-cover" />
+                  <img src={url} alt={`${project.title} ${idx + 1}`} className="h-24 w-full object-cover" />
                 </div>
               ))}
             </div>
@@ -537,7 +553,7 @@ export default function ArtisanProjects() {
             <div className="rounded-2xl border border-slate-200 bg-white p-6 text-slate-600">No projects yet.</div>
           ) : (
             paginated.map((p) => {
-              const cover = p.images?.[0]?.url ? `${ASSET_BASE}${p.images[0].url}` : null;
+              const cover = normalizeImageUrl(p.images?.[0]);
               return (
                 <div key={p._id} className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
                   <div className="grid gap-0 lg:grid-cols-[360px,1fr]">

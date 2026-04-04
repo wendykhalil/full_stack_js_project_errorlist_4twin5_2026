@@ -1,5 +1,6 @@
 const artisanProfileService = require('./artisanProfile.service');
 const apiResponse = require('../../utils/apiResponse');
+const { uploadBufferToCloudinary } = require('../../config/cloudinary');
 
 // Mettre à jour le profil artisan
 async function updateProfile(req, res) {
@@ -11,7 +12,11 @@ async function updateProfile(req, res) {
     
     // Gérer l'upload d'image si présent
     if (req.file) {
-      profileData.profileImage = `/uploads/${req.file.filename}`;
+      const uploaded = await uploadBufferToCloudinary(req.file.buffer, {
+        folder: 'bmp/artisan/profile',
+        resourceType: 'image',
+      });
+      profileData.profileImage = uploaded.secure_url;
     }
 
     // Parser les coordonnées si fournies

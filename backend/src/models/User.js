@@ -45,6 +45,12 @@ const userSchema = new mongoose.Schema(
       maxlength: 30,
     },
 
+    profilePicture: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+
     role: {
       type: String,
       enum: ["REGISTER_ROLE","ARTISAN","PRESCRIPTEUR","SUPPLIER","ADMIN"],
