@@ -15,13 +15,14 @@ import {
   Plus,
   Receipt,
   Search,
+  Sparkles,
   Trash2,
   Wallet,
   X,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import SimpleFooter from "../components/Footer";
-import { apiFetch, getMySubscription } from "../auth/api";
+import { apiFetch, getMySubscription, smartSearchAI, suggestProjectWithAI } from "../auth/api";
 import { useAuth } from "../auth/AuthContext";
 import SubscriptionAlert from "../components/SubscriptionAlert";
 import AIAssistantModal from "../components/ai-assistant/AIAssistantModal";
@@ -383,6 +384,10 @@ export default function ArtisanProjects() {
   const [checkingSubscription, setCheckingSubscription] = useState(true);
   const [showSubscriptionAlert, setShowSubscriptionAlert] = useState(false);
   const [isAIOpen, setIsAIOpen] = useState(false);
+  const [smartProjectIds, setSmartProjectIds] = useState(null);
+  const [smartSuggestions, setSmartSuggestions] = useState([]);
+  const [smartLoading, setSmartLoading] = useState(false);
+  const [projectSuggestLoading, setProjectSuggestLoading] = useState(false);
 
   const isSubscribed = subscription?.plan && subscription.plan !== 'FREE' && subscription.status === 'ACTIVE';
 
@@ -422,7 +427,7 @@ export default function ArtisanProjects() {
 
   const filtered = useMemo(() => {
     const qq = q.trim().toLowerCase();
-    return (items || []).filter((p) => {
+    let base = (items || []).filter((p) => {
       const haystack = [p.title, p.category, p.location?.city, p.location?.address, p.description, ...(p.materials || [])]
         .filter(Boolean)
         .join(' ')
@@ -431,7 +436,16 @@ export default function ArtisanProjects() {
       const okS = statusFilter === 'ALL' || p.status === statusFilter;
       return okQ && okS;
     });
-  }, [items, q, statusFilter]);
+
+    if (smartProjectIds?.length) {
+      const rank = new Map(smartProjectIds.map((id, index) => [String(id), index]));
+      base = base
+        .filter((item) => rank.has(String(item._id)))
+        .sort((a, b) => rank.get(String(a._id)) - rank.get(String(b._id)));
+    }
+
+    return base;
+  }, [items, q, statusFilter, smartProjectIds]);
 
   const pages = Math.max(1, Math.ceil(filtered.length / perPage));
   const paginated = filtered.slice((page - 1) * perPage, page * perPage);
@@ -439,6 +453,69 @@ export default function ArtisanProjects() {
   useEffect(() => {
     setPage(1);
   }, [q, statusFilter]);
+
+
+  const runSmartSearch = async () => {
+    if (!q.trim()) {
+      setSmartProjectIds(null);
+      setSmartSuggestions([]);
+      return;
+    }
+    try {
+      setSmartLoading(true);
+      const response = await smartSearchAI({ q, scope: 'projects', limit: 12 });
+      const projects = response?.data?.projects || [];
+      setSmartProjectIds(projects.map((item) => item._id));
+      setSmartSuggestions(response?.data?.suggestions || []);
+    } catch (error) {
+      setErr(error.message || 'Recherche IA impossible');
+    } finally {
+      setSmartLoading(false);
+    }
+  };
+
+  const clearSmartSearch = () => {
+    setSmartProjectIds(null);
+    setSmartSuggestions([]);
+  };
+
+  const autofillProjectForm = async () => {
+    const hasContext = [form.title, form.category, form.description, form.city].some((value) => String(value || '').trim());
+    if (!hasContext) {
+      setErr('Ajoutez au moins un titre, une catégorie ou une description pour lancer les suggestions IA.');
+      return;
+    }
+    try {
+      setProjectSuggestLoading(true);
+      setErr('');
+      const response = await suggestProjectWithAI({
+        token,
+        payload: {
+          title: form.title,
+          category: form.category,
+          description: form.description,
+          city: form.city,
+          budgetTND: form.budgetTND,
+          surfaceM2: form.surfaceM2,
+        },
+      });
+      const data = response?.data || {};
+      setForm((prev) => ({
+        ...prev,
+        title: data.title || prev.title,
+        category: data.category || prev.category,
+        description: data.description || prev.description,
+        city: data.city || prev.city,
+        budgetTND: data.budgetTND ?? prev.budgetTND,
+        surfaceM2: data.surfaceM2 ?? prev.surfaceM2,
+        materials: Array.isArray(data.materials) && data.materials.length ? data.materials : prev.materials,
+      }));
+    } catch (error) {
+      setErr(error.message || 'Suggestions IA indisponibles');
+    } finally {
+      setProjectSuggestLoading(false);
+    }
+  };
 
   const guardSubscription = (callback) => {
     if (!isSubscribed) {
@@ -529,9 +606,15 @@ export default function ArtisanProjects() {
         </div>
 
         <div className="mt-6 grid gap-4 lg:grid-cols-[1fr,260px]">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('artisanProjects.searchPlaceholder')} className="w-full rounded-2xl border border-slate-200 bg-white py-3.5 pl-11 pr-4 text-sm outline-none ring-indigo-500 focus:ring-2" />
+          <div className="space-y-3">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input value={q} onChange={(e) => { setQ(e.target.value); if (!e.target.value.trim()) clearSmartSearch(); }} placeholder={t('artisanProjects.searchPlaceholder')} className="w-full rounded-2xl border border-slate-200 bg-white py-3.5 pl-11 pr-36 text-sm outline-none ring-indigo-500 focus:ring-2" />
+              <button type="button" onClick={runSmartSearch} className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-3 py-2 text-xs font-semibold text-white hover:bg-indigo-700">
+                {smartLoading ? <Sparkles className="h-3.5 w-3.5 animate-pulse" /> : <Sparkles className="h-3.5 w-3.5" />} Recherche IA
+              </button>
+            </div>
+            {smartSuggestions.length ? <div className="flex flex-wrap gap-2">{smartSuggestions.map((suggestion) => <button key={suggestion} type="button" onClick={() => setQ(suggestion)} className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-100">{suggestion}</button>)}</div> : null}
           </div>
           <div className="relative">
             <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -622,6 +705,15 @@ export default function ArtisanProjects() {
 
         <Modal open={isCreateOpen} title={t('artisanProjects.newProjectButton')} onClose={() => setIsCreateOpen(false)} size="xl">
           <form onSubmit={onCreate} className="space-y-6">
+            <div className="flex items-center justify-between rounded-2xl border border-indigo-100 bg-indigo-50 px-4 py-3">
+              <div>
+                <div className="text-sm font-semibold text-slate-900">Assistant de suggestion</div>
+                <div className="text-xs text-slate-600">Laissez l’IA enrichir la description, le budget, la surface et les matériaux selon votre brief.</div>
+              </div>
+              <button type="button" onClick={autofillProjectForm} disabled={projectSuggestLoading} className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60">
+                <Sparkles className={`h-4 w-4 ${projectSuggestLoading ? 'animate-pulse' : ''}`} /> Remplir avec IA
+              </button>
+            </div>
             <ProjectFormFields mode="create" form={form} setForm={setForm} images={images} setImages={setImages} editing={editing} t={t} />
             <div className="flex items-center justify-end gap-3 pt-2">
               <button type="button" onClick={() => { setIsCreateOpen(false); setForm(emptyForm); setImages([]); }} className="rounded-xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100">Cancel</button>
@@ -632,6 +724,15 @@ export default function ArtisanProjects() {
 
         <Modal open={isEditOpen} title="Edit project" onClose={() => setIsEditOpen(false)} size="xl">
           <form onSubmit={onEdit} className="space-y-6">
+            <div className="flex items-center justify-between rounded-2xl border border-indigo-100 bg-indigo-50 px-4 py-3">
+              <div>
+                <div className="text-sm font-semibold text-slate-900">Optimisation IA</div>
+                <div className="text-xs text-slate-600">Rafraîchissez votre texte, ajustez le budget conseillé et enrichissez les matériaux.</div>
+              </div>
+              <button type="button" onClick={autofillProjectForm} disabled={projectSuggestLoading} className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60">
+                <Sparkles className={`h-4 w-4 ${projectSuggestLoading ? 'animate-pulse' : ''}`} /> Optimiser avec IA
+              </button>
+            </div>
             <ProjectFormFields mode="edit" form={form} setForm={setForm} images={images} setImages={setImages} editing={editing} t={t} />
             <div className="flex items-center justify-end gap-3 pt-2">
               <button type="button" onClick={() => { setIsEditOpen(false); setEditing(null); setForm(emptyForm); setImages([]); }} className="rounded-xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100">Cancel</button>

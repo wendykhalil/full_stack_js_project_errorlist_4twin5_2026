@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, FileSignature, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Bot, FileSignature, Loader2, Plus, Sparkles, Trash2 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import SimpleFooter from "../components/Footer";
+import { apiFetch, suggestQuoteFromProject } from "../auth/api";
 
 const emptyLine = { description: "", quantity: 1, unitPrice: 0 };
 
@@ -14,16 +15,14 @@ export default function ArtisanDevisCreate() {
   const [projectId, setProjectId] = useState(state?.projectId || "");
   const [lines, setLines] = useState([{ ...emptyLine }]);
   const [loading, setLoading] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
   const [info, setInfo] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
     const run = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/projects/my', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await response.json();
+        const data = await apiFetch('/projects/my', { token });
         setProjects(data?.items || []);
       } catch {
         setProjects([]);
@@ -32,12 +31,16 @@ export default function ArtisanDevisCreate() {
     if (token) run();
   }, [token]);
 
-
   useEffect(() => {
     if (state?.projectId && projects.some((project) => project._id === state.projectId)) {
       setProjectId(state.projectId);
     }
   }, [projects, state]);
+
+  const selectedProject = useMemo(
+    () => projects.find((project) => project._id === projectId) || null,
+    [projects, projectId]
+  );
 
   const totals = useMemo(() => {
     const subTotal = lines.reduce((sum, line) => sum + Number(line.quantity || 0) * Number(line.unitPrice || 0), 0);
@@ -49,22 +52,45 @@ export default function ArtisanDevisCreate() {
     setLines((prev) => prev.map((line, i) => (i === index ? { ...line, [field]: value } : line)));
   };
 
+  const autofillWithAI = async () => {
+    if (!projectId) {
+      setError('Sélectionnez d\'abord un projet.');
+      return;
+    }
+    setAiLoading(true);
+    setError('');
+    setInfo('');
+    try {
+      const response = await suggestQuoteFromProject({ token, projectId });
+      const aiData = response?.data || {};
+      const suggestedLines = (aiData.lines || []).map((line) => ({
+        description: line.description || '',
+        quantity: Number(line.quantity || 1),
+        unitPrice: Number(line.unitPrice || 0),
+      }));
+      if (suggestedLines.length) {
+        setLines(suggestedLines);
+      }
+      setInfo(aiData.summary || 'Lignes de devis générées avec l’assistant IA.');
+    } catch (err) {
+      setError(err.message || 'Génération IA impossible');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   const submit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setInfo("");
     setError("");
     try {
-      const response = await fetch('http://localhost:5000/api/documents/quotes', {
+      const response = await apiFetch('/documents/quotes', {
+        token,
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ projectId, lines }),
+        body: { projectId, lines },
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data?.message || 'Création du devis impossible');
+      if (!response?.ok) throw new Error(response?.message || 'Création du devis impossible');
       setInfo('Devis généré avec succès.');
       setTimeout(() => navigate('/artisan/factures'), 900);
     } catch (err) {
@@ -86,10 +112,20 @@ export default function ArtisanDevisCreate() {
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-50 text-orange-600">
               <FileSignature className="h-6 w-6" />
             </div>
-            <div>
+            <div className="flex-1">
               <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Créer un devis</h1>
-              <p className="mt-1 text-sm text-slate-500">Générez un devis directement à partir de l'identifiant du projet.</p>
+              <p className="mt-1 text-sm text-slate-500">Générez un devis professionnel et laissez l’IA vous proposer des lignes prêtes à ajuster.</p>
               {state?.projectTitle ? <p className="mt-2 inline-flex rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">Projet sélectionné: {state.projectTitle}</p> : null}
+            </div>
+          </div>
+
+          <div className="mt-6 rounded-2xl border border-indigo-100 bg-indigo-50/70 p-4 text-sm text-slate-700">
+            <div className="flex items-start gap-3">
+              <div className="rounded-xl bg-white p-2 text-indigo-600 shadow-sm"><Bot className="h-4 w-4" /></div>
+              <div className="flex-1">
+                <p className="font-semibold text-slate-900">Assistant devis</p>
+                <p className="mt-1 text-slate-600">Choisissez un projet puis cliquez sur <strong>Auto-remplir avec IA</strong> pour générer une base réaliste de prestations, matériaux et main d’œuvre.</p>
+              </div>
             </div>
           </div>
 
@@ -99,9 +135,27 @@ export default function ArtisanDevisCreate() {
               <select value={projectId} onChange={(e) => setProjectId(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none" required>
                 <option value="">Sélectionner un projet</option>
                 {projects.map((project) => (
-                  <option key={project._id} value={project._id}>{project.title} — {project._id}</option>
+                  <option key={project._id} value={project._id}>{project.title} — {project.location?.city || 'Sans ville'}</option>
                 ))}
               </select>
+              {selectedProject ? (
+                <div className="mt-3 rounded-2xl bg-slate-50 p-4 text-xs text-slate-600">
+                  <div className="grid gap-3 md:grid-cols-3">
+                    <div><span className="font-semibold text-slate-900">Catégorie:</span> {selectedProject.category || '—'}</div>
+                    <div><span className="font-semibold text-slate-900">Budget:</span> {selectedProject.budgetTND ? `${Number(selectedProject.budgetTND).toLocaleString()} TND` : '—'}</div>
+                    <div><span className="font-semibold text-slate-900">Surface:</span> {selectedProject.surfaceM2 ? `${selectedProject.surfaceM2} m²` : '—'}</div>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <button type="button" onClick={autofillWithAI} disabled={!projectId || aiLoading} className="inline-flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm font-semibold text-indigo-700 hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-60">
+                {aiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Auto-remplir avec IA
+              </button>
+              <button type="button" onClick={() => setLines((prev) => [...prev, { ...emptyLine }])} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+                <Plus className="h-4 w-4" /> Ajouter une ligne
+              </button>
             </div>
 
             <div className="space-y-3">
@@ -116,10 +170,6 @@ export default function ArtisanDevisCreate() {
                 </div>
               ))}
             </div>
-
-            <button type="button" onClick={() => setLines((prev) => [...prev, { ...emptyLine }])} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-              <Plus className="h-4 w-4" /> Ajouter une ligne
-            </button>
 
             <div className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-700">
               <div className="flex justify-between"><span>Sous-total</span><strong>{totals.subTotal.toFixed(3)} TND</strong></div>

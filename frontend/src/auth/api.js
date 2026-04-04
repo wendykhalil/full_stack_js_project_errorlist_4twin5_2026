@@ -227,3 +227,33 @@ export async function getArtisanDashboardSummary({ token }) {
 export async function getAdminDashboardSummary({ token }) {
   return apiFetch('/admin/dashboard-summary', { token });
 }
+
+
+export async function suggestProjectWithAI({ token, payload }) {
+  return apiFetch('/ai/suggest/project', {
+    token,
+    method: 'POST',
+    body: payload,
+  });
+}
+
+export async function suggestProductWithAI({ token, payload }) {
+  return apiFetch('/ai/suggest/product', {
+    token,
+    method: 'POST',
+    body: payload,
+  });
+}
+
+export async function suggestQuoteFromProject({ token, projectId }) {
+  return apiFetch('/ai/quote/from-project', {
+    token,
+    method: 'POST',
+    body: { projectId },
+  });
+}
+
+export async function smartSearchAI({ q, scope = 'all', limit = 8 } = {}) {
+  const params = new URLSearchParams({ q, scope, limit });
+  return apiFetch(`/ai/smart-search?${params}`);
+}

@@ -10,11 +10,12 @@ import {
   Pencil,
   Trash2,
   Bot,
+  Sparkles,
 } from "lucide-react";
 import SimpleFooter from "../components/Footer";
 import { useTranslation } from 'react-i18next';
 import { useAuth } from "../auth/AuthContext";
-import { getMyProducts, getSupplierStats, deleteProduct, createProduct } from "../auth/api.js";
+import { getMyProducts, getSupplierStats, deleteProduct, createProduct, smartSearchAI } from "../auth/api.js";
 import AIProductAssistantModal from '../components/ai-assistant-product/AIProductAssistantModal';
 
 const StatCard = ({ title, value, icon, iconBg, iconFg }) => (
@@ -75,6 +76,9 @@ export default function FournisseurProduits() {
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const [isAIOpen, setIsAIOpen] = useState(false);
+  const [smartProductIds, setSmartProductIds] = useState(null);
+  const [smartSuggestions, setSmartSuggestions] = useState([]);
+  const [smartLoading, setSmartLoading] = useState(false);
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -86,6 +90,12 @@ export default function FournisseurProduits() {
       else if (data?.data?.products) productsArray = data.data.products;
       else if (Array.isArray(data)) productsArray = data;
       else if (data?.data && Array.isArray(data.data)) productsArray = data.data;
+      if (smartProductIds?.length) {
+        const rank = new Map(smartProductIds.map((id, index) => [String(id), index]));
+        productsArray = productsArray
+          .filter((item) => rank.has(String(item._id)))
+          .sort((a, b) => rank.get(String(a._id)) - rank.get(String(b._id)));
+      }
       setProducts(productsArray);
       
       if (page === 1) {
@@ -102,11 +112,39 @@ export default function FournisseurProduits() {
     } finally {
       setLoading(false);
     }
-  }, [token, page, search]);
+  }, [token, page, search, smartProductIds]);
 
   useEffect(() => {
     if (token) fetchProducts();
   }, [fetchProducts, token]);
+
+
+  const runSmartSearch = async () => {
+    if (!search.trim()) {
+      setSmartProductIds(null);
+      setSmartSuggestions([]);
+      fetchProducts();
+      return;
+    }
+    try {
+      setSmartLoading(true);
+      const response = await smartSearchAI({ q: search, scope: 'products', limit: 20 });
+      const ids = (response?.data?.products || []).map((item) => item._id);
+      setSmartProductIds(ids);
+      setSmartSuggestions(response?.data?.suggestions || []);
+    } catch (error) {
+      setError(error.message || 'Recherche IA indisponible');
+    } finally {
+      setSmartLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!search.trim()) {
+      setSmartProductIds(null);
+      setSmartSuggestions([]);
+    }
+  }, [search]);
 
   const handleDelete = async (id) => {
     if (!window.confirm(t('confirmDelete') || 'Delete this product?')) return;
@@ -162,15 +200,21 @@ export default function FournisseurProduits() {
       <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <h2 className="text-lg font-semibold text-slate-900">{t('fournisseurProduits.tableTitle')}</h2>
-          <div className="relative w-full md:w-72">
-            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              placeholder={t('fournisseurProduits.searchPlaceholder')}
-              value={search}
-              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-              className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-4 text-sm focus:border-indigo-500 focus:outline-none"
-            />
+          <div className="w-full md:w-[26rem]">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder={t('fournisseurProduits.searchPlaceholder')}
+                value={search}
+                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-28 text-sm focus:border-indigo-500 focus:outline-none"
+              />
+              <button type="button" onClick={runSmartSearch} className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-xs font-semibold text-white hover:bg-indigo-700">
+                <Sparkles className={`h-3.5 w-3.5 ${smartLoading ? 'animate-pulse' : ''}`} /> IA
+              </button>
+            </div>
+            {smartSuggestions.length ? <div className="mt-2 flex flex-wrap gap-2">{smartSuggestions.map((suggestion) => <button key={suggestion} type="button" onClick={() => setSearch(suggestion)} className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-100">{suggestion}</button>)}</div> : null}
           </div>
         </div>
 

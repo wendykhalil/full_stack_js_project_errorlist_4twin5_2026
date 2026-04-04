@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { detectCategory, generateDescription, suggestPriceAndStock } from './aiProductConfig';
-import { getSupplierCategories } from '../../auth/api';
+import { getSupplierCategories, suggestProductWithAI } from '../../auth/api';
 
 export function useAIProductAssistant(onComplete, onCancel, token) {
   const [messages, setMessages] = useState([]);
@@ -196,11 +196,40 @@ export function useAIProductAssistant(onComplete, onCancel, token) {
         setCurrentStep(2);
         askManualDescription();
       } else if (lowerAnswer === 'generate') {
-        const generatedDesc = generateDescription(answers.name, answers.categoryName || 'général');
-        setAnswers(prev => ({ ...prev, description: generatedDesc }));
-        addMessage('ai', `📝 Description générée:\n${generatedDesc}`);
-        const suggestions = suggestPriceAndStock(answers.name);
-        setAnswers(prev => ({ ...prev, price: suggestions.price, stock: suggestions.stock }));
+        let generatedDesc = generateDescription(answers.name, answers.categoryName || 'général');
+        let suggestions = suggestPriceAndStock(answers.name);
+
+        try {
+          const aiRes = await suggestProductWithAI({
+            token,
+            payload: {
+              name: answers.name,
+              categoryName: answers.categoryName,
+              description: answers.description,
+            },
+          });
+          const aiData = aiRes?.data || {};
+          if (aiData.description) generatedDesc = aiData.description;
+          if (aiData.priceSuggestion !== undefined || aiData.stockSuggestion !== undefined) {
+            suggestions = {
+              price: aiData.priceSuggestion ?? suggestions.price,
+              stock: aiData.stockSuggestion ?? suggestions.stock,
+            };
+          }
+          if (aiData.categoryName && !answers.categoryId) {
+            const existing = availableCategories.find((c) => c.name.toLowerCase() === String(aiData.categoryName).toLowerCase());
+            if (existing) {
+              setAnswers(prev => ({ ...prev, categoryId: existing._id, categoryName: existing.name }));
+              addMessage('ai', `📦 Catégorie IA détectée: ${existing.name}`);
+            }
+          }
+        } catch (error) {
+          console.warn('AI product suggestion fallback used:', error);
+        }
+
+        setAnswers(prev => ({ ...prev, description: generatedDesc, price: suggestions.price, stock: suggestions.stock }));
+        addMessage('ai', `📝 Description générée:
+${generatedDesc}`);
         setCurrentStep(3);
         askPrice(suggestions.price);
       }
@@ -269,7 +298,7 @@ export function useAIProductAssistant(onComplete, onCancel, token) {
       }
       return;
     }
-  }, [currentStep, answers, availableCategories, userLanguage, completeAndSubmit, askDescriptionChoice, askManualDescription, askPrice, askStock, askImages, askPdf]);
+  }, [currentStep, answers, availableCategories, userLanguage, completeAndSubmit, askDescriptionChoice, askManualDescription, askPrice, askStock, askImages, askPdf, token]);
 
   // Image handling
   const addImages = useCallback((files) => {
