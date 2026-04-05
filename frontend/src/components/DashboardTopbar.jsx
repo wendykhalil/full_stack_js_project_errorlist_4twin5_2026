@@ -228,20 +228,27 @@ export default function DashboardTopbar({ role = "ARTISAN", unreadCount = 0 }) {
           {unreadCount > 0 ? <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-blue-600" /> : null}
         </button>
 
-        {avatarUrl ? (
-          <img
-            src={avatarUrl}
-            alt=""
-            className="h-11 w-11 rounded-full object-cover ring-2 ring-slate-200 dark:ring-slate-700"
-            onError={(event) => {
-              event.currentTarget.style.display = "none";
-            }}
-          />
-        ) : (
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-200 text-sm font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-100">
-            {initialsFromUser(user)}
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt=""
+              className="h-11 w-11 rounded-full object-cover ring-2 ring-slate-200 dark:ring-slate-700"
+              onError={(event) => {
+                event.currentTarget.style.display = "none";
+              }}
+            />
+          ) : (
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-200 text-sm font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-100">
+              {initialsFromUser(user)}
+            </div>
+          )}
+          {user?.firstName || user?.lastName ? (
+            <span className="ml-2 font-bold text-blue-900 dark:text-blue-200 text-base">
+              {user?.firstName} {user?.lastName}
+            </span>
+          ) : null}
+        </div>
       </div>
     </div>
   );
