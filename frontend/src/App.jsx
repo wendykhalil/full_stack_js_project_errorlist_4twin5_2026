@@ -56,6 +56,7 @@ import ArtisanPublicProfile from './pages/ArtisanPublicProfile';
 
 // FOURNISSEUR
 import FournisseurLayout from "./layouts/FournisseurLayout";
+import FournisseurDashboard from "./pages/FournisseurDashboard";
 import FournisseurProduits from "./pages/FournisseurProduits";
 import FournisseurProduitNew from "./pages/FournisseurProduitNew";
 import FournisseurProduitEdit from "./pages/FournisseurProduitEdit";
@@ -169,7 +170,7 @@ export default function App() {
                 {/* Fournisseur (protected) */}
                 <Route element={<ProtectedRoute allowedRoles={[Roles.SUPPLIER]} />}>
                     <Route path="/fournisseur" element={<FournisseurLayout />}>
-                        <Route index element={<Navigate to="produits" replace />} />
+                        <Route index element={<FournisseurDashboard />} />
                         <Route path="produits" element={<FournisseurProduits />} />
                         <Route path="produits/new" element={<FournisseurProduitNew />} />
                         <Route path="produits/edit/:id" element={<FournisseurProduitEdit />} />

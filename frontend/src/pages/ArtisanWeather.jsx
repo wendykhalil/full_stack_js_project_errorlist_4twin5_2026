@@ -12,9 +12,10 @@ const ArtisanWeather = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [mapLoading, setMapLoading] = useState(false);
+  const [retryKey, setRetryKey] = useState(0);
   const mapContainer = useRef(null);
   const map = useRef(null);
-  // Pending coords buffered while Leaflet is still downloading
+  const marker = useRef(null);
   const pendingCoords = useRef(null);
 
   const initializeMap = useCallback((lat, lon) => {
@@ -32,7 +33,8 @@ const ArtisanWeather = () => {
       map.current.setView([lat, lon], 10);
     }
 
-    window.L.marker([lat, lon])
+    if (marker.current) map.current.removeLayer(marker.current);
+    marker.current = window.L.marker([lat, lon])
       .addTo(map.current)
       .bindPopup('Your Location')
       .openPopup();
@@ -72,8 +74,8 @@ const ArtisanWeather = () => {
 
   // ── Fallback: Leaflet finished loading after weather+location were set ───────
   useEffect(() => {
-    if (!document.getElementById('leaflet-js')) return;
     const script = document.getElementById('leaflet-js');
+    if (!script) return;
     const handleLoad = () => {
       if (pendingCoords.current && !map.current) {
         initializeMap(pendingCoords.current.latitude, pendingCoords.current.longitude);
@@ -84,8 +86,14 @@ const ArtisanWeather = () => {
     return () => script.removeEventListener('load', handleLoad);
   }, [initializeMap]);
 
-  // ── Start geolocation + weather fetch immediately on mount ───────
   useEffect(() => {
+    setError(null);
+    setWeather(null);
+    setLocation(null);
+    setLoading(true);
+    map.current = null;
+    marker.current = null;
+
     if (!token) {
       setError('Authentication token not available');
       setLoading(false);
@@ -102,7 +110,6 @@ const ArtisanWeather = () => {
       async (position) => {
         const { latitude, longitude } = position.coords;
         setLocation({ latitude, longitude });
-        // Buffer coords in case Leaflet hasn't loaded yet
         pendingCoords.current = { latitude, longitude };
 
         try {
@@ -123,8 +130,9 @@ const ArtisanWeather = () => {
         setLoading(false);
       }
     );
+  // t is stable; retryKey intentionally triggers a full re-fetch
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
+  }, [token, retryKey]);
 
   const isGoodDayToWork = (weatherData) => {
     if (!weatherData) return null;
@@ -167,16 +175,10 @@ const ArtisanWeather = () => {
           </div>
           <div className="flex flex-col gap-2 mt-4">
             <button
-              onClick={getLocationAndWeather}
+              onClick={() => setRetryKey(k => k + 1)}
               className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition"
             >
               {t('weather.retry')}
-            </button>
-            <button
-              onClick={() => getLocationAndWeather()}
-              className="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition"
-            >
-              Refresh Weather & Map Now
             </button>
           </div>
         </div>

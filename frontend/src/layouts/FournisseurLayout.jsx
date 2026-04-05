@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, MessageCircle, Package, Plus, Shield, ShoppingBag, UserCircle2 } from "lucide-react";
+import { Eye, LayoutDashboard, MessageCircle, Package, Plus, Shield, ShoppingBag, UserCircle2 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import RoleWorkspace from "../components/RoleWorkspace";
 import { useUnreadMessages } from "../hooks/useUnreadMessages";
@@ -35,6 +35,7 @@ export default function FournisseurLayout() {
 
   const navItems = [
     { to: "/fournisseur/profile", label: "Profil", icon: <UserCircle2 className="h-5 w-5" /> },
+    { to: "/fournisseur", label: "Tableau de bord", icon: <LayoutDashboard className="h-5 w-5" />, end: true },
     { to: "/fournisseur/orders", label: "Commandes", icon: <ShoppingBag className="h-5 w-5" /> },
     { to: "/fournisseur/marketplace", label: "Marketplace", icon: <Eye className="h-5 w-5" /> },
     { to: "/fournisseur/produits", label: "Produits", icon: <Package className="h-5 w-5" /> },
