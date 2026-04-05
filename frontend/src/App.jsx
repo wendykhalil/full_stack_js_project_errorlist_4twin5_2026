@@ -42,6 +42,7 @@ import RequireSubscription from './components/RequireSubscription';
 import ArtisanProfileEdit from './pages/ArtisanProfileEdit';
 import ArtisanPortfolio from './pages/ArtisanPortfolio';
 import ArtisanPortfolioAdd from './pages/ArtisanPortfolioAdd';
+import ArtisanWeather from './pages/ArtisanWeather';
 
 // PRESCRIPTEUR
 import PrescripteurLayout from "./layouts/PrescripteurLayout";
@@ -144,6 +145,7 @@ export default function App() {
                         <Route path="order-request/:productId" element={<RequireSubscription><ArtisanOrderRequest /></RequireSubscription>} />
                         <Route path="orders" element={<RequireSubscription><ArtisanOrders /></RequireSubscription>} />
                         <Route path="orders/:id" element={<RequireSubscription><OrderDetails /></RequireSubscription>} />
+                        <Route path="weather" element={<ArtisanWeather />} />
                         <Route path="messages" element={<RequireSubscription><Messages /></RequireSubscription>} />
                         <Route path="messages/:userId" element={<RequireSubscription><Conversation /></RequireSubscription>} />
                     </Route>

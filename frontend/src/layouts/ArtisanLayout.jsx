@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   ShoppingCart,
   UserCircle2,
+  Cloud,
 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { getMySubscription } from "../auth/api";
@@ -81,6 +82,7 @@ export default function ArtisanLayout() {
     { to: "/artisan/portfolio", label: "Portfolio", icon: <ImageIcon className="h-5 w-5" /> },
     { to: "/artisan/devis/create", label: "Creer un devis", icon: <FileText className="h-5 w-5" /> },
     { to: "/artisan/factures", label: "Factures", icon: <Receipt className="h-5 w-5" /> },
+    { to: "/artisan/weather", label:"Météo" , icon:<Cloud className="h-5 w-5" />},
     { to: "/artisan/orders", label: "Mes commandes", icon: <Package className="h-5 w-5" /> },
     { to: "/artisan/messages", label: "Messages", icon: messageIcon },
   ];

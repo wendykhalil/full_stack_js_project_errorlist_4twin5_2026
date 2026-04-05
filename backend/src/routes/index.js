@@ -15,6 +15,7 @@ const artisanProfileRoutes = require('../modules/artisan/artisanProfile.routes')
 const portfolioRoutes = require('../modules/artisan/portfolio.routes');
 const searchRoutes = require('../modules/search/search.routes');
 const subscriptionRoutes = require('../modules/subscription/subscription.routes');
+const weatherRoutes = require('../modules/weather/weather.routes');
 
 const { authRequired } = require('../middleware/authMiddleware');
 const { requireRoles } = require('../middleware/roleMiddleware');
@@ -141,6 +142,7 @@ router.use('/artisan/profile', artisanProfileRoutes);
 router.use('/artisan/portfolio', portfolioRoutes);
 router.use('/subscriptions', subscriptionRoutes);
 router.use('/search', searchRoutes);
+router.use('/weather', weatherRoutes);
 
 // Admin routes
 router.get('/admin/ping', authRequired, requireRoles('ADMIN'), (req, res) => {
