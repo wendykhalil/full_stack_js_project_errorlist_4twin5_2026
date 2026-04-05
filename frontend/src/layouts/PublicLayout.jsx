@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { Outlet, Link } from "react-router-dom";
 import { HardHat, Menu, Search, X } from "lucide-react";
 import ThemeToggle from "../components/ThemeToggle";
-import LanguageSwitcher from "../components/LanguageSwitcher";
 import Footer from "../components/Footer";
 
 export default function PublicLayout() {
@@ -30,11 +29,10 @@ export default function PublicLayout() {
           </div>
 
           <div className="flex items-center gap-2">
-            <LanguageSwitcher />
             <ThemeToggle />
             <nav className="hidden items-center gap-3 md:flex">
-              <Link to="/login" className="rounded-2xl px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white">Se connecter</Link>
-              <Link to="/register" className="rounded-2xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700">S'inscrire</Link>
+              <Link to="/login" className="rounded-2xl px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white">Sign in</Link>
+              <Link to="/register" className="rounded-2xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700">Create account</Link>
             </nav>
             <button
               type="button"
@@ -50,8 +48,8 @@ export default function PublicLayout() {
         {isMobileMenuOpen ? (
           <div className="border-t border-slate-200 px-4 py-4 dark:border-slate-800 md:hidden">
             <nav className="flex flex-col gap-3">
-              <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className="rounded-2xl px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">Se connecter</Link>
-              <Link to="/register" onClick={() => setIsMobileMenuOpen(false)} className="rounded-2xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white">S'inscrire</Link>
+              <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className="rounded-2xl px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">Sign in</Link>
+              <Link to="/register" onClick={() => setIsMobileMenuOpen(false)} className="rounded-2xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white">Create account</Link>
             </nav>
           </div>
         ) : null}

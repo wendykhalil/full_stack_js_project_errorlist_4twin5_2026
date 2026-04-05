@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useAuth } from "../auth/AuthContext";
 import { useTranslation } from 'react-i18next';
 import Footer from "../components/Footer";
+import MapPickerModal from "../components/MapPickerModal";
 import { 
   Building, 
   MapPin, 
@@ -53,6 +54,7 @@ export default function Profile() {
   const [allCategories, setAllCategories] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
+  const [isMapPickerOpen, setIsMapPickerOpen] = useState(false);
 
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
@@ -141,6 +143,9 @@ useEffect(() => {
       setDescription(user.supplierProfile.description || "");
       setLogo(user.supplierProfile.logo || "");
       setLogoPreview(user.supplierProfile.logo || "");
+      setCity(user.supplierProfile.city || user.city || "");
+      setLatitude(user.supplierProfile.latitude ?? user.latitude ?? "");
+      setLongitude(user.supplierProfile.longitude ?? user.longitude ?? "");
       setSelectedCategories(user.supplierProfile.categories || []);
     }
 
@@ -289,6 +294,9 @@ useEffect(() => {
           updateData.append('companyPhone', companyPhone);
           updateData.append('address', address);
           updateData.append('description', description);
+          updateData.append('city', city);
+          updateData.append('latitude', latitude);
+          updateData.append('longitude', longitude);
           updateData.append('categories', JSON.stringify(selectedCategories));
           updateData.append('logo', logoFile);
         } else {
@@ -300,6 +308,9 @@ useEffect(() => {
             companyPhone,
             address,
             description,
+            city,
+            latitude,
+            longitude,
             categories: selectedCategories,
             logo,
           };
@@ -543,6 +554,22 @@ useEffect(() => {
                   />
                 </div>
 
+                <div className="sm:col-span-2">
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Location on map</label>
+                  <div className="mt-2 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/30 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="text-sm text-slate-600 dark:text-slate-300">
+                      {city || address ? `${city || 'Selected city'}${address ? ` - ${address}` : ''}` : 'Choose your place on the map or use your current position.'}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsMapPickerOpen(true)}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
+                    >
+                      <MapPin className="h-4 w-4" /> Open map
+                    </button>
+                  </div>
+                </div>
+
                 <div>
                   <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
                     Latitude
@@ -666,6 +693,56 @@ useEffect(() => {
                     rows="3"
                     className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
                     placeholder="Rue, ville, code postal, pays"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Ville</label>
+                  <input
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
+                    placeholder="Ex : Tunis"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Location on map</label>
+                  <div className="mt-2 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/30 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="text-sm text-slate-600 dark:text-slate-300">
+                      {city || address ? `${city || 'Selected city'}${address ? ` - ${address}` : ''}` : 'Choose your company location on the map or use your current position.'}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsMapPickerOpen(true)}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
+                    >
+                      <MapPin className="h-4 w-4" /> Open map
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Latitude</label>
+                  <input
+                    value={latitude}
+                    onChange={(e) => setLatitude(e.target.value)}
+                    type="number"
+                    step="any"
+                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
+                    placeholder="Ex : 36.8065"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Longitude</label>
+                  <input
+                    value={longitude}
+                    onChange={(e) => setLongitude(e.target.value)}
+                    type="number"
+                    step="any"
+                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
+                    placeholder="Ex : 10.1815"
                   />
                 </div>
 
@@ -881,6 +958,18 @@ useEffect(() => {
           </form>
         </div>
 
+        <MapPickerModal
+          open={isMapPickerOpen}
+          onClose={() => setIsMapPickerOpen(false)}
+          initialValue={{ latitude, longitude, city, address }}
+          onUsePlace={({ latitude: nextLatitude, longitude: nextLongitude, city: nextCity, address: nextAddress }) => {
+            setLatitude(String(nextLatitude));
+            setLongitude(String(nextLongitude));
+            if (nextCity) setCity(nextCity);
+            if (nextAddress) setAddress(nextAddress);
+            setIsMapPickerOpen(false);
+          }}
+        />
         <Footer />
       </div>
     </>

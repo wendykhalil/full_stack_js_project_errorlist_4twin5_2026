@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import SimpleFooter from "../components/Footer";
 import { apiFetch, suggestQuoteFromProject } from "../auth/api";
+import PageShell from '../components/PageShell';
 
 const emptyLine = { description: "", quantity: 1, unitPrice: 0 };
 
@@ -101,8 +102,9 @@ export default function ArtisanDevisCreate() {
   };
 
   return (
+    <PageShell>
     <div className="min-h-screen bg-slate-50">
-      <main className="mx-auto max-w-5xl px-4 py-8">
+      <main className="mx-auto max-w-none px-4 py-8">
         <button onClick={() => navigate(-1)} className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">
           <ArrowLeft className="h-4 w-4" /> Retour
         </button>
@@ -188,5 +190,6 @@ export default function ArtisanDevisCreate() {
       </main>
       <SimpleFooter />
     </div>
+    </PageShell>
   );
 }

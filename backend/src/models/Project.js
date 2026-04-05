@@ -32,6 +32,8 @@ const projectSchema = new mongoose.Schema(
     location: {
       city: { type: String, trim: true, maxlength: 80, default: '' },
       address: { type: String, trim: true, maxlength: 180, default: '' },
+      latitude: { type: Number, default: null },
+      longitude: { type: Number, default: null },
     },
 
     budgetTND: {

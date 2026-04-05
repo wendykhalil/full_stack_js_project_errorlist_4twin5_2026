@@ -3,6 +3,7 @@ import { apiFetch } from "../auth/api";
 import { useAuth } from "../auth/AuthContext";
 import { Activity, RefreshCw, Search, Filter, Info, X, MonitorSmartphone, Globe2, UserCircle2, ShieldCheck } from "lucide-react";
 import Footer from "../components/Footer";
+import PageShell from '../components/PageShell';
 
 function fmt(dt) {
   try { return new Date(dt).toLocaleString(); } catch { return String(dt || ""); }
@@ -55,8 +56,9 @@ function RawViewModal({ item, onClose }) {
   const entries = detailEntries(item);
 
   return (
+    <PageShell>
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-5xl overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-2xl">
+      <div className="w-full max-w-none overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-2xl">
         <div className="flex items-start justify-between gap-4 border-b border-slate-200 bg-slate-50 px-6 py-5">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-white px-3 py-1 text-xs font-semibold text-indigo-700">
@@ -134,6 +136,7 @@ function RawViewModal({ item, onClose }) {
         </div>
       </div>
     </div>
+    </PageShell>
   );
 }
 

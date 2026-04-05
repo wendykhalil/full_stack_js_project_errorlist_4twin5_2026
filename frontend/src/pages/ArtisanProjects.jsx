@@ -27,6 +27,8 @@ import { useAuth } from "../auth/AuthContext";
 import SubscriptionAlert from "../components/SubscriptionAlert";
 import AIAssistantModal from "../components/ai-assistant/AIAssistantModal";
 import Pagination from "../components/Pagination";
+import PageShell from '../components/PageShell';
+import MapPickerModal from '../components/MapPickerModal';
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 const ASSET_BASE = API_URL.replace(/\/api\/?$/, "");
@@ -71,6 +73,7 @@ const MATERIAL_SUGGESTIONS = [
 
 function SuggestInput({ label, value, onChange, placeholder, listId, options = [], required = false }) {
   return (
+    <PageShell>
     <div>
       <label className="text-sm font-medium text-slate-700">{label}</label>
       <input
@@ -85,6 +88,7 @@ function SuggestInput({ label, value, onChange, placeholder, listId, options = [
         {options.map((opt) => <option key={opt} value={opt} />)}
       </datalist>
     </div>
+    </PageShell>
   );
 }
 
@@ -156,7 +160,7 @@ function formatDate(d) {
 
 function Modal({ open, title, children, onClose, size = "md" }) {
   if (!open) return null;
-  const maxWidth = size === "xl" ? "max-w-6xl" : size === "lg" ? "max-w-4xl" : "max-w-2xl";
+  const maxWidth = size === "xl" ? "max-w-none" : size === "lg" ? "max-w-none" : "max-w-none";
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center p-4 sm:items-center">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
@@ -173,7 +177,7 @@ function Modal({ open, title, children, onClose, size = "md" }) {
   );
 }
 
-function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t }) {
+function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t, onOpenMap }) {
   const isEdit = mode === "edit";
   return (
     <div className="space-y-6">
@@ -237,6 +241,27 @@ function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t 
             <div>
               <label className="text-sm font-medium text-slate-700">Address</label>
               <input value={form.address} onChange={(e) => setForm((s) => ({ ...s, address: e.target.value }))} className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none ring-indigo-500 focus:ring-2" placeholder="Street / neighborhood" />
+            </div>
+            <div className="md:col-span-2 rounded-2xl border border-slate-200 bg-white p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <label className="text-sm font-medium text-slate-700">Map location</label>
+                  <p className="mt-1 text-xs text-slate-500">Open the map, click where the project is, or use your current place.</p>
+                </div>
+                <button type="button" onClick={onOpenMap} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-700 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700">
+                  <MapPin className="h-4 w-4" /> Open map
+                </button>
+              </div>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <div>
+                  <div className="text-xs uppercase tracking-wide text-slate-400">Latitude</div>
+                  <div className="mt-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">{form.latitude || '—'}</div>
+                </div>
+                <div>
+                  <div className="text-xs uppercase tracking-wide text-slate-400">Longitude</div>
+                  <div className="mt-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">{form.longitude || '—'}</div>
+                </div>
+              </div>
             </div>
             <div>
               <label className="text-sm font-medium text-slate-700">Budget (TND)</label>
@@ -336,6 +361,8 @@ const emptyForm = {
   description: "",
   city: "",
   address: "",
+  latitude: "",
+  longitude: "",
   budgetTND: "",
   surfaceM2: "",
   startDate: "",
@@ -388,6 +415,7 @@ export default function ArtisanProjects() {
   const [smartSuggestions, setSmartSuggestions] = useState([]);
   const [smartLoading, setSmartLoading] = useState(false);
   const [projectSuggestLoading, setProjectSuggestLoading] = useState(false);
+  const [isMapPickerOpen, setIsMapPickerOpen] = useState(false);
 
   const isSubscribed = subscription?.plan && subscription.plan !== 'FREE' && subscription.status === 'ACTIVE';
 
@@ -534,6 +562,8 @@ export default function ArtisanProjects() {
       description: p.description || '',
       city: p.location?.city || '',
       address: p.location?.address || '',
+      latitude: p.location?.latitude ?? '',
+      longitude: p.location?.longitude ?? '',
       budgetTND: p.budgetTND ?? '',
       surfaceM2: p.surfaceM2 ?? '',
       startDate: p.startDate ? String(p.startDate).slice(0, 10) : '',
@@ -589,7 +619,7 @@ export default function ArtisanProjects() {
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
-      <main className="mx-auto w-full max-w-[1500px] flex-1 px-4 py-8 sm:px-6 lg:px-8">
+      <main className="mx-auto w-full max-w-none flex-1 px-4 py-8 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">{t('artisanProjects.title')}</h1>
@@ -651,7 +681,7 @@ export default function ArtisanProjects() {
                             <h3 className="text-2xl font-semibold text-slate-900">{p.title}</h3>
                             <StatusPill status={p.status} />
                           </div>
-                          {p.description ? <p className="mt-3 max-w-4xl text-sm leading-7 text-slate-600">{p.description}</p> : null}
+                          {p.description ? <p className="mt-3 max-w-none text-sm leading-7 text-slate-600">{p.description}</p> : null}
                         </div>
 
                         <div className="relative">
@@ -714,7 +744,7 @@ export default function ArtisanProjects() {
                 <Sparkles className={`h-4 w-4 ${projectSuggestLoading ? 'animate-pulse' : ''}`} /> Remplir avec IA
               </button>
             </div>
-            <ProjectFormFields mode="create" form={form} setForm={setForm} images={images} setImages={setImages} editing={editing} t={t} />
+            <ProjectFormFields mode="create" form={form} setForm={setForm} images={images} setImages={setImages} editing={editing} t={t} onOpenMap={() => setIsMapPickerOpen(true)} />
             <div className="flex items-center justify-end gap-3 pt-2">
               <button type="button" onClick={() => { setIsCreateOpen(false); setForm(emptyForm); setImages([]); }} className="rounded-xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100">Cancel</button>
               <button type="submit" className="rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white hover:bg-indigo-700">Create</button>
@@ -733,7 +763,7 @@ export default function ArtisanProjects() {
                 <Sparkles className={`h-4 w-4 ${projectSuggestLoading ? 'animate-pulse' : ''}`} /> Optimiser avec IA
               </button>
             </div>
-            <ProjectFormFields mode="edit" form={form} setForm={setForm} images={images} setImages={setImages} editing={editing} t={t} />
+            <ProjectFormFields mode="edit" form={form} setForm={setForm} images={images} setImages={setImages} editing={editing} t={t} onOpenMap={() => setIsMapPickerOpen(true)} />
             <div className="flex items-center justify-end gap-3 pt-2">
               <button type="button" onClick={() => { setIsEditOpen(false); setEditing(null); setForm(emptyForm); setImages([]); }} className="rounded-xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100">Cancel</button>
               <button type="submit" className="rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white hover:bg-indigo-700">Save</button>
@@ -757,6 +787,28 @@ export default function ArtisanProjects() {
         onAction={() => {
           setShowSubscriptionAlert(false);
           navigate('/artisan/subscription');
+        }}
+      />
+
+
+      <MapPickerModal
+        open={isMapPickerOpen}
+        onClose={() => setIsMapPickerOpen(false)}
+        initialValue={{
+          latitude: form.latitude,
+          longitude: form.longitude,
+          city: form.city,
+          address: form.address,
+        }}
+        onUsePlace={({ latitude, longitude, city, address }) => {
+          setForm((current) => ({
+            ...current,
+            latitude: String(latitude),
+            longitude: String(longitude),
+            city: city || current.city,
+            address: address || current.address,
+          }));
+          setIsMapPickerOpen(false);
         }}
       />
 

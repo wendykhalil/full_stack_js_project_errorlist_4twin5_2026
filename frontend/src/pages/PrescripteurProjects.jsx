@@ -20,6 +20,7 @@ import Pagination from "../components/Pagination";
 import { useTranslation } from "react-i18next";
 import { apiFetch } from "../auth/api";
 import { useAuth } from "../auth/AuthContext";
+import PageShell from '../components/PageShell';
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 const ASSET_BASE = API_URL.replace(/\/api\/?$/, "");
@@ -68,6 +69,7 @@ const StatusPill = ({ status }) => {
 
 function ActionMenu({ open, onToggle, onView, onMessage, onCall, canMessage, canCall }) {
   return (
+    <PageShell>
     <div className="relative" onClick={(e) => e.stopPropagation()}>
       <button
         type="button"
@@ -110,6 +112,7 @@ function ActionMenu({ open, onToggle, onView, onMessage, onCall, canMessage, can
         </div>
       ) : null}
     </div>
+    </PageShell>
   );
 }
 
@@ -132,7 +135,7 @@ function DetailsModal({ open, onClose, project, onMessage }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4 sm:p-6">
-      <div className="mt-4 w-full max-w-5xl overflow-hidden rounded-[28px] bg-white shadow-2xl">
+      <div className="mt-4 w-full max-w-none overflow-hidden rounded-[28px] bg-white shadow-2xl">
         <div className="flex items-start justify-between border-b border-slate-100 px-6 py-5">
           <div>
             <div className="mb-2 flex flex-wrap items-center gap-2">
@@ -406,7 +409,7 @@ export default function PrescripteurProjects() {
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
-      <main className="mx-auto w-full max-w-[1400px] flex-1 px-4 py-8 sm:px-6 lg:px-8">
+      <main className="mx-auto w-full max-w-none flex-1 px-4 py-8 sm:px-6 lg:px-8">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Projets</h1>
           <p className="mt-1 text-slate-600">Tous les projets créés par les artisans, avec plus de détails pour une lecture plus facile.</p>

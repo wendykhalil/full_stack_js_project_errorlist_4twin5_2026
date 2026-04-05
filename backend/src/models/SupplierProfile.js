@@ -40,6 +40,21 @@ const supplierProfileSchema = new mongoose.Schema(
     type: [String],
     default: [],
   },
+
+  city: {
+    type: String,
+    default: ""
+  },
+
+  latitude: {
+    type: Number,
+    default: null
+  },
+
+  longitude: {
+    type: Number,
+    default: null
+  },
 },
 { timestamps: true }
 );

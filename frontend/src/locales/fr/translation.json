@@ -1,0 +1,599 @@
+{
+  "footer": {
+    "description": "La première plateforme digitale en Tunisie connectant artisans, prescripteurs et fournisseurs du secteur du bâtiment.",
+    "quickLinks": {
+      "title": "Liens Rapides",
+      "about": "À propos",
+      "contact": "Contact",
+      "blog": "Blog",
+      "faq": "FAQ"
+    },
+    "legal": {
+      "title": "Informations Légales",
+      "terms": "Conditions d'utilisation",
+      "privacy": "Politique de confidentialité",
+      "cookies": "Gestion des cookies",
+      "legal": "Mentions légales"
+    },
+    "contact": {
+      "title": "Contact",
+      "address": "Immeuble BMP, Rue de la Construction, 1000 Tunis, Tunisie",
+      "phone": "+216 71 123 456"
+    },
+    "newsletter": {
+      "title": "Newsletter",
+      "placeholder": "Votre email",
+      "button": "OK"
+    },
+    "copyright": "© {{year}} BMP.tn - Tous droits réservés.",
+    "copyrightExtra": "Plateforme digitale pour le secteur du bâtiment en Tunisie.",
+    "version": "Version {{version}}",
+    "madeWith": "Made with ♥ in Tunisia"
+  },
+  "artisanDashboard": {
+    "title": "Tableau de Bord",
+    "subtitle": "Vue d'ensemble de votre activité",
+    "welcome": {
+      "title": "Bienvenue 👋",
+      "description": "Tableau de bord en mode simplifié. Utilisez les actions rapides pour commencer."
+    },
+    "quickActions": {
+      "title": "Actions Rapides",
+      "newProject": "Nouveau Projet",
+      "createQuote": "Créer un Devis",
+      "newInvoice": "Nouvelle Facture",
+      "order": "Commander"
+    },
+    "recentProjects": {
+      "title": "Projets Récents",
+      "viewAll": "Voir tout",
+      "project1": {
+        "title": "Villa Ben Arous",
+        "client": "Mohammed Ahmed",
+        "remaining": "37% restant"
+      },
+      "project2": {
+        "title": "Appartement Tunis",
+        "client": "Fatima Ben Ali",
+        "remaining": "33% restant"
+      },
+      "project3": {
+        "title": "Bureau Ariana",
+        "client": "Tech Solutions SARL",
+        "remaining": "100% restant"
+      }
+    },
+    "status": {
+      "active": "Actif",
+      "pending": "En attente"
+    },
+    "projectCard": {
+      "budget": "Budget:"
+    },
+    "recentActivity": {
+      "title": "Activité Récente",
+      "invoicePaid": "Facture {{invoice}} payée",
+      "quoteSent": "Devis {{quote}} envoyé à {{client}}",
+      "orderShipped": "Commande {{order}} expédiée",
+      "invoiceOverdue": "Facture {{invoice}} en retard",
+      "timeAgo": "Il y a {{hours}}h",
+      "yesterday": "Hier",
+      "daysAgo": "Il y a {{days}}j",
+      "clientFatima": "Fatima Ben Ali"
+    }
+  },
+  "prescripteurArtisans": {
+    "title": "Trouver un Artisan",
+    "subtitle": "Recherchez des artisans qualifiés par spécialité et région",
+    "searchPlaceholder": "Rechercher un artisan...",
+    "specialtyPlaceholder": "Toutes spécialités",
+    "regionPlaceholder": "Toutes régions",
+    "contactButton": "Contacter",
+    "viewProfileButton": "Voir le profil",
+    "projectsCompleted_one": "{{count}} projet réalisé",
+    "projectsCompleted_other": "{{count}} projets réalisés",
+    "yearsExperience_one": "{{count}} an d'expérience",
+    "yearsExperience_other": "{{count}} ans d'expérience",
+    "specialties": {
+      "plumbing": "Plomberie",
+      "electricity": "Électricité",
+      "masonry": "Maçonnerie"
+    },
+    "cities": {
+      "tunis": "Tunis",
+      "ariana": "Ariana",
+      "benarous": "Ben Arous"
+    }
+  },
+  "prescripteurProduits": {
+    "title": "Catalogue de Produits",
+    "subtitle": "Découvrez notre sélection de matériaux et équipements",
+    "searchPlaceholder": "Rechercher des produits...",
+    "categoryPlaceholder": "Toutes catégories",
+    "categories": {
+      "basicMaterials": "Matériaux de base",
+      "flooring": "Revêtements",
+      "paint": "Peinture",
+      "carpentry": "Menuiserie",
+      "electricity": "Électricité",
+      "plumbing": "Sanitaire"
+    },
+        "detailsButton": "Détails"
+
+  },
+  "profile": {
+    "title": "Mon profil",
+    "subtitle": "Modifiez vos informations et votre mot de passe.",
+    "informationSection": "Informations",
+    "firstNameLabel": "Prénom",
+    "firstNamePlaceholder": "Prénom",
+    "lastNameLabel": "Nom",
+    "lastNamePlaceholder": "Nom",
+    "emailLabel": "Email",
+    "phoneLabel": "Téléphone",
+    "phonePlaceholder": "+216...",
+    "saveButton": "Enregistrer",
+    "savingButton": "Enregistrement...",
+    "saveSuccess": "Profil mis à jour ✅",
+    "saveError": "Impossible de mettre à jour le profil",
+    "passwordSection": "Mot de passe",
+    "currentPasswordLabel": "Mot de passe actuel",
+    "newPasswordLabel": "Nouveau mot de passe",
+    "passwordPlaceholder": "••••••••",
+    "changePasswordButton": "Changer le mot de passe",
+    "changingPasswordButton": "Mise à jour...",
+    "passwordChangeSuccess": "Mot de passe mis à jour ✅",
+    "passwordChangeError": "Impossible de changer le mot de passe",
+    "passwordMinLengthError": "Le nouveau mot de passe doit contenir au moins 6 caractères.",
+    "googleInfo": "Vous êtes connecté avec Google. Vous pouvez définir un mot de passe local ici (optionnel)."
+  },
+  "adminLogs": {
+    "title": "Historique Connexion / Déconnexion",
+    "subtitle": "Dernières activités d'authentification (LOGIN / LOGOUT).",
+    "refreshButton": "Actualiser",
+    "loadError": "Impossible de charger les logs",
+    "loading": "Chargement...",
+    "noData": "Aucun log pour le moment.",
+    "totalLabel": "Total :",
+    "previous": "Précédent",
+    "pageLabel": "Page",
+    "next": "Suivant",
+    "table": {
+      "date": "Date",
+      "user": "Utilisateur",
+      "role": "Rôle",
+      "action": "Action",
+      "ip": "IP",
+      "userAgent": "User-Agent"
+    },
+    "action": {
+      "login": "Connexion",
+      "logout": "Déconnexion"
+    }
+  },
+   "adminDashboard": {
+    "title": "Tableau de Bord Admin",
+    "subtitle": "Vue d'ensemble de la plateforme BMP.tn",
+    "welcomeTitle": "Bienvenue 👋",
+    "welcomeDescription": "Tableau de bord en mode simplifié. Utilisez le menu à gauche pour gérer les utilisateurs et consulter les logs."
+  },
+  "adminUsers": {
+    "title": "Gestion des Utilisateurs",
+    "totalUsers_one": "{{count}} utilisateur au total",
+    "totalUsers_other": "{{count}} utilisateurs au total",
+    "searchPlaceholder": "Rechercher par nom, email, téléphone…",
+    "roleFilter": {
+      "all": "Tous les rôles"
+    },
+    "roles": {
+      "artisan": "Artisan",
+      "prescripteur": "Prescripteur",
+      "supplier": "Supplier",
+      "admin": "Admin"
+    },
+    "status": {
+      "active": "Actif",
+      "inactive": "Inactif",
+      "blocked": "Bloqué"
+    },
+    "emailVerified": {
+      "verified": "Vérifié",
+      "pending": "En attente"
+    },
+    "actions": {
+      "block": "Bloquer",
+      "unblock": "Débloquer"
+    },
+    "tableTitle": "Utilisateurs",
+    "displayedCount_one": "({{count}} affiché)",
+    "displayedCount_other": "({{count}} affichés)",
+    "table": {
+      "name": "Nom",
+      "email": "Email",
+      "phone": "Téléphone",
+      "role": "Rôle",
+      "status": "Statut",
+      "blockedUntil": "Bloqué jusqu'au",
+      "emailVerified": "Email vérifié",
+      "registered": "Inscription",
+      "actions": "Actions"
+    },
+    "loading": "Chargement…",
+    "noUsersFound": "Aucun utilisateur trouvé.",
+    "blockModal": {
+      "title": "Bloquer l'utilisateur",
+      "durationLabel": "Durée du blocage",
+      "durations": {
+        "1h": "1 heure",
+        "3h": "3 heures",
+        "1d": "1 jour",
+        "3d": "3 jours",
+        "1w": "1 semaine",
+        "1m": "1 mois"
+      },
+      "cancelButton": "Annuler",
+      "blockButton": "Bloquer"
+    }
+  },
+  
+  "artisanLayout": {
+    "brand": "BMP.tn",
+    "role": "Artisan",
+    "profile": "Profil",
+    "dashboard": "Tableau de bord",
+    "projects": "Projets",
+    "createQuote": "Créer un devis",
+    "invoices": "Factures",
+    "marketplace": "Marketplace",
+    "logout": "Déconnexion"
+  },
+
+  
+  "artisanDevisCreate": {
+    "backButton": "Retour",
+    "title": "Créer un Devis",
+    "subtitle": "Informations générales",
+    "formTitle": "Informations du devis",
+    "projectLabel": "Projet associé",
+    "projectPlaceholder": "Sélectionner un projet...",
+    "clientLabel": "Client",
+    "clientPlaceholder": "Nom du client",
+    "validUntilLabel": "Valable jusqu'au",
+    "validUntilPlaceholder": "mm/dd/yyyy",
+    "notesLabel": "Notes (optionnel)",
+    "notesPlaceholder": "Conditions particulières, notes...",
+    "nextButton": "Suivant: Ajouter les articles",
+    "projectOptions": {
+      "villa": "Villa Ben Arous",
+      "apartment": "Appartement Tunis",
+      "office": "Bureau Ariana"
+    }
+  },
+   "artisanFactures": {
+    "title": "Factures",
+    "subtitle": "Suivez vos factures, paiements et retards",
+    "newInvoiceButton": "Nouvelle Facture",
+    "searchPlaceholder": "Rechercher par numéro, client...",
+    "filterAllStatuses": "Tous les statuts",
+    "viewButton": "Voir",
+    "downloadButton": "Télécharger",
+    "amountLabel": "Montant:",
+    "status": {
+      "paid": "Payée",
+      "pending": "En attente",
+      "overdue": "Retard"
+    }
+  },
+   "artisanFactureStep1": {
+    "title": "Créer une Facture",
+    "subtitle": "Informations générales",
+    "formTitle": "Informations de la facture",
+    "projectLabel": "Projet associé",
+    "projectPlaceholder": "Sélectionner un projet...",
+    "quoteBasedLabel": "Basé sur le devis (optionnel)",
+    "quoteBasedPlaceholder": "Aucun devis",
+    "clientLabel": "Client",
+    "clientPlaceholder": "Nom du client",
+    "dueDateLabel": "Date d'échéance",
+    "dueDatePlaceholder": "mm/dd/yyyy",
+    "paymentMethodLabel": "Mode de paiement",
+    "paymentMethodPlaceholder": "Sélectionner...",
+    "notesLabel": "Notes (optionnel)",
+    "notesPlaceholder": "Conditions de paiement, notes...",
+    "nextButton": "Suivant: Ajouter les articles"
+  },
+  "artisanFactureStep2": {
+    "title": "Créer une Facture",
+    "subtitle": "Ajouter les articles",
+    "formTitle": "Articles de la facture",
+    "itemDescriptionPlaceholder": "Description de l'article",
+    "unitPlaceholder": "Unité",
+    "subtotalLabel": "Sous-total:",
+    "vatLabel": "TVA ({{rate}}%):",
+    "stampLabel": "Timbre fiscal:",
+    "totalLabel": "Total TTC:",
+    "backButton": "Retour",
+    "nextButton": "Suivant: Aperçu"
+  },
+   "artisanFactureStep3": {
+    "title": "Créer une Facture",
+    "subtitle": "Vérifier et envoyer",
+    "invoiceTitle": "FACTURE",
+    "invoiceNumber": "N° {{number}}",
+    "clientLabel": "Client",
+    "projectLabel": "Projet",
+    "paymentMethodLabel": "Mode de paiement",
+    "dateLabel": "Date: {{date}}",
+    "dueDateLabel": "Échéance: {{date}}",
+    "subtotalLabel": "Sous-total:",
+    "vatLabel": "TVA ({{rate}}%):",
+    "stampLabel": "Timbre fiscal:",
+    "totalLabel": "Total TTC:",
+    "backButton": "Retour",
+    "downloadButton": "Télécharger PDF",
+    "sendButton": "Envoyer au client"
+  },
+   "artisanMarketplace": {
+    "title": "Marketplace",
+    "subtitle": "Découvrez et commandez des matériaux de construction",
+    "searchPlaceholder": "Rechercher des produits...",
+    "filterAllCategories": "Toutes catégories",
+    "categories": {
+      "materials": "Matériaux",
+      "paint": "Peinture",
+      "carpentry": "Menuiserie"
+    },
+    "cartButton": "Panier ({{count}})",
+    "addToCart": "Ajouter au panier"
+  },
+   "artisanProjects": {
+    "title": "Mes Projets",
+    "subtitle": "Gérez tous vos chantiers en cours",
+    "newProjectButton": "Nouveau Projet",
+    "searchPlaceholder": "Rechercher par nom de projet ou client...",
+    "filterAllStatuses": "Tous les statuts",
+    "budgetLabel": "Budget",
+    "usedLabel": "utilisé",
+    "startLabel": "Début:",
+    "status": {
+      "active": "Actif",
+      "pending": "En attente",
+      "completed": "Terminé"
+    }
+  },
+   "forgotPassword": {
+    "title": "Mot de passe oublié",
+    "subtitle": "Entrez votre email pour recevoir un lien de réinitialisation",
+    "emailLabel": "Email",
+    "emailPlaceholder": "votre@email.com",
+    "sendButton": "Envoyer le lien",
+    "sendingButton": "Envoi...",
+    "backToLogin": "Retour à la connexion",
+    "emailRequired": "Veuillez entrer votre email.",
+    "linkSent": "Si cet email existe, un lien a été envoyé.",
+    "sendError": "Impossible d'envoyer l'email."
+  },
+   "fournisseurProduitNew": {
+    "title": "Gestion des Produits",
+    "subtitle": "Gérez votre catalogue de produits et équipements",
+    "addButton": "Ajouter un produit",
+    "stats": {
+      "activeProducts": "Produits actifs",
+      "monthlyOrders": "Commandes ce mois",
+      "revenue": "Chiffre d'affaires",
+      "catalogs": "Catalogues"
+    },
+    "formTitle": "Ajouter un nouveau produit",
+    "productNameLabel": "Nom du produit",
+    "productNamePlaceholder": "Ex: Ciment CEM II 42.5",
+    "categoryLabel": "Catégorie",
+    "categoryPlaceholder": "Sélectionner...",
+    "priceLabel": "Prix unitaire (TND)",
+    "unitLabel": "Unité",
+    "unitPlaceholder": "Sélectionner...",
+    "stockLabel": "Stock disponible",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Description détaillée du produit...",
+    "imageUploadTitle": "Image du produit",
+    "imageUploadSubtitle": "Cliquez pour télécharger une image",
+    "pdfUploadTitle": "Fiche technique (PDF)",
+    "pdfUploadSubtitle": "Cliquez pour télécharger un PDF",
+    "cancelButton": "Annuler",
+    "submitButton": "Ajouter le produit",
+    "categories": {
+      "basicMaterials": "Matériaux de base",
+      "flooring": "Revêtements",
+      "paint": "Peinture",
+      "carpentry": "Menuiserie",
+      "electricity": "Électricité",
+      "plumbing": "Sanitaire"
+    },
+    "units": {
+      "piece": "Pièce",
+      "box": "Boîte",
+      "meter": "Mètre",
+      "squareMeter": "Mètre carré",
+      "liter": "Litre",
+      "kilogram": "Kilogramme"
+    }
+  },
+   "fournisseurProduits": {
+    "title": "Gestion des Produits",
+    "subtitle": "Gérez votre catalogue de produits et équipements",
+    "addButton": "Ajouter un produit",
+    "stats": {
+      "activeProducts": "Produits actifs",
+      "monthlyOrders": "Commandes ce mois",
+      "revenue": "Chiffre d'affaires",
+      "catalogs": "Catalogues"
+    },
+    "tableTitle": "Mes Produits",
+    "searchPlaceholder": "Rechercher...",
+    "table": {
+      "product": "Produit",
+      "category": "Catégorie",
+      "price": "Prix",
+      "stock": "Stock",
+      "status": "Statut",
+      "actions": "Actions"
+    }
+  },
+  "login": {
+    "welcomeTitle": "Bienvenue sur BMP.tn",
+    "welcomeSubtitle": "Plateforme digitale pour le secteur du bâtiment",
+    "emailPhoneLabel": "Email ou numéro de téléphone",
+    "emailPhonePlaceholder": "votre@email.com ou +21626770267",
+    "emailBadge": "Email",
+    "phoneBadge": "Téléphone",
+    "passwordLabel": "Mot de passe",
+    "passwordPlaceholder": "••••••••",
+    "forgotPassword": "Mot de passe oublié ?",
+    "loginButton": "Se connecter",
+    "loggingIn": "Connexion...",
+    "googleLoginHint": "Connexion rapide avec votre compte Google",
+    "noAccount": "Pas encore de compte?",
+    "signUp": "S'inscrire",
+    "emailPhoneRequired": "Veuillez entrer votre email ou numéro de téléphone.",
+    "passwordRequired": "Veuillez entrer votre mot de passe.",
+    "captchaRequired": "Veuillez confirmer que vous n'êtes pas un robot.",
+    "loginError": "Connexion impossible",
+    "googleError": "Connexion Google impossible",
+    "resendButton": "Renvoyer l'email de confirmation",
+    "resending": "Envoi...",
+    "resendSuccess": "Email de confirmation renvoyé. Vérifiez votre boîte mail.",
+    "resendError": "Impossible de renvoyer l'email."
+  },
+   "registerChooseRole": {
+    "title": "Créer un compte",
+    "subtitle": "Choisissez votre profil",
+    "artisan": {
+      "title": "Artisan",
+      "desc": "Gérer vos projets, devis et factures"
+    },
+    "prescriber": {
+      "title": "Prescripteur",
+      "desc": "Découvrir des produits et trouver des artisans"
+    },
+    "supplier": {
+      "title": "Fournisseur",
+      "desc": "Gérer votre catalogue de produits"
+    },
+    "admin": {
+      "title": "Admin",
+      "desc": "Administrer la plateforme"
+    },
+    "alreadyAccount": "Vous avez déjà un compte?",
+    "loginLink": "Se connecter"
+  },
+  "registerForm": {
+    "title": "Créer un compte",
+    "subtitle": "Complétez vos informations",
+    "lastNameLabel": "Nom",
+    "lastNamePlaceholder": "Dupont",
+    "firstNameLabel": "Prénom",
+    "firstNamePlaceholder": "Jean",
+    "emailLabel": "Email",
+    "emailPlaceholder": "jean@example.com",
+    "passwordLabel": "Mot de passe",
+    "passwordPlaceholder": "••••••••",
+    "passwordHint": "8 caractères min., une majuscule et un chiffre.",
+    "phoneLabel": "Téléphone",
+    "phonePlaceholder": "Votre numéro",
+    "companyLabel": "Entreprise (optionnel)",
+    "companyPlaceholder": "Nom de votre entreprise",
+    "backButton": "Retour",
+    "submitButton": "Créer mon compte",
+    "creatingButton": "Création...",
+    "successMessage": "Compte créé. Vérifiez votre email pour confirmer, puis connectez-vous.",
+    "errors": {
+      "lastNameMin": "Au moins 2 caractères.",
+      "lastNameMax": "Maximum 60 caractères.",
+      "firstNameMin": "Au moins 2 caractères.",
+      "firstNameMax": "Maximum 60 caractères.",
+      "emailRequired": "L'email est requis.",
+      "emailInvalid": "Adresse email invalide.",
+      "passwordRequired": "Le mot de passe est requis.",
+      "passwordMin": "Au moins 8 caractères.",
+      "passwordUppercase": "Au moins une majuscule.",
+      "passwordNumber": "Au moins un chiffre.",
+      "phoneRequired": "Le numéro est requis.",
+      "phoneInvalid": "Entre 6 et 14 chiffres.",
+      "invalidRole": "Rôle invalide",
+      "registerError": "Inscription impossible"
+    },
+    "passwordStrength": {
+      "minChars": "8 caractères min.",
+      "uppercase": "Majuscule",
+      "number": "Chiffre",
+      "special": "Caractère spécial",
+      "veryWeak": "Très faible",
+      "weak": "Faible",
+      "medium": "Moyen",
+      "strong": "Fort",
+      "strengthLabel": "Force :"
+    }
+  },
+  "countries": {
+    "tn": "Tunisie",
+    "dz": "Algérie",
+    "ma": "Maroc",
+    "ly": "Libye",
+    "eg": "Égypte",
+    "mr": "Mauritanie",
+    "sn": "Sénégal",
+    "ci": "Côte d'Ivoire",
+    "ng": "Nigeria",
+    "fr": "France",
+    "be": "Belgique",
+    "ch": "Suisse",
+    "lu": "Luxembourg",
+    "de": "Allemagne",
+    "it": "Italie",
+    "es": "Espagne",
+    "pt": "Portugal",
+    "nl": "Pays-Bas",
+    "uk": "Royaume-Uni",
+    "ae": "Émirats arabes unis",
+    "sa": "Arabie saoudite",
+    "qa": "Qatar",
+    "kw": "Koweït",
+    "lb": "Liban",
+    "us": "États-Unis",
+    "mx": "Mexique",
+    "br": "Brésil",
+    "in": "Inde",
+    "cn": "Chine",
+    "jp": "Japon",
+    "au": "Australie"
+  },
+  "resetPassword": {
+    "title": "Réinitialiser le mot de passe",
+    "subtitle": "Choisissez un nouveau mot de passe",
+    "passwordLabel": "Nouveau mot de passe",
+    "passwordPlaceholder": "••••••••",
+    "updateButton": "Mettre à jour",
+    "updatingButton": "Mise à jour...",
+    "backToLogin": "Retour à la connexion",
+    "tokenMissing": "Token manquant.",
+    "passwordMinLength": "Mot de passe doit contenir au moins 6 caractères.",
+    "success": "Mot de passe mis à jour.",
+    "error": "Impossible de réinitialiser."
+  },
+  "unauthorized": {
+    "title": "Accès refusé",
+    "description": "Vous n'avez pas l'autorisation d'accéder à cette page.",
+    "backToLogin": "Retour au login"
+  },
+   "verifyEmail": {
+    "title": "Vérification Email",
+    "subtitle": "Confirmation de votre compte",
+    "loadingMessage": "Vérification en cours...",
+    "successTitle": "Succès",
+    "errorTitle": "Erreur",
+    "successDefaultMessage": "Email vérifié. Vous pouvez vous connecter.",
+    "errorDefaultMessage": "Lien invalide ou expiré.",
+    "missingToken": "Token manquant.",
+    "goToLoginButton": "Aller à la connexion"
+  }
+}
+

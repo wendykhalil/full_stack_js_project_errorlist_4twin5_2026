@@ -3,6 +3,7 @@ import { Bell, Search } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { apiFetch } from "../auth/api";
 import { useAuth } from "../auth/AuthContext";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "");
 
@@ -212,6 +213,9 @@ export default function DashboardTopbar({ role = "ARTISAN", unreadCount = 0 }) {
       </div>
 
       <div className="flex items-center gap-3">
+        <div className="hidden lg:block">
+          <LanguageSwitcher />
+        </div>
         <span className="hidden rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600 md:inline-flex dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
           {config.roleLabel}
         </span>

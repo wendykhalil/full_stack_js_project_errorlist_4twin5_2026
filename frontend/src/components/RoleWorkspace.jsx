@@ -60,14 +60,12 @@ export default function RoleWorkspace({
     <>
       {/* Logo Section */}
       <div className={`flex h-16 items-center border-b border-blue-700/50 ${isSidebarCollapsed ? "justify-center px-2" : "px-4"}`}>
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm shadow-lg">
-            <img src={logo} alt="BMP.tn" className="h-5 w-5 brightness-0 invert" />
-          </div>
+        <div className="flex items-center gap-3">
+          <img src={logo} alt="BMP.tn" className="h-10 w-10 rounded-2xl bg-white p-1 shadow-sm" />
           {!isSidebarCollapsed ? (
             <div>
               <div className="text-base font-bold text-white">BMP.tn</div>
-              <div className="text-[10px] font-medium text-blue-200">{roleLabel}</div>
+              <div className="text-[10px] font-medium text-blue-100">{roleLabel}</div>
             </div>
           ) : null}
         </div>
@@ -106,7 +104,7 @@ export default function RoleWorkspace({
 
         {!isSidebarCollapsed ? (
           <>
-            <SectionLabel collapsed={isSidebarCollapsed}>Accessibilité</SectionLabel>
+            <SectionLabel collapsed={isSidebarCollapsed}>Accessibility</SectionLabel>
             <AccessibilityControls />
           </>
         ) : null}
@@ -151,12 +149,10 @@ export default function RoleWorkspace({
         <header className="sticky top-0 z-20 border-b border-blue-800/30 bg-gradient-to-r from-blue-800 via-blue-700 to-blue-800 backdrop-blur-md xl:hidden">
           <div className="flex items-center justify-between px-4 py-3">
             <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm shadow-md">
-                <img src={logo} alt="BMP.tn" className="h-5 w-5 brightness-0 invert" />
-              </div>
+              <img src={logo} alt="BMP.tn" className="h-9 w-9 rounded-2xl bg-white p-1 shadow-sm" />
               <div>
                 <div className="text-sm font-bold text-white">BMP.tn</div>
-                <div className="text-[10px] font-medium text-blue-200">{roleLabel}</div>
+                <div className="text-[10px] font-medium text-blue-100">{roleLabel}</div>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -192,7 +188,7 @@ export default function RoleWorkspace({
         </div>
 
         {/* Page Content */}
-        <main className="px-4 py-5 sm:px-5 xl:px-6">
+        <main className="w-full px-4 py-5 sm:px-5 xl:px-6">
           <Outlet />
         </main>
       </div>

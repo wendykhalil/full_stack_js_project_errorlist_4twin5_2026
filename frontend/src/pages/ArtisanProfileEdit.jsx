@@ -16,6 +16,8 @@ import {
   Navigation
 } from 'lucide-react';
 import SimpleFooter from '../components/Footer';
+import PageShell from '../components/PageShell';
+import MapPickerModal from '../components/MapPickerModal';
 
 export default function ArtisanProfileEdit() {
  
@@ -26,6 +28,7 @@ export default function ArtisanProfileEdit() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [updatingLocation, setUpdatingLocation] = useState(false);
+  const [isMapPickerOpen, setIsMapPickerOpen] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -39,7 +42,7 @@ export default function ArtisanProfileEdit() {
       street: '',
       city: '',
       postalCode: '',
-      country: 'Tunisie'
+      country: 'Tunisia'
     },
     location: {
       latitude: 0,
@@ -87,7 +90,7 @@ export default function ArtisanProfileEdit() {
               street: '',
               city: '',
               postalCode: '',
-              country: 'Tunisie'
+              country: 'Tunisia'
             },
             location: {
               latitude: artisanProfile.location?.coordinates?.[1] || 0,
@@ -100,7 +103,7 @@ export default function ArtisanProfileEdit() {
         }
       } catch (err) {
         console.error('Error fetching profile:', err);
-        setError('Erreur lors du chargement du profil');
+        setError('Unable to load profile');
       } finally {
         setLoading(false);
       }
@@ -112,44 +115,48 @@ export default function ArtisanProfileEdit() {
   }, [token, user]);
 
   // Obtenir la localisation actuelle
-  const getCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      setError('La géolocalisation n\'est pas supportée par votre navigateur');
-      return;
-    }
+  const openMapPicker = () => {
+    setError('');
+    setIsMapPickerOpen(true);
+  };
 
-    setUpdatingLocation(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-        setProfile(prev => ({
-          ...prev,
-          location: { latitude, longitude }
-        }));
+  const handleMapPlaceSelect = async (place) => {
+    const latitude = Number(place?.latitude || 0);
+    const longitude = Number(place?.longitude || 0);
+    const city = String(place?.city || '').trim();
+    const address = String(place?.address || '').trim();
 
-        // Optionnel : mettre à jour automatiquement sur le serveur
-        try {
-          await fetch('http://localhost:5000/api/artisan/profile/location', {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ latitude, longitude })
-          });
-          setSuccess('Localisation mise à jour avec succès');
-        } catch (err) {
-          console.error('Error updating location:', err);
-        } finally {
-          setUpdatingLocation(false);
-        }
+    setProfile((prev) => ({
+      ...prev,
+      region: city || prev.region,
+      address: {
+        ...prev.address,
+        city: city || prev.address?.city || '',
+        street: address || prev.address?.street || '',
       },
-      (err) => {
-        console.error('Geolocation error:', err);
-        setError('Impossible d\'obtenir votre position');
-        setUpdatingLocation(false);
-      }
-    );
+      location: { latitude, longitude },
+    }));
+
+    setIsMapPickerOpen(false);
+    setUpdatingLocation(true);
+    try {
+      await fetch('http://localhost:5000/api/artisan/profile/location', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ latitude, longitude }),
+      });
+      setSuccess('Location selected successfully. Save the profile to keep the new address details.');
+      setTimeout(() => setSuccess(''), 4000);
+    } catch (err) {
+      console.error('Error updating location:', err);
+      setSuccess('Location selected. Save the profile to finish updating your profile.');
+      setTimeout(() => setSuccess(''), 4000);
+    } finally {
+      setUpdatingLocation(false);
+    }
   };
 
   const handleImageChange = (e) => {
@@ -208,11 +215,11 @@ export default function ArtisanProfileEdit() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Erreur lors de la sauvegarde');
+        throw new Error(data.message || 'Unable to save profile');
       }
 
       await refreshMe();
-      setSuccess('Profil mis à jour avec succès !');
+      setSuccess('Profile updated successfully!');
       
       // Rediriger vers la page de profil après 2 secondes
       setTimeout(() => {
@@ -229,19 +236,22 @@ export default function ArtisanProfileEdit() {
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-      </div>
+      <PageShell>
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+        </div>
+      </PageShell>
     );
   }
 
   return (
-    <div className="flex-1 max-w-4xl mx-auto">
+    <PageShell>
+    <div className="flex-1 max-w-none mx-auto">
       <h1 className="text-3xl font-semibold text-slate-900 mb-2">
-        Modifier mon profil
+        Edit my profile
       </h1>
       <p className="text-sm text-slate-500 mb-8">
-        Complétez votre profil pour être visible par les prescripteurs
+        Complete your profile to become visible to prescribers
       </p>
 
       {error && (
@@ -263,11 +273,11 @@ export default function ArtisanProfileEdit() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Photo de profil */}
+        {/* Profile photo */}
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
             <Camera className="h-5 w-5" />
-            Photo de profil
+            Profile photo
           </h2>
           
           <div className="flex items-center gap-6">
@@ -298,7 +308,7 @@ export default function ArtisanProfileEdit() {
                 onClick={() => fileInputRef.current.click()}
                 className="px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 text-sm font-medium"
               >
-                Choisir une photo
+                Choose a photo
               </button>
               <p className="mt-2 text-xs text-slate-500">
                 JPG, PNG, GIF. Max 5MB.
@@ -307,17 +317,17 @@ export default function ArtisanProfileEdit() {
           </div>
         </div>
 
-        {/* Informations de base */}
+        {/* Basic information */}
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
             <User className="h-5 w-5" />
-            Informations personnelles
+            Personal information
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Métier *
+                Trade *
               </label>
               <select
                 value={profile.trade}
@@ -325,7 +335,7 @@ export default function ArtisanProfileEdit() {
                 required
                 className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
               >
-                <option value="">Sélectionnez un métier</option>
+                <option value="">Select a trade</option>
                 {tradeOptions.map(option => (
                   <option key={option} value={option}>{option}</option>
                 ))}
@@ -334,7 +344,7 @@ export default function ArtisanProfileEdit() {
 
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Téléphone *
+                Phone *
               </label>
               <input
                 type="tel"
@@ -361,22 +371,22 @@ export default function ArtisanProfileEdit() {
           </div>
         </div>
 
-        {/* Localisation */}
+        {/* Location */}
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
             <MapPin className="h-5 w-5" />
-            Localisation
+            Location
           </h2>
 
           <div className="mb-4">
             <button
               type="button"
-              onClick={getCurrentLocation}
+              onClick={openMapPicker}
               disabled={updatingLocation}
               className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 rounded-xl hover:bg-indigo-100 text-sm font-medium"
             >
               <Navigation className="h-4 w-4" />
-              {updatingLocation ? 'Obtention de la position...' : 'Mettre à jour ma position'}
+              {updatingLocation ? 'Saving location...' : 'Update my position'}
             </button>
             <p className="mt-2 text-xs text-slate-500">
               Votre position sera mise à jour quotidiennement
@@ -386,14 +396,14 @@ export default function ArtisanProfileEdit() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Région *
+                Region *
               </label>
               <input
                 type="text"
                 value={profile.region}
                 onChange={(e) => setProfile({...profile, region: e.target.value})}
                 required
-                placeholder="Ex: Tunis, Sousse, Sfax..."
+                placeholder="Example: Tunis, Sousse, Sfax..."
                 className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
               />
             </div>
@@ -432,7 +442,7 @@ export default function ArtisanProfileEdit() {
 
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Code postal
+                Postal code
               </label>
               <input
                 type="text"
@@ -475,7 +485,7 @@ export default function ArtisanProfileEdit() {
             {saving ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Enregistrement...
+                Saving...
               </>
             ) : (
               <>
@@ -488,6 +498,18 @@ export default function ArtisanProfileEdit() {
       </form>
 
       <SimpleFooter />
+      <MapPickerModal
+        open={isMapPickerOpen}
+        onClose={() => setIsMapPickerOpen(false)}
+        initialValue={{
+          latitude: profile.location?.latitude,
+          longitude: profile.location?.longitude,
+          city: profile.address?.city || profile.region || '',
+          address: profile.address?.street || '',
+        }}
+        onUsePlace={handleMapPlaceSelect}
+      />
     </div>
+    </PageShell>
   );
 }

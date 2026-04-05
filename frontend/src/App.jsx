@@ -71,11 +71,13 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Profile from "./pages/Profile";
 import AppErrorBoundary from "./components/AppErrorBoundary";
+import AutoPageTranslator from "./components/translation/AutoPageTranslator";
 
 export default function App() {
     return (
         <AppErrorBoundary>
         <BrowserRouter>
+            <AutoPageTranslator />
             <AppErrorBoundary><TawkToChat /></AppErrorBoundary>
             <AppErrorBoundary><RealtimeNotifications /></AppErrorBoundary>
             <Routes>

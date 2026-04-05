@@ -5,6 +5,7 @@ import { useAuth } from "../auth/AuthContext";
 import { apiFetch } from "../auth/api";
 import { roleToBasePath } from "../auth/role";
 import logo from "../assets/bmp-logo.svg";
+import LanguageSwitcher from "../components/LanguageSwitcher";
 
 const COUNTRY_CODES = [
   { code: "+216", label: "Tunisia", flag: "🇹🇳" },
@@ -79,6 +80,7 @@ export default function PhoneLogin() {
   }
 
   return (
+    <>
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
       {/* Professional Navbar */}
       <nav className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-sm">
@@ -100,7 +102,8 @@ export default function PhoneLogin() {
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex md:items-center md:gap-6 lg:gap-8">
+            <div className="hidden md:flex md:items-center md:gap-4 lg:gap-6">
+              <LanguageSwitcher />
               <Link to="/about" className="text-sm font-medium text-slate-600 transition-colors hover:text-blue-600 lg:text-base">
                 About
               </Link>
@@ -116,7 +119,8 @@ export default function PhoneLogin() {
             </div>
 
             {/* Mobile Menu Button - Simple for now */}
-            <div className="md:hidden">
+            <div className="flex items-center gap-2 md:hidden">
+              <LanguageSwitcher />
               <Link 
                 to="/register" 
                 className="rounded-full bg-blue-600 px-4 py-1.5 text-sm font-semibold text-white shadow-sm"
@@ -424,5 +428,7 @@ export default function PhoneLogin() {
         </div>
       </footer>
     </div>
+    </>
+
   );
 }

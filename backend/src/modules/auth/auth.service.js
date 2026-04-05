@@ -370,6 +370,9 @@ async function updateProfile(userId, profileData) {
         address: profileData.address || '',
         description: profileData.description || '',
         logo: profileData.logo || '',
+        city: profileData.city || '',
+        latitude: profileData.latitude !== undefined && profileData.latitude !== '' ? Number(profileData.latitude) : null,
+        longitude: profileData.longitude !== undefined && profileData.longitude !== '' ? Number(profileData.longitude) : null,
         categories: Array.isArray(categories) ? categories : []
       });
       
@@ -388,6 +391,9 @@ async function updateProfile(userId, profileData) {
       if (profileData.address !== undefined) supplierProfile.address = profileData.address;
       if (profileData.description !== undefined) supplierProfile.description = profileData.description;
       if (profileData.logo !== undefined) supplierProfile.logo = profileData.logo;
+      if (profileData.city !== undefined) supplierProfile.city = profileData.city;
+      if (profileData.latitude !== undefined) supplierProfile.latitude = profileData.latitude === '' ? null : Number(profileData.latitude);
+      if (profileData.longitude !== undefined) supplierProfile.longitude = profileData.longitude === '' ? null : Number(profileData.longitude);
       if (categories !== undefined) {
         supplierProfile.categories = Array.isArray(categories) ? categories : [];
       }

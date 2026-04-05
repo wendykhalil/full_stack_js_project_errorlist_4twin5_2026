@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../auth/AuthContext';
 import {
   MessageCircle,
@@ -14,6 +15,7 @@ import SimpleFooter from '../components/Footer';
 
 export default function Messages() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { token } = useAuth();
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -39,7 +41,7 @@ export default function Messages() {
         });
         
         if (!response.ok) {
-          throw new Error('Erreur lors du chargement');
+          throw new Error('Error while loading messages');
         }
         
         const data = await response.json();
@@ -86,7 +88,7 @@ export default function Messages() {
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-          <p className="text-sm text-slate-500">Chargement des messages...</p>
+          <p className="text-sm text-slate-500">{t('messages.loading', 'Loading messages...')}</p>
         </div>
       </div>
     );
@@ -102,7 +104,7 @@ export default function Messages() {
             onClick={() => window.location.reload()}
             className="mt-4 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
           >
-            Réessayer
+            {t('common.retry', 'Retry')}
           </button>
         </div>
       </div>
@@ -118,9 +120,9 @@ export default function Messages() {
             <MessageCircle className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900">Messages</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900">{t('messages.title', 'Messages')}</h1>
             <p className="mt-1 text-slate-500">
-              Vos conversations avec les artisans et fournisseurs
+              {t('messages.subtitle', 'Your conversations with artisans and suppliers')}
             </p>
           </div>
         </div>
@@ -133,10 +135,10 @@ export default function Messages() {
             <Inbox className="h-8 w-8 text-slate-400" />
           </div>
           <h3 className="mt-4 text-lg font-semibold text-slate-900">
-            Aucune conversation
+            {t('messages.emptyTitle', 'No conversations yet')}
           </h3>
           <p className="mt-2 text-sm text-slate-500">
-            Les messages que vous échangez apparaîtront ici
+            {t('messages.emptySubtitle', 'Messages you exchange will appear here')}
           </p>
         </div>
       ) : (
@@ -171,7 +173,7 @@ export default function Messages() {
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
-                    <h3 className="font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                    <h3 className="font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors" data-no-auto-translate translate="no">
                       {conv.user.firstName} {conv.user.lastName}
                     </h3>
                     <div className="flex items-center gap-1 text-xs text-slate-400">

@@ -3,7 +3,7 @@ import { HardHat, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { useTranslation } from 'react-i18next';
-import LanguageSwitcher from "../components/LanguageSwitcher"; // Import du sélecteur
+import AuthLanguageSwitcher from "../components/AuthLanguageSwitcher";
 
 export default function ForgotPassword() {
   const { t } = useTranslation();
@@ -17,10 +17,14 @@ export default function ForgotPassword() {
 
   async function onSubmit(e) {
     e.preventDefault();
-    setError(""); setMsg("");
+    setError("");
+    setMsg("");
 
     const value = email.trim();
-    if (!value) { setError(t('forgotPassword.emailRequired')); return; }
+    if (!value) {
+      setError(t('forgotPassword.emailRequired'));
+      return;
+    }
 
     setLoading(true);
     try {
@@ -35,20 +39,15 @@ export default function ForgotPassword() {
 
   return (
     <>
-      {/* Language Switcher - fixed top right */}
-      <div className="fixed top-4 right-4 z-50">
-        <LanguageSwitcher />
-      </div>
+      <AuthLanguageSwitcher />
 
       <div className="relative flex h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-slate-50 via-indigo-50/60 to-slate-100 px-4">
-        {/* Éléments de fond (blur, cercles) */}
         <div className="pointer-events-none absolute inset-0 opacity-[0.35] [background-image:radial-gradient(circle_at_1px_1px,rgba(99,102,241,0.18)_1px,transparent_0)] [background-size:22px_22px]" />
         <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-indigo-300/50 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-24 -right-24 h-80 w-80 rounded-full bg-sky-300/50 blur-3xl" />
         <div className="pointer-events-none absolute top-1/3 right-1/4 h-64 w-64 rounded-full bg-purple-300/45 blur-3xl" />
 
         <div className="relative w-full max-w-lg">
-          {/* Logo et titres */}
           <div className="text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-indigo-700 text-white shadow-sm">
               <HardHat className="h-7 w-7" />
@@ -61,14 +60,17 @@ export default function ForgotPassword() {
             </p>
           </div>
 
-          {/* Formulaire */}
           <div className="mt-8 rounded-3xl border border-slate-200/80 bg-white/90 p-8 shadow-lg shadow-slate-200/60 backdrop-blur">
             <form onSubmit={onSubmit} className="space-y-5" noValidate>
               <div>
                 <label className="block text-sm font-medium text-slate-700">{t('forgotPassword.emailLabel')}</label>
                 <input
                   value={email}
-                  onChange={(e) => { setEmail(e.target.value); setError(""); setMsg(""); }}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setError("");
+                    setMsg("");
+                  }}
                   type="email"
                   autoComplete="email"
                   placeholder={t('forgotPassword.emailPlaceholder')}

@@ -1,5 +1,6 @@
 import React from "react";
 import { useTranslation } from 'react-i18next';
+import PageShell from '../components/PageShell';
 
 const Stepper = ({ step }) => (
   <div className="mt-6 flex items-center gap-4">
@@ -28,7 +29,8 @@ export default function ArtisanFactureStep3() {
   const { t } = useTranslation();
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-10">
+    <PageShell>
+    <main className="mx-auto max-w-none px-4 py-10">
       <h1 className="text-3xl font-semibold text-slate-900">
         {t('artisanFactureStep3.title')}
       </h1>
@@ -91,5 +93,6 @@ export default function ArtisanFactureStep3() {
         </div>
       </div>
     </main>
+    </PageShell>
   );
 }

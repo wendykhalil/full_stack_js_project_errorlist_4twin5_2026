@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../auth/AuthContext';
 import { 
   ChevronLeft, 
@@ -44,6 +45,7 @@ function AttachmentPreview({ attachment, own }) {
 
 export default function Conversation() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { token, user } = useAuth();
   const { userId } = useParams();
   const messagesEndRef = useRef(null);
@@ -172,7 +174,7 @@ export default function Conversation() {
             onClick={() => window.location.reload()}
             className="mt-4 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
           >
-            Réessayer
+            {t('common.retry', 'Retry')}
           </button>
         </div>
       </div>
@@ -207,9 +209,9 @@ export default function Conversation() {
                 </div>
                 <div>
                   <h2 className="font-semibold text-slate-900">
-                    {otherUser ? `${otherUser.firstName} ${otherUser.lastName}` : 'Utilisateur'}
+                    <span data-no-auto-translate translate="no">{otherUser ? `${otherUser.firstName} ${otherUser.lastName}` : t('messages.userFallback', 'User')}</span>
                   </h2>
-                  <p className="text-xs text-slate-400">En ligne</p>
+                  <p className="text-xs text-slate-400">{t('messages.online', 'Online')}</p>
                 </div>
               </div>
             </div>
@@ -234,9 +236,9 @@ export default function Conversation() {
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
                   <MessageCircle className="h-8 w-8 text-slate-400" />
                 </div>
-                <h3 className="mt-4 text-lg font-semibold text-slate-900">Aucun message</h3>
+                <h3 className="mt-4 text-lg font-semibold text-slate-900">{t('messages.emptyConversationTitle', 'No messages yet')}</h3>
                 <p className="mt-1 text-sm text-slate-500">
-                  Envoyez un message pour démarrer la conversation
+                  {t('messages.emptyConversationSubtitle', 'Send a message to start the conversation')}
                 </p>
               </div>
             ) : (
@@ -258,7 +260,7 @@ export default function Conversation() {
                             : 'bg-white text-slate-900 border border-slate-200'
                         }`}>
                           {msg.content && (
-                            <p className="whitespace-pre-wrap text-sm leading-relaxed">{msg.content}</p>
+                            <p className="whitespace-pre-wrap text-sm leading-relaxed" data-no-auto-translate translate="no">{msg.content}</p>
                           )}
                           {(msg.attachments || []).map((attachment, index) => (
                             <AttachmentPreview key={`${msg._id}-${index}`} attachment={attachment} own={isOwn} />
@@ -308,7 +310,7 @@ export default function Conversation() {
                 type="text"
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Écrivez votre message..."
+                placeholder={t('messages.writePlaceholder', 'Write your message...')}
                 className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
                 disabled={sending}
               />

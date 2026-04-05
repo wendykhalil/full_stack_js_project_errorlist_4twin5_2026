@@ -257,3 +257,10 @@ export async function smartSearchAI({ q, scope = 'all', limit = 8 } = {}) {
   const params = new URLSearchParams({ q, scope, limit });
   return apiFetch(`/ai/smart-search?${params}`);
 }
+
+export async function translateUiBatch({ texts, targetLang, sourceLang = 'auto' }) {
+  return apiFetch('/translations/translate', {
+    method: 'POST',
+    body: { texts, targetLang, sourceLang },
+  });
+}

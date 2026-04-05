@@ -17,6 +17,7 @@ import { useAuth } from "../auth/AuthContext";
 import { apiFetch } from "../auth/api";
 import { roleToBasePath } from "../auth/role";
 import logo from "../assets/bmp-logo.svg";
+import LanguageSwitcher from "../components/LanguageSwitcher";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -116,6 +117,7 @@ export default function Login() {
   const showResend = error?.toLowerCase().includes("verif") || error?.toLowerCase().includes("email not");
 
   return (
+    <>
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
       {/* Professional Navbar with Role Dropdown */}
       <nav className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
@@ -137,7 +139,8 @@ export default function Login() {
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex md:items-center md:gap-6 lg:gap-8">
+            <div className="hidden md:flex md:items-center md:gap-4 lg:gap-6">
+              <LanguageSwitcher />
               {/* Role Dropdown */}
               <div className="relative">
                 <button
@@ -183,6 +186,10 @@ export default function Login() {
               >
                 Get Started
               </Link>
+            </div>
+
+            <div className="flex items-center gap-2 md:hidden">
+              <LanguageSwitcher />
             </div>
 
             {/* Mobile Menu Button */}
@@ -510,5 +517,7 @@ export default function Login() {
         </div>
       </footer>
     </div>
+    </>
+
   );
 }

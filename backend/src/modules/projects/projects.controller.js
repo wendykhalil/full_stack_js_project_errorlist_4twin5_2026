@@ -62,6 +62,8 @@ async function createProject(req, res, next) {
       address,
       budgetTND,
       surfaceM2,
+      latitude,
+      longitude,
       startDate,
       endDate,
       phoneNumber,
@@ -84,6 +86,8 @@ async function createProject(req, res, next) {
       location: {
         city: city ? String(city).trim() : '',
         address: address ? String(address).trim() : '',
+        latitude: toNumber(latitude) !== undefined ? toNumber(latitude) : null,
+        longitude: toNumber(longitude) !== undefined ? toNumber(longitude) : null,
       },
       ...(toNumber(budgetTND) !== undefined ? { budgetTND: toNumber(budgetTND) } : {}),
       ...(toNumber(surfaceM2) !== undefined ? { surfaceM2: toNumber(surfaceM2) } : {}),
@@ -171,6 +175,8 @@ async function updateProject(req, res, next) {
       address,
       budgetTND,
       surfaceM2,
+      latitude,
+      longitude,
       startDate,
       endDate,
       phoneNumber,
@@ -200,10 +206,12 @@ async function updateProject(req, res, next) {
     if (description !== undefined) project.description = String(description).trim();
     if (category !== undefined) project.category = String(category).trim();
 
-    if (city !== undefined || address !== undefined) {
+    if (city !== undefined || address !== undefined || latitude !== undefined || longitude !== undefined) {
       project.location = {
         city: city !== undefined ? String(city).trim() : (project.location?.city || ''),
         address: address !== undefined ? String(address).trim() : (project.location?.address || ''),
+        latitude: latitude !== undefined ? (toNumber(latitude) !== undefined ? toNumber(latitude) : null) : (project.location?.latitude ?? null),
+        longitude: longitude !== undefined ? (toNumber(longitude) !== undefined ? toNumber(longitude) : null) : (project.location?.longitude ?? null),
       };
     }
 

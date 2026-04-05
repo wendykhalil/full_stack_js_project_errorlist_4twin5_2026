@@ -8,6 +8,7 @@ const ordersRoutes = require('../modules/orders/orders.routes');
 const messagesRoutes = require('../modules/messages/messages.routes');
 const documentsRoutes = require('../modules/documents/documents.routes');
 const aiRoutes = require('../modules/ai-assistant/ai.routes');
+const translationRoutes = require('../modules/translation/translation.routes');
 
 // ✅ NOUVEAUX IMPORTS
 const artisanProfileRoutes = require('../modules/artisan/artisanProfile.routes');
@@ -133,6 +134,7 @@ router.use('/orders', ordersRoutes);
 router.use('/messages', messagesRoutes);
 router.use('/documents', documentsRoutes);
 router.use('/ai', aiRoutes);
+router.use('/translations', translationRoutes);
 
 // ✅ NOUVELLES ROUTES
 router.use('/artisan/profile', artisanProfileRoutes);

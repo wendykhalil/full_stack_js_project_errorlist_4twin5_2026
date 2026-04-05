@@ -6,7 +6,15 @@ function money(value) {
 }
 
 function docLabel(docType) {
-  return docType === 'quote' ? 'Devis' : 'Facture';
+  return docType === 'quote' ? 'Quote' : 'Invoice';
+}
+
+function resolveReference(docData = {}, docType = 'quote') {
+  return docData.reference || docData.number || `${docType === 'quote' ? 'QUOTE' : 'INVOICE'}-${new Date(docData.createdAt || Date.now()).getFullYear()}`;
+}
+
+function resolveProjectLabel(docData = {}) {
+  return docData.projectTitle || docData.projectName || docData.project?.title || '—';
 }
 
 function drawRow(pdf, y, columns, widths, options = {}) {
@@ -28,7 +36,7 @@ function drawRow(pdf, y, columns, widths, options = {}) {
 export function exportDocumentPdf(docType, docData) {
   const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
   const title = docLabel(docType);
-  const ref = docData.reference || docData._id || 'draft';
+  const ref = resolveReference(docData, docType);
   const pageWidth = pdf.internal.pageSize.getWidth();
   let y = 18;
 
@@ -40,30 +48,30 @@ export function exportDocumentPdf(docType, docData) {
   pdf.text(`BMP.tn • ${title}`, 18, 25);
   pdf.setFontSize(10);
   pdf.setFont('helvetica', 'normal');
-  pdf.text(`Référence: ${ref}`, 18, 33);
-  pdf.text(`Statut: ${docData.status || 'DRAFT'}`, 75, 33);
-  pdf.text(`Date: ${new Date(docData.createdAt || Date.now()).toLocaleDateString('fr-TN')}`, 130, 33);
+  pdf.text(`Reference: ${ref}`, 18, 33);
+  pdf.text(`Status: ${docData.status || 'DRAFT'}`, 78, 33);
+  pdf.text(`Date: ${new Date(docData.createdAt || Date.now()).toLocaleDateString('en-GB')}`, 130, 33);
   pdf.setTextColor(15, 23, 42);
   y = 48;
 
   pdf.setFontSize(11);
   pdf.setFont('helvetica', 'bold');
-  pdf.text('Informations document', 14, y);
+  pdf.text('Document information', 14, y);
   y += 6;
   pdf.setFont('helvetica', 'normal');
   pdf.setDrawColor(226, 232, 240);
   pdf.roundedRect(12, y, pageWidth - 24, 25, 4, 4);
-  pdf.text(`Projet: ${docData.projectTitle || docData.projectName || docData.projectId || '-'}`, 16, y + 8);
-  pdf.text(`Sous-total: ${money(docData.subTotal)}`, 16, y + 16);
-  pdf.text(`TVA: ${(Number(docData.taxRate || 0) * 100).toFixed(0)}%`, 78, y + 16);
-  pdf.text(`Remise: ${money(docData.discount)}`, 118, y + 16);
+  pdf.text(`Project: ${resolveProjectLabel(docData)}`, 16, y + 8);
+  pdf.text(`Subtotal: ${money(docData.subTotal)}`, 16, y + 16);
+  pdf.text(`VAT: ${(Number(docData.taxRate || 0) * 100).toFixed(0)}%`, 78, y + 16);
+  pdf.text(`Discount: ${money(docData.discount)}`, 118, y + 16);
   pdf.setFont('helvetica', 'bold');
   pdf.text(`Total: ${money(docData.total)}`, 158, y + 16);
   y += 34;
 
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(11);
-  y = drawRow(pdf, y, ['Description', 'Qté', 'Prix unit.', 'Total'], [96, 20, 34, 34], {
+  y = drawRow(pdf, y, ['Description', 'Qty', 'Unit price', 'Total'], [96, 20, 34, 34], {
     fillColor: [241, 245, 249],
     bold: true,
   });
@@ -73,7 +81,7 @@ export function exportDocumentPdf(docType, docData) {
     if (y > 265) {
       pdf.addPage();
       y = 18;
-      y = drawRow(pdf, y, ['Description', 'Qté', 'Prix unit.', 'Total'], [96, 20, 34, 34], {
+      y = drawRow(pdf, y, ['Description', 'Qty', 'Unit price', 'Total'], [96, 20, 34, 34], {
         fillColor: [241, 245, 249],
         bold: true,
       });
@@ -92,41 +100,41 @@ export function exportDocumentPdf(docType, docData) {
   pdf.setFillColor(248, 250, 252);
   pdf.roundedRect(110, y, pageWidth - 122, 30, 4, 4, 'F');
   pdf.setFont('helvetica', 'normal');
-  pdf.text(`Sous-total`, 116, y + 8);
+  pdf.text('Subtotal', 116, y + 8);
   pdf.text(money(docData.subTotal), pageWidth - 18, y + 8, { align: 'right' });
-  pdf.text(`TVA`, 116, y + 15);
+  pdf.text('VAT', 116, y + 15);
   pdf.text(money(docData.taxAmount), pageWidth - 18, y + 15, { align: 'right' });
-  pdf.text(`Remise`, 116, y + 22);
+  pdf.text('Discount', 116, y + 22);
   pdf.text(money(docData.discount), pageWidth - 18, y + 22, { align: 'right' });
   pdf.setFont('helvetica', 'bold');
-  pdf.text(`Total`, 116, y + 29);
+  pdf.text('Total', 116, y + 29);
   pdf.text(money(docData.total), pageWidth - 18, y + 29, { align: 'right' });
 
   const footerY = 286;
   pdf.setFont('helvetica', 'normal');
   pdf.setFontSize(9);
   pdf.setTextColor(100, 116, 139);
-  pdf.text('Document généré depuis BMP.tn', 14, footerY);
-  pdf.text('Merci pour votre confiance.', pageWidth - 14, footerY, { align: 'right' });
+  pdf.text('Generated from BMP.tn', 14, footerY);
+  pdf.text('Thank you for your trust.', pageWidth - 14, footerY, { align: 'right' });
   pdf.save(`${title.toLowerCase()}-${ref}.pdf`);
 }
 
 export function exportDocumentExcel(docType, docData) {
   const label = docLabel(docType);
-  const ref = docData.reference || docData._id || 'draft';
+  const ref = resolveReference(docData, docType);
   const rows = [
-    [ 'BMP.tn', '', '', '' ],
-    [ label.toUpperCase(), '', '', '' ],
-    [ 'Référence', ref, 'Date', new Date(docData.createdAt || Date.now()).toLocaleDateString('fr-TN') ],
-    [ 'Projet', docData.projectTitle || docData.projectName || docData.projectId || '-', 'Statut', docData.status || 'DRAFT' ],
+    ['BMP.tn', '', '', ''],
+    [label.toUpperCase(), '', '', ''],
+    ['Reference', ref, 'Date', new Date(docData.createdAt || Date.now()).toLocaleDateString('en-GB')],
+    ['Project', resolveProjectLabel(docData), 'Status', docData.status || 'DRAFT'],
     [],
-    [ 'Description', 'Quantité', 'Prix unitaire (TND)', 'Total ligne (TND)' ],
+    ['Description', 'Quantity', 'Unit price (TND)', 'Line total (TND)'],
     ...(docData.lines || []).map((line) => [line.description || '', Number(line.quantity || 0), Number(line.unitPrice || 0), Number(line.lineTotal || 0)]),
     [],
-    [ '', '', 'Sous-total', Number(docData.subTotal || 0) ],
-    [ '', '', 'TVA', Number(docData.taxAmount || 0) ],
-    [ '', '', 'Remise', Number(docData.discount || 0) ],
-    [ '', '', 'Total', Number(docData.total || 0) ],
+    ['', '', 'Subtotal', Number(docData.subTotal || 0)],
+    ['', '', 'VAT', Number(docData.taxAmount || 0)],
+    ['', '', 'Discount', Number(docData.discount || 0)],
+    ['', '', 'Total', Number(docData.total || 0)],
   ];
 
   const ws = XLSX.utils.aoa_to_sheet(rows);

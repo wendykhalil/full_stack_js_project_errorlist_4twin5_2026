@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
+import PageShell from '../components/PageShell';
 
 const Stepper = ({ step }) => (
   <div className="mt-6 flex items-center gap-4">
@@ -81,7 +82,8 @@ export default function ArtisanFactureStep1() {
   }, []);
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-10">
+    <PageShell>
+    <main className="mx-auto max-w-none px-4 py-10">
       <h1 className="text-3xl font-semibold text-slate-900">{t('artisanFactureStep1.title')}</h1>
       {state?.projectTitle ? <p className="mt-3 inline-flex rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">Projet sélectionné: {state.projectTitle}</p> : null}
       <p className="mt-1 text-sm text-slate-500">{t('artisanFactureStep1.subtitle')}</p>
@@ -137,5 +139,6 @@ export default function ArtisanFactureStep1() {
         </button>
       </div>
     </main>
+    </PageShell>
   );
 }
