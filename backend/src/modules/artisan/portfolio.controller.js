@@ -30,7 +30,21 @@ async function addProject(req, res) {
       images
     );
 
-    return apiResponse(res, 'Projet ajouté avec succès', project, 201);
+    const response = {
+      success: true,
+      message: 'Projet ajouté avec succès',
+      data: project
+    };
+
+    // Add trial information if this was a trial attempt
+    if (req.isTrialAttempt) {
+      response.trialInfo = {
+        isTrialAttempt: true,
+        message: 'Ceci est votre essai gratuit pour créer des portfolios. Vous devez vous abonner pour en créer d\'autres.',
+      };
+    }
+
+    return res.status(201).json(response);
   } catch (error) {
     console.error('Error adding portfolio project:', error);
     return res.status(error.statusCode || 500).json({

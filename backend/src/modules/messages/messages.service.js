@@ -155,6 +155,11 @@ async function getRecentConversations(userId) {
     const conversations = {};
 
     messages.forEach((msg) => {
+      // Skip if sender or receiver is null (user was deleted)
+      if (!msg.senderId || !msg.receiverId) {
+        return;
+      }
+
       const otherId = msg.senderId._id.toString() === userId.toString() ? msg.receiverId._id.toString() : msg.senderId._id.toString();
 
       if (!conversations[otherId]) {

@@ -112,15 +112,6 @@ export default function RoleWorkspace({
 
       {/* User Section */}
       <div className="border-t border-blue-700/50 p-3 flex flex-col items-center gap-2">
-        {/* Profile image and name */}
-        {!isSidebarCollapsed && user && (
-          <div className="flex flex-col items-center w-full mb-2">
-            {avatar}
-            <div className="mt-2 text-sm font-semibold text-white text-center">
-              {user.firstName} {user.lastName}
-            </div>
-          </div>
-        )}
         <button
           type="button"
           onClick={onLogout}

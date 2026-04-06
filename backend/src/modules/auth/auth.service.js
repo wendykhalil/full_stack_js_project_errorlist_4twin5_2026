@@ -167,7 +167,7 @@ async function me(userId) {
     e.statusCode = 404; 
     throw e;
   }
-  console.log('me() - User with populated profile:', user.supplierProfile);
+  // User may not have a supplier profile - that's normal for artisans, prescripteurs, etc.
   return sanitizeUser(user);
 }
 

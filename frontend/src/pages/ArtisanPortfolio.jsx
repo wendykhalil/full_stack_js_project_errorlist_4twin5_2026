@@ -79,11 +79,7 @@ export default function ArtisanPortfolio() {
   }, [token]);
 
   const handleDelete = async (projectId) => {
-    if (!isSubscribed) {
-      alert('Abonnement actif requis pour supprimer un projet. Contactez l\'administrateur.');
-      return;
-    }
-
+    // Trial feature - let backend handle subscription check
     if (!window.confirm('Voulez-vous vraiment supprimer ce projet ?')) return;
 
     setDeleting(projectId);
@@ -96,13 +92,19 @@ export default function ArtisanPortfolio() {
       });
 
       if (!response.ok) {
-        throw new Error('Erreur lors de la suppression');
+        const data = await response.json();
+        if (data.message && data.message.includes('essai gratuit')) {
+          setShowSubscriptionAlert(true);
+        } else {
+          throw new Error(data.message || 'Erreur lors de la suppression');
+        }
+        return;
       }
 
       setProjects(projects.filter(p => p._id !== projectId));
     } catch (err) {
       console.error('Error deleting project:', err);
-      alert('Erreur lors de la suppression du projet');
+      alert(err.message || 'Erreur lors de la suppression du projet');
     } finally {
       setDeleting(null);
     }
@@ -131,18 +133,12 @@ export default function ArtisanPortfolio() {
         </div>
 
         <button
-          onClick={() => {
-            if (!isSubscribed) {
-              setShowSubscriptionAlert(true);
-              return;
-            }
-            navigate('/artisan/portfolio/add');
-          }}
+          onClick={() => navigate('/artisan/portfolio/add')}
           disabled={checkingSubscription}
-          className={`inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white ${isSubscribed ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-slate-300 cursor-not-allowed'}`}
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
         >
           <Plus className="h-4 w-4" />
-          {isSubscribed ? 'Ajouter un projet' : 'Abonnement requis'}
+          Ajouter un projet
         </button>
       </div>
 
@@ -172,11 +168,10 @@ export default function ArtisanPortfolio() {
             Vous n'avez pas encore ajouté de projet à votre portfolio.
           </p>
           <button
-            onClick={() => isSubscribed ? navigate('/artisan/portfolio/add') : null}
-            disabled={!isSubscribed}
-            className={`mt-6 rounded-xl px-6 py-3 text-sm font-semibold text-white ${isSubscribed ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-slate-300 cursor-not-allowed'}`}
+            onClick={() => navigate('/artisan/portfolio/add')}
+            className="mt-6 rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-700"
           >
-            {isSubscribed ? 'Ajouter mon premier projet' : 'Abonnement requis'}
+            Ajouter mon premier projet
           </button>
         </div>
       ) : (
@@ -235,16 +230,15 @@ export default function ArtisanPortfolio() {
                   </button>
                   <button
                     onClick={() => navigate(`/artisan/portfolio/edit/${project._id}`)}
-                    disabled={!isSubscribed}
-                    className={`flex-1 flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium rounded-lg ${isSubscribed ? 'text-slate-600 hover:bg-slate-50' : 'text-slate-400 bg-slate-100 cursor-not-allowed'}`}
+                    className="flex-1 flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium rounded-lg text-slate-600 hover:bg-slate-50"
                   >
                     <Edit className="h-3 w-3" />
                     Modifier
                   </button>
                   <button
                     onClick={() => handleDelete(project._id)}
-                    disabled={!isSubscribed || deleting === project._id}
-                    className={`flex-1 flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium rounded-lg ${isSubscribed ? 'text-red-600 hover:bg-red-50' : 'text-slate-400 bg-slate-100 cursor-not-allowed'}`}
+                    disabled={deleting === project._id}
+                    className="flex-1 flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium rounded-lg text-red-600 hover:bg-red-50 disabled:opacity-50"
                   >
                     {deleting === project._id ? (
                       <Loader2 className="h-3 w-3 animate-spin" />

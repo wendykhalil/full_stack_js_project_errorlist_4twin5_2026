@@ -40,4 +40,11 @@ router.get('/public/:id',
   artisanProfileController.getPublicProfile
 );
 
+// DEBUG/TEST ONLY: Reset trial features (remove in production)
+router.post('/dev/reset-trials',
+  authRequired,
+  requireRoles('ARTISAN'),
+  artisanProfileController.resetTrialFeatures
+);
+
 module.exports = router;

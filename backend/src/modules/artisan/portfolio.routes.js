@@ -4,7 +4,7 @@ const multer = require('multer');
 const portfolioController = require('./portfolio.controller');
 const { authRequired } = require('../../middleware/authMiddleware');
 const { requireRoles } = require('../../middleware/roleMiddleware');
-const { requireActiveSubscription } = require('../../middleware/subscriptionMiddleware');
+const { allowOneTrialOrActiveSubscription } = require('../../middleware/trialMiddleware');
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -21,7 +21,7 @@ const upload = multer({
 router.post('/',
   authRequired,
   requireRoles('ARTISAN'),
-  requireActiveSubscription,
+  allowOneTrialOrActiveSubscription('portfolioCreated'),
   upload.array('images', 10),
   portfolioController.addProject
 );
@@ -41,7 +41,7 @@ router.get('/:id',
 router.patch('/:id',
   authRequired,
   requireRoles('ARTISAN'),
-  requireActiveSubscription,
+  allowOneTrialOrActiveSubscription('portfolioCreated'),
   upload.array('images', 10),
   portfolioController.updateProject
 );
@@ -49,7 +49,7 @@ router.patch('/:id',
 router.delete('/:id',
   authRequired,
   requireRoles('ARTISAN'),
-  requireActiveSubscription,
+  allowOneTrialOrActiveSubscription('portfolioCreated'),
   portfolioController.deleteProject
 );
 

@@ -546,10 +546,8 @@ export default function ArtisanProjects() {
   };
 
   const guardSubscription = (callback) => {
-    if (!isSubscribed) {
-      setShowSubscriptionAlert(true);
-      return;
-    }
+    // Only guard for features that are NOT part of the trial
+    // Trial features: project, portfolio, quote, invoice - these are allowed to proceed
     callback();
   };
 
@@ -585,7 +583,13 @@ export default function ArtisanProjects() {
       setImages([]);
       await load();
     } catch (e2) {
-      setErr(e2.message || 'Create failed');
+      // Check if this is a subscription/trial blocking error
+      if (e2.status === 403 || (e2.message && (e2.message.includes('essai gratuit') || e2.message.includes('Abonnement')))) {
+        setErr(''); // Clear any previous errors
+        setShowSubscriptionAlert(true);
+      } else {
+        setErr(e2.message || 'Create failed');
+      }
     }
   };
 
@@ -601,7 +605,13 @@ export default function ArtisanProjects() {
       setImages([]);
       await load();
     } catch (e2) {
-      setErr(e2.message || 'Update failed');
+      // Check if this is a subscription/trial blocking error
+      if (e2.status === 403 || (e2.message && (e2.message.includes('essai gratuit') || e2.message.includes('Abonnement')))) {
+        setErr('');
+        setShowSubscriptionAlert(true);
+      } else {
+        setErr(e2.message || 'Update failed');
+      }
     }
   };
 
@@ -613,7 +623,12 @@ export default function ArtisanProjects() {
       setOpenMenuId(null);
       await load();
     } catch (e2) {
-      setErr(e2.message || 'Delete failed');
+      // Check if this is a subscription/trial blocking error
+      if (e2.status === 403 || (e2.message && (e2.message.includes('essai gratuit') || e2.message.includes('Abonnement')))) {
+        setShowSubscriptionAlert(true);
+      } else {
+        setErr(e2.message || 'Delete failed');
+      }
     }
   };
 

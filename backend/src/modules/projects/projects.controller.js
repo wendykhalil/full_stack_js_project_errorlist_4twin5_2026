@@ -107,7 +107,17 @@ async function createProject(req, res, next) {
       .populate('artisanId', 'firstName lastName email role')
       .lean();
 
-    return res.status(201).json({ ok: true, project: created });
+    const response = { ok: true, project: created };
+    
+    // Add trial information if this was a trial attempt
+    if (req.isTrialAttempt) {
+      response.trialInfo = {
+        isTrialAttempt: true,
+        message: 'Ceci est votre essai gratuit pour créer des projets. Vous devez vous abonner pour créer d\'autres projets.',
+      };
+    }
+
+    return res.status(201).json(response);
   } catch (err) {
     return next(err);
   }

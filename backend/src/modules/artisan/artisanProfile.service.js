@@ -161,9 +161,38 @@ async function getPublicArtisanProfile(identifier) {
   }
 }
 
+// DEBUG/TEST: Reset trial features
+async function resetArtisanTrialFeatures(userId) {
+  try {
+    let profile = await ArtisanProfile.findOne({ userId });
+    
+    if (!profile) {
+      const error = new Error('Profil artisan non trouvé');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Reset all trial features
+    profile.trialFeatures = {
+      projectCreated: false,
+      portfolioCreated: false,
+      quoteCreated: false,
+      invoiceCreated: false
+    };
+
+    await profile.save();
+    
+    return profile;
+  } catch (error) {
+    console.error('Error in resetArtisanTrialFeatures service:', error);
+    throw error;
+  }
+}
+
 module.exports = {
   updateArtisanProfile,
   getArtisanProfile,
   updateArtisanLocation,
-  getPublicArtisanProfile
+  getPublicArtisanProfile,
+  resetArtisanTrialFeatures
 };

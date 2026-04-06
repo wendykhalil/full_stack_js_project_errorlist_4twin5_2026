@@ -62,7 +62,17 @@ async function createQuote(req, res, next) {
       ...totals,
     });
 
-    return res.status(201).json({ ok: true, quote });
+    const response = { ok: true, quote };
+
+    // Add trial information if this was a trial attempt
+    if (req.isTrialAttempt) {
+      response.trialInfo = {
+        isTrialAttempt: true,
+        message: 'Ceci est votre essai gratuit pour créer des devis. Vous devez vous abonner pour en créer d\'autres.',
+      };
+    }
+
+    return res.status(201).json(response);
   } catch (err) {
     return next(err);
   }
@@ -92,7 +102,17 @@ async function createInvoice(req, res, next) {
       ...(dueDate ? { dueDate: new Date(dueDate) } : {}),
     });
 
-    return res.status(201).json({ ok: true, invoice });
+    const response = { ok: true, invoice };
+
+    // Add trial information if this was a trial attempt
+    if (req.isTrialAttempt) {
+      response.trialInfo = {
+        isTrialAttempt: true,
+        message: 'Ceci est votre essai gratuit pour créer des factures. Vous devez vous abonner pour en créer d\'autres.',
+      };
+    }
+
+    return res.status(201).json(response);
   } catch (err) {
     return next(err);
   }

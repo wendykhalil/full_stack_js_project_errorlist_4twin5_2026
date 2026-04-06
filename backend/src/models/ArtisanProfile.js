@@ -99,6 +99,26 @@ const artisanProfileSchema = new mongoose.Schema(
     isActive: {
       type: Boolean,
       default: true
+    },
+
+    // Trial features tracking - allows one free attempt per feature for non-subscribed artisans
+    trialFeatures: {
+      projectCreated: {
+        type: Boolean,
+        default: false
+      },
+      portfolioCreated: {
+        type: Boolean,
+        default: false
+      },
+      quoteCreated: {
+        type: Boolean,
+        default: false
+      },
+      invoiceCreated: {
+        type: Boolean,
+        default: false
+      }
     }
   },
   { 

@@ -92,9 +92,23 @@ async function getPublicProfile(req, res) {
   }
 }
 
+// DEBUG/TEST: Reset trial features for current artisan
+async function resetTrialFeatures(req, res) {
+  try {
+    const profile = await artisanProfileService.resetArtisanTrialFeatures(req.user._id);
+    return apiResponse(res, 'Trial features réinitialisés', profile);
+  } catch (error) {
+    console.error('Error resetting trial features:', error);
+    return res.status(error.statusCode || 500).json({
+      message: error.message || 'Erreur lors de la réinitialisation des essais'
+    });
+  }
+}
+
 module.exports = {
   updateProfile,
   getMyProfile,
   updateLocation,
-  getPublicProfile
+  getPublicProfile,
+  resetTrialFeatures
 };

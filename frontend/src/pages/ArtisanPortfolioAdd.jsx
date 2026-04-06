@@ -104,11 +104,7 @@ export default function ArtisanPortfolioAdd() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!isSubscribed) {
-      setError('Abonnement actif requis pour ajouter un projet. Contactez l\'administrateur pour activer votre abonnement.');
-      return;
-    }
-
+    // Trial feature - let backend handle subscription check
     setError('');
     setSuccess('');
     setSubmitting(true);
@@ -191,30 +187,8 @@ export default function ArtisanPortfolioAdd() {
     );
   }
 
-  if (!isSubscribed) {
-    return (
-      <div className="flex-1 max-w-3xl mx-auto">
-        <div className="bg-red-50 border border-red-200 rounded-2xl p-8 text-center">
-          <AlertCircle className="mx-auto h-12 w-12 text-red-600" />
-          <h2 className="mt-4 text-xl font-semibold text-slate-900">
-            Abonnement requis
-          </h2>
-          <p className="mt-2 text-slate-600">
-            Vous devez souscrire un abonnement actif pour ajouter des projets au portfolio.
-            Contactez l'administrateur pour obtenir l'autorisation.
-          </p>
-          <button
-            onClick={() => navigate('/artisan/profile')}
-            className="mt-6 rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-700"
-          >
-            Voir mon profil
-          </button>
-        </div>
-        <SimpleFooter />
-      </div>
-    );
-  }
-
+  // Trial feature - allow all artisans to attempt, backend will handle limits
+  
   return (
     <div className="flex-1 max-w-3xl mx-auto">
       {/* Navigation */}
