@@ -1,6 +1,5 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import TawkToChat from "./components/TawkToChat";
 import RealtimeNotifications from "./components/RealtimeNotifications";
 import ArtisanProfile from './pages/ArtisanProfile';
 
@@ -38,7 +37,6 @@ import ArtisanOrders from "./pages/ArtisanOrders";
 import ArtisanSubscription from './pages/ArtisanSubscription';
 import RequireSubscription from './components/RequireSubscription';
 
-// Ajouter les imports pour les nouvelles pages Artisan
 import ArtisanProfileEdit from './pages/ArtisanProfileEdit';
 import ArtisanPortfolio from './pages/ArtisanPortfolio';
 import ArtisanPortfolioAdd from './pages/ArtisanPortfolioAdd';
@@ -49,8 +47,6 @@ import PrescripteurLayout from "./layouts/PrescripteurLayout";
 import PrescripteurProduits from "./pages/PrescripteurProduits";
 import PrescripteurArtisans from "./pages/PrescripteurArtisans";
 import PrescripteurProjects from "./pages/PrescripteurProjects";
-
-// Ajouter les imports pour les nouvelles pages Prescripteur
 import PrescripteurSearch from './pages/PrescripteurSearch';
 import ArtisanPublicProfile from './pages/ArtisanPublicProfile';
 
@@ -65,7 +61,7 @@ import FournisseurMarketplace from "./pages/FournisseurMarketplace";
 import FournisseurProductDetails from "./pages/FournisseurProductDetails";
 import OrderDetails from "./pages/OrderDetails";
 
-// ✅ IMPORTS POUR LA MESSAGERIE
+// MESSAGERIE
 import Messages from './pages/Messages';
 import Conversation from './pages/Conversation';
 
@@ -74,13 +70,14 @@ import ResetPassword from "./pages/ResetPassword";
 import Profile from "./pages/Profile";
 import AppErrorBoundary from "./components/AppErrorBoundary";
 import AutoPageTranslator from "./components/translation/AutoPageTranslator";
+import AiChat from "./components/ai-chat"; // ton composant chat modernisé
 
 export default function App() {
     return (
         <AppErrorBoundary>
         <BrowserRouter>
             <AutoPageTranslator />
-            <AppErrorBoundary><TawkToChat /></AppErrorBoundary>
+            <AppErrorBoundary></AppErrorBoundary>
             <AppErrorBoundary><RealtimeNotifications /></AppErrorBoundary>
             <Routes>
                 {/* Routes publiques */}
@@ -94,6 +91,7 @@ export default function App() {
                 <Route path="/verify-email" element={<VerifyEmail />} />
                 <Route path="/unauthorized" element={<Unauthorized />} />
                 <Route path="/profile" element={<Profile />} />
+                {/* La route AiChat a été retirée d'ici : elle est maintenant dans chaque layout protégé */}
 
                 {/* Register */}
                 <Route path="/register" element={<RegisterChooseRole />} />
@@ -116,10 +114,9 @@ export default function App() {
                         <Route path="profile" element={<Profile />} />
                         <Route path="users" element={<AdminUsers />} />
                         <Route path="activity" element={<AdminActivityLogs />} />
-                        <Route
-                            path="transactions"
-                            element={<div className="mx-auto max-w-6xl py-10">Transactions (à faire)</div>}
-                        />
+                        <Route path="transactions" element={<div className="mx-auto max-w-6xl py-10">Transactions (à faire)</div>} />
+                        {/* AI Chat pour Admin */}
+                        <Route path="AiChat" element={<AiChat />} />
                     </Route>
                 </Route>
 
@@ -127,12 +124,10 @@ export default function App() {
                 <Route element={<ProtectedRoute allowedRoles={[Roles.ARTISAN]} />}>
                     <Route path="/artisan" element={<ArtisanLayout />}>
                         <Route index element={<ArtisanDashboard />} />
-                            <Route path="profile" element={<ArtisanProfile />} />
+                        <Route path="profile" element={<ArtisanProfile />} />
                         <Route path="profile/edit" element={<ArtisanProfileEdit />} />
                         <Route path="subscription" element={<ArtisanSubscription />} />
                         <Route path="marketplace" element={<ArtisanMarketplace />} />
-
-                        <Route path="" element={<ArtisanDashboard />} />
                         <Route path="portfolio" element={<ArtisanPortfolio />} />
                         <Route path="portfolio/add" element={<ArtisanPortfolioAdd />} />
                         <Route path="portfolio/edit/:id" element={<ArtisanPortfolioAdd />} />
@@ -149,6 +144,8 @@ export default function App() {
                         <Route path="weather" element={<ArtisanWeather />} />
                         <Route path="messages" element={<RequireSubscription><Messages /></RequireSubscription>} />
                         <Route path="messages/:userId" element={<RequireSubscription><Conversation /></RequireSubscription>} />
+                        {/* AI Chat pour Artisan */}
+                        <Route path="AiChat" element={<AiChat />} />
                     </Route>
                 </Route>
 
@@ -161,9 +158,10 @@ export default function App() {
                         <Route path="artisan/:id" element={<ArtisanPublicProfile />} />
                         <Route path="artisans" element={<PrescripteurArtisans />} />
                         <Route path="projects" element={<PrescripteurProjects />} />
-                        {/* ✅ ROUTES MESSAGES POUR PRESCRIPTEUR */}
                         <Route path="messages" element={<Messages />} />
                         <Route path="messages/:userId" element={<Conversation />} />
+                        {/* AI Chat pour Prescripteur */}
+                        <Route path="AiChat" element={<AiChat />} />
                     </Route>
                 </Route>
 
@@ -179,9 +177,10 @@ export default function App() {
                         <Route path="orders" element={<FournisseurOrders />} />
                         <Route path="orders/:id" element={<OrderDetails />} />
                         <Route path="profile" element={<Profile />} />
-                        {/* ✅ ROUTES MESSAGES POUR FOURNISSEUR */}
                         <Route path="messages" element={<Messages />} />
                         <Route path="messages/:userId" element={<Conversation />} />
+                        {/* AI Chat pour Fournisseur */}
+                        <Route path="AiChat" element={<AiChat />} />
                     </Route>
                 </Route>
 

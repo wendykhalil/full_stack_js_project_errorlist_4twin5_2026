@@ -14,6 +14,7 @@ const ROLE_CONFIG = {
     pages: [
       { to: "/admin", label: "Dashboard", keywords: ["home", "overview", "tableau de bord"] },
       { to: "/admin/profile", label: "Profile", keywords: ["settings", "account", "password"] },
+      {  to: "/chat",label: "AI Assistant",icon: "🤖",},
       { to: "/admin/users", label: "Users", keywords: ["team", "members", "utilisateurs"] },
       { to: "/admin/activity", label: "Activity", keywords: ["logs", "journal", "history"] },
       { to: "/admin/transactions", label: "Transactions", keywords: ["payments", "billing"] },
@@ -24,6 +25,8 @@ const ROLE_CONFIG = {
     roleLabel: "Artisan",
     pages: [
       { to: "/artisan", label: "Dashboard", keywords: ["home", "overview", "tableau de bord"] },
+      {  to: "/chat",label: "AI Assistant",icon: "🤖",},
+
       { to: "/artisan/profile", label: "Profile", keywords: ["account", "settings", "reset password", "profil"] },
       { to: "/artisan/projects", label: "Projects", keywords: ["chantier", "project list", "projets"] },
       { to: "/artisan/portfolio", label: "Portfolio", keywords: ["gallery", "images", "travaux"] },
@@ -40,6 +43,8 @@ const ROLE_CONFIG = {
     roleLabel: "Prescripteur",
     pages: [
       { to: "/prescripteur", label: "Products", keywords: ["catalog", "produits"] },
+            {  to: "/chat",label: "AI Assistant",icon: "🤖",},
+
       { to: "/prescripteur/profile", label: "Profile", keywords: ["account", "settings", "password"] },
       { to: "/prescripteur/artisans", label: "Artisans", keywords: ["workers", "providers"] },
       { to: "/prescripteur/projects", label: "Projects", keywords: ["projets", "sites"] },
@@ -52,6 +57,8 @@ const ROLE_CONFIG = {
     roleLabel: "Fournisseur",
     pages: [
       { to: "/fournisseur/profile", label: "Profile", keywords: ["account", "settings", "password"] },
+            {  to: "/chat",label: "AI Assistant",icon: "🤖",},
+
       { to: "/fournisseur/orders", label: "Orders", keywords: ["commandes", "sales"] },
       { to: "/fournisseur/marketplace", label: "Marketplace", keywords: ["catalog", "products"] },
       { to: "/fournisseur/produits", label: "Products", keywords: ["items", "inventory"] },

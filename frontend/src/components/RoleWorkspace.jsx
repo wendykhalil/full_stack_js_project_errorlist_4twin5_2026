@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { Bot } from "lucide-react";
 import { NavLink, Outlet } from "react-router-dom";
 import {
   Bell,
@@ -71,7 +72,7 @@ export default function RoleWorkspace({
         </div>
       </div>
 
-      {/* Navigation - Hidden scrollbar */}
+      {/* Navigation */}
       <div className="flex-1 overflow-y-auto px-3 py-4 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         <SectionLabel collapsed={isSidebarCollapsed}>Menu Principal</SectionLabel>
         <div className="space-y-1">
@@ -108,14 +109,33 @@ export default function RoleWorkspace({
             <AccessibilityControls />
           </>
         ) : null}
+
+        {/* AI CHAT BUTTON */}
+        <div className={`mt-4 ${isSidebarCollapsed ? "px-2" : "px-3"}`}>
+          <NavLink
+to={"/" + role + "/AiChat"}            onClick={closeMobileMenu}
+            title={isSidebarCollapsed ? "AI Chat" : undefined}
+            className={({ isActive }) =>
+              `flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-200 ${
+                isActive
+                  ? "bg-white/20 text-white shadow-lg"
+                  : "text-blue-100 hover:bg-white/10 hover:text-white"
+              } ${isSidebarCollapsed ? "justify-center px-2" : ""}`
+            }
+          >
+            <Bot className="h-4 w-4" />
+            {!isSidebarCollapsed ? <span>AI Chat</span> : null}
+          </NavLink>
+        </div>
       </div>
 
-      {/* User Section */}
-      <div className="border-t border-blue-700/50 p-3 flex flex-col items-center gap-2">
+      {/* Logout */}
+      <div className="border-t border-blue-700/50 p-3">
         <button
           type="button"
           onClick={onLogout}
-          className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium text-blue-200 transition-all duration-200 hover:bg-white/10 hover:text-white ${isSidebarCollapsed ? "justify-center" : ""}`}
+          className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium text-blue-200 transition-all duration-200 hover:bg-white/10 hover:text-white w-full ${isSidebarCollapsed ? "justify-center" : ""}`}
+          title={isSidebarCollapsed ? "Déconnexion" : undefined}
         >
           <LogOut className="h-4 w-4" />
           {!isSidebarCollapsed ? <span>Déconnexion</span> : null}
@@ -126,7 +146,7 @@ export default function RoleWorkspace({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
-      {/* Sidebar - Professional Blue Background */}
+      {/* Sidebar */}
       <aside
         className={`fixed inset-y-0 left-0 z-30 hidden border-r border-blue-800/30 bg-gradient-to-b from-blue-800 via-blue-700 to-blue-800 shadow-xl transition-all duration-300 xl:flex xl:flex-col ${
           isSidebarCollapsed ? "w-20" : "w-64"
@@ -136,16 +156,16 @@ export default function RoleWorkspace({
         <button
           type="button"
           onClick={() => setIsSidebarCollapsed((value) => !value)}
-          className="absolute -right-3 top-20 flex h-6 w-6 items-center justify-center rounded-full border border-blue-300 bg-white text-blue-600 shadow-md transition-all hover:border-blue-400 hover:bg-blue-50"
+          className="absolute -right-3 top-20 flex h-6 w-6 items-center justify-center rounded-full border border-blue-300 bg-white text-blue-600 shadow-md transition-all"
           aria-label="Collapse sidebar"
         >
           {isSidebarCollapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
         </button>
       </aside>
 
-      {/* Main Content Area */}
+      {/* Main content */}
       <div className={`min-h-screen transition-all duration-300 ${isSidebarCollapsed ? "xl:ml-20" : "xl:ml-64"}`}>
-        {/* Mobile Header - Sticky with Blue Color */}
+        {/* Mobile header */}
         <header className="sticky top-0 z-20 border-b border-blue-800/30 bg-gradient-to-r from-blue-800 via-blue-700 to-blue-800 backdrop-blur-md xl:hidden">
           <div className="flex items-center justify-between px-4 py-3">
             <div className="flex items-center gap-2">
@@ -156,14 +176,12 @@ export default function RoleWorkspace({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button type="button" className="rounded-full p-2 text-blue-200 transition-colors hover:bg-white/10 hover:text-white">
+              <button className="rounded-full p-2 text-blue-200 hover:bg-white/10">
                 <Bell className="h-4 w-4" />
               </button>
               <button
-                type="button"
-                onClick={() => setIsMobileMenuOpen((value) => !value)}
-                className="rounded-md p-2 text-blue-200 transition-colors hover:bg-white/10 hover:text-white"
-                aria-label="Toggle sidebar"
+                onClick={() => setIsMobileMenuOpen((v) => !v)}
+                className="rounded-md p-2 text-blue-200 hover:bg-white/10"
               >
                 {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
@@ -171,12 +189,12 @@ export default function RoleWorkspace({
           </div>
         </header>
 
-        {/* Desktop Top Bar - BLUE COLOR */}
+        {/* Desktop top bar */}
         <div className="sticky top-0 z-20 hidden xl:block">
           <DashboardTopbar role={role} unreadCount={unreadCount} />
         </div>
 
-        {/* Mobile Menu Overlay */}
+        {/* Mobile menu overlay */}
         <div className={`fixed inset-0 z-40 xl:hidden ${isMobileMenuOpen ? "pointer-events-auto" : "pointer-events-none"}`}>
           <div
             className={`absolute inset-0 bg-slate-950/45 transition-opacity ${isMobileMenuOpen ? "opacity-100" : "opacity-0"}`}
@@ -187,7 +205,7 @@ export default function RoleWorkspace({
           </div>
         </div>
 
-        {/* Page Content */}
+        {/* Page content */}
         <main className="w-full px-4 py-5 sm:px-5 xl:px-6">
           <Outlet />
         </main>

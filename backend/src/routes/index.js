@@ -26,6 +26,7 @@ const Product = require('../models/Product');
 const Project = require('../models/Project');
 const Order = require('../models/Order');
 const Devis = require('../models/Devis');
+const productRoutes = require("./products.routes");
 const Facture = require('../models/Facture');
 
 // ✅ Créer le router APRÈS tous les imports
@@ -143,6 +144,7 @@ router.use('/artisan/portfolio', portfolioRoutes);
 router.use('/subscriptions', subscriptionRoutes);
 router.use('/search', searchRoutes);
 router.use('/weather', weatherRoutes);
+router.use(productRoutes);
 
 // Admin routes
 router.get('/admin/ping', authRequired, requireRoles('ADMIN'), (req, res) => {
