@@ -32,8 +32,6 @@ const getMyProducts = async (supplierId, { page = 1, limit = 10, search = '', ca
 };
 
 // Create product
-// Create product
-// Create product
 const createProduct = async (data, supplierId) => {
   console.log('=== CREATE PRODUCT DEBUG ===');
   console.log('1. Received supplierId:', supplierId);
@@ -45,36 +43,36 @@ const createProduct = async (data, supplierId) => {
   }
 
   // Vérifier si c'est une nouvelle catégorie
-if (data.newCategory && typeof data.newCategory === 'string') {
-  console.log('Creating new category:', data.newCategory);
-  
-  // Créer un slug à partir du nom
-  const slug = data.newCategory
-    .toLowerCase()
-    .replace(/[^\w\s]/gi, '')
-    .replace(/\s+/g, '-');
-  
-  // Vérifier si la catégorie existe déjà
-  let existingCategory = await Category.findOne({ 
-    name: { $regex: new RegExp('^' + data.newCategory + '$', 'i') } 
-  });
-  
-  if (existingCategory) {
-    console.log('Category already exists:', existingCategory.name);
-    data.categoryId = existingCategory._id;
-  } else {
-    // Créer la nouvelle catégorie
-    const newCategory = new Category({
-      name: data.newCategory,
-      slug: slug
+  if (data.newCategory && typeof data.newCategory === 'string') {
+    console.log('Creating new category:', data.newCategory);
+    
+    // Créer un slug à partir du nom
+    const slug = data.newCategory
+      .toLowerCase()
+      .replace(/[^\w\s]/gi, '')
+      .replace(/\s+/g, '-');
+    
+    // Vérifier si la catégorie existe déjà
+    let existingCategory = await Category.findOne({ 
+      name: { $regex: new RegExp('^' + data.newCategory + '$', 'i') } 
     });
-    await newCategory.save();
-    console.log('New category created with ID:', newCategory._id);
-    data.categoryId = newCategory._id;
+    
+    if (existingCategory) {
+      console.log('Category already exists:', existingCategory.name);
+      data.categoryId = existingCategory._id;
+    } else {
+      // Créer la nouvelle catégorie
+      const newCategory = new Category({
+        name: data.newCategory,
+        slug: slug
+      });
+      await newCategory.save();
+      console.log('New category created with ID:', newCategory._id);
+      data.categoryId = newCategory._id;
+    }
+    
+    delete data.newCategory;
   }
-  
-  delete data.newCategory;
-}
 
   // Create product with supplierId
   const productData = {
@@ -96,7 +94,6 @@ if (data.newCategory && typeof data.newCategory === 'string') {
   return product;
 };
 
-// Update product (same fix)
 // Update product
 const updateProduct = async (id, data, supplierId) => {
   console.log('=== UPDATE PRODUCT DEBUG ===');
@@ -191,8 +188,7 @@ const deleteProduct = async (id, supplierId) => {
 
 // Get supplier stats
 const getStats = async (supplierId) => {
-
-  // عدد المنتجات
+  // Nombre de produits
   const productsCount = await Product.countDocuments({ supplierId });
 
   // Commandes en cours
@@ -227,7 +223,6 @@ const getStats = async (supplierId) => {
   };
 };
 
-// Get categories
 // Get categories
 const getCategories = async () => {
   try {

@@ -6,6 +6,7 @@ const { notFound } = require('./middleware/notFound');
 const { errorHandler } = require('./middleware/errorMiddleware');
 const productRoutes = require("./routes/products.routes");
 const aiRoutes = require("./routes/ai.routes");
+const paymentRoutes = require('./routes/payment.routes');
 
 function createApp() {
   const app = express();
@@ -19,8 +20,7 @@ function createApp() {
 app.use("/api/ai", aiRoutes);
 
   app.use('/api', routes);
-
-
+app.use('/api/payments', paymentRoutes);
   app.use(notFound);
   app.use(errorHandler);
 

@@ -33,7 +33,6 @@ import MapPickerModal from '../components/MapPickerModal';
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 const ASSET_BASE = API_URL.replace(/\/api\/?$/, "");
 
-
 function resolveAssetUrl(path) {
   if (!path) return "";
   const value = String(path).trim();
@@ -177,7 +176,7 @@ function Modal({ open, title, children, onClose, size = "md" }) {
   );
 }
 
-function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t, onOpenMap }) {
+function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t, onOpenMap, fieldErrors = {} }) {
   const isEdit = mode === "edit";
   return (
     <div className="space-y-6">
@@ -190,15 +189,33 @@ function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t,
               <input
                 value={form.title}
                 onChange={(e) => setForm((s) => ({ ...s, title: e.target.value }))}
-                className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none ring-indigo-500 focus:ring-2"
+                className={`mt-2 w-full rounded-xl border ${fieldErrors.title ? 'border-red-500' : 'border-slate-200'} bg-white px-4 py-3 text-sm outline-none ring-indigo-500 focus:ring-2`}
                 placeholder="e.g., Villa Ben Arous"
                 required
               />
+              {fieldErrors.title && <p className="mt-1 text-sm text-red-600">{fieldErrors.title}</p>}
             </div>
-            <SuggestInput label="Category" value={form.category} onChange={(e) => setForm((s) => ({ ...s, category: e.target.value }))} placeholder="Choisir une catégorie…" listId="project-categories" options={PROJECT_CATEGORIES} />
+            <div>
+              <label className="text-sm font-medium text-slate-700">Category</label>
+              <input
+                value={form.category}
+                onChange={(e) => setForm((s) => ({ ...s, category: e.target.value }))}
+                list="project-categories"
+                className={`mt-2 w-full rounded-xl border ${fieldErrors.category ? 'border-red-500' : 'border-slate-200'} bg-white px-4 py-3 text-sm outline-none ring-indigo-500 focus:ring-2`}
+                placeholder="Choisir une catégorie…"
+              />
+              <datalist id="project-categories">
+                {PROJECT_CATEGORIES.map((opt) => <option key={opt} value={opt} />)}
+              </datalist>
+              {fieldErrors.category && <p className="mt-1 text-sm text-red-600">{fieldErrors.category}</p>}
+            </div>
             <div>
               <label className="text-sm font-medium text-slate-700">Status</label>
-              <select value={form.status} onChange={(e) => setForm((s) => ({ ...s, status: e.target.value }))} className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none ring-indigo-500 focus:ring-2">
+              <select
+                value={form.status}
+                onChange={(e) => setForm((s) => ({ ...s, status: e.target.value }))}
+                className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none ring-indigo-500 focus:ring-2"
+              >
                 <option value="ACTIVE">{t("artisanProjects.status.active")}</option>
                 <option value="PENDING">{t("artisanProjects.status.pending")}</option>
                 <option value="COMPLETED">{t("artisanProjects.status.completed")}</option>
@@ -206,7 +223,14 @@ function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t,
             </div>
             <div className="md:col-span-2">
               <label className="text-sm font-medium text-slate-700">Description</label>
-              <textarea value={form.description} onChange={(e) => setForm((s) => ({ ...s, description: e.target.value }))} rows={5} className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none ring-indigo-500 focus:ring-2" placeholder="What needs to be done? Requirements, constraints, style..." />
+              <textarea
+                value={form.description}
+                onChange={(e) => setForm((s) => ({ ...s, description: e.target.value }))}
+                rows={5}
+                className={`mt-2 w-full rounded-xl border ${fieldErrors.description ? 'border-red-500' : 'border-slate-200'} bg-white px-4 py-3 text-sm outline-none ring-indigo-500 focus:ring-2`}
+                placeholder="What needs to be done? Requirements, constraints, style..."
+              />
+              {fieldErrors.description && <p className="mt-1 text-sm text-red-600">{fieldErrors.description}</p>}
             </div>
           </div>
         </div>
@@ -216,18 +240,36 @@ function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t,
           <div className="mt-4 space-y-4">
             <div>
               <label className="text-sm font-medium text-slate-700">Start date</label>
-              <input value={form.startDate} onChange={(e) => setForm((s) => ({ ...s, startDate: e.target.value }))} className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none ring-indigo-500 focus:ring-2" type="date" />
+              <input
+                value={form.startDate}
+                onChange={(e) => setForm((s) => ({ ...s, startDate: e.target.value }))}
+                className={`mt-2 w-full rounded-xl border ${fieldErrors.startDate ? 'border-red-500' : 'border-slate-200'} bg-white px-4 py-3 text-sm outline-none ring-indigo-500 focus:ring-2`}
+                type="date"
+              />
+              {fieldErrors.startDate && <p className="mt-1 text-sm text-red-600">{fieldErrors.startDate}</p>}
             </div>
             <div>
               <label className="text-sm font-medium text-slate-700">End date</label>
-              <input value={form.endDate} onChange={(e) => setForm((s) => ({ ...s, endDate: e.target.value }))} className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none ring-indigo-500 focus:ring-2" type="date" />
+              <input
+                value={form.endDate}
+                onChange={(e) => setForm((s) => ({ ...s, endDate: e.target.value }))}
+                className={`mt-2 w-full rounded-xl border ${fieldErrors.endDate ? 'border-red-500' : 'border-slate-200'} bg-white px-4 py-3 text-sm outline-none ring-indigo-500 focus:ring-2`}
+                type="date"
+              />
+              {fieldErrors.endDate && <p className="mt-1 text-sm text-red-600">{fieldErrors.endDate}</p>}
             </div>
             <div>
               <label className="text-sm font-medium text-slate-700">Phone number</label>
               <div className="relative mt-2">
                 <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <input value={form.phoneNumber} onChange={(e) => setForm((s) => ({ ...s, phoneNumber: e.target.value }))} className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-4 text-sm outline-none ring-indigo-500 focus:ring-2" placeholder="+216 XX XXX XXX" />
+                <input
+                  value={form.phoneNumber}
+                  onChange={(e) => setForm((s) => ({ ...s, phoneNumber: e.target.value }))}
+                  className={`w-full rounded-xl border ${fieldErrors.phoneNumber ? 'border-red-500' : 'border-slate-200'} bg-white py-3 pl-10 pr-4 text-sm outline-none ring-indigo-500 focus:ring-2`}
+                  placeholder="+216 XX XXX XXX"
+                />
               </div>
+              {fieldErrors.phoneNumber && <p className="mt-1 text-sm text-red-600">{fieldErrors.phoneNumber}</p>}
             </div>
           </div>
         </div>
@@ -237,10 +279,29 @@ function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t,
         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
           <h4 className="text-base font-semibold text-slate-900">Budget et localisation</h4>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <SuggestInput label="City" value={form.city} onChange={(e) => setForm((s) => ({ ...s, city: e.target.value }))} placeholder="Choisir une ville…" listId="tunisia-cities" options={TUNISIA_CITIES} />
+            <div>
+              <label className="text-sm font-medium text-slate-700">City</label>
+              <input
+                value={form.city}
+                onChange={(e) => setForm((s) => ({ ...s, city: e.target.value }))}
+                list="tunisia-cities"
+                className={`mt-2 w-full rounded-xl border ${fieldErrors.city ? 'border-red-500' : 'border-slate-200'} bg-white px-4 py-3 text-sm outline-none ring-indigo-500 focus:ring-2`}
+                placeholder="Choisir une ville…"
+              />
+              <datalist id="tunisia-cities">
+                {TUNISIA_CITIES.map((opt) => <option key={opt} value={opt} />)}
+              </datalist>
+              {fieldErrors.city && <p className="mt-1 text-sm text-red-600">{fieldErrors.city}</p>}
+            </div>
             <div>
               <label className="text-sm font-medium text-slate-700">Address</label>
-              <input value={form.address} onChange={(e) => setForm((s) => ({ ...s, address: e.target.value }))} className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none ring-indigo-500 focus:ring-2" placeholder="Street / neighborhood" />
+              <input
+                value={form.address}
+                onChange={(e) => setForm((s) => ({ ...s, address: e.target.value }))}
+                className={`mt-2 w-full rounded-xl border ${fieldErrors.address ? 'border-red-500' : 'border-slate-200'} bg-white px-4 py-3 text-sm outline-none ring-indigo-500 focus:ring-2`}
+                placeholder="Street / neighborhood"
+              />
+              {fieldErrors.address && <p className="mt-1 text-sm text-red-600">{fieldErrors.address}</p>}
             </div>
             <div className="md:col-span-2 rounded-2xl border border-slate-200 bg-white p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -265,11 +326,27 @@ function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t,
             </div>
             <div>
               <label className="text-sm font-medium text-slate-700">Budget (TND)</label>
-              <input value={form.budgetTND} onChange={(e) => setForm((s) => ({ ...s, budgetTND: e.target.value }))} className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none ring-indigo-500 focus:ring-2" type="number" min="0" placeholder="e.g., 15000" />
+              <input
+                value={form.budgetTND}
+                onChange={(e) => setForm((s) => ({ ...s, budgetTND: e.target.value }))}
+                type="number"
+                min="0"
+                className={`mt-2 w-full rounded-xl border ${fieldErrors.budgetTND ? 'border-red-500' : 'border-slate-200'} bg-white px-4 py-3 text-sm outline-none ring-indigo-500 focus:ring-2`}
+                placeholder="e.g., 15000"
+              />
+              {fieldErrors.budgetTND && <p className="mt-1 text-sm text-red-600">{fieldErrors.budgetTND}</p>}
             </div>
             <div>
               <label className="text-sm font-medium text-slate-700">Surface (m²)</label>
-              <input value={form.surfaceM2} onChange={(e) => setForm((s) => ({ ...s, surfaceM2: e.target.value }))} className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none ring-indigo-500 focus:ring-2" type="number" min="0" placeholder="e.g., 120" />
+              <input
+                value={form.surfaceM2}
+                onChange={(e) => setForm((s) => ({ ...s, surfaceM2: e.target.value }))}
+                type="number"
+                min="0"
+                className={`mt-2 w-full rounded-xl border ${fieldErrors.surfaceM2 ? 'border-red-500' : 'border-slate-200'} bg-white px-4 py-3 text-sm outline-none ring-indigo-500 focus:ring-2`}
+                placeholder="e.g., 120"
+              />
+              {fieldErrors.surfaceM2 && <p className="mt-1 text-sm text-red-600">{fieldErrors.surfaceM2}</p>}
             </div>
           </div>
         </div>
@@ -287,6 +364,7 @@ function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t,
       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
         <h4 className="text-base font-semibold text-slate-900">Matériaux</h4>
         <div className="mt-4"><MaterialsPicker value={form.materials} onChange={(arr) => setForm((s) => ({ ...s, materials: arr }))} /></div>
+        {fieldErrors.materials && <p className="mt-1 text-sm text-red-600">{fieldErrors.materials}</p>}
       </div>
     </div>
   );
@@ -416,6 +494,7 @@ export default function ArtisanProjects() {
   const [smartLoading, setSmartLoading] = useState(false);
   const [projectSuggestLoading, setProjectSuggestLoading] = useState(false);
   const [isMapPickerOpen, setIsMapPickerOpen] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const isSubscribed = subscription?.plan && subscription.plan !== 'FREE' && subscription.status === 'ACTIVE';
 
@@ -546,8 +625,6 @@ export default function ArtisanProjects() {
   };
 
   const guardSubscription = (callback) => {
-    // Only guard for features that are NOT part of the trial
-    // Trial features: project, portfolio, quote, invoice - these are allowed to proceed
     callback();
   };
 
@@ -573,47 +650,98 @@ export default function ArtisanProjects() {
     setIsEditOpen(true);
   };
 
-  const onCreate = async (e) => {
-    e.preventDefault();
-    try {
-      const fd = toFormData(form, images);
-      await apiFetch('/projects', { token, method: 'POST', body: fd });
-      setIsCreateOpen(false);
-      setForm(emptyForm);
-      setImages([]);
-      await load();
-    } catch (e2) {
-      // Check if this is a subscription/trial blocking error
-      if (e2.status === 403 || (e2.message && (e2.message.includes('essai gratuit') || e2.message.includes('Abonnement')))) {
-        setErr(''); // Clear any previous errors
-        setShowSubscriptionAlert(true);
-      } else {
-        setErr(e2.message || 'Create failed');
-      }
-    }
-  };
+const onCreate = async (e) => {
+  e.preventDefault();
+  console.log("=== onCreate DEBUT ===");
+  
+  setFieldErrors({});
+  setErr('');
 
-  const onEdit = async (e) => {
-    e.preventDefault();
-    if (!editing?._id) return;
-    try {
-      const fd = toFormData(form, images);
-      await apiFetch(`/projects/${editing._id}`, { token, method: 'PUT', body: fd });
-      setIsEditOpen(false);
-      setEditing(null);
-      setForm(emptyForm);
-      setImages([]);
-      await load();
-    } catch (e2) {
-      // Check if this is a subscription/trial blocking error
-      if (e2.status === 403 || (e2.message && (e2.message.includes('essai gratuit') || e2.message.includes('Abonnement')))) {
-        setErr('');
+  try {
+    const fd = toFormData(form, images);
+    
+    // Utilisation directe de fetch au lieu de apiFetch
+    const response = await fetch(`${API_URL}/projects`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: fd
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.log("Erreur HTTP:", response.status);
+      console.log("Données d'erreur:", data);
+      
+      if (response.status === 400) {
+        // Affiche les erreurs
+        if (data.errors && Array.isArray(data.errors)) {
+          setErr(data.errors.join(', '));
+        } else if (data.message) {
+          setErr(data.message);
+        } else {
+          setErr('Erreur de validation. Vérifiez les champs.');
+        }
+      } else if (response.status === 403) {
         setShowSubscriptionAlert(true);
       } else {
-        setErr(e2.message || 'Update failed');
+        setErr(data.message || 'Create failed');
       }
+      return;
     }
-  };
+
+    // Succès
+    setIsCreateOpen(false);
+    setForm(emptyForm);
+    setImages([]);
+    await load();
+    
+  } catch (error) {
+    console.log("Erreur réseau:", error);
+    setErr('Erreur réseau. Vérifiez votre connexion.');
+  }
+  
+  console.log("=== onCreate FIN ===");
+};
+
+ const onEdit = async (e) => {
+  e.preventDefault();
+  setFieldErrors({});
+  setErr('');
+  if (!editing?._id) return;
+  
+  try {
+    const fd = toFormData(form, images);
+    await apiFetch(`/projects/${editing._id}`, { token, method: 'PUT', body: fd });
+    setIsEditOpen(false);
+    setEditing(null);
+    setForm(emptyForm);
+    setImages([]);
+    await load();
+  } catch (e2) {
+    console.error('Full error object:', e2);
+    
+    if (e2.status === 400) {
+      if (e2.errors && Array.isArray(e2.errors) && e2.errors.length > 0) {
+        setErr(e2.errors.join(', '));
+      } else if (e2.message) {
+        setErr(e2.message);
+      } else if (e2.data?.errors && Array.isArray(e2.data.errors)) {
+        setErr(e2.data.errors.join(', '));
+      } else if (e2.data?.message) {
+        setErr(e2.data.message);
+      } else {
+        setErr('Erreur de validation. Vérifiez les champs.');
+      }
+    } else if (e2.status === 403 || (e2.message && (e2.message.includes('essai gratuit') || e2.message.includes('Abonnement')))) {
+      setShowSubscriptionAlert(true);
+    } else {
+      setErr(e2.message || 'Update failed');
+    }
+  }
+};
 
   const onDelete = async (id) => {
     if (!id) return;
@@ -623,7 +751,6 @@ export default function ArtisanProjects() {
       setOpenMenuId(null);
       await load();
     } catch (e2) {
-      // Check if this is a subscription/trial blocking error
       if (e2.status === 403 || (e2.message && (e2.message.includes('essai gratuit') || e2.message.includes('Abonnement')))) {
         setShowSubscriptionAlert(true);
       } else {
@@ -748,7 +875,7 @@ export default function ArtisanProjects() {
           {!loading && filtered.length > 0 ? <Pagination page={page} pages={pages} onPageChange={setPage} /> : null}
         </div>
 
-        <Modal open={isCreateOpen} title={t('artisanProjects.newProjectButton')} onClose={() => setIsCreateOpen(false)} size="xl">
+        <Modal open={isCreateOpen} title={t('artisanProjects.newProjectButton')} onClose={() => { setIsCreateOpen(false); setForm(emptyForm); setImages([]); setFieldErrors({}); }} size="xl">
           <form onSubmit={onCreate} className="space-y-6">
             <div className="flex items-center justify-between rounded-2xl border border-indigo-100 bg-indigo-50 px-4 py-3">
               <div>
@@ -759,15 +886,25 @@ export default function ArtisanProjects() {
                 <Sparkles className={`h-4 w-4 ${projectSuggestLoading ? 'animate-pulse' : ''}`} /> Remplir avec IA
               </button>
             </div>
-            <ProjectFormFields mode="create" form={form} setForm={setForm} images={images} setImages={setImages} editing={editing} t={t} onOpenMap={() => setIsMapPickerOpen(true)} />
+            <ProjectFormFields
+              mode="create"
+              form={form}
+              setForm={setForm}
+              images={images}
+              setImages={setImages}
+              editing={editing}
+              t={t}
+              onOpenMap={() => setIsMapPickerOpen(true)}
+              fieldErrors={fieldErrors}
+            />
             <div className="flex items-center justify-end gap-3 pt-2">
-              <button type="button" onClick={() => { setIsCreateOpen(false); setForm(emptyForm); setImages([]); }} className="rounded-xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100">Cancel</button>
+              <button type="button" onClick={() => { setIsCreateOpen(false); setForm(emptyForm); setImages([]); setFieldErrors({}); }} className="rounded-xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100">Cancel</button>
               <button type="submit" className="rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white hover:bg-indigo-700">Create</button>
             </div>
           </form>
         </Modal>
 
-        <Modal open={isEditOpen} title="Edit project" onClose={() => setIsEditOpen(false)} size="xl">
+        <Modal open={isEditOpen} title="Edit project" onClose={() => { setIsEditOpen(false); setEditing(null); setForm(emptyForm); setImages([]); setFieldErrors({}); }} size="xl">
           <form onSubmit={onEdit} className="space-y-6">
             <div className="flex items-center justify-between rounded-2xl border border-indigo-100 bg-indigo-50 px-4 py-3">
               <div>
@@ -778,9 +915,19 @@ export default function ArtisanProjects() {
                 <Sparkles className={`h-4 w-4 ${projectSuggestLoading ? 'animate-pulse' : ''}`} /> Optimiser avec IA
               </button>
             </div>
-            <ProjectFormFields mode="edit" form={form} setForm={setForm} images={images} setImages={setImages} editing={editing} t={t} onOpenMap={() => setIsMapPickerOpen(true)} />
+            <ProjectFormFields
+              mode="edit"
+              form={form}
+              setForm={setForm}
+              images={images}
+              setImages={setImages}
+              editing={editing}
+              t={t}
+              onOpenMap={() => setIsMapPickerOpen(true)}
+              fieldErrors={fieldErrors}
+            />
             <div className="flex items-center justify-end gap-3 pt-2">
-              <button type="button" onClick={() => { setIsEditOpen(false); setEditing(null); setForm(emptyForm); setImages([]); }} className="rounded-xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100">Cancel</button>
+              <button type="button" onClick={() => { setIsEditOpen(false); setEditing(null); setForm(emptyForm); setImages([]); setFieldErrors({}); }} className="rounded-xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100">Cancel</button>
               <button type="submit" className="rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white hover:bg-indigo-700">Save</button>
             </div>
           </form>
@@ -804,7 +951,6 @@ export default function ArtisanProjects() {
           navigate('/artisan/subscription');
         }}
       />
-
 
       <MapPickerModal
         open={isMapPickerOpen}

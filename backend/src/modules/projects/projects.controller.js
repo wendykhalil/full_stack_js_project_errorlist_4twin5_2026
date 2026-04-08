@@ -20,17 +20,12 @@ function toDate(v) {
 function toStringArray(v) {
   if (!v) return [];
   if (Array.isArray(v)) return v.map(String).map((s) => s.trim()).filter(Boolean);
-  // allow comma-separated input
-  return String(v)
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean);
+  return String(v).split(',').map((s) => s.trim()).filter(Boolean);
 }
 
 async function mapFilesToImages(req) {
   const files = req.files || [];
   const results = [];
-
   for (const f of files) {
     const uploaded = await uploadBufferToCloudinary(f.buffer, {
       folder: 'bmp/projects/images',
@@ -44,13 +39,9 @@ async function mapFilesToImages(req) {
       size: f.size,
     });
   }
-
   return results;
 }
 
-/**
- * Artisan: create a project (owned by logged-in artisan)
- */
 async function createProject(req, res, next) {
   try {
     const {
@@ -94,7 +85,6 @@ async function createProject(req, res, next) {
       ...(toDate(startDate) ? { startDate: toDate(startDate) } : {}),
       ...(toDate(endDate) ? { endDate: toDate(endDate) } : {}),
       contactPhone: (contactPhone ?? phoneNumber ?? '').toString().trim(),
-      // legacy mapping
       client: {
         name: '',
         phone: (contactPhone ?? phoneNumber ?? '').toString().trim(),
@@ -109,7 +99,6 @@ async function createProject(req, res, next) {
 
     const response = { ok: true, project: created };
     
-    // Add trial information if this was a trial attempt
     if (req.isTrialAttempt) {
       response.trialInfo = {
         isTrialAttempt: true,
@@ -123,9 +112,6 @@ async function createProject(req, res, next) {
   }
 }
 
-/**
- * Artisan: list my projects
- */
 async function listMyProjects(req, res, next) {
   try {
     const items = await Project.find({ artisanId: getUserId(req) })
@@ -137,9 +123,6 @@ async function listMyProjects(req, res, next) {
   }
 }
 
-/**
- * Prescripteur: list all projects (with artisan info)
- */
 async function listAllProjects(req, res, next) {
   try {
     const items = await Project.find()
@@ -162,12 +145,10 @@ async function getProjectById(req, res, next) {
 
     const role = req.user?.role;
 
-    // ARTISAN can only access own project
     if (role === 'ARTISAN' && String(project.artisanId?._id || project.artisanId) !== String(getUserId(req))) {
       return res.status(403).json({ message: 'Forbidden' });
     }
 
-    // PRESCRIPTEUR can access any project
     return res.json({ ok: true, project });
   } catch (err) {
     return next(err);
@@ -198,7 +179,6 @@ async function updateProject(req, res, next) {
     const project = await Project.findById(req.params.id);
     if (!project) return res.status(404).json({ message: 'Project not found' });
 
-    // only owner artisan can update
     if (String(project.artisanId) !== String(getUserId(req))) {
       return res.status(403).json({ message: 'Forbidden' });
     }
@@ -244,13 +224,11 @@ async function updateProject(req, res, next) {
     if (contactPhone !== undefined || phoneNumber !== undefined) {
       const ph = (contactPhone ?? phoneNumber ?? '').toString().trim();
       project.contactPhone = ph;
-      // legacy
       if (project.client) project.client.phone = ph;
     }
 
     if (materials !== undefined) project.materials = toStringArray(materials);
 
-    // Images: clear or append
     if (String(clearImages).toLowerCase() === 'true') {
       project.images = [];
     }

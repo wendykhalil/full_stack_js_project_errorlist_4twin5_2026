@@ -21,6 +21,7 @@
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
+    "express-validator": "^7.3.2",
     "google-auth-library": "^9.15.1",
     "i18next": "^25.8.13",
     "i18next-browser-languagedetector": "^8.2.1",
@@ -31,6 +32,7 @@
     "nodemailer": "^6.9.14",
     "react-i18next": "^16.5.4",
     "socket.io": "^4.8.1",
+    "stripe": "^22.0.0",
     "tawk-react": "^0.0.2",
     "twilio": "^5.6.0"
   },
