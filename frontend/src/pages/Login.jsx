@@ -52,7 +52,7 @@ export default function Login() {
       callback: async (resp) => {
         try {
           setLoading(true);
-          setError("");
+          clearErrors();
           const res = await loginWithGoogle(resp.credential);
           if (res?.needsRole) {
             navigate("/register-role", { replace: true, state: { from: "google" } });
@@ -60,7 +60,7 @@ export default function Login() {
           }
           navigate(roleToBasePath(res.user.role), { replace: true });
         } catch (e) {
-          setError(e.message || "Google login failed");
+          handleError(e);
         } finally {
           setLoading(false);
         }
@@ -287,7 +287,7 @@ export default function Login() {
                       <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
                       <input
                         value={emailOrPhone}
-                        onChange={(e) => { setEmailOrPhone(e.target.value); setError(""); }}
+                        onChange={(e) => { setEmailOrPhone(e.target.value); clearErrors(); }}
                         type="text"
                         autoComplete="username"
                         placeholder="Enter your email or phone"
@@ -306,7 +306,7 @@ export default function Login() {
                       <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
                       <input
                         value={password}
-                        onChange={(e) => { setPassword(e.target.value); setError(""); }}
+                        onChange={(e) => { setPassword(e.target.value); clearErrors(); }}
                         type={showPassword ? "text" : "password"}
                         autoComplete="current-password"
                         placeholder="Enter your password"

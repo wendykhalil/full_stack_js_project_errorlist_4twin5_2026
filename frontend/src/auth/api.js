@@ -24,19 +24,12 @@ async function resolveClientMeta() {
 
   const sources = [
     async () => {
-      const data = await tryFetchJson('https://ipwho.is/');
-      return { ip: data?.ip || '', country: data?.country || '', countryCode: data?.country_code || '' };
-    },
-    async () => {
       const data = await tryFetchJson('https://ipapi.co/json/');
       return { ip: data?.ip || '', country: data?.country_name || '', countryCode: data?.country_code || '' };
     },
     async () => {
-      const [ipData, geoData] = await Promise.all([
-        tryFetchJson('https://api.ipify.org?format=json'),
-        tryFetchJson('https://ipwho.is/'),
-      ]);
-      return { ip: ipData?.ip || geoData?.ip || '', country: geoData?.country || '', countryCode: geoData?.country_code || '' };
+      const data = await tryFetchJson('https://api.ipify.org?format=json');
+      return { ip: data?.ip || '', country: '', countryCode: '' };
     },
   ];
 

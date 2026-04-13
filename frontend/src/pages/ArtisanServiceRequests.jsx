@@ -265,7 +265,7 @@ export default function ArtisanServiceRequests() {
                       <span className="text-xs text-slate-400 flex items-center gap-1">
                         <Clock className="h-3 w-3" />{new Date(item.application?.appliedAt).toLocaleDateString()}
                       </span>
-                      {item.status === "COMPLETED" && item.application?.status === "ACCEPTED" && (
+                      {(item.status === "COMPLETED" || item.status === "ASSIGNED") && item.application?.status === "ACCEPTED" && !item.alreadyReviewed && (
                         <button
                           onClick={() => {
                             setReviewSourceId(item._id);

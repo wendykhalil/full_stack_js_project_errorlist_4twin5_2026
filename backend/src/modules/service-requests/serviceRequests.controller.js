@@ -201,7 +201,6 @@ async function listOpen(req, res, next) {
       applicationsCount: item.applications?.length || 0,
       applications: undefined, // don't expose other applicants
     }));
-
     return res.json({ ok: true, items: enriched, total, page: Number(page) });
   } catch (err) {
     return next(err);
@@ -210,7 +209,11 @@ async function listOpen(req, res, next) {
 
 async function getOpenOne(req, res, next) {
   try {
-    const doc = await ServiceRequest.findOne({ _id: req.params.id, status: "OPEN" })
+    // Allow viewing OPEN and ASSIGNED requests (artisan may want to see their accepted request)
+    const doc = await ServiceRequest.findOne({
+      _id: req.params.id,
+      status: { $in: ["OPEN", "ASSIGNED", "COMPLETED"] }
+    })
       .populate("prescripteurId", "firstName lastName profilePicture")
       .lean();
     if (!doc) return res.status(404).json({ message: "Not found" });
@@ -277,6 +280,13 @@ async function myApplications(req, res, next) {
       .populate("prescripteurId", "firstName lastName profilePicture")
       .lean();
 
+    // Get all reviews this artisan already left for these service requests
+    const Review = require('../../models/Review');
+    const reviewedSourceIds = new Set(
+      (await Review.find({ authorId: artisanId, targetType: 'PRESCRIPTEUR' }).select('sourceId').lean())
+        .map(r => String(r.sourceId))
+    );
+
     const items = docs.map((doc) => {
       const myApp = doc.applications.find((a) => String(a.artisanId) === artisanId);
       return {
@@ -289,6 +299,7 @@ async function myApplications(req, res, next) {
         status: doc.status,
         prescripteur: doc.prescripteurId,
         application: myApp,
+        alreadyReviewed: reviewedSourceIds.has(String(doc._id)),
         createdAt: doc.createdAt,
       };
     });

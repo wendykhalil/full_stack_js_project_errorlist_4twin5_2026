@@ -23,8 +23,8 @@ async function create(req, res, next) {
     if (sourceId) {
       const sr = await ServiceRequest.findById(sourceId).lean();
       if (!sr) return res.status(404).json({ message: "Service request not found" });
-      if (sr.status !== "COMPLETED") {
-        return res.status(400).json({ message: "Can only review after a completed service request" });
+      if (!['COMPLETED', 'ASSIGNED'].includes(sr.status)) {
+        return res.status(400).json({ message: "Can only review after an accepted or completed service request" });
       }
 
       const authorStr = String(authorId);
