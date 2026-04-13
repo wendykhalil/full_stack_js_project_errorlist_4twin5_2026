@@ -5,6 +5,9 @@ import { useAuth } from "../auth/AuthContext";
 import SimpleFooter from "../components/Footer";
 import { apiFetch, suggestQuoteFromProject } from "../auth/api";
 import PageShell from '../components/PageShell';
+import { useFormValidation, rules } from '../hooks/useFormValidation';
+import { useServerErrors } from '../hooks/useServerErrors';
+import FieldError from '../components/FieldError';
 
 const emptyLine = { description: "", quantity: 1, unitPrice: 0 };
 
@@ -19,6 +22,11 @@ export default function ArtisanDevisCreate() {
   const [aiLoading, setAiLoading] = useState(false);
   const [info, setInfo] = useState("");
   const [error, setError] = useState("");
+
+  const { errors: formErrors, validate } = useFormValidation({
+    projectId: [rules.required('Veuillez sélectionner un projet')],
+  });
+  const { fieldErrors: serverErrors, globalError: serverGlobalError, handleError, clearErrors } = useServerErrors();
 
   useEffect(() => {
     const run = async () => {
@@ -82,9 +90,29 @@ export default function ArtisanDevisCreate() {
 
   const submit = async (e) => {
     e.preventDefault();
+    clearErrors();
     setLoading(true);
     setInfo("");
     setError("");
+
+    if (!validate({ projectId })) {
+      setLoading(false);
+      return;
+    }
+
+    // Validate line items
+    const lineErrors = [];
+    lines.forEach((line, i) => {
+      if (!line.description.trim()) lineErrors.push(`Ligne ${i + 1}: description requise`);
+      if (!line.quantity || Number(line.quantity) <= 0) lineErrors.push(`Ligne ${i + 1}: quantité invalide`);
+      if (!line.unitPrice || Number(line.unitPrice) < 0) lineErrors.push(`Ligne ${i + 1}: prix unitaire invalide`);
+    });
+    if (lineErrors.length > 0) {
+      setError(lineErrors.join(' | '));
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await apiFetch('/documents/quotes', {
         token,
@@ -95,6 +123,7 @@ export default function ArtisanDevisCreate() {
       setInfo('Devis généré avec succès.');
       setTimeout(() => navigate('/artisan/factures'), 900);
     } catch (err) {
+      handleError(err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -134,7 +163,13 @@ export default function ArtisanDevisCreate() {
           <form onSubmit={submit} className="mt-8 space-y-6">
             <div>
               <label className="mb-2 block text-sm font-semibold text-slate-900">Projet</label>
-              <select value={projectId} onChange={(e) => setProjectId(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none">
+              <select value={projectId} onChange={(e) => setProjectId(e.target.value)} className={`w-full rounded-xl border ${formErrors.projectId || serverErrors.projectId ? 'border-red-400' : 'border-slate-200'} bg-white px-4 py-3 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none`}>
+                <option value="">Sélectionner un projet</option>
+                {projects.map((project) => (
+                  <option key={project._id} value={project._id}>{project.title} — {project.location?.city || 'Sans ville'}</option>
+                ))}
+              </select>
+              <FieldError error={formErrors.projectId || serverErrors.projectId} />
                 <option value="">Sélectionner un projet</option>
                 {projects.map((project) => (
                   <option key={project._id} value={project._id}>{project.title} — {project.location?.city || 'Sans ville'}</option>

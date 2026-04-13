@@ -25,6 +25,9 @@ import {
 import SimpleFooter from '../components/Footer';
 import PageShell from '../components/PageShell';
 import MapPickerModal from '../components/MapPickerModal';
+import { useFormValidation, rules } from '../hooks/useFormValidation';
+import { useServerErrors } from '../hooks/useServerErrors';
+import FieldError from '../components/FieldError';
 
 const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '');
 
@@ -70,6 +73,20 @@ export default function ArtisanProfile() {
   const [resetLoading, setResetLoading] = useState(false);
   const [resetMsg, setResetMsg] = useState('');
   const [resetErr, setResetErr] = useState('');
+
+  const { errors: profileFormErrors, validate: validateProfile } = useFormValidation({
+    trade: [rules.required('Métier requis')],
+    region: [rules.required('Région requise')],
+    phone: [rules.required('Téléphone requis'), rules.phone()],
+    description: [rules.maxLength(500)],
+  });
+  const { fieldErrors: profileServerErrors, globalError: profileGlobalError, handleError: handleProfileError, clearErrors: clearProfileErrors } = useServerErrors();
+
+  const { errors: pwFormErrors, validate: validatePw } = useFormValidation({
+    currentPassword: [rules.required('Mot de passe actuel requis')],
+    newPassword: [rules.required('Nouveau mot de passe requis'), rules.minLength(6, 'Minimum 6 caractères')],
+  });
+  const { fieldErrors: pwServerErrors, globalError: pwGlobalError, handleError: handlePwError, clearErrors: clearPwErrors } = useServerErrors();
 
   const tradeOptions = ['Plombier', 'Électricien', 'Maçon', 'Peintre', 'Menuisier', 'Carreleur', 'Chauffagiste', 'Climatisation', 'Jardinier', 'Autre'];
 
@@ -184,8 +201,10 @@ export default function ArtisanProfile() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    clearProfileErrors();
     setError('');
     setSuccess('');
+    if (!validateProfile({ trade: profile.trade, region: profile.region, phone: profile.phone, description: profile.description })) return;
     setSaving(true);
 
     try {
@@ -219,6 +238,7 @@ export default function ArtisanProfile() {
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
       console.error('Error saving profile:', err);
+      handleProfileError(err);
       setError(err.message);
       setTimeout(() => setError(''), 3000);
     } finally {
@@ -228,14 +248,10 @@ export default function ArtisanProfile() {
 
   const onChangePassword = async (e) => {
     e.preventDefault();
+    clearPwErrors();
     setPwErr('');
     setPwMsg('');
-
-    if (!newPassword || newPassword.length < 6) {
-      setPwErr('Le mot de passe doit contenir au moins 6 caractères');
-      return;
-    }
-
+    if (!validatePw({ currentPassword, newPassword })) return;
     setPwLoading(true);
     try {
       await changePassword({ currentPassword, newPassword });
@@ -244,6 +260,7 @@ export default function ArtisanProfile() {
       setNewPassword('');
       setTimeout(() => setPwMsg(''), 3000);
     } catch (err) {
+      handlePwError(err);
       setPwErr(err.message || 'Erreur lors du changement de mot de passe');
       setTimeout(() => setPwErr(''), 3000);
     } finally {
@@ -411,13 +428,14 @@ export default function ArtisanProfile() {
                 <select
                   value={profile.trade}
                   onChange={(e) => setProfile({ ...profile, trade: e.target.value })}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
+                  className={`w-full rounded-xl border ${profileFormErrors.trade || profileServerErrors.trade ? 'border-red-400' : 'border-slate-200'} bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20`}
                 >
                   <option value="">Select a trade</option>
                   {tradeOptions.map((option) => (
                     <option key={option} value={option}>{option}</option>
                   ))}
                 </select>
+                <FieldError error={profileFormErrors.trade || profileServerErrors.trade} />
               </div>
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-700">
@@ -430,9 +448,10 @@ export default function ArtisanProfile() {
                     value={profile.phone}
                     onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
                     placeholder="+216 XX XXX XXX"
-                    className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
+                    className={`w-full rounded-xl border ${profileFormErrors.phone || profileServerErrors.phone ? 'border-red-400' : 'border-slate-200'} bg-white pl-10 pr-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20`}
                   />
                 </div>
+                <FieldError error={profileFormErrors.phone || profileServerErrors.phone} />
               </div>
               <div className="sm:col-span-2">
                 <label className="mb-1.5 block text-sm font-medium text-slate-700">Description / Bio</label>
@@ -441,8 +460,9 @@ export default function ArtisanProfile() {
                   onChange={(e) => setProfile({ ...profile, description: e.target.value })}
                   rows="4"
                   placeholder="Describe your experience, skills, and specialties..."
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
+                  className={`w-full rounded-xl border ${profileFormErrors.description || profileServerErrors.description ? 'border-red-400' : 'border-slate-200'} bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20`}
                 />
+                <FieldError error={profileFormErrors.description || profileServerErrors.description} />
                 <p className="mt-1 text-xs text-slate-400">Maximum 500 characters</p>
               </div>
             </div>
@@ -482,9 +502,10 @@ export default function ArtisanProfile() {
                     value={profile.region}
                     onChange={(e) => setProfile({ ...profile, region: e.target.value })}
                     placeholder="Example: Tunis, Sousse, Sfax..."
-                    className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
+                    className={`w-full rounded-xl border ${profileFormErrors.region || profileServerErrors.region ? 'border-red-400' : 'border-slate-200'} bg-white pl-10 pr-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20`}
                   />
                 </div>
+                <FieldError error={profileFormErrors.region || profileServerErrors.region} />
               </div>
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-700">Ville</label>
@@ -578,10 +599,11 @@ export default function ArtisanProfile() {
                     type="password"
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
+                    className={`w-full rounded-xl border ${pwFormErrors.currentPassword || pwServerErrors.currentPassword ? 'border-red-400' : 'border-slate-200'} bg-white pl-10 pr-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20`}
                     placeholder="Votre mot de passe actuel"
                   />
                 </div>
+                <FieldError error={pwFormErrors.currentPassword || pwServerErrors.currentPassword} />
               </div>
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-700">Nouveau mot de passe</label>
@@ -591,14 +613,15 @@ export default function ArtisanProfile() {
                     type="password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
+                    className={`w-full rounded-xl border ${pwFormErrors.newPassword || pwServerErrors.newPassword ? 'border-red-400' : 'border-slate-200'} bg-white pl-10 pr-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20`}
                     placeholder="Minimum 6 caractères"
                   />
                 </div>
+                <FieldError error={pwFormErrors.newPassword || pwServerErrors.newPassword} />
               </div>
-              {pwErr && (
+              {(pwErr || pwGlobalError) && (
                 <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">
-                  {pwErr}
+                  {pwErr || pwGlobalError}
                 </div>
               )}
               {pwMsg && (

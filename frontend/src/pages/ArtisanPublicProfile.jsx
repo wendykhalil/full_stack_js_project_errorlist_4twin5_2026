@@ -9,6 +9,9 @@ import SimpleFooter from '../components/Footer';
 import ReviewsList from '../components/ReviewsList';
 import { getReviewsForUser } from '../auth/api';
 import ArtisanAvailabilityView from '../components/ArtisanAvailabilityView';
+import { useFormValidation, rules } from '../hooks/useFormValidation';
+import { useServerErrors } from '../hooks/useServerErrors';
+import FieldError from '../components/FieldError';
 
 const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '');
 
@@ -38,6 +41,11 @@ export default function ArtisanPublicProfile() {
   const [showContactForm, setShowContactForm] = useState(false);
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
+
+  const { errors: msgFormErrors, validate: validateMsg } = useFormValidation({
+    message: [rules.required('Message requis'), rules.minLength(10, 'Minimum 10 caractères'), rules.maxLength(500)],
+  });
+  const { fieldErrors: msgServerErrors, globalError: msgGlobalError, handleError: handleMsgError, clearErrors: clearMsgErrors } = useServerErrors();
   const [reviewStats, setReviewStats] = useState({ avgRating: 0, total: 0 });
   const [artisanPlan, setArtisanPlan] = useState(null);
 
@@ -94,7 +102,8 @@ export default function ArtisanPublicProfile() {
 
  const handleSendMessage = async (e) => {
   e.preventDefault();
-  if (!message.trim()) return;
+  clearMsgErrors();
+  if (!validateMsg({ message })) return;
 
   setSending(true);
   try {
@@ -105,7 +114,7 @@ export default function ArtisanPublicProfile() {
         'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify({
-        receiverId: artisan.userId, // ← Envoie l'ID de l'utilisateur
+        receiverId: artisan.userId,
         content: message.trim()
       })
     });
@@ -116,13 +125,12 @@ export default function ArtisanPublicProfile() {
       throw new Error(data.message || 'Erreur lors de l\'envoi');
     }
 
-    alert('Message envoyé avec succès !');
     setShowContactForm(false);
     setMessage('');
     
   } catch (err) {
     console.error('Error sending message:', err);
-    alert(err.message || 'Erreur lors de l\'envoi du message');
+    handleMsgError(err);
   } finally {
     setSending(false);
   }
@@ -331,8 +339,12 @@ export default function ArtisanPublicProfile() {
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Votre message..."
                   rows="4"
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
+                  className={`w-full rounded-xl border ${msgFormErrors.message || msgServerErrors.message ? 'border-red-400' : 'border-slate-200'} px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none`}
                 />
+                <FieldError error={msgFormErrors.message || msgServerErrors.message} />
+                {msgGlobalError && (
+                  <p className="mt-1 text-xs text-red-600">{msgGlobalError}</p>
+                )}
 
                 <div className="mt-4 flex gap-3">
                   <button
@@ -344,7 +356,7 @@ export default function ArtisanPublicProfile() {
                   </button>
                   <button
                     type="submit"
-                    disabled={sending || !message.trim()}
+                    disabled={sending}
                     className="flex-1 rounded-xl bg-indigo-600 px-4 py-3 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
                   >
                     {sending ? 'Envoi...' : 'Envoyer'}

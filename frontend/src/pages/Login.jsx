@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { 
-  ArrowLeft, Phone, UserPlus, Mail, Lock, Building2,
+  Phone, UserPlus, Mail, Lock, Building2,
   Eye, EyeOff, Menu, X, ChevronDown
 } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
@@ -68,13 +68,15 @@ export default function Login() {
     });
     if (googleBtnRef.current) {
       googleBtnRef.current.innerHTML = "";
+      const containerWidth = googleBtnRef.current.parentElement?.offsetWidth || googleWidth;
+      const btnWidth = Math.min(containerWidth - 16, googleWidth);
       window.google.accounts.id.renderButton(googleBtnRef.current, {
         type: "standard",
         theme: "outline",
         size: "large",
         text: "signin_with",
         shape: "rectangular",
-        width: googleWidth,
+        width: btnWidth,
       });
     }
   }, [googleWidth, loginWithGoogle, navigate]);
@@ -245,16 +247,6 @@ export default function Login() {
         
         <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
           <div className="mx-auto max-w-md">
-            {/* Back Button */}
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="group mb-6 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition-all hover:bg-slate-50 hover:text-blue-600"
-            >
-              <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
-              Back
-            </button>
-
             {/* Login Card */}
             <div className="rounded-2xl bg-white/90 backdrop-blur-sm border border-slate-200/80 shadow-xl">
               <div className="p-6 sm:p-8">
@@ -388,7 +380,7 @@ export default function Login() {
                 <div className="space-y-3">
                   {/* Google Button */}
                   <div className="flex min-h-[54px] items-center justify-center rounded-xl border border-slate-200 bg-white p-2 transition-all hover:border-blue-300 hover:shadow-md">
-                    <div ref={googleBtnRef} />
+                    <div ref={googleBtnRef} className="flex justify-center" />
                   </div>
 
                   {/* Phone Login Button */}

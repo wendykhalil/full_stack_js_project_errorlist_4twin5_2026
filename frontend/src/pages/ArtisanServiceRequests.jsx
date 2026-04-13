@@ -10,6 +10,9 @@ import {
   applyToServiceRequest, getMyApplications,
   getReviewsForUser,
 } from "../auth/api";
+import { useFormValidation, rules } from "../hooks/useFormValidation";
+import { useServerErrors } from "../hooks/useServerErrors";
+import FieldError from "../components/FieldError";
 
 const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "");
 
@@ -111,7 +114,12 @@ export default function ArtisanServiceRequests() {
   const [applyPrice, setApplyPrice] = useState("");
   const [applying, setApplying] = useState(false);
   const [applySuccess, setApplySuccess] = useState(false);
-  const [reviewTarget, setReviewTarget] = useState(null);
+
+  const { errors: applyFormErrors, validate: validateApply } = useFormValidation({
+    applyMsg: [rules.maxLength(500)],
+    applyPrice: [rules.positiveNumber('Doit être un nombre positif')],
+  });
+  const { fieldErrors: applyServerErrors, globalError: applyGlobalError, handleError: handleApplyError, clearErrors: clearApplyErrors } = useServerErrors();  const [reviewTarget, setReviewTarget] = useState(null);
   const [reviewSourceId, setReviewSourceId] = useState(null);
   const [prescripteurRating, setPrescripteurRating] = useState(null);
 
@@ -168,12 +176,18 @@ export default function ArtisanServiceRequests() {
 
   async function handleApply(e) {
     e.preventDefault();
+    clearApplyErrors();
+    // Validate optional fields
+    const valuesToValidate = { applyMsg };
+    if (applyPrice.trim()) valuesToValidate.applyPrice = applyPrice;
+    if (!validateApply(valuesToValidate)) return;
     try {
       setApplying(true);
       await applyToServiceRequest({ token, id: detail._id, message: applyMsg, proposedPrice: applyPrice ? Number(applyPrice) : undefined });
       setApplySuccess(true);
       loadOpen();
     } catch (e) {
+      handleApplyError(e);
       setErr(e.message);
     } finally {
       setApplying(false);
@@ -328,15 +342,20 @@ export default function ArtisanServiceRequests() {
                 <div>
                   <label className="text-sm font-medium text-slate-700">Message (optionnel)</label>
                   <textarea value={applyMsg} onChange={e => setApplyMsg(e.target.value)} rows={3}
-                    className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                    className={`mt-1 w-full rounded-xl border ${applyFormErrors.applyMsg || applyServerErrors.applyMsg ? 'border-red-400' : 'border-slate-200'} px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500`}
                     placeholder="Présentez-vous et expliquez pourquoi vous êtes le bon choix…" />
+                  <FieldError error={applyFormErrors.applyMsg || applyServerErrors.applyMsg} />
                 </div>
                 <div>
                   <label className="text-sm font-medium text-slate-700">Prix proposé (TND, optionnel)</label>
                   <input value={applyPrice} onChange={e => setApplyPrice(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                    className={`mt-1 w-full rounded-xl border ${applyFormErrors.applyPrice || applyServerErrors.applyPrice ? 'border-red-400' : 'border-slate-200'} px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500`}
                     placeholder="Ex: 2500" />
+                  <FieldError error={applyFormErrors.applyPrice || applyServerErrors.applyPrice} />
                 </div>
+                {applyGlobalError && (
+                  <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">{applyGlobalError}</div>
+                )}
                 <button type="submit" disabled={applying}
                   className="w-full rounded-xl bg-indigo-600 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50">
                   {applying ? "Envoi…" : "Envoyer ma candidature"}

@@ -5,6 +5,9 @@ import { useAuth } from "../auth/AuthContext";
 import { apiFetch } from "../auth/api";
 import { roleToBasePath } from "../auth/role";
 import logo from "../assets/bmp-logo.svg";
+import { useFormValidation, rules } from "../hooks/useFormValidation";
+import { useServerErrors } from "../hooks/useServerErrors";
+import FieldError from "../components/FieldError";
 
 const COUNTRY_CODES = [
   { code: "+216", label: "Tunisia", flag: "🇹🇳" },
@@ -39,19 +42,30 @@ export default function PhoneLogin() {
   const [msg, setMsg] = useState("");
   const [error, setError] = useState("");
 
+  const { errors: phoneFormErrors, validate: validatePhone } = useFormValidation({
+    phoneInput: [rules.required('Numéro de téléphone requis'), rules.minLength(6, 'Minimum 6 chiffres')],
+  });
+  const { errors: codeFormErrors, validate: validateCode } = useFormValidation({
+    code: [rules.required('Code requis'), rules.minLength(6, 'Le code doit contenir 6 chiffres'), rules.maxLength(6, 'Le code doit contenir 6 chiffres')],
+  });
+  const { fieldErrors: phoneServerErrors, globalError: phoneGlobalError, handleError: handlePhoneError, clearErrors: clearPhoneErrors } = useServerErrors();
+  const { fieldErrors: codeServerErrors, globalError: codeGlobalError, handleError: handleCodeError, clearErrors: clearCodeErrors } = useServerErrors();
+
   const normalizedPhone = useMemo(() => `${countryCode}${cleanLocalPhone(phoneInput)}`, [countryCode, phoneInput]);
 
   async function sendCode(e) {
     e.preventDefault();
+    clearPhoneErrors();
     setError("");
     setMsg("");
-    if (!cleanLocalPhone(phoneInput)) return setError("Please enter your phone number.");
+    if (!validatePhone({ phoneInput })) return;
     setLoading(true);
     try {
       const res = await apiFetch("/auth/phone/start", { method: "POST", body: { phone: normalizedPhone } });
       setMsg(res.message || "Verification code sent.");
       setStep("CODE");
     } catch (err) {
+      handlePhoneError(err);
       setError(err.message || "Failed to send verification code.");
     } finally {
       setLoading(false);
@@ -60,8 +74,10 @@ export default function PhoneLogin() {
 
   async function verifyCode(e) {
     e.preventDefault();
+    clearCodeErrors();
     setError("");
     setMsg("");
+    if (!validateCode({ code })) return;
     setLoading(true);
     try {
       const res = await apiFetch("/auth/phone/verify", { method: "POST", body: { phone: normalizedPhone, code: code.trim() } });
@@ -72,6 +88,7 @@ export default function PhoneLogin() {
       }
       navigate(roleToBasePath(res.user.role), { replace: true });
     } catch (err) {
+      handleCodeError(err);
       setError(err.message || "Invalid verification code.");
     } finally {
       setLoading(false);
@@ -213,9 +230,10 @@ export default function PhoneLogin() {
                           }}
                           placeholder="22 345 678"
                           inputMode="numeric"
-                          className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                          className={`w-full rounded-xl border ${phoneFormErrors.phoneInput || phoneServerErrors.phoneInput ? 'border-red-400' : 'border-slate-300'} bg-white px-4 py-3 text-base text-slate-900 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20`}
                         />
                       </div>
+                      <FieldError error={phoneFormErrors.phoneInput} />
 
                       {/* Full Number Preview */}
                       <div className="mt-3 rounded-xl bg-slate-50 border border-slate-200 px-4 py-3">
@@ -261,8 +279,9 @@ export default function PhoneLogin() {
                         placeholder="Enter 6-digit code"
                         inputMode="numeric"
                         maxLength="6"
-                        className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-center text-2xl font-semibold tracking-wider text-slate-900 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                        className={`w-full rounded-xl border ${codeFormErrors.code || codeServerErrors.code ? 'border-red-400' : 'border-slate-300'} bg-white px-4 py-3 text-center text-2xl font-semibold tracking-wider text-slate-900 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20`}
                       />
+                      <FieldError error={codeFormErrors.code} />
                       
                       {/* Phone Number Reference */}
                       <div className="mt-3 rounded-xl bg-slate-50 border border-slate-200 px-4 py-3">

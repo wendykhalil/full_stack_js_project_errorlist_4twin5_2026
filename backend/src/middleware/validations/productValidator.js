@@ -2,19 +2,17 @@ const { body } = require('express-validator');
 const { handleValidationErrors } = require('../validate');
 
 const validateProduct = [
-  body('name')
-    .trim()
-    .notEmpty().withMessage('Nom requis')
-    .isLength({ max: 100 }).withMessage('Nom trop long'),
+  body('name').trim()
+    .notEmpty().withMessage('Le nom du produit est obligatoire')
+    .isLength({ max: 100 }).withMessage('Le nom du produit ne peut pas dépasser 100 caractères'),
   body('price')
-    .isFloat({ min: 0.01 }).withMessage('Prix invalide (≥ 0.01)')
+    .isFloat({ min: 0.01 }).withMessage('Le prix doit être un nombre positif supérieur à 0 (ex: 29.99)')
     .toFloat(),
   body('stock')
-    .isInt({ min: 0 }).withMessage('Stock doit être un entier ≥ 0')
+    .isInt({ min: 0 }).withMessage('Le stock doit être un nombre entier positif ou zéro (ex: 50)')
     .toInt(),
-  body('categoryId')
-    .optional()
-    .isMongoId().withMessage('ID catégorie invalide'),
+  body('categoryId').optional()
+    .isMongoId().withMessage('Identifiant de catégorie invalide'),
   handleValidationErrors
 ];
 

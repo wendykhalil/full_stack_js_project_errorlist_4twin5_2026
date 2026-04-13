@@ -16,6 +16,9 @@ import {
   CheckCircle
 } from 'lucide-react';
 import SimpleFooter from '../components/Footer';
+import { useFormValidation, rules } from '../hooks/useFormValidation';
+import { useServerErrors } from '../hooks/useServerErrors';
+import FieldError from '../components/FieldError';
 
 export default function ArtisanPortfolioAdd() {
 
@@ -41,6 +44,13 @@ export default function ArtisanPortfolioAdd() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  const { errors: formErrors, validate } = useFormValidation({
+    title: [rules.required('Titre requis'), rules.minLength(3)],
+    description: [rules.maxLength(1000)],
+    date: [rules.date()],
+  });
+  const { fieldErrors: serverErrors, globalError, handleError, clearErrors } = useServerErrors();
   const isSubscribed = subscription?.plan && subscription?.plan !== 'FREE' && subscription?.status === 'ACTIVE';
 
   // Vérifier si l'artisan a un profil
@@ -105,8 +115,10 @@ export default function ArtisanPortfolioAdd() {
     e.preventDefault();
 
     // Trial feature - let backend handle subscription check
+    clearErrors();
     setError('');
     setSuccess('');
+    if (!validate({ title: formData.title, description: formData.description, date: formData.date })) return;
     setSubmitting(true);
 
     try {
@@ -150,6 +162,7 @@ export default function ArtisanPortfolioAdd() {
 
     } catch (err) {
       console.error('Error adding project:', err);
+      handleError(err);
       setError(err.message);
     } finally {
       setSubmitting(false);
@@ -296,8 +309,9 @@ export default function ArtisanPortfolioAdd() {
                 value={formData.title}
                 onChange={(e) => setFormData({...formData, title: e.target.value})}
                 placeholder="Ex: Installation plomberie villa"
-                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
+                className={`w-full rounded-xl border ${formErrors.title || serverErrors.title ? 'border-red-400' : 'border-slate-200'} px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none`}
               />
+              <FieldError error={formErrors.title || serverErrors.title} />
             </div>
 
             <div>
@@ -309,8 +323,9 @@ export default function ArtisanPortfolioAdd() {
                 onChange={(e) => setFormData({...formData, description: e.target.value})}
                 rows="4"
                 placeholder="Décrivez le projet réalisé..."
-                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
+                className={`w-full rounded-xl border ${formErrors.description || serverErrors.description ? 'border-red-400' : 'border-slate-200'} px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none`}
               />
+              <FieldError error={formErrors.description || serverErrors.description} />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -341,9 +356,10 @@ export default function ArtisanPortfolioAdd() {
                     value={formData.date}
                     onChange={(e) => setFormData({...formData, date: e.target.value})}
                     max={new Date().toISOString().split('T')[0]}
-                    className="w-full rounded-xl border border-slate-200 pl-10 pr-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
+                    className={`w-full rounded-xl border ${formErrors.date || serverErrors.date ? 'border-red-400' : 'border-slate-200'} pl-10 pr-4 py-3 text-sm focus:border-indigo-500 focus:outline-none`}
                   />
                 </div>
+                <FieldError error={formErrors.date || serverErrors.date} />
               </div>
             </div>
 

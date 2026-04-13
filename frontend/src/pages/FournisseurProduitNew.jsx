@@ -5,6 +5,9 @@ import SimpleFooter from "../components/Footer";
 import { useTranslation } from '../i18n';
 import { useAuth } from "../auth/AuthContext.jsx";
 import { createProduct, getSupplierStats } from "../auth/api.js";
+import { useServerErrors } from "../hooks/useServerErrors";
+import { useFormValidation, rules } from "../hooks/useFormValidation";
+import FieldError from "../components/FieldError";
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -109,6 +112,14 @@ export default function FournisseurProduitNew() {
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [errors, setErrors] = useState({});
   const [globalError, setGlobalError] = useState('');
+
+  const { errors: formErrors, validate } = useFormValidation({
+    name: [rules.required('Nom requis'), rules.minLength(2)],
+    price: [rules.required('Prix requis'), rules.positiveNumber('Doit être un nombre positif')],
+    stock: [rules.required('Stock requis'), rules.positiveNumber('Doit être un nombre positif')],
+    description: [rules.required('Description requise'), rules.minLength(10)],
+  });
+  const { fieldErrors: serverErrors, globalError: serverGlobalError, handleError: handleServerError, clearErrors: clearServerErrors } = useServerErrors();
   
   const [showNewCategoryInput, setShowNewCategoryInput] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
@@ -161,6 +172,12 @@ export default function FournisseurProduitNew() {
     setSubmitting(true);
     setErrors({});
     setGlobalError('');
+    clearServerErrors();
+
+    if (!validate({ name: formData.name, price: formData.price, stock: formData.stock, description: formData.description })) {
+      setSubmitting(false);
+      return;
+    }
 
     // Validation frontend rapide
     const frontendErrors = {};
@@ -231,6 +248,7 @@ export default function FournisseurProduitNew() {
       navigate('/fournisseur/produits');
     } catch (error) {
       console.error('Error creating product:', error);
+      handleServerError(error);
       setGlobalError('Erreur réseau. Vérifiez votre connexion.');
     } finally {
       setSubmitting(false);
@@ -267,7 +285,7 @@ export default function FournisseurProduitNew() {
               placeholder={t('fournisseurProduitNew.productNamePlaceholder')}
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              error={errors.name}
+              error={formErrors.name || errors.name || serverErrors.name}
             />
             
             {/* Catégorie avec gestion d'erreur */}
@@ -313,7 +331,7 @@ export default function FournisseurProduitNew() {
               type="text"
               value={formData.price}
               onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-              error={errors.price}
+              error={formErrors.price || errors.price || serverErrors.price}
             />
             
             <Input 
@@ -322,7 +340,7 @@ export default function FournisseurProduitNew() {
               type="text"
               value={formData.stock}
               onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-              error={errors.stock}
+              error={formErrors.stock || errors.stock || serverErrors.stock}
             />
             <div />
           </div>
@@ -333,7 +351,7 @@ export default function FournisseurProduitNew() {
               placeholder={t('fournisseurProduitNew.descriptionPlaceholder')}
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              error={errors.description}
+              error={formErrors.description || errors.description || serverErrors.description}
             />
           </div>
 
@@ -342,9 +360,9 @@ export default function FournisseurProduitNew() {
             <UploadBox title={t('fournisseurProduitNew.pdfUploadTitle')} subtitle={t('fournisseurProduitNew.pdfUploadSubtitle')} icon={<FileText className="h-5 w-5" />} files={docFiles} onChange={(e) => setDocFiles(Array.from(e.target.files))} />
           </div>
 
-          {globalError && (
+          {(globalError || serverGlobalError) && (
             <div className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">
-              {globalError}
+              {globalError || serverGlobalError}
             </div>
           )}
 

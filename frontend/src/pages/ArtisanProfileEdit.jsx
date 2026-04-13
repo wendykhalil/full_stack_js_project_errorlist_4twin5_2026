@@ -18,6 +18,9 @@ import {
 import SimpleFooter from '../components/Footer';
 import PageShell from '../components/PageShell';
 import MapPickerModal from '../components/MapPickerModal';
+import { useFormValidation, rules } from '../hooks/useFormValidation';
+import { useServerErrors } from '../hooks/useServerErrors';
+import FieldError from '../components/FieldError';
 
 export default function ArtisanProfileEdit() {
  
@@ -31,6 +34,14 @@ export default function ArtisanProfileEdit() {
   const [isMapPickerOpen, setIsMapPickerOpen] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  const { errors: formErrors, validate } = useFormValidation({
+    trade: [rules.required('Métier requis')],
+    region: [rules.required('Région requise')],
+    phone: [rules.required('Téléphone requis'), rules.phone()],
+    description: [rules.maxLength(500)],
+  });
+  const { fieldErrors: serverErrors, globalError, handleError, clearErrors } = useServerErrors();
 
   const [profile, setProfile] = useState({
     trade: '',
@@ -177,8 +188,10 @@ export default function ArtisanProfileEdit() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    clearErrors();
     setError('');
     setSuccess('');
+    if (!validate({ trade: profile.trade, region: profile.region, phone: profile.phone, description: profile.description })) return;
     setSaving(true);
 
     try {
@@ -228,6 +241,7 @@ export default function ArtisanProfileEdit() {
 
     } catch (err) {
       console.error('Error saving profile:', err);
+      handleError(err);
       setError(err.message);
     } finally {
       setSaving(false);
@@ -332,13 +346,14 @@ export default function ArtisanProfileEdit() {
               <select
                 value={profile.trade}
                 onChange={(e) => setProfile({...profile, trade: e.target.value})}
-                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
+                className={`w-full rounded-xl border ${formErrors.trade || serverErrors.trade ? 'border-red-400' : 'border-slate-200'} px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none`}
               >
                 <option value="">Select a trade</option>
                 {tradeOptions.map(option => (
                   <option key={option} value={option}>{option}</option>
                 ))}
               </select>
+              <FieldError error={formErrors.trade || serverErrors.trade} />
             </div>
 
             <div>
@@ -350,8 +365,9 @@ export default function ArtisanProfileEdit() {
                 value={profile.phone}
                 onChange={(e) => setProfile({...profile, phone: e.target.value})}
                 placeholder="+216 XX XXX XXX"
-                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
+                className={`w-full rounded-xl border ${formErrors.phone || serverErrors.phone ? 'border-red-400' : 'border-slate-200'} px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none`}
               />
+              <FieldError error={formErrors.phone || serverErrors.phone} />
             </div>
 
             <div className="md:col-span-2">
@@ -363,8 +379,9 @@ export default function ArtisanProfileEdit() {
                 onChange={(e) => setProfile({...profile, description: e.target.value})}
                 rows="4"
                 placeholder="Décrivez votre expérience, vos compétences..."
-                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
+                className={`w-full rounded-xl border ${formErrors.description || serverErrors.description ? 'border-red-400' : 'border-slate-200'} px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none`}
               />
+              <FieldError error={formErrors.description || serverErrors.description} />
             </div>
           </div>
         </div>
@@ -401,8 +418,9 @@ export default function ArtisanProfileEdit() {
                 value={profile.region}
                 onChange={(e) => setProfile({...profile, region: e.target.value})}
                 placeholder="Example: Tunis, Sousse, Sfax..."
-                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
+                className={`w-full rounded-xl border ${formErrors.region || serverErrors.region ? 'border-red-400' : 'border-slate-200'} px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none`}
               />
+              <FieldError error={formErrors.region || serverErrors.region} />
             </div>
 
             <div>

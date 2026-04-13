@@ -3,6 +3,9 @@ import { useAuth } from "../auth/AuthContext";
 import { useTranslation } from '../i18n';
 import Footer from "../components/Footer";
 import MapPickerModal from "../components/MapPickerModal";
+import { useFormValidation, rules } from "../hooks/useFormValidation";
+import { useServerErrors } from "../hooks/useServerErrors";
+import FieldError from "../components/FieldError";
 import { 
   Building, 
   MapPin, 
@@ -68,6 +71,21 @@ export default function Profile() {
   const [resetLoading, setResetLoading] = useState(false);
   const [resetMsg, setResetMsg] = useState("");
   const [resetErr, setResetErr] = useState("");
+
+  const { errors: profileFieldErrors, validate: validateProfile } = useFormValidation({
+    firstName: [rules.required('Prénom requis'), rules.minLength(2)],
+    lastName: [rules.required('Nom requis'), rules.minLength(2)],
+  });
+  const { errors: profilePhoneErrors, validate: validateProfilePhone } = useFormValidation({
+    phone: [rules.phone()],
+  });
+  const { fieldErrors: profileServerErrors, globalError: profileGlobalError, handleError: handleProfileError, clearErrors: clearProfileErrors } = useServerErrors();
+
+  const { errors: pwFieldErrors, validate: validatePw } = useFormValidation({
+    currentPassword: [rules.required('Mot de passe actuel requis')],
+    newPassword: [rules.required('Nouveau mot de passe requis'), rules.minLength(6, 'Minimum 6 caractères')],
+  });
+  const { fieldErrors: pwServerErrors, globalError: pwGlobalError, handleError: handlePwError, clearErrors: clearPwErrors } = useServerErrors();
 
   // ✅ CORRECTION : Flag pour éviter les réinitialisations multiples
   const [isInitialized, setIsInitialized] = useState(false);
@@ -244,8 +262,11 @@ useEffect(() => {
 
   async function onSave(e) {
     e.preventDefault();
+    clearProfileErrors();
     setErr(""); 
     setMsg("");
+    if (!validateProfile({ firstName, lastName })) return;
+    if (phone.trim() && !validateProfilePhone({ phone })) return;
     setSaving(true);
 
     try {
@@ -351,6 +372,7 @@ useEffect(() => {
       
     } catch (e2) {
       console.error('Save error:', e2);
+      handleProfileError(e2);
       setErr(e2.message || t('profile.saveError') || 'Erreur lors de la sauvegarde');
     } finally {
       setSaving(false);
@@ -359,14 +381,10 @@ useEffect(() => {
 
   async function onChangePassword(e) {
     e.preventDefault();
+    clearPwErrors();
     setPwErr(""); 
     setPwMsg("");
-
-    if (!newPassword || newPassword.length < 6) {
-      setPwErr(t('profile.passwordMinLengthError') || 'Le mot de passe doit contenir au moins 6 caractères');
-      return;
-    }
-
+    if (!validatePw({ currentPassword, newPassword })) return;
     setPwLoading(true);
     try {
       await changePassword({ currentPassword, newPassword });
@@ -374,6 +392,7 @@ useEffect(() => {
       setCurrentPassword("");
       setNewPassword("");
     } catch (e2) {
+      handlePwError(e2);
       setPwErr(e2.message || t('profile.passwordChangeError') || 'Erreur lors du changement de mot de passe');
     } finally {
       setPwLoading(false);
@@ -446,9 +465,10 @@ useEffect(() => {
               <input
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
+                className={`mt-2 w-full rounded-xl border ${profileFieldErrors.firstName || profileServerErrors.firstName ? 'border-red-400' : 'border-slate-200'} bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950`}
                 placeholder={t('profile.firstNamePlaceholder') || 'Votre prénom'}
               />
+              <FieldError error={profileFieldErrors.firstName || profileServerErrors.firstName} />
             </div>
 
             <div>
@@ -458,10 +478,10 @@ useEffect(() => {
               <input
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
+                className={`mt-2 w-full rounded-xl border ${profileFieldErrors.lastName || profileServerErrors.lastName ? 'border-red-400' : 'border-slate-200'} bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950`}
                 placeholder={t('profile.lastNamePlaceholder') || 'Votre nom'}
               />
-            </div>
+              <FieldError error={profileFieldErrors.lastName || profileServerErrors.lastName} />
 
             <div className="sm:col-span-2">
               <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -481,9 +501,10 @@ useEffect(() => {
               <input
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
+                className={`mt-2 w-full rounded-xl border ${profilePhoneErrors.phone || profileServerErrors.phone ? 'border-red-400' : 'border-slate-200'} bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950`}
                 placeholder={t('profile.phonePlaceholder') || '+216 XX XXX XXX'}
               />
+              <FieldError error={profilePhoneErrors.phone || profileServerErrors.phone} />
             </div>
 
             {/* Profile image for non-supplier users */}
@@ -874,9 +895,10 @@ useEffect(() => {
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
                     type="password"
-                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
+                    className={`mt-2 w-full rounded-xl border ${pwFieldErrors.currentPassword || pwServerErrors.currentPassword ? 'border-red-400' : 'border-slate-200'} bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950`}
                     placeholder="••••••••"
                   />
+                  <FieldError error={pwFieldErrors.currentPassword || pwServerErrors.currentPassword} />
                 </div>
 
                 <div>
@@ -887,14 +909,20 @@ useEffect(() => {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     type="password"
-                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
+                    className={`mt-2 w-full rounded-xl border ${pwFieldErrors.newPassword || pwServerErrors.newPassword ? 'border-red-400' : 'border-slate-200'} bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950`}
                     placeholder="••••••••"
                   />
+                  <FieldError error={pwFieldErrors.newPassword || pwServerErrors.newPassword} />
                 </div>
 
                 {pwErr && (
                   <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                     {pwErr}
+                  </div>
+                )}
+                {pwGlobalError && (
+                  <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {pwGlobalError}
                   </div>
                 )}
                 {pwMsg && (
