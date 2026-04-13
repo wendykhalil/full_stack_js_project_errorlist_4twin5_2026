@@ -20,7 +20,7 @@ import {
   Wallet,
   X,
 } from "lucide-react";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "../i18n";
 import SimpleFooter from "../components/Footer";
 import { apiFetch, getMySubscription, smartSearchAI, suggestProjectWithAI } from "../auth/api";
 import { useAuth } from "../auth/AuthContext";

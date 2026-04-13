@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import SimpleFooter from "../components/Footer";
 import Pagination from "../components/Pagination";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "../i18n";
 import { apiFetch } from "../auth/api";
 import { useAuth } from "../auth/AuthContext";
 import PageShell from '../components/PageShell';

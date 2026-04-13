@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { Search, ChevronDown, Loader2, ShieldOff, ShieldCheck, X } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { setUserSubscription } from '../auth/api';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '../i18n';
 
 // Les constantes de durée restent inchangées
 const DURATIONS = [
@@ -327,22 +327,39 @@ export default function AdminUsers() {
                         <div className="flex gap-2">
                           {isAdmin ? (
                             <span className="text-xs text-slate-300 dark:text-slate-600">Admin - actions désactivées</span>
-                          ) : isBlocked ? (
-                            <button
-                              onClick={() => handleUnblock(u._id)}
-                              className="flex-1 inline-flex items-center justify-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700 hover:bg-emerald-100 transition-colors dark:border-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-400 dark:hover:bg-emerald-900/60"
-                            >
-                              <ShieldCheck className="h-3.5 w-3.5" />
-                              {t('adminUsers.actions.unblock')}
-                            </button>
                           ) : (
-                            <button
-                              onClick={() => setBlockTarget(u)}
-                              className="flex-1 inline-flex items-center justify-center gap-1 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-100 transition-colors dark:border-red-800 dark:bg-red-900/40 dark:text-red-400 dark:hover:bg-red-900/60"
-                            >
-                              <ShieldOff className="h-3.5 w-3.5" />
-                              {t('adminUsers.actions.block')}
-                            </button>
+                            <>
+                              {isBlocked ? (
+                                <button
+                                  onClick={() => handleUnblock(u._id)}
+                                  className="flex-1 inline-flex items-center justify-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700 hover:bg-emerald-100 transition-colors dark:border-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-400 dark:hover:bg-emerald-900/60"
+                                >
+                                  <ShieldCheck className="h-3.5 w-3.5" />
+                                  {t('adminUsers.actions.unblock')}
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => setBlockTarget(u)}
+                                  className="flex-1 inline-flex items-center justify-center gap-1 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-100 transition-colors dark:border-red-800 dark:bg-red-900/40 dark:text-red-400 dark:hover:bg-red-900/60"
+                                >
+                                  <ShieldOff className="h-3.5 w-3.5" />
+                                  {t('adminUsers.actions.block')}
+                                </button>
+                              )}
+                              <button
+                                onClick={() => handleSubscriptionChange(u)}
+                                disabled={subLoading === u._id}
+                                className="flex-1 inline-flex items-center justify-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-medium text-indigo-700 hover:bg-indigo-100 transition-colors dark:border-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300"
+                              >
+                                {subLoading === u._id ? (
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                ) : u.subscriptionStatus === 'ACTIVE' ? (
+                                  'Désactiver'
+                                ) : (
+                                  'Activer abonnement'
+                                )}
+                              </button>
+                            </>
                           )}
                         </div>
                       </div>

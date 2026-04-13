@@ -1,5 +1,11 @@
 const ordersService = require('./orders.service');
 const apiResponse = require('../../utils/apiResponse');
+const { notify } = require('../../utils/notify');
+
+const STATUS_LABELS = {
+  ACCEPTED: 'acceptée', REFUSED: 'refusée', PREPARING: 'en préparation',
+  SHIPPED: 'expédiée', DELIVERED: 'livrée', CONTACTED: 'contactée',
+};
 
 // Artisan : Créer une demande de commande
 async function createOrder(req, res) {
@@ -130,17 +136,22 @@ async function updateOrderStatus(req, res) {
   try {
     const { id } = req.params;
     const { status, note } = req.body;
-    const order = await ordersService.updateOrderStatus(
-      id, 
-      req.user._id, 
-      status, 
-      note
-    );
+    const order = await ordersService.updateOrderStatus(id, req.user._id, status, note);
+
+    // Notify artisan
+    await notify({
+      userId: order.artisanId,
+      type: 'ORDER_STATUS',
+      title: `Commande ${STATUS_LABELS[status] || status}`,
+      message: `Votre commande ${order.orderNumber} a été ${STATUS_LABELS[status] || status}.`,
+      link: `/artisan/orders/${order._id}`,
+    });
+
     return apiResponse(res, 'Statut de la commande mis à jour', order);
   } catch (error) {
     console.error('Error updating status:', error);
-    return res.status(error.statusCode || 500).json({ 
-      message: error.message || 'Erreur lors de la mise à jour du statut' 
+    return res.status(error.statusCode || 500).json({
+      message: error.message || 'Erreur lors de la mise à jour du statut'
     });
   }
 }

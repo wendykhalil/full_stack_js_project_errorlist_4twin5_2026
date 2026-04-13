@@ -16,6 +16,8 @@ import AdminLayout from "./layouts/AdminLayout";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
 import AdminActivityLogs from "./pages/AdminActivityLogs";
+import AdminPromoCodes from "./pages/AdminPromoCodes";
+import AdminTransactions from "./pages/AdminTransactions";
 
 // REGISTER
 import RegisterChooseRole from "./pages/RegisterChooseRole";
@@ -41,6 +43,9 @@ import ArtisanProfileEdit from './pages/ArtisanProfileEdit';
 import ArtisanPortfolio from './pages/ArtisanPortfolio';
 import ArtisanPortfolioAdd from './pages/ArtisanPortfolioAdd';
 import ArtisanWeather from './pages/ArtisanWeather';
+import ArtisanAvailability from './pages/ArtisanAvailability';
+import ArtisanServiceRequests from './pages/ArtisanServiceRequests';
+import PrescripteurServiceRequests from './pages/PrescripteurServiceRequests';
 
 // PRESCRIPTEUR
 import PrescripteurLayout from "./layouts/PrescripteurLayout";
@@ -69,14 +74,12 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Profile from "./pages/Profile";
 import AppErrorBoundary from "./components/AppErrorBoundary";
-import AutoPageTranslator from "./components/translation/AutoPageTranslator";
 import AiChat from "./components/ai-chat"; // ton composant chat modernisé
 
 export default function App() {
     return (
         <AppErrorBoundary>
         <BrowserRouter>
-            <AutoPageTranslator />
             <AppErrorBoundary></AppErrorBoundary>
             <AppErrorBoundary><RealtimeNotifications /></AppErrorBoundary>
             <Routes>
@@ -114,7 +117,8 @@ export default function App() {
                         <Route path="profile" element={<Profile />} />
                         <Route path="users" element={<AdminUsers />} />
                         <Route path="activity" element={<AdminActivityLogs />} />
-                        <Route path="transactions" element={<div className="mx-auto max-w-6xl py-10">Transactions (à faire)</div>} />
+                        <Route path="transactions" element={<AdminTransactions />} />
+                        <Route path="promo-codes" element={<AdminPromoCodes />} />
                         {/* AI Chat pour Admin */}
                         <Route path="AiChat" element={<AiChat />} />
                     </Route>
@@ -142,6 +146,8 @@ export default function App() {
                         <Route path="orders" element={<RequireSubscription><ArtisanOrders /></RequireSubscription>} />
                         <Route path="orders/:id" element={<RequireSubscription><OrderDetails /></RequireSubscription>} />
                         <Route path="weather" element={<ArtisanWeather />} />
+                        <Route path="availability" element={<ArtisanAvailability />} />
+                        <Route path="service-requests" element={<ArtisanServiceRequests />} />
                         <Route path="messages" element={<RequireSubscription><Messages /></RequireSubscription>} />
                         <Route path="messages/:userId" element={<RequireSubscription><Conversation /></RequireSubscription>} />
                         {/* AI Chat pour Artisan */}
@@ -158,6 +164,7 @@ export default function App() {
                         <Route path="artisan/:id" element={<ArtisanPublicProfile />} />
                         <Route path="artisans" element={<PrescripteurArtisans />} />
                         <Route path="projects" element={<PrescripteurProjects />} />
+                        <Route path="service-requests" element={<PrescripteurServiceRequests />} />
                         <Route path="messages" element={<Messages />} />
                         <Route path="messages/:userId" element={<Conversation />} />
                         {/* AI Chat pour Prescripteur */}

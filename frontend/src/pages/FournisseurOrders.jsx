@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '../i18n';
 import {
   Package,
   Search,

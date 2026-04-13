@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ChevronDown, Upload, FileText, Plus, X, Image, File } from "lucide-react";
 import SimpleFooter from "../components/Footer";
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '../i18n';
 import { useAuth } from "../auth/AuthContext";
 import { getMyProducts, updateProduct } from "../auth/api.js";
 

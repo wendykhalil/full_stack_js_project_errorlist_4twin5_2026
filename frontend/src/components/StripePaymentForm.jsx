@@ -4,7 +4,7 @@ import { useAuth } from '../auth/AuthContext';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-export default function StripePaymentForm({ amount, plan, onSuccess, onError }) {
+export default function StripePaymentForm({ amount, plan, promoCode, onSuccess, onError }) {
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
@@ -22,18 +22,14 @@ export default function StripePaymentForm({ amount, plan, onSuccess, onError }) 
     setError('');
 
     try {
-      // 1. Créer l'intention de paiement
+      // 1. Create payment intent
       const response = await fetch(`${API_URL}/payments/create-payment-intent`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ 
-          amount: amount, 
-          plan: plan,
-          userId: user?.id 
-        })
+        body: JSON.stringify({ amount, plan })
       });
 
       const data = await response.json();
@@ -53,27 +49,20 @@ export default function StripePaymentForm({ amount, plan, onSuccess, onError }) 
         setError(stripeError.message);
         onError?.(stripeError.message);
       } else if (paymentIntent.status === 'succeeded') {
-        // 3. Paiement réussi - Appeler l'activation
-        console.log('Paiement réussi, activation en cours...');
-        
         const activateResponse = await fetch(`${API_URL}/payments/activate-subscription`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify({ 
-            plan, 
-            paymentIntentId: paymentIntent.id,
-            status: 'ACTIVE'
-          })
+          body: JSON.stringify({ plan, paymentIntentId: paymentIntent.id, promoCode: promoCode || undefined })
         });
 
         const activateData = await activateResponse.json();
-        console.log('Réponse activation:', activateData);
+        console.log('Activation response:', activateData);
 
         if (!activateResponse.ok) {
-          throw new Error(activateData.error || 'Erreur lors de l\'activation');
+          throw new Error(activateData.error || `Activation failed (${activateResponse.status})`);
         }
 
         onSuccess?.(paymentIntent);
@@ -113,8 +102,7 @@ export default function StripePaymentForm({ amount, plan, onSuccess, onError }) 
         disabled={!stripe || loading}
         className="w-full rounded-xl bg-indigo-600 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
       >
-        {loading ? 'Traitement en cours...' : `Payer ${amount} €`}
-      </button>
+        {loading ? 'Traitement en cours...' : `Payer ${amount} TND`}      </button>
     </form>
   );
 }

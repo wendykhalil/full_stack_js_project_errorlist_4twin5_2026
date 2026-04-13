@@ -8,7 +8,6 @@ const ordersRoutes = require('../modules/orders/orders.routes');
 const messagesRoutes = require('../modules/messages/messages.routes');
 const documentsRoutes = require('../modules/documents/documents.routes');
 const aiRoutes = require('../modules/ai-assistant/ai.routes');
-const translationRoutes = require('../modules/translation/translation.routes');
 
 // ✅ NOUVEAUX IMPORTS
 const artisanProfileRoutes = require('../modules/artisan/artisanProfile.routes');
@@ -16,6 +15,11 @@ const portfolioRoutes = require('../modules/artisan/portfolio.routes');
 const searchRoutes = require('../modules/search/search.routes');
 const subscriptionRoutes = require('../modules/subscription/subscription.routes');
 const weatherRoutes = require('../modules/weather/weather.routes');
+const serviceRequestsRoutes = require('../modules/service-requests/serviceRequests.routes');
+const reviewsRoutes = require('../modules/reviews/reviews.routes');
+const promoRoutes = require('../modules/promo/promo.routes');
+const availabilityRoutes = require('../modules/availability/availability.routes');
+const notificationsRoutes = require('../modules/notifications/notifications.routes');
 
 const { authRequired } = require('../middleware/authMiddleware');
 const { requireRoles } = require('../middleware/roleMiddleware');
@@ -136,7 +140,7 @@ router.use('/orders', ordersRoutes);
 router.use('/messages', messagesRoutes);
 router.use('/documents', documentsRoutes);
 router.use('/ai', aiRoutes);
-router.use('/translations', translationRoutes);
+
 
 // ✅ NOUVELLES ROUTES
 router.use('/artisan/profile', artisanProfileRoutes);
@@ -144,6 +148,11 @@ router.use('/artisan/portfolio', portfolioRoutes);
 router.use('/subscriptions', subscriptionRoutes);
 router.use('/search', searchRoutes);
 router.use('/weather', weatherRoutes);
+router.use('/service-requests', serviceRequestsRoutes);
+router.use('/reviews', reviewsRoutes);
+router.use('/promo', promoRoutes);
+router.use('/availability', availabilityRoutes);
+router.use('/notifications', notificationsRoutes);
 router.use(productRoutes);
 
 // Admin routes
@@ -506,7 +515,81 @@ router.get('/admin/dashboard-summary', authRequired, requireRoles('ADMIN'), asyn
   }
 });
 
-// 🔍 DEBUG ROUTE
+router.get('/admin/transactions', authRequired, requireRoles('ADMIN'), async (req, res, next) => {
+  try {
+    const Order = require('../models/Order');
+    const Subscription = require('../models/Subscription');
+    const Facture = require('../models/Facture');
+
+    const [orders, subscriptions, invoices] = await Promise.all([
+      Order.find().sort({ createdAt: -1 })
+        .populate('artisanId', 'firstName lastName email')
+        .populate('supplierId', 'firstName lastName email')
+        .populate('productId', 'name')
+        .lean(),
+      Subscription.find().sort({ createdAt: -1 })
+        .populate('userId', 'firstName lastName email')
+        .lean(),
+      Facture.find().sort({ createdAt: -1 })
+        .populate('artisanId', 'firstName lastName email')
+        .populate('projectId', 'title')
+        .lean(),
+    ]);
+
+    // Normalize into unified transaction list
+    const transactions = [
+      ...orders.map(o => ({
+        _id: `order-${o._id}`,
+        type: 'order',
+        ref: o.orderNumber || String(o._id).slice(-8).toUpperCase(),
+        user: o.artisanId ? `${o.artisanId.firstName} ${o.artisanId.lastName}` : '—',
+        description: o.productId?.name ? `Commande: ${o.productId.name}` : 'Commande produit',
+        amount: o.lineTotal || 0,
+        status: o.status,
+        date: o.createdAt,
+      })),
+      ...subscriptions.map(s => ({
+        _id: `sub-${s._id}`,
+        type: 'subscription',
+        ref: String(s._id).slice(-8).toUpperCase(),
+        user: s.userId ? `${s.userId.firstName} ${s.userId.lastName}` : '—',
+        description: `Abonnement ${s.plan}`,
+        amount: s.plan === 'PRO' ? 399 : s.plan === 'BASIC' ? 40 : 0,
+        status: s.status,
+        date: s.createdAt,
+      })),
+      ...invoices.map(f => ({
+        _id: `inv-${f._id}`,
+        type: 'invoice',
+        ref: String(f._id).slice(-8).toUpperCase(),
+        user: f.artisanId ? `${f.artisanId.firstName} ${f.artisanId.lastName}` : '—',
+        description: f.projectId?.title ? `Facture: ${f.projectId.title}` : 'Facture projet',
+        amount: f.total || 0,
+        status: f.status,
+        date: f.createdAt,
+      })),
+    ].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    // Stats
+    const deliveredOrders = orders.filter(o => o.status === 'DELIVERED');
+    const paidInvoices = invoices.filter(f => f.status === 'PAID');
+    const activeSubscriptions = subscriptions.filter(s => s.status === 'ACTIVE' && s.plan !== 'FREE');
+
+    const stats = {
+      totalOrders: orders.length,
+      deliveredOrders: deliveredOrders.length,
+      ordersRevenue: Number(deliveredOrders.reduce((s, o) => s + (o.lineTotal || 0), 0).toFixed(2)),
+      totalSubscriptions: subscriptions.length,
+      activeSubscriptions: activeSubscriptions.length,
+      paidInvoices: paidInvoices.length,
+      invoicesRevenue: Number(paidInvoices.reduce((s, f) => s + (f.total || 0), 0).toFixed(2)),
+    };
+
+    res.json({ ok: true, stats, transactions });
+  } catch (err) {
+    next(err);
+  }
+});
 router.get('/debug/all-products', authRequired, async (req, res) => {
   try {
     const Product = require('../models/Product');

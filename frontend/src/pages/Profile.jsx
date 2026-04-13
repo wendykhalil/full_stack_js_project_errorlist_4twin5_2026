@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useAuth } from "../auth/AuthContext";
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '../i18n';
 import Footer from "../components/Footer";
 import MapPickerModal from "../components/MapPickerModal";
 import { 

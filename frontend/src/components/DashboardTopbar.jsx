@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Bell, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { apiFetch } from "../auth/api";
 import { useAuth } from "../auth/AuthContext";
-import LanguageSwitcher from "./LanguageSwitcher";
+import NotificationBell from "./NotificationBell";
 
 const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "");
 
@@ -220,20 +220,10 @@ export default function DashboardTopbar({ role = "ARTISAN", unreadCount = 0 }) {
       </div>
 
       <div className="flex items-center gap-3">
-        <div className="hidden lg:block">
-          <LanguageSwitcher />
-        </div>
         <span className="hidden rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600 md:inline-flex dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
           {config.roleLabel}
         </span>
-        <button
-          type="button"
-          className="relative rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
-          aria-label="Notifications"
-        >
-          <Bell className="h-4 w-4" />
-          {unreadCount > 0 ? <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-blue-600" /> : null}
-        </button>
+        <NotificationBell />
 
         <div className="flex items-center gap-2">
           {avatarUrl ? (

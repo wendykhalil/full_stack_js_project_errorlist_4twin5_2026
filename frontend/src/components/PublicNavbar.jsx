@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { LogIn, Menu, Phone, UserPlus, X } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import LanguageSwitcher from "./LanguageSwitcher";
 import logo from "../assets/bmp-logo.svg";
 
 const NAV_ITEMS = [
@@ -58,9 +57,6 @@ export default function PublicNavbar() {
         </nav>
 
         <div className="flex items-center gap-3">
-          <div className="hidden sm:block">
-            <LanguageSwitcher />
-          </div>
           <button
             type="button"
             onClick={() => setMobileOpen((prev) => !prev)}
@@ -74,9 +70,6 @@ export default function PublicNavbar() {
 
       {mobileOpen && (
         <div className="border-t border-slate-200 bg-white px-4 py-4 shadow-lg shadow-slate-200/40 md:hidden">
-          <div className="mb-4">
-            <LanguageSwitcher />
-          </div>
           <nav className="grid gap-2">
             {NAV_ITEMS.map(({ to, label, icon: Icon }) => {
               const active = location.pathname === to || (to === "/register" && location.pathname.startsWith("/register"));

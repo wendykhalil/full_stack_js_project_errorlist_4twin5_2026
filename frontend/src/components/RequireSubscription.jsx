@@ -18,6 +18,7 @@ export default function RequireSubscription({ children }) {
     let isMounted = true;
     const check = async () => {
       setLoading(true);
+      setAllowed(false); // always reset before checking
       try {
         const res = await getMySubscription({ token });
         const sub = res?.data || { plan: 'FREE', status: 'INACTIVE' };
@@ -41,10 +42,9 @@ export default function RequireSubscription({ children }) {
 
     check();
 
-    return () => {
-      isMounted = false;
-    };
-  }, [token, navigate, location.pathname]);
+    return () => { isMounted = false; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, location.pathname]);
 
   if (loading) {
     return (

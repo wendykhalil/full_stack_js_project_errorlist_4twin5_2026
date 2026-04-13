@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { HardHat, Package, Shield, User } from "lucide-react";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "../i18n";
 import PublicNavbar from "../components/PublicNavbar";
 import Footer from "../components/Footer";
 import logo from "../assets/bmp-logo.svg";

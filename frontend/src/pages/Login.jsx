@@ -17,7 +17,6 @@ import { useAuth } from "../auth/AuthContext";
 import { apiFetch } from "../auth/api";
 import { roleToBasePath } from "../auth/role";
 import logo from "../assets/bmp-logo.svg";
-import LanguageSwitcher from "../components/LanguageSwitcher";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -140,7 +139,6 @@ export default function Login() {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex md:items-center md:gap-4 lg:gap-6">
-              <LanguageSwitcher />
               {/* Role Dropdown */}
               <div className="relative">
                 <button
@@ -188,9 +186,7 @@ export default function Login() {
               </Link>
             </div>
 
-            <div className="flex items-center gap-2 md:hidden">
-              <LanguageSwitcher />
-            </div>
+
 
             {/* Mobile Menu Button */}
             <button

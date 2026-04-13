@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '../i18n';
 import {
   Search,
   Filter,
@@ -25,19 +25,16 @@ import Pagination from '../components/Pagination';
 const ArtisanCard = ({ artisan, onViewProfile }) => {
   const { t } = useTranslation();
   const [imageError, setImageError] = useState(false);
+  const [plan, setPlan] = useState(null);
 
-  const artisanRating = Number(artisan?.rating ?? artisan?.avgRating ?? 4.8);
-  const normalizedArtisanRating = Number.isFinite(artisanRating) ? Math.max(0, Math.min(5, artisanRating)) : 4.8;
-  const artisanStarCount = Math.round(normalizedArtisanRating);
+  useEffect(() => {
+    if (!artisan._id) return;
+    fetch(`http://localhost:5000/api/subscriptions/public/${artisan.userId || artisan._id}`)
+      .then(r => r.json()).then(r => setPlan(r?.data?.plan || null)).catch(() => {});
+  }, [artisan._id]);
 
-  const renderArtisanStars = () => {
-    return [0, 1, 2, 3, 4].map((index) => (
-      <Star
-        key={`prescripteur-artisan-star-${index}`}
-        className={`h-4 w-4 ${index < artisanStarCount ? 'fill-yellow-400 text-yellow-400' : 'text-slate-300'}`}
-      />
-    ));
-  };
+  const rating = Number(artisan?.avgRating ?? artisan?.rating ?? 0);
+  const stars = Math.round(rating);
 
   return (
     <div className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white transition-all hover:shadow-md hover:-translate-y-0.5">
@@ -48,22 +45,24 @@ const ArtisanCard = ({ artisan, onViewProfile }) => {
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-100 to-indigo-50 text-indigo-600 overflow-hidden">
               {artisan.profileImage && !imageError ? (
-                <img
-                  src={artisan.profileImage}
-                  alt={artisan.name}
-                  className="h-full w-full object-cover"
-                  onError={() => setImageError(true)}
-                />
+                <img src={artisan.profileImage} alt={artisan.name} className="h-full w-full object-cover" onError={() => setImageError(true)} />
               ) : (
                 <User className="h-6 w-6" />
               )}
             </div>
             <div>
-              <h3 className="text-base font-semibold text-slate-900">{artisan.name}</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-semibold text-slate-900">{artisan.name}</h3>
+                {plan === 'PRO' && (
+                  <span className="rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 px-2 py-0.5 text-xs font-bold text-white">PRO</span>
+                )}
+                {plan === 'BASIC' && (
+                  <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-bold text-indigo-700">BASIC</span>
+                )}
+              </div>
               <p className="text-xs text-slate-500">{artisan.trade || 'Profil en cours'}</p>
             </div>
           </div>
-
           {artisan.distance && (
             <div className="flex items-center gap-1 rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700">
               <Navigation className="h-3 w-3" />
@@ -79,36 +78,33 @@ const ArtisanCard = ({ artisan, onViewProfile }) => {
 
         <div className="mt-3 flex items-center justify-between text-sm">
           <span className="text-slate-500">
-            {artisan.hasCompletedProfile 
-              ? `${artisan.totalProjects || 0} projet(s) réalisé(s)`
-              : 'Compte actif'}
+            {artisan.hasCompletedProfile ? `${artisan.totalProjects || 0} projet(s)` : 'Compte actif'}
           </span>
           <div className="flex items-center gap-1">
-            {renderArtisanStars()}
-            <span className="text-sm font-medium text-slate-700">{normalizedArtisanRating.toFixed(1)}</span>
+            {[1,2,3,4,5].map(i => (
+              <Star key={i} className={`h-4 w-4 ${i <= stars ? 'fill-yellow-400 text-yellow-400' : 'text-slate-300'}`} />
+            ))}
+            {rating > 0 ? (
+              <span className="text-sm font-medium text-slate-700 ml-1">{rating.toFixed(1)}</span>
+            ) : (
+              <span className="text-xs text-slate-400 ml-1">Nouveau</span>
+            )}
           </div>
         </div>
 
         <div className="mt-5 flex gap-2">
           {artisan.phone ? (
-            <a
-              href={`tel:${artisan.phone}`}
-              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-medium text-slate-700 transition-all hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
-            >
-              <Phone className="h-4 w-4" />
-              Contacter
+            <a href={`tel:${artisan.phone}`}
+              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-medium text-slate-700 transition-all hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600">
+              <Phone className="h-4 w-4" /> Contacter
             </a>
           ) : (
             <div className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl border border-dashed border-slate-200 bg-slate-50 py-2.5 text-sm font-medium text-slate-400">
-              <Phone className="h-4 w-4" />
-              Non disponible
+              <Phone className="h-4 w-4" /> Non disponible
             </div>
           )}
-
-          <button
-            onClick={() => onViewProfile(artisan._id)}
-            className="flex-1 inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:from-indigo-700 hover:to-indigo-600 hover:shadow-md"
-          >
+          <button onClick={() => onViewProfile(artisan._id)}
+            className="flex-1 inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:from-indigo-700 hover:to-indigo-600 hover:shadow-md">
             Voir profil
           </button>
         </div>

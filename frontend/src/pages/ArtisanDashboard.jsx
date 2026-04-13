@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowUpRight,
   ClipboardList,
@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import SimpleFooter from "../components/Footer";
 import { useAuth } from "../auth/AuthContext";
-import { getArtisanDashboardSummary } from "../auth/api";
+import { getArtisanDashboardSummary, getMySubscription } from "../auth/api";
 
 const currency = new Intl.NumberFormat("fr-TN", {
   style: "currency",
@@ -81,6 +81,7 @@ export default function ArtisanDashboard() {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [subWarning, setSubWarning] = useState(null);
 
   useEffect(() => {
     let active = true;
@@ -100,7 +101,15 @@ export default function ArtisanDashboard() {
       }
     }
 
-    if (token) load();
+    if (token) {
+      load();
+      getMySubscription({ token }).then(res => {
+        const d = res?.data;
+        if (d && d.daysUntilExpiry !== null && d.daysUntilExpiry <= 7 && d.status === 'ACTIVE' && d.plan !== 'FREE') {
+          setSubWarning({ days: d.daysUntilExpiry, isOnTrial: d.isOnTrial });
+        }
+      }).catch(() => {});
+    }
     return () => {
       active = false;
     };
@@ -120,6 +129,22 @@ export default function ArtisanDashboard() {
 
   return (
     <div className="space-y-8">
+      {/* Expiry warning banner */}
+      {subWarning && (
+        <Link to="/artisan/subscription"
+          className={`flex items-center justify-between gap-4 rounded-2xl border px-5 py-4 ${subWarning.days <= 3 ? 'border-red-200 bg-red-50' : 'border-orange-200 bg-orange-50'}`}>
+          <div className="flex items-center gap-3">
+            <AlertCircle className={`h-5 w-5 shrink-0 ${subWarning.days <= 3 ? 'text-red-500' : 'text-orange-500'}`} />
+            <p className={`text-sm font-medium ${subWarning.days <= 3 ? 'text-red-700' : 'text-orange-700'}`}>
+              {subWarning.isOnTrial ? 'Votre essai gratuit' : 'Votre abonnement'} expire dans {subWarning.days} jour(s). Cliquez pour renouveler.
+            </p>
+          </div>
+          <span className={`shrink-0 rounded-xl px-4 py-2 text-sm font-semibold text-white ${subWarning.days <= 3 ? 'bg-red-600' : 'bg-orange-500'}`}>
+            Renouveler
+          </span>
+        </Link>
+      )}
+
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-slate-900">Tableau de bord</h1>

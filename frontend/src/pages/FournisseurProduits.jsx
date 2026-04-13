@@ -21,7 +21,7 @@ import {
   ChevronRight
 } from "lucide-react";
 import SimpleFooter from "../components/Footer";
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '../i18n';
 import { useAuth } from "../auth/AuthContext";
 import { getMyProducts, getSupplierStats, deleteProduct, createProduct, smartSearchAI } from "../auth/api.js";
 import AIProductAssistantModal from '../components/ai-assistant-product/AIProductAssistantModal';

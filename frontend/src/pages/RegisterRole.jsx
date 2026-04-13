@@ -7,7 +7,6 @@ import { Roles, roleToBasePath } from "../auth/role";
 import { useAuth } from "../auth/AuthContext";
 
 import ThemeToggle from "../components/ThemeToggle";
-import LanguageSwitcher from "../components/LanguageSwitcher";
 import Footer from "../components/Footer";
 
 const RoleCard = ({ icon, title, desc, onClick, disabled }) => (
@@ -119,8 +118,6 @@ export default function RegisterRole() {
                 <span>Aide</span>
               </Link>
 
-              <LanguageSwitcher />
-
               <div className="h-6 w-px bg-slate-200 dark:bg-slate-700" />
               <ThemeToggle />
 
@@ -137,7 +134,6 @@ export default function RegisterRole() {
 
             {/* Mobile right */}
             <div className="flex items-center gap-2 md:hidden">
-              <LanguageSwitcher />
               <ThemeToggle />
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}

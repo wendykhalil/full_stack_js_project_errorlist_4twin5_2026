@@ -1,17 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  FileText,
-  FolderKanban,
-  Image as ImageIcon,
-  LayoutDashboard,
-  MessageCircle,
-  Package,
-  Receipt,
-  ShieldCheck,
-  ShoppingCart,
-  UserCircle2,
-  Cloud,
+  FileText, FolderKanban, Image as ImageIcon, LayoutDashboard,
+  MessageCircle, Package, Receipt, ShieldCheck, ShoppingCart,
+  UserCircle2, Cloud, ClipboardList, CalendarDays,
 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { getMySubscription } from "../auth/api";
@@ -82,7 +74,9 @@ export default function ArtisanLayout() {
     { to: "/artisan/portfolio", label: "Portfolio", icon: <ImageIcon className="h-5 w-5" /> },
     { to: "/artisan/devis/create", label: "Creer un devis", icon: <FileText className="h-5 w-5" /> },
     { to: "/artisan/factures", label: "Factures", icon: <Receipt className="h-5 w-5" /> },
-    { to: "/artisan/weather", label:"Météo" , icon:<Cloud className="h-5 w-5" />},
+    { to: "/artisan/weather", label:"Météo", icon:<Cloud className="h-5 w-5" />},
+    { to: "/artisan/availability", label: "Disponibilités", icon: <CalendarDays className="h-5 w-5" /> },
+    { to: "/artisan/service-requests", label: "Missions", icon: <ClipboardList className="h-5 w-5" /> },
     { to: "/artisan/orders", label: "Mes commandes", icon: <Package className="h-5 w-5" /> },
     { to: "/artisan/messages", label: "Messages", icon: messageIcon },
   ];

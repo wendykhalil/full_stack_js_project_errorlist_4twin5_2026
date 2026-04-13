@@ -264,3 +264,123 @@ export async function translateUiBatch({ texts, targetLang, sourceLang = 'auto' 
     body: { texts, targetLang, sourceLang },
   });
 }
+
+// ========== SERVICE REQUESTS API ==========
+export async function createServiceRequest({ token, data }) {
+  return apiFetch("/service-requests", { token, method: "POST", body: data });
+}
+
+export async function getMyServiceRequests({ token }) {
+  return apiFetch("/service-requests/my", { token });
+}
+
+export async function getMyServiceRequest({ token, id }) {
+  return apiFetch(`/service-requests/my/${id}`, { token });
+}
+
+export async function updateServiceRequest({ token, id, data }) {
+  return apiFetch(`/service-requests/my/${id}`, { token, method: "PUT", body: data });
+}
+
+export async function deleteServiceRequest({ token, id }) {
+  return apiFetch(`/service-requests/my/${id}`, { token, method: "DELETE" });
+}
+
+export async function changeServiceRequestStatus({ token, id, status }) {
+  return apiFetch(`/service-requests/my/${id}/status`, { token, method: "PATCH", body: { status } });
+}
+
+export async function acceptApplication({ token, requestId, appId }) {
+  return apiFetch(`/service-requests/my/${requestId}/applications/${appId}/accept`, { token, method: "PATCH" });
+}
+
+export async function rejectApplication({ token, requestId, appId }) {
+  return apiFetch(`/service-requests/my/${requestId}/applications/${appId}/reject`, { token, method: "PATCH" });
+}
+
+export async function getOpenServiceRequests({ token, trade, city, page = 1, limit = 10 }) {
+  const params = new URLSearchParams({ page, limit });
+  if (trade) params.append("trade", trade);
+  if (city) params.append("city", city);
+  return apiFetch(`/service-requests/open?${params}`, { token });
+}
+
+export async function getOpenServiceRequest({ token, id }) {
+  return apiFetch(`/service-requests/open/${id}`, { token });
+}
+
+export async function applyToServiceRequest({ token, id, message, proposedPrice }) {
+  return apiFetch(`/service-requests/${id}/apply`, { token, method: "POST", body: { message, proposedPrice } });
+}
+
+export async function getMyApplications({ token }) {
+  return apiFetch("/service-requests/my-applications", { token });
+}
+
+// ========== REVIEWS API ==========
+export async function submitReview({ token, data }) {
+  return apiFetch("/reviews", { token, method: "POST", body: data });
+}
+
+export async function getReviewsForUser({ userId }) {
+  return apiFetch(`/reviews/user/${userId}`);
+}
+
+export async function getPendingReviews({ token }) {
+  return apiFetch("/reviews/pending", { token });
+}
+
+export async function deleteReview({ token, id }) {
+  return apiFetch(`/reviews/${id}`, { token, method: "DELETE" });
+}
+
+// ========== PROMO CODES API ==========
+export async function validatePromoCode({ token, code, plan }) {
+  return apiFetch("/promo/validate", { token, method: "POST", body: { code, plan } });
+}
+
+export async function getPromoCodes({ token }) {
+  return apiFetch("/promo", { token });
+}
+
+export async function createPromoCode({ token, data }) {
+  return apiFetch("/promo", { token, method: "POST", body: data });
+}
+
+export async function updatePromoCode({ token, id, data }) {
+  return apiFetch(`/promo/${id}`, { token, method: "PATCH", body: data });
+}
+
+export async function deletePromoCode({ token, id }) {
+  return apiFetch(`/promo/${id}`, { token, method: "DELETE" });
+}
+
+// ========== SUBSCRIPTION EXTRAS ==========
+export async function cancelSubscription({ token }) {
+  return apiFetch('/subscriptions/cancel', { token, method: 'POST' });
+}
+
+export async function startTrial({ token }) {
+  return apiFetch('/subscriptions/trial', { token, method: 'POST' });
+}
+
+// ========== NOTIFICATIONS API ==========
+export async function getNotifications({ token, page = 1, limit = 20 }) {
+  return apiFetch(`/notifications?page=${page}&limit=${limit}`, { token });
+}
+
+export async function getUnreadNotifCount({ token }) {
+  return apiFetch('/notifications/unread-count', { token });
+}
+
+export async function markNotificationRead({ token, id }) {
+  return apiFetch(`/notifications/${id}/read`, { token, method: 'PATCH' });
+}
+
+export async function markAllNotificationsRead({ token }) {
+  return apiFetch('/notifications/read-all', { token, method: 'PATCH' });
+}
+
+export async function deleteNotification({ token, id }) {
+  return apiFetch(`/notifications/${id}`, { token, method: 'DELETE' });
+}

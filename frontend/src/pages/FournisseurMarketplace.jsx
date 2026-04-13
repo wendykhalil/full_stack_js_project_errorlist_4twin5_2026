@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, ChevronDown, Eye, Star } from "lucide-react";
 import SimpleFooter from "../components/Footer";
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '../i18n';
 import { getCatalogProducts } from "../auth/api.js";
 
 const ProductCard = ({

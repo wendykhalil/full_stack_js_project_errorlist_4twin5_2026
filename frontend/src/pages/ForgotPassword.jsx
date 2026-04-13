@@ -2,8 +2,7 @@ import React, { useState } from "react";
 import { HardHat, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
-import { useTranslation } from 'react-i18next';
-import AuthLanguageSwitcher from "../components/AuthLanguageSwitcher";
+import { useTranslation } from '../i18n';
 
 export default function ForgotPassword() {
   const { t } = useTranslation();
@@ -39,8 +38,6 @@ export default function ForgotPassword() {
 
   return (
     <>
-      <AuthLanguageSwitcher />
-
       <div className="relative flex h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-slate-50 via-indigo-50/60 to-slate-100 px-4">
         <div className="pointer-events-none absolute inset-0 opacity-[0.35] [background-image:radial-gradient(circle_at_1px_1px,rgba(99,102,241,0.18)_1px,transparent_0)] [background-size:22px_22px]" />
         <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-indigo-300/50 blur-3xl" />

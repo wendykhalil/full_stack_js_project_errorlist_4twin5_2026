@@ -1,22 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
-
 import {
-  User,
-  Phone,
-  Mail,
-  MapPin,
-  Briefcase,
-  Calendar,
-  Star,
-  MessageCircle,
-  ChevronLeft,
-  Image as ImageIcon,
-  Loader2,
-  AlertCircle
+  User, Phone, Mail, MapPin, Briefcase, Calendar, Star,
+  MessageCircle, ChevronLeft, Image as ImageIcon, Loader2, AlertCircle, Crown
 } from 'lucide-react';
 import SimpleFooter from '../components/Footer';
+import ReviewsList from '../components/ReviewsList';
+import { getReviewsForUser } from '../auth/api';
+import ArtisanAvailabilityView from '../components/ArtisanAvailabilityView';
+
+const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '');
+
+function PlanBadge({ plan }) {
+  if (!plan || plan === 'FREE') return null;
+  const styles = {
+    PRO:   'bg-gradient-to-r from-purple-600 to-indigo-600 text-white',
+    BASIC: 'bg-indigo-100 text-indigo-700',
+  };
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold ${styles[plan] || styles.BASIC}`}>
+      <Crown className="h-3 w-3" /> {plan}
+    </span>
+  );
+}
 
 export default function ArtisanPublicProfile() {
   
@@ -31,6 +38,8 @@ export default function ArtisanPublicProfile() {
   const [showContactForm, setShowContactForm] = useState(false);
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
+  const [reviewStats, setReviewStats] = useState({ avgRating: 0, total: 0 });
+  const [artisanPlan, setArtisanPlan] = useState(null);
 
   useEffect(() => {
   const fetchArtisanProfile = async () => {
@@ -46,6 +55,14 @@ export default function ArtisanPublicProfile() {
 
       if (data.data) {
         setArtisan(data.data);
+        // Load review stats using the User ID, not the profile ID
+        const userIdForReviews = data.data.userId || id;
+        getReviewsForUser({ userId: userIdForReviews })
+          .then(r => setReviewStats({ avgRating: r.avgRating || 0, total: r.total || 0 }))
+          .catch(() => {});
+        // Load subscription plan for badge
+        fetch(`http://localhost:5000/api/subscriptions/public/${data.data.userId || id}`)
+          .then(r => r.json()).then(r => setArtisanPlan(r?.data?.plan || null)).catch(() => {});
       }
 
       // Récupérer le portfolio
@@ -168,8 +185,9 @@ export default function ArtisanPublicProfile() {
 
             {/* Infos */}
             <div className="flex-1">
-              <h1 className="text-3xl font-semibold text-slate-900">
+              <h1 className="text-3xl font-semibold text-slate-900 flex items-center gap-3">
                 {artisan.name}
+                <PlanBadge plan={artisanPlan} />
               </h1>
               
               <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -187,7 +205,11 @@ export default function ArtisanPublicProfile() {
                 </div>
                 <div className="flex items-center gap-2 text-slate-600">
                   <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
-                  <span>{artisan.hasCompletedProfile ? 'Portfolio public disponible' : 'Compte artisan actif'}</span>
+                  {reviewStats.total > 0 ? (
+                    <span className="font-medium">{reviewStats.avgRating.toFixed(1)}/5 <span className="font-normal text-slate-400">({reviewStats.total} avis)</span></span>
+                  ) : (
+                    <span className="text-slate-400">Pas encore d'avis</span>
+                  )}
                 </div>
               </div>
 
@@ -334,6 +356,12 @@ export default function ArtisanPublicProfile() {
           </div>
         </div>
       )}
+
+      {/* Reviews */}
+      <ReviewsList userId={artisan?.userId ? String(artisan.userId) : null} />
+
+      {/* Availability */}
+      <ArtisanAvailabilityView artisanId={artisan?.userId ? String(artisan.userId) : null} />
 
       <SimpleFooter />
     </div>

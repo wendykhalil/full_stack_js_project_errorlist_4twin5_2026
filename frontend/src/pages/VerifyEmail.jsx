@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { HardHat, CheckCircle2, XCircle, ArrowRight } from "lucide-react";
 import { apiFetch } from "../auth/api";
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '../i18n';
 
 function useQuery() {
   const { search } = useLocation();

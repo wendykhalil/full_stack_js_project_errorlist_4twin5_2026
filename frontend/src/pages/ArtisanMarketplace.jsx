@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, ChevronDown, ShoppingCart, Star, Eye } from "lucide-react";
 import SimpleFooter from "../components/Footer";
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '../i18n';
 import { getCatalogProducts, rateCatalogProduct, getMySubscription } from "../auth/api.js";
 import { useAuth } from "../auth/AuthContext";
 import SubscriptionAlert from '../components/SubscriptionAlert';

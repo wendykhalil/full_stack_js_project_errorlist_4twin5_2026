@@ -3,7 +3,7 @@ import { apiFetch } from "../auth/api";
 import { useAuth } from "../auth/AuthContext";
 import { History, RefreshCw } from "lucide-react";
 import Footer from "../components/Footer";
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '../i18n';
 
 function fmt(dt) {
   try {

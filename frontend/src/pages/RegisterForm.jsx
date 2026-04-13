@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { urlRoleToEnum } from "../auth/role";
 import { ArrowLeft, Building2, CheckCircle, ShieldCheck, UserPlus, XCircle } from "lucide-react";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "../i18n";
 import Footer from "../components/Footer";
 import PublicNavbar from "../components/PublicNavbar";
 import logo from "../assets/bmp-logo.svg";

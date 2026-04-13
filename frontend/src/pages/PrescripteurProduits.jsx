@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Search, ChevronDown, FileText } from "lucide-react";
 import Footer from "../components/Footer";
 import Pagination from "../components/Pagination";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "../i18n";
 import { getCatalogProducts } from "../auth/api.js";
 
 const Card = ({ cat, title, desc, supplier, price, unit }) => {

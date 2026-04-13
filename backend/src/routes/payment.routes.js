@@ -1,57 +1,102 @@
 const express = require('express');
 const router = express.Router();
 const Stripe = require('stripe');
+const { authRequired } = require('../middleware/authMiddleware');
+const { upsertSubscription } = require('../modules/subscription/subscription.service');
+const PromoCode = require('../models/PromoCode');
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
-// Créer une intention de paiement
-router.post('/create-payment-intent', express.json(), async (req, res) => {
+// Create payment intent
+router.post('/create-payment-intent', express.json(), authRequired, async (req, res) => {
   try {
-    const { amount, plan, userId } = req.body;
-
-    console.log('📦 Création paiement:', { amount, plan, userId });
+    const { amount, plan } = req.body;
+    const userId = String(req.user._id);
 
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(amount * 100),
       currency: 'eur',
-      metadata: {
-        userId: userId || 'unknown',
-        plan: plan || 'unknown',
-      }
+      metadata: { userId, plan: plan || 'unknown' },
     });
 
-    console.log('✅ PaymentIntent créé:', paymentIntent.id);
-    res.json({ 
-      clientSecret: paymentIntent.client_secret,
-      paymentIntentId: paymentIntent.id
-    });
+    res.json({ clientSecret: paymentIntent.client_secret, paymentIntentId: paymentIntent.id });
   } catch (error) {
-    console.error('❌ Erreur Stripe:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Activer l'abonnement après paiement réussi
-router.post('/activate-subscription', express.json(), async (req, res) => {
+// Activate subscription after successful payment
+router.post('/activate-subscription', express.json(), authRequired, async (req, res) => {
   try {
-    const { plan, paymentIntentId, status } = req.body;
-    const userId = req.user?.id || req.user?._id || 'unknown';
+    const { plan, paymentIntentId } = req.body;
+    const userId = String(req.user._id);
 
-    console.log('📦 Activation reçue:', { plan, paymentIntentId, userId, status });
+    console.log('🔔 activate-subscription called:', { plan, paymentIntentId, userId });
 
-    // TODO: Ajouter la logique de sauvegarde en base de données ici
-    
-    res.json({ 
-      success: true, 
-      message: `Abonnement ${plan} activé avec succès`,
-      plan: plan,
-      paymentIntentId: paymentIntentId,
-      activatedAt: new Date()
-    });
+    if (!plan || !['monthly', 'yearly', 'BASIC', 'PRO'].includes(plan)) {
+      return res.status(400).json({ error: 'Invalid plan: ' + plan });
+    }
+
+    // Map frontend plan names to DB enum
+    const planMap = { monthly: 'BASIC', yearly: 'PRO', BASIC: 'BASIC', PRO: 'PRO' };
+    const dbPlan = planMap[plan] || 'BASIC';
+
+    // Calculate end date
+    const endDate = new Date();
+    if (plan === 'yearly' || plan === 'PRO') {
+      endDate.setFullYear(endDate.getFullYear() + 1);
+    } else {
+      endDate.setMonth(endDate.getMonth() + 1);
+    }
+
+    const subscription = await upsertSubscription(userId, dbPlan, 'ACTIVE', 'Payment via Stripe');
+    subscription.endDate = endDate;
+    await subscription.save();
+
+    // Increment promo code usage if one was applied
+    if (req.body.promoCode) {
+      await PromoCode.findOneAndUpdate(
+        { code: req.body.promoCode.toUpperCase().trim() },
+        { $inc: { usedCount: 1 } }
+      );
+    }
+
+    console.log('✅ Subscription activated:', { userId, dbPlan, endDate });
+    res.json({ success: true, subscription });
   } catch (error) {
-    console.error('❌ Erreur activation:', error.message);
+    console.error('❌ Activation error:', error.message);
     res.status(500).json({ error: error.message });
   }
+});
+
+// Stripe webhook (for production reliability)
+router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+  } catch (err) {
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  if (event.type === 'payment_intent.succeeded') {
+    const intent = event.data.object;
+    const { userId, plan } = intent.metadata || {};
+    if (userId && plan) {
+      const planMap = { monthly: 'BASIC', yearly: 'PRO', BASIC: 'BASIC', PRO: 'PRO' };
+      const dbPlan = planMap[plan] || 'BASIC';
+      const endDate = new Date();
+      plan === 'yearly' || plan === 'PRO'
+        ? endDate.setFullYear(endDate.getFullYear() + 1)
+        : endDate.setMonth(endDate.getMonth() + 1);
+      const sub = await upsertSubscription(userId, dbPlan, 'ACTIVE');
+      sub.endDate = endDate;
+      await sub.save();
+    }
+  }
+
+  res.json({ received: true });
 });
 
 module.exports = router;
