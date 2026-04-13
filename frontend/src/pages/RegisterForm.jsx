@@ -60,7 +60,7 @@ function Field({ label, error, hint, children }) {
   );
 }
 
-function Input({ label, placeholder, type = "text", value, onChange, error, hint, required = true }) {
+function Input({ label, placeholder, type = "text", value, onChange, error, hint }) {
   const hasError = Boolean(error);
   const isValid = !hasError && value.length > 0;
   return (
@@ -70,7 +70,6 @@ function Input({ label, placeholder, type = "text", value, onChange, error, hint
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        required={required}
         className={`w-full rounded-xl border px-4 py-3 text-base text-slate-900 outline-none transition ${
           hasError
             ? "border-red-300 bg-red-50 focus:border-red-400 focus:ring-4 focus:ring-red-100"
@@ -149,7 +148,6 @@ function PhoneInput({ label, countryCode, setCountryCode, phoneNumber, setPhoneN
           value={phoneNumber}
           onChange={(e) => setPhoneNumber(e.target.value.replace(/[^\d\s]/g, ""))}
           inputMode="tel"
-          required
         />
       </div>
     </Field>
@@ -396,3 +394,5 @@ export default function RegisterForm() {
     </div>
   );
 }
+
+

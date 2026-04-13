@@ -6,7 +6,7 @@ import { useTranslation } from '../i18n';
 import { useAuth } from "../auth/AuthContext";
 import { getMyProducts, updateProduct } from "../auth/api.js";
 
-const Input = ({ label, placeholder, type = "text", value, onChange, required }) => (
+const Input = ({ label, placeholder, type = "text", value, onChange }) => (
   <div>
     <label className="mb-2 block text-sm font-semibold text-slate-900">{label}</label>
     <input
@@ -14,20 +14,18 @@ const Input = ({ label, placeholder, type = "text", value, onChange, required })
       placeholder={placeholder}
       value={value || ''}
       onChange={onChange}
-      required={required}
       className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
     />
   </div>
 );
 
-const Select = ({ label, placeholder, options = [], value, onChange, required, disabled }) => (
+const Select = ({ label, placeholder, options = [], value, onChange, disabled }) => (
   <div>
     <label className="mb-2 block text-sm font-semibold text-slate-900">{label}</label>
     <div className="relative">
       <select 
         value={value || ''} 
         onChange={onChange}
-        required={required}
         disabled={disabled}
         className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none disabled:opacity-50"
       >
@@ -41,7 +39,7 @@ const Select = ({ label, placeholder, options = [], value, onChange, required, d
   </div>
 );
 
-const Textarea = ({ label, placeholder, value, onChange, required }) => (
+const Textarea = ({ label, placeholder, value, onChange }) => (
   <div>
     <label className="mb-2 block text-sm font-semibold text-slate-900">{label}</label>
     <textarea
@@ -49,7 +47,6 @@ const Textarea = ({ label, placeholder, value, onChange, required }) => (
       placeholder={placeholder}
       value={value || ''}
       onChange={onChange}
-      required={required}
       className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
     />
   </div>
@@ -335,7 +332,6 @@ export default function FournisseurProduitEdit() {
               placeholder={t('fournisseurProduitNew.productNamePlaceholder')}
               value={formData.name}
               onChange={(e) => setFormData({...formData, name: e.target.value})}
-              required
             />
             
             {/* Catégorie avec option d'ajout */}
@@ -349,7 +345,6 @@ export default function FournisseurProduitEdit() {
                     <select 
                       value={formData.category} 
                       onChange={(e) => setFormData({...formData, category: e.target.value})}
-                      required
                       disabled={loadingCategories}
                       className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
                     >
@@ -404,22 +399,17 @@ export default function FournisseurProduitEdit() {
             <Input 
               label={t('fournisseurProduitNew.priceLabel')} 
               placeholder="0.00" 
-              type="number" 
-              step="0.01"
-              min="0"
+              type="text"
               value={formData.price}
               onChange={(e) => setFormData({...formData, price: e.target.value})}
-              required
             />
 
             <Input 
               label={t('fournisseurProduitNew.stockLabel')} 
               placeholder="0" 
-              type="number" 
-              min="0"
+              type="text"
               value={formData.stock}
               onChange={(e) => setFormData({...formData, stock: e.target.value})}
-              required
             />
             <div />
           </div>
@@ -430,7 +420,6 @@ export default function FournisseurProduitEdit() {
               placeholder={t('fournisseurProduitNew.descriptionPlaceholder')} 
               value={formData.description}
               onChange={(e) => setFormData({...formData, description: e.target.value})}
-              required
             />
           </div>
 
@@ -478,3 +467,5 @@ export default function FournisseurProduitEdit() {
     </div>
   );
 }
+
+

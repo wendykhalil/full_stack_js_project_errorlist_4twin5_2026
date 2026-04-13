@@ -577,8 +577,7 @@ useEffect(() => {
                   <input
                     value={latitude}
                     onChange={(e) => setLatitude(e.target.value)}
-                    type="number"
-                    step="any"
+                    type="text"
                     className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
                     placeholder="Ex : 36.8065"
                   />
@@ -591,8 +590,7 @@ useEffect(() => {
                   <input
                     value={longitude}
                     onChange={(e) => setLongitude(e.target.value)}
-                    type="number"
-                    step="any"
+                    type="text"
                     className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
                     placeholder="Ex : 10.1815"
                   />
@@ -605,9 +603,7 @@ useEffect(() => {
                   <input
                     value={yearsOfExperience}
                     onChange={(e) => setYearsOfExperience(e.target.value)}
-                    type="number"
-                    min="0"
-                    step="1"
+                    type="text"
                     className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
                     placeholder="Ex : 5"
                   />
@@ -643,9 +639,7 @@ useEffect(() => {
                   <input
                     value={serviceRadius}
                     onChange={(e) => setServiceRadius(e.target.value)}
-                    type="number"
-                    min="0"
-                    step="1"
+                    type="text"
                     className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
                     placeholder="Ex : 30"
                   />
@@ -666,7 +660,6 @@ useEffect(() => {
                     onChange={(e) => setCompanyName(e.target.value)}
                     className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
                     placeholder="Ex : BMP Distribution"
-                    required
                   />
                 </div>
 
@@ -727,8 +720,7 @@ useEffect(() => {
                   <input
                     value={latitude}
                     onChange={(e) => setLatitude(e.target.value)}
-                    type="number"
-                    step="any"
+                    type="text"
                     className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
                     placeholder="Ex : 36.8065"
                   />
@@ -739,8 +731,7 @@ useEffect(() => {
                   <input
                     value={longitude}
                     onChange={(e) => setLongitude(e.target.value)}
-                    type="number"
-                    step="any"
+                    type="text"
                     className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
                     placeholder="Ex : 10.1815"
                   />
@@ -975,3 +966,4 @@ useEffect(() => {
     </>
   );
 }
+

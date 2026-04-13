@@ -332,7 +332,6 @@ export default function ArtisanPublicProfile() {
                   placeholder="Votre message..."
                   rows="4"
                   className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
-                  required
                 />
 
                 <div className="mt-4 flex gap-3">

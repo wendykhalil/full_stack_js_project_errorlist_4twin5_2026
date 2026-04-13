@@ -134,7 +134,7 @@ export default function ArtisanDevisCreate() {
           <form onSubmit={submit} className="mt-8 space-y-6">
             <div>
               <label className="mb-2 block text-sm font-semibold text-slate-900">Projet</label>
-              <select value={projectId} onChange={(e) => setProjectId(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none" required>
+              <select value={projectId} onChange={(e) => setProjectId(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none">
                 <option value="">Sélectionner un projet</option>
                 {projects.map((project) => (
                   <option key={project._id} value={project._id}>{project.title} — {project.location?.city || 'Sans ville'}</option>
@@ -163,9 +163,9 @@ export default function ArtisanDevisCreate() {
             <div className="space-y-3">
               {lines.map((line, index) => (
                 <div key={index} className="grid gap-3 rounded-2xl border border-slate-200 p-4 md:grid-cols-[1.7fr,0.7fr,0.8fr,auto]">
-                  <input value={line.description} onChange={(e) => updateLine(index, 'description', e.target.value)} placeholder="Description" className="rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none" required />
-                  <input value={line.quantity} onChange={(e) => updateLine(index, 'quantity', e.target.value)} type="number" min="1" placeholder="Qté" className="rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none" required />
-                  <input value={line.unitPrice} onChange={(e) => updateLine(index, 'unitPrice', e.target.value)} type="number" min="0" step="0.001" placeholder="Prix unitaire" className="rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none" required />
+                  <input value={line.description} onChange={(e) => updateLine(index, 'description', e.target.value)} placeholder="Description" className="rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none" />
+                  <input value={line.quantity} onChange={(e) => updateLine(index, 'quantity', e.target.value)} type="text" placeholder="Qté" className="rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none" />
+                  <input value={line.unitPrice} onChange={(e) => updateLine(index, 'unitPrice', e.target.value)} type="text" placeholder="Prix unitaire" className="rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none" />
                   <button type="button" onClick={() => setLines((prev) => prev.filter((_, i) => i !== index || prev.length === 1))} className="inline-flex items-center justify-center rounded-xl border border-slate-200 px-3 py-3 text-slate-600 hover:bg-slate-50">
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -193,3 +193,4 @@ export default function ArtisanDevisCreate() {
     </PageShell>
   );
 }
+

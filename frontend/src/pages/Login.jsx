@@ -1,22 +1,16 @@
 import React, { useEffect, useRef, useState } from "react";
 import { 
-  ArrowLeft, 
-  Phone, 
-  UserPlus, 
-  Mail, 
-  Lock, 
-  Building2,
-  Eye,
-  EyeOff,
-  Menu,
-  X,
-  ChevronDown
+  ArrowLeft, Phone, UserPlus, Mail, Lock, Building2,
+  Eye, EyeOff, Menu, X, ChevronDown
 } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { apiFetch } from "../auth/api";
 import { roleToBasePath } from "../auth/role";
 import logo from "../assets/bmp-logo.svg";
+import { useFormValidation, rules } from "../hooks/useFormValidation";
+import FieldError from "../components/FieldError";
+import { useServerErrors } from "../hooks/useServerErrors";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -26,7 +20,6 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [info] = useState(() => location.state?.info || "");
   const [resendState, setResendState] = useState({ loading: false, message: "" });
   const [googleWidth, setGoogleWidth] = useState(320);
@@ -86,18 +79,22 @@ export default function Login() {
     }
   }, [googleWidth, loginWithGoogle, navigate]);
 
+  const { errors: formErrors, validate } = useFormValidation({
+    emailOrPhone: [rules.required('Email ou téléphone requis'), rules.minLength(3)],
+    password: [rules.required('Mot de passe requis'), rules.minLength(6, 'Minimum 6 caractères')],
+  });
+  const { fieldErrors, globalError, handleError, clearErrors } = useServerErrors();
+
   async function onSubmit(e) {
     e.preventDefault();
-    setError("");
-    const value = emailOrPhone.trim();
-    if (!value) return setError("Email or phone number is required");
-    if (!password) return setError("Password is required");
+    clearErrors();
+    if (!validate({ emailOrPhone, password })) return;
     setLoading(true);
     try {
-      const user = await login(value, password);
+      const user = await login(emailOrPhone.trim(), password);
       navigate(roleToBasePath(user.role), { replace: true });
     } catch (err) {
-      setError(err.message || "Login failed");
+      handleError(err);
     } finally {
       setLoading(false);
     }
@@ -113,7 +110,7 @@ export default function Login() {
     }
   }
 
-  const showResend = error?.toLowerCase().includes("verif") || error?.toLowerCase().includes("email not");
+  const showResend = globalError?.toLowerCase().includes("verif") || globalError?.toLowerCase().includes("email not");
 
   return (
     <>
@@ -290,17 +287,14 @@ export default function Login() {
                       <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
                       <input
                         value={emailOrPhone}
-                        onChange={(e) => {
-                          setEmailOrPhone(e.target.value);
-                          setError("");
-                        }}
+                        onChange={(e) => { setEmailOrPhone(e.target.value); setError(""); }}
                         type="text"
                         autoComplete="username"
                         placeholder="Enter your email or phone"
-                        className="w-full rounded-xl border border-slate-300 bg-white pl-10 pr-4 py-3 text-base text-slate-900 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                        required
+                        className={`w-full rounded-xl border bg-white pl-10 pr-4 py-3 text-base text-slate-900 outline-none transition-all focus:ring-2 focus:ring-blue-500/20 ${formErrors.emailOrPhone ? 'border-red-400 focus:border-red-400' : 'border-slate-300 focus:border-blue-500'}`}
                       />
                     </div>
+                    <FieldError error={formErrors.emailOrPhone} />
                   </div>
 
                   {/* Password Field with Show/Hide */}
@@ -312,24 +306,18 @@ export default function Login() {
                       <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
                       <input
                         value={password}
-                        onChange={(e) => {
-                          setPassword(e.target.value);
-                          setError("");
-                        }}
+                        onChange={(e) => { setPassword(e.target.value); setError(""); }}
                         type={showPassword ? "text" : "password"}
                         autoComplete="current-password"
                         placeholder="Enter your password"
-                        className="w-full rounded-xl border border-slate-300 bg-white pl-10 pr-12 py-3 text-base text-slate-900 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                        required
+                        className={`w-full rounded-xl border bg-white pl-10 pr-12 py-3 text-base text-slate-900 outline-none transition-all focus:ring-2 focus:ring-blue-500/20 ${formErrors.password ? 'border-red-400 focus:border-red-400' : 'border-slate-300 focus:border-blue-500'}`}
                       />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-blue-600"
-                      >
+                      <button type="button" onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-blue-600">
                         {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                       </button>
                     </div>
+                    <FieldError error={formErrors.password} />
                   </div>
 
                   {/* Forgot Password Link */}
@@ -344,9 +332,9 @@ export default function Login() {
                   </div>
 
                   {/* Error Message */}
-                  {error && (
+                  {globalError && (
                     <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3">
-                      <p className="text-sm text-rose-700">{error}</p>
+                      <p className="text-sm text-rose-700">{globalError}</p>
                     </div>
                   )}
 

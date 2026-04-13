@@ -2,15 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { useTranslation } from '../i18n';
-import { 
-  ChevronLeft, 
-  Package, 
-  MapPin, 
-  MessageSquare,
-  Loader2
-} from 'lucide-react';
+import { ChevronLeft, Package, MapPin, MessageSquare, Loader2 } from 'lucide-react';
 import { getCatalogProducts, createOrder } from '../auth/api';
 import SimpleFooter from '../components/Footer';
+import { useFormValidation, rules } from '../hooks/useFormValidation';
+import FieldError from '../components/FieldError';
 
 export default function ArtisanOrderRequest() {
   const { t } = useTranslation();
@@ -78,35 +74,39 @@ export default function ArtisanOrderRequest() {
     }));
   };
 
+  const { errors: formErrors, validate } = useFormValidation({
+    quantity: [rules.required('Quantité requise'), rules.numeric(), rules.min(1, 'Minimum 1')],
+    street: [rules.required('Rue requise'), rules.minLength(3)],
+    city: [rules.required('Ville requise'), rules.minLength(2)],
+    postalCode: [rules.required('Code postal requis')],
+  });
+
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError('');
-  setSubmitting(true);
-
-  try {
-    const orderData = {
-      productId: product._id,
+    e.preventDefault();
+    setError('');
+    const ok = validate({
       quantity: formData.quantity,
-      deliveryAddress: formData.deliveryAddress,
-      artisanMessage: formData.artisanMessage
-      // Note: unitPrice et lineTotal seront calculés par le backend
-    };
-
-    console.log('Sending order data:', orderData);
-    
-    await createOrder({ token, orderData });
-    setSuccess('Votre demande de commande a été envoyée avec succès !');
-    
-    setTimeout(() => {
-      navigate('/artisan/orders');
-    }, 2000);
-  } catch (err) {
-    console.error('Error creating order:', err);
-    setError(err.message || 'Erreur lors de l\'envoi de la demande');
-  } finally {
-    setSubmitting(false);
-  }
-};
+      street: formData.deliveryAddress.street,
+      city: formData.deliveryAddress.city,
+      postalCode: formData.deliveryAddress.postalCode,
+    });
+    if (!ok) return;
+    setSubmitting(true);
+    try {
+      await createOrder({ token, orderData: {
+        productId: product._id,
+        quantity: formData.quantity,
+        deliveryAddress: formData.deliveryAddress,
+        artisanMessage: formData.artisanMessage,
+      }});
+      setSuccess('Votre demande de commande a été envoyée avec succès !');
+      setTimeout(() => navigate('/artisan/orders'), 2000);
+    } catch (err) {
+      setError(err.message || 'Erreur lors de l\'envoi de la demande');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -175,15 +175,13 @@ export default function ArtisanOrderRequest() {
             </h3>
             <div className="mt-4">
               <input
-                type="number"
+                type="text"
                 name="quantity"
                 value={formData.quantity}
                 onChange={handleInputChange}
-                min="1"
-                max={product.stock}
-                required
-                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
+                className={`w-full rounded-xl border px-4 py-3 text-sm focus:outline-none ${formErrors.quantity ? 'border-red-400' : 'border-slate-200 focus:border-indigo-500'}`}
               />
+              <FieldError error={formErrors.quantity} />
               <p className="mt-1 text-xs text-slate-400">
                 {t('artisan.order.stock', 'Stock disponible')} : {product.stock} {t('common.units', 'unités')}
               </p>
@@ -203,28 +201,32 @@ export default function ArtisanOrderRequest() {
                 value={formData.deliveryAddress.street}
                 onChange={handleAddressChange}
                 placeholder={t('artisan.order.streetPlaceholder', 'Rue, numéro')}
-                required
-                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
+                className={`w-full rounded-xl border px-4 py-3 text-sm focus:outline-none ${formErrors.street ? 'border-red-400' : 'border-slate-200 focus:border-indigo-500'}`}
               />
+              <FieldError error={formErrors.street} />
               <div className="grid grid-cols-2 gap-4">
-                <input
-                  type="text"
-                  name="city"
-                  value={formData.deliveryAddress.city}
-                  onChange={handleAddressChange}
-                  placeholder={t('artisan.order.cityPlaceholder', 'Ville')}
-                  required
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
-                />
-                <input
-                  type="text"
-                  name="postalCode"
-                  value={formData.deliveryAddress.postalCode}
-                  onChange={handleAddressChange}
-                  placeholder={t('artisan.order.postalCodePlaceholder', 'Code postal')}
-                  required
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
-                />
+                <div>
+                  <input
+                    type="text"
+                    name="city"
+                    value={formData.deliveryAddress.city}
+                    onChange={handleAddressChange}
+                    placeholder={t('artisan.order.cityPlaceholder', 'Ville')}
+                    className={`w-full rounded-xl border px-4 py-3 text-sm focus:outline-none ${formErrors.city ? 'border-red-400' : 'border-slate-200 focus:border-indigo-500'}`}
+                  />
+                  <FieldError error={formErrors.city} />
+                </div>
+                <div>
+                  <input
+                    type="text"
+                    name="postalCode"
+                    value={formData.deliveryAddress.postalCode}
+                    onChange={handleAddressChange}
+                    placeholder={t('artisan.order.postalCodePlaceholder', 'Code postal')}
+                    className={`w-full rounded-xl border px-4 py-3 text-sm focus:outline-none ${formErrors.postalCode ? 'border-red-400' : 'border-slate-200 focus:border-indigo-500'}`}
+                  />
+                  <FieldError error={formErrors.postalCode} />
+                </div>
               </div>
               <textarea
                 name="additionalInfo"

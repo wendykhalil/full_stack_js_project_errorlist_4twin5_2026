@@ -23,7 +23,7 @@ const StatCard = ({ title, value, icon, iconBg, iconFg }) => (
 );
 
 // ✅ Input avec gestion d'erreur
-const Input = ({ label, placeholder, type = "text", value, onChange, required, error }) => (
+const Input = ({ label, placeholder, type = "text", value, onChange, error }) => (
   <div>
     <label className="mb-2 block text-sm font-semibold text-slate-900">{label}</label>
     <input
@@ -31,7 +31,6 @@ const Input = ({ label, placeholder, type = "text", value, onChange, required, e
       placeholder={placeholder}
       value={value}
       onChange={onChange}
-      required={required}
       className={`w-full rounded-xl border ${error ? 'border-red-500' : 'border-slate-200'} bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none`}
     />
     {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
@@ -39,14 +38,13 @@ const Input = ({ label, placeholder, type = "text", value, onChange, required, e
 );
 
 // ✅ Select avec gestion d'erreur
-const Select = ({ label, placeholder, options = [], value, onChange, required, disabled, error }) => (
+const Select = ({ label, placeholder, options = [], value, onChange, disabled, error }) => (
   <div>
     <label className="mb-2 block text-sm font-semibold text-slate-900">{label}</label>
     <div className="relative">
       <select 
         value={value} 
         onChange={onChange}
-        required={required}
         disabled={disabled}
         className={`w-full appearance-none rounded-xl border ${error ? 'border-red-500' : 'border-slate-200'} bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed`}
       >
@@ -62,7 +60,7 @@ const Select = ({ label, placeholder, options = [], value, onChange, required, d
 );
 
 // ✅ Textarea avec gestion d'erreur
-const Textarea = ({ label, placeholder, value, onChange, required, error }) => (
+const Textarea = ({ label, placeholder, value, onChange, error }) => (
   <div>
     <label className="mb-2 block text-sm font-semibold text-slate-900">{label}</label>
     <textarea
@@ -70,7 +68,6 @@ const Textarea = ({ label, placeholder, value, onChange, required, error }) => (
       placeholder={placeholder}
       value={value}
       onChange={onChange}
-      required={required}
       className={`w-full rounded-xl border ${error ? 'border-red-500' : 'border-slate-200'} bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none`}
     />
     {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
@@ -270,7 +267,6 @@ export default function FournisseurProduitNew() {
               placeholder={t('fournisseurProduitNew.productNamePlaceholder')}
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              required
               error={errors.name}
             />
             
@@ -285,7 +281,6 @@ export default function FournisseurProduitNew() {
                     <select 
                       value={formData.category} 
                       onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                      required
                       disabled={loadingCategories}
                       className={`w-full appearance-none rounded-xl border ${errors.category ? 'border-red-500' : 'border-slate-200'} bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none disabled:opacity-50`}
                     >
@@ -315,23 +310,18 @@ export default function FournisseurProduitNew() {
             <Input 
               label={t('fournisseurProduitNew.priceLabel')}
               placeholder="0.00"
-              type="number"
-              step="0.01"
-              min="0"
+              type="text"
               value={formData.price}
               onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-              required
               error={errors.price}
             />
             
             <Input 
               label={t('fournisseurProduitNew.stockLabel')}
               placeholder="0"
-              type="number"
-              min="0"
+              type="text"
               value={formData.stock}
               onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-              required
               error={errors.stock}
             />
             <div />
@@ -343,7 +333,6 @@ export default function FournisseurProduitNew() {
               placeholder={t('fournisseurProduitNew.descriptionPlaceholder')}
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              required
               error={errors.description}
             />
           </div>
@@ -373,3 +362,5 @@ export default function FournisseurProduitNew() {
     </div>
   );
 }
+
+

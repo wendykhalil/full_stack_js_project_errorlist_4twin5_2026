@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Plus, Trash2, Pencil, X, Tag, CheckCircle, XCircle } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { getPromoCodes, createPromoCode, updatePromoCode, deletePromoCode } from "../auth/api";
+import { useFormValidation, rules } from "../hooks/useFormValidation";
+import FieldError from "../components/FieldError";
 
 const emptyForm = {
   code: "", discountPercent: "", maxUses: "", expiresAt: "", isActive: true, appliesTo: "both",
@@ -24,35 +26,47 @@ function Modal({ open, title, onClose, children }) {
 }
 
 function PromoForm({ form, setForm, onSubmit, loading, submitLabel }) {
+  const { errors, validate, clearError } = useFormValidation({
+    code: [rules.required('Le code est requis'), rules.minLength(2), rules.maxLength(30), rules.alphanumeric('Lettres majuscules, chiffres, - et _ uniquement')],
+    discountPercent: [rules.required('La remise est requise'), rules.numeric(), rules.min(1, 'Min 1%'), rules.max(100, 'Max 100%')],
+    maxUses: [v => v && (isNaN(Number(v)) || Number(v) < 1) ? 'Doit être au moins 1' : null],
+  });
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    if (!validate({ code: form.code, discountPercent: form.discountPercent, maxUses: form.maxUses })) return;
+    onSubmit(e);
+  }
+
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label className="text-sm font-medium text-slate-700">Code *</label>
-        <input value={form.code} onChange={e => setForm(s => ({ ...s, code: e.target.value.toUpperCase() }))}
-          className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm uppercase outline-none focus:ring-2 focus:ring-indigo-500"
-          placeholder="EX: SUMMER20" required />
+        <input value={form.code} onChange={e => { setForm(s => ({ ...s, code: e.target.value.toUpperCase() })); clearError('code'); }}
+          className={`mt-1 w-full rounded-xl border px-4 py-2.5 text-sm uppercase outline-none focus:ring-2 focus:ring-indigo-500 ${errors.code ? 'border-red-400' : 'border-slate-200'}`}
+          placeholder="EX: SUMMER20" />
+        <FieldError error={errors.code} />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="text-sm font-medium text-slate-700">Remise (%) *</label>
-          <input value={form.discountPercent} onChange={e => setForm(s => ({ ...s, discountPercent: e.target.value }))}
-            type="number" min="1" max="100"
-            className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-            placeholder="20" required />
+          <input value={form.discountPercent} onChange={e => { setForm(s => ({ ...s, discountPercent: e.target.value })); clearError('discountPercent'); }}
+            className={`mt-1 w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 ${errors.discountPercent ? 'border-red-400' : 'border-slate-200'}`}
+            placeholder="20" />
+          <FieldError error={errors.discountPercent} />
         </div>
         <div>
           <label className="text-sm font-medium text-slate-700">Utilisations max</label>
-          <input value={form.maxUses} onChange={e => setForm(s => ({ ...s, maxUses: e.target.value }))}
-            type="number" min="1"
-            className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+          <input value={form.maxUses} onChange={e => { setForm(s => ({ ...s, maxUses: e.target.value })); clearError('maxUses'); }}
+            className={`mt-1 w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 ${errors.maxUses ? 'border-red-400' : 'border-slate-200'}`}
             placeholder="Illimité" />
+          <FieldError error={errors.maxUses} />
         </div>
       </div>
       <div>
         <label className="text-sm font-medium text-slate-700">Date d'expiration</label>
         <input value={form.expiresAt} onChange={e => setForm(s => ({ ...s, expiresAt: e.target.value }))}
-          type="date"
-          className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+          type="date" className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
       </div>
       <div>
         <label className="text-sm font-medium text-slate-700">Applicable sur</label>

@@ -332,7 +332,6 @@ export default function ArtisanProfileEdit() {
               <select
                 value={profile.trade}
                 onChange={(e) => setProfile({...profile, trade: e.target.value})}
-                required
                 className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
               >
                 <option value="">Select a trade</option>
@@ -350,7 +349,6 @@ export default function ArtisanProfileEdit() {
                 type="tel"
                 value={profile.phone}
                 onChange={(e) => setProfile({...profile, phone: e.target.value})}
-                required
                 placeholder="+216 XX XXX XXX"
                 className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
               />
@@ -402,7 +400,6 @@ export default function ArtisanProfileEdit() {
                 type="text"
                 value={profile.region}
                 onChange={(e) => setProfile({...profile, region: e.target.value})}
-                required
                 placeholder="Example: Tunis, Sousse, Sfax..."
                 className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
               />

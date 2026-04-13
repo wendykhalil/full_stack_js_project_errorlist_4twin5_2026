@@ -3,34 +3,28 @@ import { HardHat, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { useTranslation } from '../i18n';
+import { useServerErrors } from "../hooks/useServerErrors";
+import FieldError from "../components/FieldError";
 
 export default function ForgotPassword() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { forgotPassword } = useAuth();
-
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
-  const [error, setError] = useState("");
+  const { fieldErrors, globalError, handleError, clearErrors } = useServerErrors();
 
   async function onSubmit(e) {
     e.preventDefault();
-    setError("");
-    setMsg("");
-
-    const value = email.trim();
-    if (!value) {
-      setError(t('forgotPassword.emailRequired'));
-      return;
-    }
-
+    clearErrors(); setMsg("");
+    if (!email.trim()) return;
     setLoading(true);
     try {
-      const res = await forgotPassword({ email: value });
+      const res = await forgotPassword({ email: email.trim() });
       setMsg(res?.message || t('forgotPassword.linkSent'));
     } catch (e2) {
-      setError(e2.message || t('forgotPassword.sendError'));
+      handleError(e2);
     } finally {
       setLoading(false);
     }
@@ -63,21 +57,18 @@ export default function ForgotPassword() {
                 <label className="block text-sm font-medium text-slate-700">{t('forgotPassword.emailLabel')}</label>
                 <input
                   value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    setError("");
-                    setMsg("");
-                  }}
-                  type="email"
+                  onChange={(e) => { setEmail(e.target.value); clearErrors(); setMsg(""); }}
+                  type="text"
                   autoComplete="email"
                   placeholder={t('forgotPassword.emailPlaceholder')}
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-base focus:border-indigo-500 focus:outline-none"
+                  className={`mt-2 w-full rounded-2xl border bg-white px-4 py-3.5 text-base focus:outline-none ${fieldErrors.email ? 'border-red-400' : 'border-slate-200 focus:border-indigo-500'}`}
                 />
+                <FieldError error={fieldErrors.email} />
               </div>
 
-              {error && (
+              {globalError && (
                 <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                  {error}
+                  {globalError}
                 </div>
               )}
 

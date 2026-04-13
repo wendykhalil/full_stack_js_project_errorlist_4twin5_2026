@@ -488,8 +488,6 @@ export default function PrescripteurArtisans() {
                       </label>
                       <input
                         type="range"
-                        min="1"
-                        max="100"
                         value={filters.distance}
                         onChange={(e) => handleFilterChange('distance', parseInt(e.target.value))}
                         className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-indigo-200 accent-indigo-600"

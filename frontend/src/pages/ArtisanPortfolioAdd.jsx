@@ -295,7 +295,6 @@ export default function ArtisanPortfolioAdd() {
                 type="text"
                 value={formData.title}
                 onChange={(e) => setFormData({...formData, title: e.target.value})}
-                required
                 placeholder="Ex: Installation plomberie villa"
                 className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
               />
@@ -308,7 +307,6 @@ export default function ArtisanPortfolioAdd() {
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData({...formData, description: e.target.value})}
-                required
                 rows="4"
                 placeholder="Décrivez le projet réalisé..."
                 className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
@@ -326,7 +324,6 @@ export default function ArtisanPortfolioAdd() {
                     type="text"
                     value={formData.location}
                     onChange={(e) => setFormData({...formData, location: e.target.value})}
-                    required
                     placeholder="Ex: Lac 2, Tunis"
                     className="w-full rounded-xl border border-slate-200 pl-10 pr-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
                   />
@@ -343,7 +340,6 @@ export default function ArtisanPortfolioAdd() {
                     type="date"
                     value={formData.date}
                     onChange={(e) => setFormData({...formData, date: e.target.value})}
-                    required
                     max={new Date().toISOString().split('T')[0]}
                     className="w-full rounded-xl border border-slate-200 pl-10 pr-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
                   />

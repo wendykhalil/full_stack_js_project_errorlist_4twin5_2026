@@ -3,6 +3,8 @@ import { HardHat, ArrowRight } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { useTranslation } from '../i18n';
+import { useServerErrors } from "../hooks/useServerErrors";
+import FieldError from "../components/FieldError";
 
 function useQuery() {
   const { search } = useLocation();
@@ -14,35 +16,23 @@ export default function ResetPassword() {
   const navigate = useNavigate();
   const q = useQuery();
   const { resetPassword } = useAuth();
-
   const token = q.get("token") || "";
-
   const [newPassword, setNewPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
-  const [error, setError] = useState("");
+  const { fieldErrors, globalError, handleError, clearErrors } = useServerErrors();
 
   async function onSubmit(e) {
     e.preventDefault();
-    setError("");
-    setMsg("");
-
-    if (!token) {
-      setError(t('resetPassword.tokenMissing'));
-      return;
-    }
-    if (!newPassword || newPassword.length < 6) {
-      setError(t('resetPassword.passwordMinLength'));
-      return;
-    }
-
+    clearErrors(); setMsg("");
+    if (!token) { handleError({ message: t('resetPassword.tokenMissing') }); return; }
     setLoading(true);
     try {
       const res = await resetPassword({ token, newPassword });
       setMsg(res?.message || t('resetPassword.success'));
       setTimeout(() => navigate("/login"), 800);
     } catch (e2) {
-      setError(e2.message || t('resetPassword.error'));
+      handleError(e2);
     } finally {
       setLoading(false);
     }
@@ -75,21 +65,18 @@ export default function ResetPassword() {
                 <label className="block text-sm font-medium text-slate-700">{t('resetPassword.passwordLabel')}</label>
                 <input
                   value={newPassword}
-                  onChange={(e) => {
-                    setNewPassword(e.target.value);
-                    setError("");
-                    setMsg("");
-                  }}
+                  onChange={(e) => { setNewPassword(e.target.value); clearErrors(); setMsg(""); }}
                   type="password"
                   autoComplete="new-password"
                   placeholder={t('resetPassword.passwordPlaceholder')}
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-base focus:border-indigo-500 focus:outline-none"
+                  className={`mt-2 w-full rounded-2xl border bg-white px-4 py-3.5 text-base focus:outline-none ${fieldErrors.newPassword ? 'border-red-400' : 'border-slate-200 focus:border-indigo-500'}`}
                 />
+                <FieldError error={fieldErrors.newPassword} />
               </div>
 
-              {error && (
+              {globalError && (
                 <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                  {error}
+                  {globalError}
                 </div>
               )}
 

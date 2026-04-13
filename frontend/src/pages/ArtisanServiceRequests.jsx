@@ -333,7 +333,7 @@ export default function ArtisanServiceRequests() {
                 </div>
                 <div>
                   <label className="text-sm font-medium text-slate-700">Prix proposé (TND, optionnel)</label>
-                  <input value={applyPrice} onChange={e => setApplyPrice(e.target.value)} type="number" min="0"
+                  <input value={applyPrice} onChange={e => setApplyPrice(e.target.value)}
                     className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
                     placeholder="Ex: 2500" />
                 </div>

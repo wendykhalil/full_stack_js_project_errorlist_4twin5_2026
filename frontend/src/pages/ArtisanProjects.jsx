@@ -70,7 +70,7 @@ const MATERIAL_SUGGESTIONS = [
   "Câble électrique", "Tuyaux PVC", "Tuyaux cuivre", "Robinetterie", "Sanitaires",
 ];
 
-function SuggestInput({ label, value, onChange, placeholder, listId, options = [], required = false }) {
+function SuggestInput({ label, value, onChange, placeholder, listId, options = [] }) {
   return (
     <PageShell>
     <div>
@@ -81,7 +81,6 @@ function SuggestInput({ label, value, onChange, placeholder, listId, options = [
         list={listId}
         className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none ring-indigo-500 focus:ring-2"
         placeholder={placeholder}
-        required={required}
       />
       <datalist id={listId}>
         {options.map((opt) => <option key={opt} value={opt} />)}
@@ -191,7 +190,6 @@ function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t,
                 onChange={(e) => setForm((s) => ({ ...s, title: e.target.value }))}
                 className={`mt-2 w-full rounded-xl border ${fieldErrors.title ? 'border-red-500' : 'border-slate-200'} bg-white px-4 py-3 text-sm outline-none ring-indigo-500 focus:ring-2`}
                 placeholder="e.g., Villa Ben Arous"
-                required
               />
               {fieldErrors.title && <p className="mt-1 text-sm text-red-600">{fieldErrors.title}</p>}
             </div>
@@ -329,8 +327,7 @@ function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t,
               <input
                 value={form.budgetTND}
                 onChange={(e) => setForm((s) => ({ ...s, budgetTND: e.target.value }))}
-                type="number"
-                min="0"
+                type="text"
                 className={`mt-2 w-full rounded-xl border ${fieldErrors.budgetTND ? 'border-red-500' : 'border-slate-200'} bg-white px-4 py-3 text-sm outline-none ring-indigo-500 focus:ring-2`}
                 placeholder="e.g., 15000"
               />
@@ -341,8 +338,7 @@ function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t,
               <input
                 value={form.surfaceM2}
                 onChange={(e) => setForm((s) => ({ ...s, surfaceM2: e.target.value }))}
-                type="number"
-                min="0"
+                type="text"
                 className={`mt-2 w-full rounded-xl border ${fieldErrors.surfaceM2 ? 'border-red-500' : 'border-slate-200'} bg-white px-4 py-3 text-sm outline-none ring-indigo-500 focus:ring-2`}
                 placeholder="e.g., 120"
               />
@@ -998,3 +994,5 @@ const onCreate = async (e) => {
     </div>
   );
 }
+
+

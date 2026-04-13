@@ -5,6 +5,8 @@ import { useAuth } from "../auth/AuthContext";
 import PageShell from "../components/PageShell";
 import ReviewModal from "../components/ReviewModal";
 import { Stars } from "../components/StarRating";
+import FieldError from "../components/FieldError";
+import { useFormValidation, rules } from "../hooks/useFormValidation";
 import {
   createServiceRequest, getMyServiceRequests, updateServiceRequest,
   deleteServiceRequest, changeServiceRequestStatus,
@@ -60,13 +62,26 @@ function Modal({ open, title, onClose, children }) {
 }
 
 function RequestForm({ form, setForm, onSubmit, loading, submitLabel }) {
+  const { errors, validate, clearError } = useFormValidation({
+    title: [rules.required('Le titre est requis'), rules.minLength(3, 'Minimum 3 caractères'), rules.maxLength(120)],
+    trade: [rules.required('Le métier est requis')],
+    budgetTND: [rules.positiveNumber('Budget doit être positif')],
+  });
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    if (!validate({ title: form.title, trade: form.trade, budgetTND: form.budgetTND || 0 })) return;
+    onSubmit(e);
+  }
+
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label className="text-sm font-medium text-slate-700">Titre *</label>
-        <input value={form.title} onChange={e => setForm(s => ({ ...s, title: e.target.value }))}
-          className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-          placeholder="Ex: Besoin d'un plombier pour rénovation salle de bain" required />
+        <input value={form.title} onChange={e => { setForm(s => ({ ...s, title: e.target.value })); clearError('title'); }}
+          className={`mt-1 w-full rounded-xl border px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500 ${errors.title ? 'border-red-400' : 'border-slate-200'}`}
+          placeholder="Ex: Besoin d'un plombier pour rénovation salle de bain" />
+        <FieldError error={errors.title} />
       </div>
       <div>
         <label className="text-sm font-medium text-slate-700">Description</label>
@@ -77,11 +92,12 @@ function RequestForm({ form, setForm, onSubmit, loading, submitLabel }) {
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label className="text-sm font-medium text-slate-700">Métier requis *</label>
-          <select value={form.trade} onChange={e => setForm(s => ({ ...s, trade: e.target.value }))}
-            className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500" required>
+          <select value={form.trade} onChange={e => { setForm(s => ({ ...s, trade: e.target.value })); clearError('trade'); }}
+            className={`mt-1 w-full rounded-xl border px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500 ${errors.trade ? 'border-red-400' : 'border-slate-200'}`}>
             <option value="">Choisir un métier…</option>
             {TRADES.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
+          <FieldError error={errors.trade} />
         </div>
         <div>
           <label className="text-sm font-medium text-slate-700">Ville</label>
@@ -92,9 +108,10 @@ function RequestForm({ form, setForm, onSubmit, loading, submitLabel }) {
         </div>
         <div>
           <label className="text-sm font-medium text-slate-700">Budget (TND)</label>
-          <input value={form.budgetTND} onChange={e => setForm(s => ({ ...s, budgetTND: e.target.value }))}
-            type="number" min="0" className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+          <input value={form.budgetTND} onChange={e => { setForm(s => ({ ...s, budgetTND: e.target.value })); clearError('budgetTND'); }}
+            className={`mt-1 w-full rounded-xl border px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500 ${errors.budgetTND ? 'border-red-400' : 'border-slate-200'}`}
             placeholder="Ex: 3000" />
+          <FieldError error={errors.budgetTND} />
         </div>
         <div>
           <label className="text-sm font-medium text-slate-700">Date limite</label>
@@ -159,7 +176,7 @@ export default function PrescripteurServiceRequests() {
       setForm(emptyForm);
       load();
     } catch (e) {
-      setErr(e.message);
+      setErr(e.data?.errors?.map(x => x.message).join(', ') || e.message);
     } finally {
       setSaving(false);
     }
@@ -174,7 +191,7 @@ export default function PrescripteurServiceRequests() {
       setForm(emptyForm);
       load();
     } catch (e) {
-      setErr(e.message);
+      setErr(e.data?.errors?.map(x => x.message).join(', ') || e.message);
     } finally {
       setSaving(false);
     }
