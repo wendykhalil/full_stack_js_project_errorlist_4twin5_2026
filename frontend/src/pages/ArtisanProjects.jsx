@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "../i18n";
 import SimpleFooter from "../components/Footer";
+import Pagination from "../components/Pagination";
 import { apiFetch, getMySubscription, smartSearchAI, suggestProjectWithAI } from "../auth/api";
 import { useAuth } from "../auth/AuthContext";
 import SubscriptionAlert from "../components/SubscriptionAlert";
@@ -186,24 +187,6 @@ function stripHtml(value = "") {
   return String(value).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
 }
 
-function buildPaginationItems(page, pages) {
-  const safePages = Math.max(1, Number(pages) || 1);
-  const safePage = Math.min(Math.max(1, Number(page) || 1), safePages);
-  if (safePages <= 7) return Array.from({ length: safePages }, (_, i) => i + 1);
-
-  const items = [];
-  const left = Math.max(2, safePage - 1);
-  const right = Math.min(safePages - 1, safePage + 1);
-
-  items.push(1);
-  if (left > 2) items.push('...');
-  for (let p = left; p <= right; p += 1) items.push(p);
-  if (right < safePages - 1) items.push('...');
-  items.push(safePages);
-
-  return items;
-}
-
 function cleanNumber(value) {
   const raw = String(value ?? "").replace(",", ".").trim();
   if (!raw) return "";
@@ -312,7 +295,7 @@ function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t,
           <h4 className="text-base font-semibold text-slate-900">Informations du projet</h4>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             <div className="md:col-span-2">
-              <label className="text-sm font-medium text-slate-700">Title</label>
+              <label className="text-sm font-medium text-slate-700">Titre</label>
               <input
                 value={form.title}
                 onChange={(e) => setForm((s) => ({ ...s, title: e.target.value }))}
@@ -324,7 +307,7 @@ function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t,
             </div>
 
             <div>
-              <label className="text-sm font-medium text-slate-700">Category</label>
+              <label className="text-sm font-medium text-slate-700">Categorie</label>
               <input
                 value={form.category}
                 onChange={(e) => setForm((s) => ({ ...s, category: e.target.value }))}
@@ -340,7 +323,7 @@ function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t,
             </div>
 
             <div>
-              <label className="text-sm font-medium text-slate-700">Status</label>
+              <label className="text-sm font-medium text-slate-700">Statut</label>
               <select
                 value={form.status}
                 onChange={(e) => setForm((s) => ({ ...s, status: e.target.value }))}
@@ -359,7 +342,7 @@ function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t,
                 onChange={(e) => setForm((s) => ({ ...s, description: e.target.value }))}
                 rows={5}
                 className={`mt-2 w-full rounded-xl border ${fieldErrors.description ? 'border-red-500' : 'border-slate-200'} bg-white px-4 py-3 text-sm outline-none ring-indigo-500 focus:ring-2`}
-                placeholder="What needs to be done? Requirements, constraints, style..."
+                placeholder="Travaux a realiser, contraintes, style souhaite..."
                 maxLength={1500}
               />
               {fieldErrors.description && <p className="mt-1 text-sm text-red-600">{fieldErrors.description}</p>}
@@ -371,7 +354,7 @@ function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t,
           <h4 className="text-base font-semibold text-slate-900">Dates et contact</h4>
           <div className="mt-4 space-y-4">
             <div>
-              <label className="text-sm font-medium text-slate-700">Start date</label>
+              <label className="text-sm font-medium text-slate-700">Date de debut</label>
               <input
                 value={form.startDate}
                 onChange={(e) => setForm((s) => ({
@@ -387,7 +370,7 @@ function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t,
             </div>
 
             <div>
-              <label className="text-sm font-medium text-slate-700">End date</label>
+              <label className="text-sm font-medium text-slate-700">Date de fin</label>
               <input
                 value={form.endDate}
                 onChange={(e) => setForm((s) => ({ ...s, endDate: e.target.value }))}
@@ -399,7 +382,7 @@ function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t,
             </div>
 
             <div>
-              <label className="text-sm font-medium text-slate-700">Phone number</label>
+              <label className="text-sm font-medium text-slate-700">Numero de telephone</label>
               <div className="relative mt-2">
                 <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <input
@@ -421,7 +404,7 @@ function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t,
           <h4 className="text-base font-semibold text-slate-900">Budget et localisation</h4>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             <div>
-              <label className="text-sm font-medium text-slate-700">City</label>
+              <label className="text-sm font-medium text-slate-700">Ville</label>
               <input
                 value={form.city}
                 onChange={(e) => setForm((s) => ({ ...s, city: e.target.value }))}
@@ -437,12 +420,12 @@ function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t,
             </div>
 
             <div>
-              <label className="text-sm font-medium text-slate-700">Address</label>
+              <label className="text-sm font-medium text-slate-700">Adresse</label>
               <input
                 value={form.address}
                 onChange={(e) => setForm((s) => ({ ...s, address: e.target.value }))}
                 className={`mt-2 w-full rounded-xl border ${fieldErrors.address ? 'border-red-500' : 'border-slate-200'} bg-white px-4 py-3 text-sm outline-none ring-indigo-500 focus:ring-2`}
-                placeholder="Street / neighborhood"
+                placeholder="Rue / quartier"
                 maxLength={120}
               />
               {fieldErrors.address && <p className="mt-1 text-sm text-red-600">{fieldErrors.address}</p>}
@@ -451,11 +434,11 @@ function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t,
             <div className="md:col-span-2 rounded-2xl border border-slate-200 bg-white p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <label className="text-sm font-medium text-slate-700">Map location</label>
-                  <p className="mt-1 text-xs text-slate-500">Open the map, click where the project is, or use your current place.</p>
+                  <label className="text-sm font-medium text-slate-700">Position sur la carte</label>
+                  <p className="mt-1 text-xs text-slate-500">Ouvrez la carte, cliquez sur l'emplacement du projet ou utilisez votre position actuelle.</p>
                 </div>
                 <button type="button" onClick={onOpenMap} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-700 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700">
-                  <MapPin className="h-4 w-4" /> Open map
+                  <MapPin className="h-4 w-4" /> Ouvrir la carte
                 </button>
               </div>
 
@@ -506,7 +489,7 @@ function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t,
           <div className="mt-4 rounded-xl border border-dashed border-slate-300 bg-white p-4">
             <div className="flex items-center gap-2 text-sm text-slate-600">
               <ImageIcon className="h-4 w-4" />
-              <span>{isEdit ? "Add images" : "Images"} (max 6)</span>
+              <span>{isEdit ? "Ajouter des images" : "Images"} (max 6)</span>
             </div>
             <input
               type="file"
@@ -516,9 +499,9 @@ function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t,
               className="mt-3 block w-full text-sm"
             />
             {images.length ? (
-              <div className="mt-3 text-xs text-slate-500">Selected: {images.length} file(s)</div>
+              <div className="mt-3 text-xs text-slate-500">Selectionne(s) : {images.length} fichier(s)</div>
             ) : isEdit && editing?.images?.length ? (
-              <div className="mt-3 text-xs text-slate-500">Existing images: {editing.images.length} (new uploads will be added)</div>
+              <div className="mt-3 text-xs text-slate-500">Images existantes : {editing.images.length} (les nouveaux uploads seront ajoutes)</div>
             ) : null}
           </div>
         </div>
@@ -562,7 +545,7 @@ function ProjectDetails({ project }) {
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <h4 className="text-3xl font-semibold text-slate-900">{project.title}</h4>
-                <p className="mt-2 text-sm text-slate-500">Detailed project overview</p>
+                <p className="mt-2 text-sm text-slate-500">Apercu detaille du projet</p>
               </div>
               <StatusPill status={project.status} />
             </div>
@@ -570,26 +553,26 @@ function ProjectDetails({ project }) {
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm"><div className="text-slate-400">Category</div><div className="mt-1 font-medium text-slate-900">{project.category || '—'}</div></div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm"><div className="text-slate-400">Categorie</div><div className="mt-1 font-medium text-slate-900">{project.category || '—'}</div></div>
             <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm"><div className="text-slate-400">Budget</div><div className="mt-1 font-medium text-slate-900">{project.budgetTND ? `${Number(project.budgetTND).toLocaleString()} TND` : '—'}</div></div>
             <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm"><div className="text-slate-400">Surface</div><div className="mt-1 font-medium text-slate-900">{project.surfaceM2 ? `${project.surfaceM2} m²` : '—'}</div></div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm"><div className="text-slate-400">Start date</div><div className="mt-1 font-medium text-slate-900">{formatDate(project.startDate || project.createdAt) || '—'}</div></div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm"><div className="text-slate-400">End date</div><div className="mt-1 font-medium text-slate-900">{formatDate(project.endDate) || '—'}</div></div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm"><div className="text-slate-400">Phone</div><div className="mt-1 font-medium text-slate-900">{project.phoneNumber || '—'}</div></div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm"><div className="text-slate-400">Date de debut</div><div className="mt-1 font-medium text-slate-900">{formatDate(project.startDate || project.createdAt) || '—'}</div></div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm"><div className="text-slate-400">Date de fin</div><div className="mt-1 font-medium text-slate-900">{formatDate(project.endDate) || '—'}</div></div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm"><div className="text-slate-400">Telephone</div><div className="mt-1 font-medium text-slate-900">{project.phoneNumber || '—'}</div></div>
           </div>
 
           <div className="rounded-3xl border border-slate-200 bg-white p-5">
-            <h5 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">Location</h5>
+            <h5 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">Localisation</h5>
             <div className="mt-3 grid gap-4 md:grid-cols-2">
-              <div><div className="text-sm text-slate-400">City</div><div className="mt-1 font-medium text-slate-900">{project.location?.city || '—'}</div></div>
-              <div><div className="text-sm text-slate-400">Address</div><div className="mt-1 font-medium text-slate-900">{project.location?.address || '—'}</div></div>
+              <div><div className="text-sm text-slate-400">Ville</div><div className="mt-1 font-medium text-slate-900">{project.location?.city || '—'}</div></div>
+              <div><div className="text-sm text-slate-400">Adresse</div><div className="mt-1 font-medium text-slate-900">{project.location?.address || '—'}</div></div>
             </div>
           </div>
         </div>
       </div>
       {project.materials?.length ? (
         <div className="rounded-3xl border border-slate-200 bg-white p-5">
-          <h5 className="mb-3 text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">Materials</h5>
+          <h5 className="mb-3 text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">Materiaux</h5>
           <div className="flex flex-wrap gap-2">{project.materials.map((m, idx) => <span key={m + idx} className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-700">{m}</span>)}</div>
         </div>
       ) : null}
@@ -725,6 +708,10 @@ export default function ArtisanProjects() {
   useEffect(() => {
     setPage(1);
   }, [q, statusFilter]);
+
+  useEffect(() => {
+    setPage((current) => Math.min(current, pages));
+  }, [pages]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1012,9 +999,9 @@ const onCreate = async (e) => {
 
         <div className="mt-8 space-y-5">
           {loading ? (
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 text-slate-600">Loading...</div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 text-slate-600">Chargement...</div>
           ) : filtered.length === 0 ? (
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 text-slate-600">No projects yet.</div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 text-slate-600">Aucun projet pour le moment.</div>
           ) : (
             paginated.map((p) => {
   const cover = normalizeImageUrl(p.images?.[0]);
@@ -1081,7 +1068,7 @@ const onCreate = async (e) => {
                     className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-slate-700 hover:bg-slate-50"
                   >
                     <Eye className="h-4 w-4" />
-                    View project
+                    Voir le projet
                   </button>
 
                   <button
@@ -1095,7 +1082,7 @@ const onCreate = async (e) => {
                     className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-slate-700 hover:bg-slate-50"
                   >
                     <Pencil className="h-4 w-4" />
-                    Edit project
+                    Modifier le projet
                   </button>
 
                   <button
@@ -1114,7 +1101,7 @@ const onCreate = async (e) => {
                     className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-slate-700 hover:bg-slate-50"
                   >
                     <FileSignature className="h-4 w-4" />
-                    Generate quote
+                    Generer un devis
                   </button>
 
                   <button
@@ -1133,7 +1120,7 @@ const onCreate = async (e) => {
                     className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-slate-700 hover:bg-slate-50"
                   >
                     <Receipt className="h-4 w-4" />
-                    Generate invoice
+                    Generer une facture
                   </button>
 
                   <button
@@ -1142,7 +1129,7 @@ const onCreate = async (e) => {
                     className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-red-700 hover:bg-red-50"
                   >
                     <Trash2 className="h-4 w-4" />
-                    Delete project
+                    Supprimer le projet
                   </button>
                 </div>
               ) : null}
@@ -1152,7 +1139,7 @@ const onCreate = async (e) => {
           <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                <Calendar className="h-4 w-4" /> Start
+                <Calendar className="h-4 w-4" /> Debut
               </div>
               <div className="mt-2 text-sm font-medium text-slate-900">
                 {formatDate(p.startDate || p.createdAt) || "—"}
@@ -1161,7 +1148,7 @@ const onCreate = async (e) => {
 
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                <MapPin className="h-4 w-4" /> Location
+                <MapPin className="h-4 w-4" /> Localisation
               </div>
               <div className="mt-2 text-sm font-medium text-slate-900">
                 {[p.location?.city, p.location?.address]
@@ -1183,7 +1170,7 @@ const onCreate = async (e) => {
 
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                <Layers3 className="h-4 w-4" /> Category
+                <Layers3 className="h-4 w-4" /> Categorie
               </div>
               <div className="mt-2 text-sm font-medium text-slate-900">
                 {p.category || "—"}
@@ -1209,59 +1196,8 @@ const onCreate = async (e) => {
   );
 })
           )} 
-          {!loading && filtered.length > 0 && pages > 1 ? (
-            <div className="mt-10 flex items-center justify-center">
-              <nav className="inline-flex items-center gap-2" aria-label="Pagination">
-                <button
-                  type="button"
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                  className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  Précédent
-                </button>
-
-                <div className="flex items-center gap-2">
-                  {buildPaginationItems(page, pages).map((item, idx) => {
-                    if (item === '...') {
-                      return (
-                        <span key={`ellipsis-${idx}`} className="px-2 text-sm text-slate-400 select-none">
-                          ...
-                        </span>
-                      );
-                    }
-
-                    const pageNumber = item;
-                    const isActive = pageNumber === page;
-                    return (
-                      <button
-                        key={`page-${pageNumber}`}
-                        type="button"
-                        onClick={() => setPage(pageNumber)}
-                        className={[
-                          "h-10 w-10 rounded-xl text-sm font-semibold transition-colors",
-                          isActive
-                            ? "bg-indigo-600 text-white"
-                            : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50",
-                        ].join(' ')}
-                        aria-current={isActive ? 'page' : undefined}
-                      >
-                        {pageNumber}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setPage((p) => Math.min(pages, p + 1))}
-                  disabled={page === pages}
-                  className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  Suivant
-                </button>
-              </nav>
-            </div>
+          {!loading && filtered.length > 0 ? (
+            <Pagination page={page} pages={pages} onPageChange={setPage} />
           ) : null}
         </div>
 
@@ -1288,13 +1224,13 @@ const onCreate = async (e) => {
               fieldErrors={fieldErrors}
             />
             <div className="flex items-center justify-end gap-3 pt-2">
-              <button type="button" onClick={() => { setIsCreateOpen(false); setForm(emptyForm); setImages([]); setFieldErrors({}); }} className="rounded-xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100">Cancel</button>
-              <button type="submit" className="rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white hover:bg-indigo-700">Create</button>
+              <button type="button" onClick={() => { setIsCreateOpen(false); setForm(emptyForm); setImages([]); setFieldErrors({}); }} className="rounded-xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100">Annuler</button>
+              <button type="submit" className="rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white hover:bg-indigo-700">Creer</button>
             </div>
           </form>
         </Modal>
 
-        <Modal open={isEditOpen} title="Edit project" onClose={() => { setIsEditOpen(false); setEditing(null); setForm(emptyForm); setImages([]); setFieldErrors({}); }} size="xl">
+        <Modal open={isEditOpen} title="Modifier le projet" onClose={() => { setIsEditOpen(false); setEditing(null); setForm(emptyForm); setImages([]); setFieldErrors({}); }} size="xl">
           <form onSubmit={onEdit} className="space-y-6">
             <div className="flex items-center justify-between rounded-2xl border border-indigo-100 bg-indigo-50 px-4 py-3">
               <div>
@@ -1317,13 +1253,13 @@ const onCreate = async (e) => {
               fieldErrors={fieldErrors}
             />
             <div className="flex items-center justify-end gap-3 pt-2">
-              <button type="button" onClick={() => { setIsEditOpen(false); setEditing(null); setForm(emptyForm); setImages([]); setFieldErrors({}); }} className="rounded-xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100">Cancel</button>
-              <button type="submit" className="rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white hover:bg-indigo-700">Save</button>
+              <button type="button" onClick={() => { setIsEditOpen(false); setEditing(null); setForm(emptyForm); setImages([]); setFieldErrors({}); }} className="rounded-xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100">Annuler</button>
+              <button type="submit" className="rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white hover:bg-indigo-700">Enregistrer</button>
             </div>
           </form>
         </Modal>
 
-        <Modal open={isViewOpen} title={viewing?.title || 'Project details'} onClose={() => setIsViewOpen(false)} size="lg">
+        <Modal open={isViewOpen} title={viewing?.title || 'Details du projet'} onClose={() => setIsViewOpen(false)} size="lg">
           <ProjectDetails project={viewing} />
         </Modal>
       </main>

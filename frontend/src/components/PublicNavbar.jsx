@@ -4,9 +4,9 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import logo from "../assets/bmp-logo.svg";
 
 const NAV_ITEMS = [
-  { to: "/login", label: "Sign in", icon: LogIn },
-  { to: "/login-phone", label: "Phone access", icon: Phone },
-  { to: "/register", label: "Create account", icon: UserPlus },
+  { to: "/login", label: "Se connecter", icon: LogIn },
+  { to: "/login-phone", label: "Acces telephone", icon: Phone },
+  { to: "/register", label: "Creer un compte", icon: UserPlus },
 ];
 
 export default function PublicNavbar() {
@@ -27,7 +27,7 @@ export default function PublicNavbar() {
           </div>
           <div>
             <div className="text-base font-semibold tracking-tight text-slate-950 sm:text-lg">BMP.tn</div>
-            <div className="text-xs text-slate-500">Trusted construction marketplace</div>
+            <div className="text-xs text-slate-500">Marketplace de construction fiable</div>
           </div>
         </button>
 
@@ -61,7 +61,7 @@ export default function PublicNavbar() {
             type="button"
             onClick={() => setMobileOpen((prev) => !prev)}
             className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:bg-blue-50 hover:text-blue-700 md:hidden"
-            aria-label="Toggle navigation"
+            aria-label="Basculer la navigation"
           >
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
@@ -88,7 +88,7 @@ export default function PublicNavbar() {
                     <Icon className="h-4 w-4" />
                     {label}
                   </span>
-                  <span className="text-xs uppercase tracking-[0.2em] opacity-70">Open</span>
+                  <span className="text-xs uppercase tracking-[0.2em] opacity-70">Ouvrir</span>
                 </Link>
               );
             })}

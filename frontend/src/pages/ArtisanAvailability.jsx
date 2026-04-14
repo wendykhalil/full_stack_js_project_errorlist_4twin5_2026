@@ -82,7 +82,7 @@ export default function ArtisanAvailability() {
 
   return (
     <PageShell title="Disponibilités">
-      <div className="mx-auto max-w-2xl space-y-6 p-4 sm:p-6">
+      <div className="mx-auto max-w-4xl space-y-6 p-4 sm:p-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Mon calendrier de disponibilité</h1>
           <p className="mt-1 text-sm text-slate-500">Indiquez vos jours disponibles, occupés ou réservés</p>
@@ -103,20 +103,20 @@ export default function ArtisanAvailability() {
         {/* Calendar */}
         <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-            <button onClick={prevMonth} className="rounded-xl p-2 hover:bg-slate-100">
-              <ChevronLeft className="h-5 w-5 text-slate-500" />
+          <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
+            <button onClick={prevMonth} className="rounded-xl p-2.5 hover:bg-slate-100">
+              <ChevronLeft className="h-6 w-6 text-slate-500" />
             </button>
-            <h2 className="font-semibold text-slate-900 capitalize">{monthLabel}</h2>
-            <button onClick={nextMonth} className="rounded-xl p-2 hover:bg-slate-100">
-              <ChevronRight className="h-5 w-5 text-slate-500" />
+            <h2 className="text-lg font-semibold text-slate-900 capitalize">{monthLabel}</h2>
+            <button onClick={nextMonth} className="rounded-xl p-2.5 hover:bg-slate-100">
+              <ChevronRight className="h-6 w-6 text-slate-500" />
             </button>
           </div>
 
           {/* Day names */}
           <div className="grid grid-cols-7 border-b border-slate-100">
             {["Dim","Lun","Mar","Mer","Jeu","Ven","Sam"].map(d => (
-              <div key={d} className="py-2 text-center text-xs font-semibold text-slate-400">{d}</div>
+              <div key={d} className="py-3 text-center text-sm font-semibold text-slate-400">{d}</div>
             ))}
           </div>
 
@@ -126,7 +126,7 @@ export default function ArtisanAvailability() {
           ) : (
             <div className="grid grid-cols-7">
               {days.map((day, i) => {
-                if (!day) return <div key={`empty-${i}`} className="h-12" />;
+                if (!day) return <div key={`empty-${i}`} className="h-20" />;
                 const key = toKey(day);
                 const status = availability[key];
                 const meta = STATUS[status];
@@ -135,12 +135,12 @@ export default function ArtisanAvailability() {
                 return (
                   <button key={key} onClick={() => !isPast && setSelected(isSelected ? null : key)}
                     disabled={isPast}
-                    className={`relative h-12 flex flex-col items-center justify-center text-sm transition-all
+                    className={`relative h-20 flex flex-col items-center justify-center text-sm transition-all
                       ${isPast ? "opacity-30 cursor-not-allowed" : "hover:bg-slate-50 cursor-pointer"}
                       ${isSelected ? "ring-2 ring-inset ring-indigo-500 bg-indigo-50" : ""}
                       border-b border-r border-slate-50`}>
-                    <span className={`font-medium ${meta ? meta.text : "text-slate-700"}`}>{day.getDate()}</span>
-                    {meta && <span className={`mt-0.5 h-1.5 w-1.5 rounded-full ${meta.color}`} />}
+                    <span className={`text-base font-semibold ${meta ? meta.text : "text-slate-700"}`}>{day.getDate()}</span>
+                    {meta && <span className={`mt-1 h-2 w-2 rounded-full ${meta.color}`} />}
                   </button>
                 );
               })}

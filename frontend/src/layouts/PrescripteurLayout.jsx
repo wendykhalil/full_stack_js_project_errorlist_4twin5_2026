@@ -32,8 +32,8 @@ export default function PrescripteurLayout() {
   ];
 
   const settingsItems = [
-    { to: "/prescripteur/profile", label: "Profile", icon: <UserCircle2 className="h-4 w-4" /> },
-    { to: "/prescripteur/profile", label: "Reset password", icon: <Shield className="h-4 w-4" /> },
+    { to: "/prescripteur/profile", label: "Profil", icon: <UserCircle2 className="h-4 w-4" /> },
+    { to: "/prescripteur/profile", label: "Reinitialiser le mot de passe", icon: <Shield className="h-4 w-4" /> },
   ];
 
   return (

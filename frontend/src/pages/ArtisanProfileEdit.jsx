@@ -22,6 +22,21 @@ import { useFormValidation, rules } from '../hooks/useFormValidation';
 import { useServerErrors } from '../hooks/useServerErrors';
 import FieldError from '../components/FieldError';
 
+function normalizePlaceData(place = {}) {
+  const latitude = Number(place?.latitude || 0);
+  const longitude = Number(place?.longitude || 0);
+  const city = String(place?.city || '').trim();
+  const address = String(place?.address || '').trim();
+  const regionFromAddress = address.split(',')[0]?.trim() || '';
+  return {
+    latitude,
+    longitude,
+    city,
+    address,
+    region: city || regionFromAddress,
+  };
+}
+
 export default function ArtisanProfileEdit() {
  
   const navigate = useNavigate();
@@ -132,20 +147,17 @@ export default function ArtisanProfileEdit() {
   };
 
   const handleMapPlaceSelect = async (place) => {
-    const latitude = Number(place?.latitude || 0);
-    const longitude = Number(place?.longitude || 0);
-    const city = String(place?.city || '').trim();
-    const address = String(place?.address || '').trim();
+    const normalized = normalizePlaceData(place);
 
     setProfile((prev) => ({
       ...prev,
-      region: city || prev.region,
+      region: normalized.region || prev.region,
       address: {
         ...prev.address,
-        city: city || prev.address?.city || '',
-        street: address || prev.address?.street || '',
+        city: normalized.city || prev.address?.city || '',
+        street: normalized.address || prev.address?.street || '',
       },
-      location: { latitude, longitude },
+      location: { latitude: normalized.latitude, longitude: normalized.longitude },
     }));
 
     setIsMapPickerOpen(false);
@@ -157,7 +169,7 @@ export default function ArtisanProfileEdit() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ latitude, longitude }),
+        body: JSON.stringify({ latitude: normalized.latitude, longitude: normalized.longitude }),
       });
       setSuccess('Location selected successfully. Save the profile to keep the new address details.');
       setTimeout(() => setSuccess(''), 4000);

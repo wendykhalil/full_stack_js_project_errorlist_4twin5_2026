@@ -18,8 +18,8 @@ export default function AdminLayout() {
   ];
 
   const settingsItems = [
-    { to: "/admin/profile", label: "Profile", icon: <UserCircle2 className="h-4 w-4" /> },
-    { to: "/admin/profile", label: "Reset password", icon: <Shield className="h-4 w-4" /> },
+    { to: "/admin/profile", label: "Profil", icon: <UserCircle2 className="h-4 w-4" /> },
+    { to: "/admin/profile", label: "Reinitialiser le mot de passe", icon: <Shield className="h-4 w-4" /> },
   ];
 
   return (

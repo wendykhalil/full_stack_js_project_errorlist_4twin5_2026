@@ -37,7 +37,7 @@ export default function FournisseurLayout() {
     { to: "/fournisseur/profile", label: "Profil", icon: <UserCircle2 className="h-5 w-5" /> },
     { to: "/fournisseur", label: "Tableau de bord", icon: <LayoutDashboard className="h-5 w-5" />, end: true },
     { to: "/fournisseur/orders", label: "Commandes", icon: <ShoppingBag className="h-5 w-5" /> },
-    { to: "/fournisseur/marketplace", label: "Marketplace", icon: <Eye className="h-5 w-5" /> },
+    { to: "/fournisseur/marketplace", label: "Place de marche", icon: <Eye className="h-5 w-5" /> },
     { to: "/fournisseur/produits", label: "Produits", icon: <Package className="h-5 w-5" /> },
     { to: "/fournisseur/produits/new", label: "Nouveau produit", icon: <Plus className="h-5 w-5" /> },
     { to: "/fournisseur/messages", label: "Messages", icon: messageIcon },
@@ -55,8 +55,8 @@ export default function FournisseurLayout() {
   );
 
   const settingsItems = [
-    { to: "/fournisseur/profile", label: "Profile", icon: <UserCircle2 className="h-4 w-4" /> },
-    { to: "/fournisseur/profile", label: "Reset password", icon: <Shield className="h-4 w-4" /> },
+    { to: "/fournisseur/profile", label: "Profil", icon: <UserCircle2 className="h-4 w-4" /> },
+    { to: "/fournisseur/profile", label: "Reinitialiser le mot de passe", icon: <Shield className="h-4 w-4" /> },
   ];
 
   return (

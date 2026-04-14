@@ -37,6 +37,21 @@ function resolveAssetUrl(path) {
   return `${API_BASE}${path.startsWith('/') ? '' : '/'}${path}`;
 }
 
+function normalizePlaceData(place = {}) {
+  const latitude = Number(place?.latitude || 0);
+  const longitude = Number(place?.longitude || 0);
+  const city = String(place?.city || '').trim();
+  const address = String(place?.address || '').trim();
+  const regionFromAddress = address.split(',')[0]?.trim() || '';
+  return {
+    latitude,
+    longitude,
+    city,
+    address,
+    region: city || regionFromAddress,
+  };
+}
+
 export default function ArtisanProfile() {
   const navigate = useNavigate();
   const { token, user, refreshMe, changePassword, forgotPassword } = useAuth();
@@ -130,7 +145,7 @@ export default function ArtisanProfile() {
         }
       } catch (err) {
         console.error('Error fetching profile:', err);
-        setError('Unable to load profile');
+        setError('Impossible de charger le profil');
       } finally {
         setLoading(false);
       }
@@ -145,20 +160,17 @@ export default function ArtisanProfile() {
   };
 
   const handleMapPlaceSelect = async (place) => {
-    const latitude = Number(place?.latitude || 0);
-    const longitude = Number(place?.longitude || 0);
-    const city = String(place?.city || '').trim();
-    const address = String(place?.address || '').trim();
+    const normalized = normalizePlaceData(place);
 
     setProfile((prev) => ({
       ...prev,
-      region: city || prev.region,
+      region: normalized.region || prev.region,
       address: {
         ...prev.address,
-        city: city || prev.address?.city || '',
-        street: address || prev.address?.street || '',
+        city: normalized.city || prev.address?.city || '',
+        street: normalized.address || prev.address?.street || '',
       },
-      location: { latitude, longitude },
+      location: { latitude: normalized.latitude, longitude: normalized.longitude },
     }));
 
     setIsMapPickerOpen(false);
@@ -170,13 +182,13 @@ export default function ArtisanProfile() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ latitude, longitude }),
+        body: JSON.stringify({ latitude: normalized.latitude, longitude: normalized.longitude }),
       });
-      setSuccess('Location selected successfully. Save the profile to keep the new address details.');
+      setSuccess('Localisation selectionnee avec succes. Enregistrez le profil pour conserver les nouvelles informations.');
       setTimeout(() => setSuccess(''), 4000);
     } catch (err) {
       console.error('Error updating location:', err);
-      setSuccess('Location selected. Save the profile to finish updating your profile.');
+      setSuccess('Localisation selectionnee. Enregistrez le profil pour finaliser la mise a jour.');
       setTimeout(() => setSuccess(''), 4000);
     } finally {
       setUpdatingLocation(false);
@@ -187,7 +199,7 @@ export default function ArtisanProfile() {
     const file = e.target.files[0];
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) {
-      setError("Image must be smaller than 5MB");
+      setError("L'image doit etre inferieure a 5MB");
       setTimeout(() => setError(''), 3000);
       return;
     }
@@ -231,10 +243,10 @@ export default function ArtisanProfile() {
       });
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.message || 'Unable to save profile');
+      if (!response.ok) throw new Error(data.message || 'Impossible d enregistrer le profil');
 
       await refreshMe();
-      setSuccess('Profile updated successfully!');
+      setSuccess('Profil mis a jour avec succes !');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
       console.error('Error saving profile:', err);
@@ -294,7 +306,7 @@ export default function ArtisanProfile() {
         <div className="flex min-h-[60vh] flex-1 items-center justify-center">
           <div className="flex flex-col items-center gap-3">
             <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-            <p className="text-sm text-slate-500">Loading your profile...</p>
+            <p className="text-sm text-slate-500">Chargement de votre profil...</p>
           </div>
         </div>
       </PageShell>
@@ -311,19 +323,19 @@ export default function ArtisanProfile() {
           className="group inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition-all hover:bg-slate-100 hover:text-indigo-600"
         >
           <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
-          Back to dashboard
+          Retour au tableau de bord
         </button>
         <div className="flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-700">
           <Shield className="h-3 w-3" />
-          Artisan profile
+          Profil artisan
         </div>
       </div>
 
       {/* Page Title */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900">My artisan profile</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900">Mon profil artisan</h1>
         <p className="mt-2 text-sm text-slate-500">
-          Complete your profile to become more visible to prescribers and win more opportunities.
+          Completez votre profil pour etre plus visible aupres des prescripteurs et obtenir plus d'opportunites.
         </p>
       </div>
 
@@ -351,9 +363,9 @@ export default function ArtisanProfile() {
           <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white px-6 py-4">
             <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900">
               <Camera className="h-5 w-5 text-indigo-600" />
-              Profile photo
+              Photo de profil
             </h2>
-            <p className="mt-1 text-xs text-slate-500">Add a photo to personalize your profile.</p>
+            <p className="mt-1 text-xs text-slate-500">Ajoutez une photo pour personnaliser votre profil.</p>
           </div>
           <div className="p-6">
             <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
@@ -361,7 +373,7 @@ export default function ArtisanProfile() {
                 {imagePreview ? (
                   <img
                     src={imagePreview}
-                    alt="Profile preview"
+                    alt="Apercu du profil"
                     className="h-28 w-28 rounded-full object-cover ring-4 ring-indigo-100"
                   />
                 ) : (
@@ -384,7 +396,7 @@ export default function ArtisanProfile() {
                   className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-indigo-700 hover:shadow-md"
                 >
                   <Camera className="h-4 w-4" />
-                  Choose a photo
+                  Choisir une photo
                 </button>
                 <p className="mt-2 text-xs text-slate-400">JPG, PNG, GIF. Max 5MB.</p>
               </div>
@@ -392,19 +404,19 @@ export default function ArtisanProfile() {
           </div>
         </div>
 
-        {/* Personal Information */}
+        {/* Informations personnelles */}
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white px-6 py-4">
             <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900">
               <User className="h-5 w-5 text-indigo-600" />
-              Personal information
+              Informations personnelles
             </h2>
-            <p className="mt-1 text-xs text-slate-500">This information can be seen by prescribers.</p>
+            <p className="mt-1 text-xs text-slate-500">Ces informations peuvent etre vues par les prescripteurs.</p>
           </div>
           <div className="p-6">
             <div className="grid gap-5 sm:grid-cols-2">
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">First name</label>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">Prenom</label>
                 <input
                   type="text"
                   value={user?.firstName || ''}
@@ -413,7 +425,7 @@ export default function ArtisanProfile() {
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">Last name</label>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">Nom</label>
                 <input
                   type="text"
                   value={user?.lastName || ''}
@@ -423,14 +435,14 @@ export default function ArtisanProfile() {
               </div>
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                  Trade <span className="text-red-500">*</span>
+                  Metier <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={profile.trade}
                   onChange={(e) => setProfile({ ...profile, trade: e.target.value })}
                   className={`w-full rounded-xl border ${profileFormErrors.trade || profileServerErrors.trade ? 'border-red-400' : 'border-slate-200'} bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20`}
                 >
-                  <option value="">Select a trade</option>
+                  <option value="">Selectionner un metier</option>
                   {tradeOptions.map((option) => (
                     <option key={option} value={option}>{option}</option>
                   ))}
@@ -439,7 +451,7 @@ export default function ArtisanProfile() {
               </div>
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                  Phone <span className="text-red-500">*</span>
+                  Telephone <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -459,11 +471,11 @@ export default function ArtisanProfile() {
                   value={profile.description}
                   onChange={(e) => setProfile({ ...profile, description: e.target.value })}
                   rows="4"
-                  placeholder="Describe your experience, skills, and specialties..."
+                  placeholder="Decrivez votre experience, vos competences et vos specialites..."
                   className={`w-full rounded-xl border ${profileFormErrors.description || profileServerErrors.description ? 'border-red-400' : 'border-slate-200'} bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20`}
                 />
                 <FieldError error={profileFormErrors.description || profileServerErrors.description} />
-                <p className="mt-1 text-xs text-slate-400">Maximum 500 characters</p>
+                <p className="mt-1 text-xs text-slate-400">Maximum 500 caracteres</p>
               </div>
             </div>
           </div>
@@ -474,9 +486,9 @@ export default function ArtisanProfile() {
           <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white px-6 py-4">
             <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900">
               <MapPin className="h-5 w-5 text-indigo-600" />
-              Location
+              Localisation
             </h2>
-            <p className="mt-1 text-xs text-slate-500">Your position helps prescribers find you.</p>
+            <p className="mt-1 text-xs text-slate-500">Votre position aide les prescripteurs a vous trouver.</p>
           </div>
           <div className="p-6">
             <div className="mb-5">
@@ -487,7 +499,7 @@ export default function ArtisanProfile() {
                 className="inline-flex items-center gap-2 rounded-xl bg-indigo-50 px-4 py-2.5 text-sm font-medium text-indigo-700 transition-all hover:bg-indigo-100 hover:shadow-sm disabled:opacity-50"
               >
                 <Navigation className="h-4 w-4" />
-                {updatingLocation ? 'Saving location...' : 'Update my position'}
+                {updatingLocation ? 'Enregistrement de la position...' : 'Mettre a jour ma position'}
               </button>
             </div>
             <div className="grid gap-5 sm:grid-cols-2">
@@ -501,7 +513,7 @@ export default function ArtisanProfile() {
                     type="text"
                     value={profile.region}
                     onChange={(e) => setProfile({ ...profile, region: e.target.value })}
-                    placeholder="Example: Tunis, Sousse, Sfax..."
+                    placeholder="Exemple : Tunis, Sousse, Sfax..."
                     className={`w-full rounded-xl border ${profileFormErrors.region || profileServerErrors.region ? 'border-red-400' : 'border-slate-200'} bg-white pl-10 pr-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20`}
                   />
                 </div>
@@ -528,7 +540,7 @@ export default function ArtisanProfile() {
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">Postal code</label>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">Code postal</label>
                 <input
                   type="text"
                   value={profile.address.postalCode}
@@ -566,7 +578,7 @@ export default function ArtisanProfile() {
             {saving ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Saving...
+                Enregistrement...
               </>
             ) : (
               <>

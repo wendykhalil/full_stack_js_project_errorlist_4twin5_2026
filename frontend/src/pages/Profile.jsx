@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { useTranslation } from '../i18n';
 import Footer from "../components/Footer";
@@ -14,6 +15,10 @@ import {
   Tag,
   Trash2,
   Upload,
+  Lock,
+  Mail,
+  Key,
+  Send,
   Loader2,
   AlertCircle,
   CheckCircle
@@ -21,6 +26,7 @@ import {
 
 export default function Profile() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { user, refreshMe, updateProfile, changePassword, forgotPassword } = useAuth();
 
   // URL de base pour les images
@@ -95,6 +101,15 @@ export default function Profile() {
   // Determine user role
   const isArtisan = user?.role?.toLowerCase() === 'artisan';
   const isSupplier = user?.role?.toLowerCase() === 'supplier';
+  const isGenericProfile = !isArtisan && !isSupplier;
+  const roleHomePath = (() => {
+    const role = (user?.role || "").toUpperCase();
+    if (role === "ADMIN") return "/admin";
+    if (role === "ARTISAN") return "/artisan";
+    if (role === "PRESCRIPTEUR") return "/prescripteur";
+    if (role === "SUPPLIER") return "/fournisseur";
+    return "/";
+  })();
 
   // Initial load - une seule fois au montage
   const loadUser = useCallback(async () => {
@@ -112,27 +127,7 @@ export default function Profile() {
   // ✅ CORRECTION : Réinitialiser le flag quand l'utilisateur change (déconnexion/connexion)
   useEffect(() => {
     if (!user) {
-      // Si utilisateur déconnecté, réinitialiser
-      setIsInitialized(false);
-      setFirstName("");
-      setLastName("");
-      setPhone("");
-      setProfilePicture("");
-      setProfilePicturePreview("");
-      setCity("");
-      setZone("");
-      setLatitude("");
-      setLongitude("");
-      setYearsOfExperience("");
-      setSpecialty("");
-      setServiceRadius("");
-      setCompanyName("");
-      setCompanyPhone("");
-      setAddress("");
-      setDescription("");
-      setLogo("");
-      setLogoPreview("");
-      setSelectedCategories([]);
+      // Avoid wiping local form state during transient refresh cycles.
       return;
     }
 
@@ -260,6 +255,21 @@ export default function Profile() {
     });
   };
 
+  const applyMapSelection = ({ latitude: nextLatitude, longitude: nextLongitude, city: nextCity, address: nextAddress }) => {
+    setLatitude(String(nextLatitude ?? ""));
+    setLongitude(String(nextLongitude ?? ""));
+    if (nextCity) {
+      setCity(nextCity);
+      // Keep region/zone aligned with selected city for non-supplier roles
+      if (!isSupplier) setZone(nextCity);
+    }
+    if (nextAddress) {
+      if (isSupplier) setAddress(nextAddress);
+      else setZone(nextAddress.split(',')[0]?.trim() || nextAddress);
+    }
+    setIsMapPickerOpen(false);
+  };
+
   async function onSave(e) {
     e.preventDefault();
     clearProfileErrors();
@@ -342,12 +352,20 @@ export default function Profile() {
           updateData.append('firstName', firstName);
           updateData.append('lastName', lastName);
           updateData.append('phone', phone);
+          updateData.append('city', city);
+          updateData.append('zone', zone);
+          updateData.append('latitude', latitude);
+          updateData.append('longitude', longitude);
           updateData.append('profilePicture', profilePictureFile);
         } else {
           updateData = {
             firstName,
             lastName,
             phone,
+            city,
+            zone,
+            latitude,
+            longitude,
             profilePicture,
           };
         }
@@ -358,10 +376,7 @@ export default function Profile() {
       const response = await updateProfile(updateData);
       console.log('Update response:', response);
       
-      // ✅ IMPORTANT : Réinitialiser le flag pour forcer le rechargement après sauvegarde
-      setIsInitialized(false);
-      
-      // Rafraîchir les données utilisateur
+      // Rafraîchir les données utilisateur sans réinitialiser le formulaire local.
       await refreshMe();
       
       setMsg(t('profile.saveSuccess') || 'Profil mis à jour avec succès !');
@@ -416,8 +431,6 @@ export default function Profile() {
       setResetLoading(false);
     }
   }
-
-  const isGoogle = (user?.authProvider || "").toUpperCase() === "GOOGLE";
 
   return (
     <>
@@ -550,6 +563,72 @@ export default function Profile() {
               </div>
             )}
 
+            {isGenericProfile && (
+              <>
+                <div>
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    Ville
+                  </label>
+                  <input
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
+                    placeholder="Ex : Tunis"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    Region / quartier
+                  </label>
+                  <input
+                    value={zone}
+                    onChange={(e) => setZone(e.target.value)}
+                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
+                    placeholder="Ex : Lac 2"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Localisation sur la carte</label>
+                  <div className="mt-2 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/30 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="text-sm text-slate-600 dark:text-slate-300">
+                      {city || zone ? `${city || 'Ville selectionnee'}${zone ? ` - ${zone}` : ''}` : 'Choisissez votre emplacement sur la carte ou utilisez votre position actuelle.'}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsMapPickerOpen(true)}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
+                    >
+                      <MapPin className="h-4 w-4" /> Ouvrir la carte
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Latitude</label>
+                  <input
+                    value={latitude}
+                    onChange={(e) => setLatitude(e.target.value)}
+                    type="text"
+                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
+                    placeholder="Ex : 36.8065"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Longitude</label>
+                  <input
+                    value={longitude}
+                    onChange={(e) => setLongitude(e.target.value)}
+                    type="text"
+                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
+                    placeholder="Ex : 10.1815"
+                  />
+                </div>
+              </>
+            )}
+
             {isArtisan && (
               <>
                 <div>
@@ -577,17 +656,17 @@ export default function Profile() {
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Location on map</label>
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Localisation sur la carte</label>
                   <div className="mt-2 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/30 sm:flex-row sm:items-center sm:justify-between">
                     <div className="text-sm text-slate-600 dark:text-slate-300">
-                      {city || address ? `${city || 'Selected city'}${address ? ` - ${address}` : ''}` : 'Choose your place on the map or use your current position.'}
+                      {city || address ? `${city || 'Ville selectionnee'}${address ? ` - ${address}` : ''}` : 'Choisissez votre emplacement sur la carte ou utilisez votre position actuelle.'}
                     </div>
                     <button
                       type="button"
                       onClick={() => setIsMapPickerOpen(true)}
                       className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
                     >
-                      <MapPin className="h-4 w-4" /> Open map
+                      <MapPin className="h-4 w-4" /> Ouvrir la carte
                     </button>
                   </div>
                 </div>
@@ -722,17 +801,17 @@ export default function Profile() {
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Location on map</label>
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Localisation sur la carte</label>
                   <div className="mt-2 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/30 sm:flex-row sm:items-center sm:justify-between">
                     <div className="text-sm text-slate-600 dark:text-slate-300">
-                      {city || address ? `${city || 'Selected city'}${address ? ` - ${address}` : ''}` : 'Choose your company location on the map or use your current position.'}
+                      {city || address ? `${city || 'Ville selectionnee'}${address ? ` - ${address}` : ''}` : 'Choisissez la localisation de votre societe sur la carte ou utilisez votre position actuelle.'}
                     </div>
                     <button
                       type="button"
                       onClick={() => setIsMapPickerOpen(true)}
                       className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
                     >
-                      <MapPin className="h-4 w-4" /> Open map
+                      <MapPin className="h-4 w-4" /> Ouvrir la carte
                     </button>
                   </div>
                 </div>
@@ -854,141 +933,142 @@ export default function Profile() {
               </>
             )}
 
-            <div className="sm:col-span-2">
-              <button
-                type="submit"
-                disabled={saving}
-                className="w-full sm:w-auto rounded-xl bg-indigo-700 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-800 disabled:opacity-60 flex items-center justify-center gap-2"
-              >
-                {saving ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    {t('profile.savingButton') || 'Enregistrement...'}
-                  </>
-                ) : (
-                  t('profile.saveButton') || 'Enregistrer'
-                )}
-              </button>
+            <div className="sm:col-span-2 mt-2">
+              <div className="flex gap-4">
+                <button
+                  type="button"
+                  onClick={() => navigate(roleHomePath)}
+                  className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:shadow-sm"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:from-indigo-700 hover:to-indigo-600 hover:shadow-md disabled:opacity-50"
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      {t('profile.savingButton') || 'Enregistrement...'}
+                    </>
+                  ) : (
+                    t('profile.saveButton') || 'Enregistrer les modifications'
+                  )}
+                </button>
+              </div>
             </div>
           </form>
         </div>
 
-        {/* Password section - same for all roles */}
+        {/* Password section */}
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900/40 sm:p-6 lg:p-8">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
             {t('profile.passwordSection') || 'Mot de passe'}
           </h2>
-
-          {isGoogle && (
-            <div className="mt-3 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-800 dark:border-indigo-800/60 dark:bg-indigo-900/30 dark:text-indigo-200">
-              {t('profile.googleInfo') || 'Vous êtes connecté avec Google. La modification du mot de passe n\'est pas disponible.'}
-            </div>
-          )}
-
-          <form onSubmit={onChangePassword} className="mt-4 grid grid-cols-1 gap-4 sm:gap-5">
-            {!isGoogle ? (
-              <>
-                <div>
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    {t('profile.currentPasswordLabel') || 'Mot de passe actuel'}
-                  </label>
+          <div className="mt-4 grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div className="space-y-4">
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">Mot de passe actuel</label>
+                <div className="relative">
+                  <Key className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <input
+                    type="password"
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
-                    type="password"
-                    className={`mt-2 w-full rounded-xl border ${pwFieldErrors.currentPassword || pwServerErrors.currentPassword ? 'border-red-400' : 'border-slate-200'} bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950`}
-                    placeholder="••••••••"
+                    className={`w-full rounded-xl border ${pwFieldErrors.currentPassword || pwServerErrors.currentPassword ? 'border-red-400' : 'border-slate-200'} bg-white pl-10 pr-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20`}
+                    placeholder="Votre mot de passe actuel"
                   />
-                  <FieldError error={pwFieldErrors.currentPassword || pwServerErrors.currentPassword} />
                 </div>
-
-                <div>
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    {t('profile.newPasswordLabel') || 'Nouveau mot de passe'}
-                  </label>
+                <FieldError error={pwFieldErrors.currentPassword || pwServerErrors.currentPassword} />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">Nouveau mot de passe</label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <input
+                    type="password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    type="password"
-                    className={`mt-2 w-full rounded-xl border ${pwFieldErrors.newPassword || pwServerErrors.newPassword ? 'border-red-400' : 'border-slate-200'} bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950`}
-                    placeholder="••••••••"
+                    className={`w-full rounded-xl border ${pwFieldErrors.newPassword || pwServerErrors.newPassword ? 'border-red-400' : 'border-slate-200'} bg-white pl-10 pr-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20`}
+                    placeholder="Minimum 6 caractères"
                   />
-                  <FieldError error={pwFieldErrors.newPassword || pwServerErrors.newPassword} />
                 </div>
-
-                {pwErr && (
-                  <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                    {pwErr}
-                  </div>
-                )}
-                {pwGlobalError && (
-                  <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                    {pwGlobalError}
-                  </div>
-                )}
-                {pwMsg && (
-                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-                    {pwMsg}
-                  </div>
-                )}
-                {resetErr && (
-                  <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                    {resetErr}
-                  </div>
-                )}
-                {resetMsg && (
-                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-                    {resetMsg}
-                  </div>
-                )}
-
-                <div className="grid gap-3 sm:flex sm:flex-wrap">
-                  <button
-                    type="submit"
-                    disabled={pwLoading}
-                    className="w-full sm:w-auto rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 flex items-center justify-center gap-2"
-                  >
-                    {pwLoading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        {t('profile.changingPasswordButton') || 'Modification...'}
-                      </>
-                    ) : (
-                      t('profile.changePasswordButton') || 'Changer le mot de passe'
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={onSendResetLink}
-                    disabled={resetLoading}
-                    className="w-full sm:w-auto rounded-xl border border-indigo-200 bg-indigo-50 px-6 py-3 text-sm font-semibold text-indigo-700 hover:bg-indigo-100 disabled:opacity-60 flex items-center justify-center gap-2"
-                  >
-                    {resetLoading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Envoi...
-                      </>
-                    ) : (
-                      "Envoyer un lien de réinitialisation"
-                    )}
-                  </button>
+                <FieldError error={pwFieldErrors.newPassword || pwServerErrors.newPassword} />
+              </div>
+              {(pwErr || pwGlobalError) && (
+                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">
+                  {pwErr || pwGlobalError}
                 </div>
-              </>
-            ) : null}
-          </form>
+              )}
+              {pwMsg && (
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-700">
+                  {pwMsg}
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={onChangePassword}
+                disabled={pwLoading}
+                className="w-full rounded-xl bg-slate-800 px-4 py-2.5 text-sm font-semibold text-white transition-all hover:bg-slate-700 hover:shadow-md disabled:opacity-50"
+              >
+                {pwLoading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Mise à jour...
+                  </span>
+                ) : (
+                  'Changer le mot de passe'
+                )}
+              </button>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-5">
+              <div className="flex items-center gap-2 text-slate-900">
+                <Mail className="h-4 w-4 text-indigo-600" />
+                <span className="font-semibold">Lien de réinitialisation</span>
+              </div>
+              <p className="mt-2 text-sm text-slate-600">
+                Envoyer un email de réinitialisation à{' '}
+                <span className="font-medium text-indigo-600">{user?.email || 'votre adresse email'}</span>
+              </p>
+              {resetErr && (
+                <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">
+                  {resetErr}
+                </div>
+              )}
+              {resetMsg && (
+                <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-700">
+                  {resetMsg}
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={onSendResetLink}
+                disabled={resetLoading}
+                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:shadow-sm disabled:opacity-50"
+              >
+                {resetLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Envoi...
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4" />
+                    Envoyer le lien
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
 
         <MapPickerModal
           open={isMapPickerOpen}
           onClose={() => setIsMapPickerOpen(false)}
-          initialValue={{ latitude, longitude, city, address }}
-          onUsePlace={({ latitude: nextLatitude, longitude: nextLongitude, city: nextCity, address: nextAddress }) => {
-            setLatitude(String(nextLatitude));
-            setLongitude(String(nextLongitude));
-            if (nextCity) setCity(nextCity);
-            if (nextAddress) setAddress(nextAddress);
-            setIsMapPickerOpen(false);
-          }}
+          initialValue={{ latitude, longitude, city, address: isSupplier ? address : zone }}
+          onUsePlace={applyMapSelection}
         />
         <Footer />
       </div>

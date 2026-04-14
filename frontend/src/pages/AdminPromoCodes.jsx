@@ -14,7 +14,7 @@ function Modal({ open, title, onClose, children }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative w-full max-w-md rounded-3xl bg-white shadow-xl">
+      <div className="relative w-full max-w-lg rounded-3xl bg-white shadow-xl">
         <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
           <h3 className="font-semibold text-slate-900">{title}</h3>
           <button onClick={onClose} className="rounded-xl p-2 hover:bg-slate-100"><X className="h-5 w-5" /></button>
@@ -152,14 +152,14 @@ export default function AdminPromoCodes() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 p-4 sm:p-6">
+    <div className="mx-auto max-w-none space-y-7 p-5 sm:p-7">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Codes Promo</h1>
-          <p className="mt-1 text-sm text-slate-500">Gérez les remises pour les abonnements</p>
+          <h1 className="text-3xl font-bold text-slate-900">Codes Promo</h1>
+          <p className="mt-1.5 text-base text-slate-500">Gérez les remises pour les abonnements</p>
         </div>
         <button onClick={() => { setForm(emptyForm); setCreateOpen(true); }}
-          className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700">
+          className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white hover:bg-indigo-700">
           <Plus className="h-4 w-4" /> Nouveau code
         </button>
       </div>
@@ -174,17 +174,17 @@ export default function AdminPromoCodes() {
           <p className="mt-2 text-slate-500">Aucun code promo créé.</p>
         </div>
       ) : (
-        <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+          <table className="w-full text-[15px]">
             <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-400">
               <tr>
-                <th className="px-4 py-3 text-left">Code</th>
-                <th className="px-4 py-3 text-left">Remise</th>
-                <th className="px-4 py-3 text-left">Utilisations</th>
-                <th className="px-4 py-3 text-left">Expiration</th>
-                <th className="px-4 py-3 text-left">Plan</th>
-                <th className="px-4 py-3 text-left">Statut</th>
-                <th className="px-4 py-3 text-left">Actions</th>
+                <th className="px-5 py-3.5 text-left">Code</th>
+                <th className="px-5 py-3.5 text-left">Remise</th>
+                <th className="px-5 py-3.5 text-left">Utilisations</th>
+                <th className="px-5 py-3.5 text-left">Expiration</th>
+                <th className="px-5 py-3.5 text-left">Plan</th>
+                <th className="px-5 py-3.5 text-left">Statut</th>
+                <th className="px-5 py-3.5 text-left">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -193,16 +193,16 @@ export default function AdminPromoCodes() {
                 const exhausted = c.maxUses !== null && c.usedCount >= c.maxUses;
                 return (
                   <tr key={c._id} className="hover:bg-slate-50">
-                    <td className="px-4 py-3 font-mono font-semibold text-slate-900">{c.code}</td>
-                    <td className="px-4 py-3 text-emerald-600 font-semibold">{c.discountPercent}%</td>
-                    <td className="px-4 py-3 text-slate-600">
+                    <td className="px-5 py-4 font-mono font-semibold text-slate-900">{c.code}</td>
+                    <td className="px-5 py-4 text-emerald-600 font-semibold">{c.discountPercent}%</td>
+                    <td className="px-5 py-4 text-slate-600">
                       {c.usedCount}{c.maxUses !== null ? ` / ${c.maxUses}` : ' / ∞'}
                     </td>
-                    <td className="px-4 py-3 text-slate-500">
+                    <td className="px-5 py-4 text-slate-500">
                       {c.expiresAt ? new Date(c.expiresAt).toLocaleDateString("fr-TN") : "—"}
                     </td>
-                    <td className="px-4 py-3 text-slate-500 capitalize">{c.appliesTo}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-4 text-slate-500 capitalize">{c.appliesTo}</td>
+                    <td className="px-5 py-4">
                       {expired || exhausted ? (
                         <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-600">
                           {expired ? "Expiré" : "Épuisé"}
@@ -213,7 +213,7 @@ export default function AdminPromoCodes() {
                         <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-500">Inactif</span>
                       )}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-4">
                       <div className="flex items-center gap-2">
                         <button onClick={() => toggleActive(c)} title={c.isActive ? "Désactiver" : "Activer"}
                           className="rounded-lg p-1.5 hover:bg-slate-100">

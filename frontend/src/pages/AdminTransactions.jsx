@@ -103,21 +103,21 @@ export default function AdminTransactions() {
   const stats = data?.stats || {};
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
+    <div className="mx-auto max-w-none space-y-7 p-5 sm:p-7">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Transactions</h1>
-          <p className="mt-1 text-sm text-slate-500">Vue globale des flux financiers de la plateforme</p>
+          <h1 className="text-3xl font-bold text-slate-900">Transactions</h1>
+          <p className="mt-1.5 text-base text-slate-500">Vue globale des flux financiers de la plateforme</p>
         </div>
         <button onClick={exportCSV}
-          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
+          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">
           <Download className="h-4 w-4" /> Exporter CSV
         </button>
       </div>
 
       {/* Stats */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard icon={<ShoppingCart className="h-5 w-5 text-indigo-600" />}
           label="Commandes" value={stats.totalOrders || 0}
           sub={`${stats.deliveredOrders || 0} livrées`} color="bg-indigo-50" />
@@ -133,16 +133,16 @@ export default function AdminTransactions() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-4">
         <div className="relative flex-1 min-w-48">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <input value={q} onChange={e => { setQ(e.target.value); setPage(1); }}
             placeholder="Rechercher par référence, utilisateur…"
-            className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-4 text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+            className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-9 pr-4 text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
         <div className="relative">
           <select value={typeFilter} onChange={e => { setTypeFilter(e.target.value); setPage(1); }}
-            className="appearance-none rounded-xl border border-slate-200 bg-white px-4 py-2.5 pr-8 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+            className="appearance-none rounded-xl border border-slate-200 bg-white px-4 py-3 pr-8 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
             <option value="all">Tous les types</option>
             <option value="order">Commandes</option>
             <option value="subscription">Abonnements</option>
@@ -152,7 +152,7 @@ export default function AdminTransactions() {
         </div>
         <div className="relative">
           <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
-            className="appearance-none rounded-xl border border-slate-200 bg-white px-4 py-2.5 pr-8 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+            className="appearance-none rounded-xl border border-slate-200 bg-white px-4 py-3 pr-8 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
             <option value="all">Tous les statuts</option>
             <option value="DELIVERED">Livré</option>
             <option value="PAID">Payé</option>
@@ -166,20 +166,20 @@ export default function AdminTransactions() {
 
       {/* Table */}
       <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
-        <div className="border-b border-slate-100 px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">
+        <div className="border-b border-slate-100 px-6 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide">
           {filtered.length} transaction(s)
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-[15px]">
             <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-400">
               <tr>
-                <th className="px-4 py-3 text-left">Référence</th>
-                <th className="px-4 py-3 text-left">Type</th>
-                <th className="px-4 py-3 text-left">Utilisateur</th>
-                <th className="px-4 py-3 text-left">Description</th>
-                <th className="px-4 py-3 text-right">Montant</th>
-                <th className="px-4 py-3 text-left">Statut</th>
-                <th className="px-4 py-3 text-left">Date</th>
+                <th className="px-5 py-3.5 text-left">Référence</th>
+                <th className="px-5 py-3.5 text-left">Type</th>
+                <th className="px-5 py-3.5 text-left">Utilisateur</th>
+                <th className="px-5 py-3.5 text-left">Description</th>
+                <th className="px-5 py-3.5 text-right">Montant</th>
+                <th className="px-5 py-3.5 text-left">Statut</th>
+                <th className="px-5 py-3.5 text-left">Date</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -187,15 +187,15 @@ export default function AdminTransactions() {
                 <tr><td colSpan={7} className="py-12 text-center text-slate-400">Aucune transaction trouvée</td></tr>
               ) : paginated.map(t => (
                 <tr key={t._id} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-4 py-3 font-mono text-xs text-slate-600">{t.ref || "—"}</td>
-                  <td className="px-4 py-3"><TypeBadge type={t.type} /></td>
-                  <td className="px-4 py-3 text-slate-700">{t.user || "—"}</td>
-                  <td className="px-4 py-3 text-slate-600 max-w-xs truncate">{t.description || "—"}</td>
-                  <td className="px-4 py-3 text-right font-semibold text-slate-900">
+                  <td className="px-5 py-4 font-mono text-xs text-slate-600">{t.ref || "—"}</td>
+                  <td className="px-5 py-4"><TypeBadge type={t.type} /></td>
+                  <td className="px-5 py-4 text-slate-700">{t.user || "—"}</td>
+                  <td className="px-5 py-4 text-slate-600 max-w-sm truncate">{t.description || "—"}</td>
+                  <td className="px-5 py-4 text-right font-semibold text-slate-900">
                     {t.amount ? `${Number(t.amount).toLocaleString()} TND` : "—"}
                   </td>
-                  <td className="px-4 py-3"><Pill status={t.status} /></td>
-                  <td className="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">
+                  <td className="px-5 py-4"><Pill status={t.status} /></td>
+                  <td className="px-5 py-4 text-slate-500 text-xs whitespace-nowrap">
                     {new Date(t.date).toLocaleDateString("fr-TN", { day: "2-digit", month: "short", year: "numeric" })}
                   </td>
                 </tr>

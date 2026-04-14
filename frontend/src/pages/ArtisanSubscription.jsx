@@ -143,13 +143,13 @@ export default function ArtisanSubscription() {
   if (subLoading) return <div className="py-20 text-center text-slate-400">Chargement…</div>;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white py-10">
-      <div className="mx-auto max-w-5xl px-4 space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white py-12">
+      <div className="mx-auto max-w-none px-5 sm:px-7 space-y-9">
 
         {/* Header */}
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-slate-900">Abonnement</h1>
-          <p className="mt-2 text-slate-500">Gérez votre plan et accédez à toutes les fonctionnalités</p>
+          <h1 className="text-5xl font-bold text-slate-900">Abonnement</h1>
+          <p className="mt-2.5 text-lg text-slate-500">Gérez votre plan et accédez à toutes les fonctionnalités</p>
         </div>
 
         {/* Expiry banner */}
@@ -157,7 +157,7 @@ export default function ArtisanSubscription() {
 
         {/* Current plan card */}
         {sub && (
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-slate-200 bg-white p-7 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <div className="rounded-2xl bg-indigo-50 p-3">
@@ -165,7 +165,7 @@ export default function ArtisanSubscription() {
                 </div>
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Plan actuel</p>
-                  <p className="text-xl font-bold text-slate-900">
+                    <p className="text-2xl font-bold text-slate-900">
                     {PLAN_FEATURES[sub.plan]?.label || sub.plan}
                     {sub.isOnTrial && <span className="ml-2 rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-700">Essai</span>}
                   </p>
@@ -178,13 +178,13 @@ export default function ArtisanSubscription() {
               <div className="flex items-center gap-3">
                 {sub.history?.length > 0 && (
                   <button onClick={() => setShowHistory(h => !h)}
-                    className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">
+                    className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-5 py-2.5 text-sm text-slate-600 hover:bg-slate-50">
                     <History className="h-4 w-4" /> Historique
                   </button>
                 )}
                 {isActive && sub.status !== 'CANCELED' && (
                   <button onClick={handleCancel} disabled={canceling}
-                    className="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-100 disabled:opacity-50">
+                    className="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-5 py-2.5 text-sm font-medium text-red-600 hover:bg-red-100 disabled:opacity-50">
                     <XCircle className="h-4 w-4" /> {canceling ? 'Annulation…' : 'Annuler'}
                   </button>
                 )}
@@ -210,7 +210,7 @@ export default function ArtisanSubscription() {
 
         {/* Trial CTA — only if FREE and never trialed */}
         {(!sub || sub.plan === 'FREE') && !sub?.history?.some(h => h.note?.includes('Trial')) && (
-          <div className="rounded-2xl border border-purple-200 bg-gradient-to-r from-purple-50 to-indigo-50 p-6 flex flex-wrap items-center justify-between gap-4">
+          <div className="rounded-2xl border border-purple-200 bg-gradient-to-r from-purple-50 to-indigo-50 p-7 flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <Zap className="h-6 w-6 text-purple-600 shrink-0" />
               <div>
@@ -219,7 +219,7 @@ export default function ArtisanSubscription() {
               </div>
             </div>
             <button onClick={handleTrial} disabled={trialLoading}
-              className="rounded-xl bg-purple-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-purple-700 disabled:opacity-50">
+              className="rounded-xl bg-purple-600 px-6 py-3 text-sm font-semibold text-white hover:bg-purple-700 disabled:opacity-50">
               {trialLoading ? 'Activation…' : 'Démarrer l\'essai gratuit'}
             </button>
           </div>
@@ -233,26 +233,26 @@ export default function ArtisanSubscription() {
 
         {/* Features comparison table */}
         <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
-          <div className="px-6 py-4 border-b border-slate-100">
-            <h2 className="font-semibold text-slate-900">Comparaison des plans</h2>
+          <div className="px-7 py-4.5 border-b border-slate-100">
+            <h2 className="text-lg font-semibold text-slate-900">Comparaison des plans</h2>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-[15px]">
               <thead>
                 <tr className="border-b border-slate-100">
-                  <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Fonctionnalité</th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-400">Gratuit</th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-indigo-600">Basic</th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-purple-600">Pro</th>
+                  <th className="px-7 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Fonctionnalité</th>
+                  <th className="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wide text-slate-400">Gratuit</th>
+                  <th className="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wide text-indigo-600">Basic</th>
+                  <th className="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wide text-purple-600">Pro</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {FEATURES_TABLE.map((row, i) => (
                   <tr key={i} className="hover:bg-slate-50">
-                    <td className="px-6 py-3 text-slate-700">{row.label}</td>
-                    <td className="px-4 py-3 text-center"><FeatureCell value={row.free} /></td>
-                    <td className="px-4 py-3 text-center"><FeatureCell value={row.basic} /></td>
-                    <td className="px-4 py-3 text-center"><FeatureCell value={row.pro} /></td>
+                    <td className="px-7 py-3.5 text-slate-700">{row.label}</td>
+                    <td className="px-5 py-3.5 text-center"><FeatureCell value={row.free} /></td>
+                    <td className="px-5 py-3.5 text-center"><FeatureCell value={row.basic} /></td>
+                    <td className="px-5 py-3.5 text-center"><FeatureCell value={row.pro} /></td>
                   </tr>
                 ))}
               </tbody>
@@ -261,20 +261,20 @@ export default function ArtisanSubscription() {
         </div>
 
         {/* Plan selection */}
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-7 md:grid-cols-2">
           {Object.entries(plans).map(([key, plan]) => (
             <div key={key} onClick={() => selectPlan(key)}
-              className={`cursor-pointer rounded-2xl border p-6 transition-all ${selectedPlan === key ? 'border-indigo-500 ring-2 ring-indigo-500 bg-indigo-50/30' : 'border-slate-200 bg-white hover:border-indigo-200'} relative`}>
+              className={`cursor-pointer rounded-2xl border p-7 transition-all ${selectedPlan === key ? 'border-indigo-500 ring-2 ring-indigo-500 bg-indigo-50/30' : 'border-slate-200 bg-white hover:border-indigo-200'} relative`}>
               {key === 'yearly' && (
-                <div className="absolute -top-3 left-6 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 px-3 py-1 text-xs font-semibold text-white">
+                <div className="absolute -top-3 left-7 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 px-3 py-1 text-xs font-semibold text-white">
                   MEILLEURE VALEUR
                 </div>
               )}
               <div className="flex items-center justify-between">
-                <h3 className="text-xl font-semibold text-slate-900">{plan.name}</h3>
+                <h3 className="text-2xl font-semibold text-slate-900">{plan.name}</h3>
                 {selectedPlan === key && <CheckCircle className="h-5 w-5 text-indigo-600" />}
               </div>
-              <p className="mt-2 text-3xl font-bold text-indigo-600">
+              <p className="mt-2 text-4xl font-bold text-indigo-600">
                 {plan.price} TND<span className="text-sm font-normal text-slate-500">/{plan.interval}</span>
               </p>
               <ul className="mt-4 space-y-2">
@@ -291,10 +291,10 @@ export default function ArtisanSubscription() {
         {/* Payment form */}
         {selectedPlan && (
           <div className="mx-auto max-w-md">
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
+            <div className="rounded-2xl border border-slate-200 bg-white p-7 shadow-sm">
+              <div className="flex items-center gap-2 border-b border-slate-200 pb-3.5">
                 <CreditCard className="h-5 w-5 text-indigo-600" />
-                <h3 className="font-semibold text-slate-900">{plans[selectedPlan].name}</h3>
+                <h3 className="text-lg font-semibold text-slate-900">{plans[selectedPlan].name}</h3>
                 <span className="ml-auto font-bold text-indigo-600">
                   {promoDiscount > 0 ? (
                     <><span className="line-through text-slate-400 text-sm font-normal mr-1">{plans[selectedPlan].price} TND</span>{getFinalPrice(plans[selectedPlan].price)} TND</>
@@ -348,12 +348,6 @@ export default function ArtisanSubscription() {
           </div>
         )}
 
-        <div className="text-center">
-          <button onClick={() => navigate(from)}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-5 py-2.5 text-slate-700 hover:bg-slate-100">
-            Retour <ArrowRight className="h-4 w-4" />
-          </button>
-        </div>
       </div>
     </div>
   );

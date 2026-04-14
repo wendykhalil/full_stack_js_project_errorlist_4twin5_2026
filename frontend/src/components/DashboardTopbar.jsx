@@ -12,43 +12,43 @@ const ROLE_CONFIG = {
     home: "/admin",
     roleLabel: "Admin",
     pages: [
-      { to: "/admin", label: "Dashboard", keywords: ["home", "overview", "tableau de bord"] },
-      { to: "/admin/profile", label: "Profile", keywords: ["settings", "account", "password"] },
-      {  to: "/chat",label: "AI Assistant",icon: "🤖",},
-      { to: "/admin/users", label: "Users", keywords: ["team", "members", "utilisateurs"] },
-      { to: "/admin/activity", label: "Activity", keywords: ["logs", "journal", "history"] },
-      { to: "/admin/transactions", label: "Transactions", keywords: ["payments", "billing"] },
+      { to: "/admin", label: "Tableau de bord", keywords: ["home", "overview", "tableau de bord"] },
+      { to: "/admin/profile", label: "Profil", keywords: ["settings", "account", "password", "profil"] },
+      {  to: "/chat",label: "Assistant IA",icon: "🤖",},
+      { to: "/admin/users", label: "Utilisateurs", keywords: ["team", "members", "utilisateurs"] },
+      { to: "/admin/activity", label: "Activite", keywords: ["logs", "journal", "history", "activite"] },
+      { to: "/admin/transactions", label: "Transactions", keywords: ["payments", "billing", "paiements"] },
     ],
   },
   ARTISAN: {
     home: "/artisan",
     roleLabel: "Artisan",
     pages: [
-      { to: "/artisan", label: "Dashboard", keywords: ["home", "overview", "tableau de bord"] },
-      {  to: "/chat",label: "AI Assistant",icon: "🤖",},
+      { to: "/artisan", label: "Tableau de bord", keywords: ["home", "overview", "tableau de bord"] },
+      {  to: "/chat",label: "Assistant IA",icon: "🤖",},
 
-      { to: "/artisan/profile", label: "Profile", keywords: ["account", "settings", "reset password", "profil"] },
-      { to: "/artisan/projects", label: "Projects", keywords: ["chantier", "project list", "projets"] },
+      { to: "/artisan/profile", label: "Profil", keywords: ["account", "settings", "reset password", "profil"] },
+      { to: "/artisan/projects", label: "Projets", keywords: ["chantier", "project list", "projets"] },
       { to: "/artisan/portfolio", label: "Portfolio", keywords: ["gallery", "images", "travaux"] },
-      { to: "/artisan/devis/create", label: "Quotes", keywords: ["devis", "quote", "estimate"] },
-      { to: "/artisan/factures", label: "Invoices", keywords: ["invoice", "factures", "billing"] },
-      { to: "/artisan/orders", label: "Orders", keywords: ["commandes", "purchases"] },
+      { to: "/artisan/devis/create", label: "Devis", keywords: ["devis", "quote", "estimate"] },
+      { to: "/artisan/factures", label: "Factures", keywords: ["invoice", "factures", "billing"] },
+      { to: "/artisan/orders", label: "Commandes", keywords: ["commandes", "purchases"] },
       { to: "/artisan/messages", label: "Messages", keywords: ["chat", "conversation", "inbox"] },
-      { to: "/artisan/marketplace", label: "Marketplace", keywords: ["products", "catalog"] },
-      { to: "/artisan/subscription", label: "Subscription", keywords: ["plan", "abonnement", "pro"] },
+      { to: "/artisan/marketplace", label: "Place de marche", keywords: ["products", "catalog", "marketplace"] },
+      { to: "/artisan/subscription", label: "Abonnement", keywords: ["plan", "abonnement", "pro"] },
     ],
   },
   PRESCRIPTEUR: {
     home: "/prescripteur",
     roleLabel: "Prescripteur",
     pages: [
-      { to: "/prescripteur", label: "Products", keywords: ["catalog", "produits"] },
-            {  to: "/chat",label: "AI Assistant",icon: "🤖",},
+      { to: "/prescripteur", label: "Produits", keywords: ["catalog", "produits"] },
+            {  to: "/chat",label: "Assistant IA",icon: "🤖",},
 
-      { to: "/prescripteur/profile", label: "Profile", keywords: ["account", "settings", "password"] },
+      { to: "/prescripteur/profile", label: "Profil", keywords: ["account", "settings", "password", "profil"] },
       { to: "/prescripteur/artisans", label: "Artisans", keywords: ["workers", "providers"] },
-      { to: "/prescripteur/projects", label: "Projects", keywords: ["projets", "sites"] },
-      { to: "/prescripteur/search", label: "Search", keywords: ["find", "rechercher"] },
+      { to: "/prescripteur/projects", label: "Projets", keywords: ["projets", "sites"] },
+      { to: "/prescripteur/search", label: "Recherche", keywords: ["find", "rechercher"] },
       { to: "/prescripteur/messages", label: "Messages", keywords: ["chat", "inbox"] },
     ],
   },
@@ -56,13 +56,13 @@ const ROLE_CONFIG = {
     home: "/fournisseur/produits",
     roleLabel: "Fournisseur",
     pages: [
-      { to: "/fournisseur/profile", label: "Profile", keywords: ["account", "settings", "password"] },
-            {  to: "/chat",label: "AI Assistant",icon: "🤖",},
+      { to: "/fournisseur/profile", label: "Profil", keywords: ["account", "settings", "password", "profil"] },
+            {  to: "/chat",label: "Assistant IA",icon: "🤖",},
 
-      { to: "/fournisseur/orders", label: "Orders", keywords: ["commandes", "sales"] },
-      { to: "/fournisseur/marketplace", label: "Marketplace", keywords: ["catalog", "products"] },
-      { to: "/fournisseur/produits", label: "Products", keywords: ["items", "inventory"] },
-      { to: "/fournisseur/produits/new", label: "New product", keywords: ["create product", "add product"] },
+      { to: "/fournisseur/orders", label: "Commandes", keywords: ["commandes", "sales"] },
+      { to: "/fournisseur/marketplace", label: "Place de marche", keywords: ["catalog", "products", "marketplace"] },
+      { to: "/fournisseur/produits", label: "Produits", keywords: ["items", "inventory"] },
+      { to: "/fournisseur/produits/new", label: "Nouveau produit", keywords: ["create product", "add product", "nouveau produit"] },
       { to: "/fournisseur/messages", label: "Messages", keywords: ["chat", "inbox"] },
     ],
   },
@@ -167,7 +167,7 @@ export default function DashboardTopbar({ role = "ARTISAN", unreadCount = 0 }) {
   return (
     <div className="flex h-16 items-center justify-between gap-4 border-b border-slate-200 bg-white px-5 dark:border-slate-800 dark:bg-slate-900">
       <div className="min-w-[180px] text-sm font-medium text-slate-600 dark:text-slate-300">
-        {new Intl.DateTimeFormat(undefined, {
+        {new Intl.DateTimeFormat("fr-FR", {
           weekday: "short",
           year: "numeric",
           month: "short",
@@ -186,7 +186,7 @@ export default function DashboardTopbar({ role = "ARTISAN", unreadCount = 0 }) {
               onChange={(event) => setQuery(event.target.value)}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setTimeout(() => setIsFocused(false), 220)}
-              placeholder="Search pages, projects, quotes, invoices..."
+              placeholder="Rechercher pages, projets, devis, factures..."
               className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400 dark:text-slate-200"
             />
           </label>

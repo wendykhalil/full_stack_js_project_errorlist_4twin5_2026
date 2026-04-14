@@ -67,7 +67,7 @@ export default function ArtisanLayout() {
 
   const navItems = [
     { to: "/artisan/profile", label: "Profil", icon: <UserCircle2 className="h-5 w-5" /> },
-    { to: "/artisan/marketplace", label: "Marketplace", icon: <ShoppingCart className="h-5 w-5" /> },
+    { to: "/artisan/marketplace", label: "Place de marche", icon: <ShoppingCart className="h-5 w-5" /> },
     { to: "/artisan/subscription", label: "Abonnement", icon: <ShieldCheck className="h-5 w-5" /> },
     { to: "/artisan", label: "Tableau de bord", icon: <LayoutDashboard className="h-5 w-5" />, end: true },
     { to: "/artisan/projects", label: "Projets", icon: <FolderKanban className="h-5 w-5" /> },
@@ -75,7 +75,7 @@ export default function ArtisanLayout() {
     { to: "/artisan/devis/create", label: "Creer un devis", icon: <FileText className="h-5 w-5" /> },
     { to: "/artisan/factures", label: "Factures", icon: <Receipt className="h-5 w-5" /> },
     { to: "/artisan/weather", label:"Météo", icon:<Cloud className="h-5 w-5" />},
-    { to: "/artisan/availability", label: "Disponibilités", icon: <CalendarDays className="h-5 w-5" /> },
+    { to: "/artisan/availability", label: "Disponibilités", icon: <CalendarDays className="h-6 w-6" /> },
     { to: "/artisan/service-requests", label: "Missions", icon: <ClipboardList className="h-5 w-5" /> },
     { to: "/artisan/orders", label: "Mes commandes", icon: <Package className="h-5 w-5" /> },
     { to: "/artisan/messages", label: "Messages", icon: messageIcon },
@@ -99,8 +99,8 @@ export default function ArtisanLayout() {
   const footerMeta = "Artisan";
 
   const settingsItems = [
-    { to: "/artisan/profile", label: "Profile", icon: <UserCircle2 className="h-4 w-4" /> },
-    { to: "/artisan/profile", label: "Reset password", icon: <ShieldCheck className="h-4 w-4" /> },
+    { to: "/artisan/profile", label: "Profil", icon: <UserCircle2 className="h-4 w-4" /> },
+    { to: "/artisan/profile", label: "Reinitialiser le mot de passe", icon: <ShieldCheck className="h-4 w-4" /> },
   ];
 
   return (

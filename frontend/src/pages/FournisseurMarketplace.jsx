@@ -37,7 +37,7 @@ const ProductCard = ({
       <div className="relative h-48 w-full">
         {!imgLoaded && !imgError && (
           <div className="absolute inset-0 flex items-center justify-center bg-slate-100 rounded-xl">
-            <span className="text-slate-400">Loading...</span>
+            <span className="text-slate-400">Chargement...</span>
           </div>
         )}
         <img
@@ -210,16 +210,16 @@ export default function FournisseurMarketplace() {
         <>
           <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {products.map((product) => {
-              const imageUrl = product.imageUrls?.[0] || 'https://via.placeholder.com/300x200?text=No+Image';
+              const imageUrl = product.imageUrls?.[0] || 'https://via.placeholder.com/300x200?text=Pas+d%27image';
               return (
                 <ProductCard
                   key={product._id}
                   product={product}
                   image={imageUrl}
-                  category={product.categoryId?.name || 'Uncategorized'}
+                  category={product.categoryId?.name || 'Non categorie'}
                   title={product.name}
-                  description={product.description || 'No description'}
-                  supplier={product.supplierId?.companyName || 'Unknown Supplier'}
+                  description={product.description || 'Aucune description'}
+                  supplier={product.supplierId?.companyName || 'Fournisseur inconnu'}
                   price={product.price?.toFixed(2) || '0.00'}
                   unit={product.unit || 'piece'}
                   onDetailClick={handleDetailsClick}

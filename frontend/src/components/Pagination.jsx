@@ -18,7 +18,7 @@ export default function Pagination({ page = 1, pages = 1, onPageChange, classNam
         className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
       >
         <ChevronLeft className="h-4 w-4" />
-        Prev
+        Precedent
       </button>
 
       <div className="flex items-center gap-2">
@@ -42,7 +42,7 @@ export default function Pagination({ page = 1, pages = 1, onPageChange, classNam
         disabled={page >= pages}
         className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        Next
+        Suivant
         <ChevronRight className="h-4 w-4" />
       </button>
     </div>

@@ -60,11 +60,11 @@ const ProductCard = ({
       <div className="relative h-48 w-full">
         {!imgLoaded && !imgError && (
           <div className="absolute inset-0 flex items-center justify-center bg-slate-100 rounded-xl">
-            <span className="text-slate-400">Loading...</span>
+            <span className="text-slate-400">Chargement...</span>
           </div>
         )}
         <img
-          src={imgError ? 'https://via.placeholder.com/300x200?text=No+Image' : image}
+          src={imgError ? 'https://via.placeholder.com/300x200?text=Pas+d%27image' : image}
           alt={title}
           className="h-48 w-full rounded-xl object-cover"
           onError={() => setImgError(true)}
@@ -313,14 +313,14 @@ export default function ArtisanMarketplace() {
       </div>
 
       {loading ? (
-        <div className="mt-8 text-center py-12">Loading products...</div>
+        <div className="mt-8 text-center py-12">Chargement des produits...</div>
       ) : error ? (
         <div className="mt-8 text-center py-12 text-red-600">
-          Error loading products: {error}
+          Erreur lors du chargement des produits : {error}
         </div>
       ) : products.length === 0 ? (
         <div className="mt-8 text-center py-12 text-slate-500">
-          No products found in the marketplace.
+          Aucun produit trouve dans la marketplace.
         </div>
       ) : (
         <>
@@ -328,17 +328,17 @@ export default function ArtisanMarketplace() {
             {products.map((product) => {
               const imageUrl = product.imageUrls?.[0] 
                 ? product.imageUrls[0]
-                : 'https://via.placeholder.com/300x200?text=No+Image';
+                : 'https://via.placeholder.com/300x200?text=Pas+d%27image';
               
               return (
                 <ProductCard
                   key={product._id}
                   product={product}
                   image={imageUrl}
-                  category={product.categoryId?.name || 'Uncategorized'}
+                  category={product.categoryId?.name || 'Non categorie'}
                   title={product.name}
-                  description={product.description || 'No description'}
-                  supplier={product.supplierId?.companyName || 'Unknown Supplier'}
+                  description={product.description || 'Aucune description'}
+                  supplier={product.supplierId?.companyName || 'Fournisseur inconnu'}
                   price={product.price?.toFixed(2) || '0.00'}
                   unit={product.unit || 'piece'}
                   onDetailsClick={handleDetailsClick}

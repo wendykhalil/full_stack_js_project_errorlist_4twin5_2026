@@ -43,7 +43,7 @@ export default function ArtisanPublicProfile() {
   const [sending, setSending] = useState(false);
 
   const { errors: msgFormErrors, validate: validateMsg } = useFormValidation({
-    message: [rules.required('Message requis'), rules.minLength(10, 'Minimum 10 caractères'), rules.maxLength(500)],
+    message: [rules.required('Message requis'), rules.maxLength(500)],
   });
   const { fieldErrors: msgServerErrors, globalError: msgGlobalError, handleError: handleMsgError, clearErrors: clearMsgErrors } = useServerErrors();
   const [reviewStats, setReviewStats] = useState({ avgRating: 0, total: 0 });

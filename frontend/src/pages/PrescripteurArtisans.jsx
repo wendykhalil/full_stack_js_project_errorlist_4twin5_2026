@@ -137,6 +137,7 @@ export default function PrescripteurArtisans() {
     latitude: null,
     longitude: null
   });
+  const [searchTerm, setSearchTerm] = useState('');
 
   const [locationStatus, setLocationStatus] = useState('');
 
@@ -219,6 +220,19 @@ export default function PrescripteurArtisans() {
     searchArtisans(1, filters);
   }, []);
 
+  // Dynamic search while typing in the quick search bar
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const term = searchTerm.trim();
+      const nextFilters = { ...filters, specialty: term, region: term };
+      setFilters(nextFilters);
+      setPagination(prev => ({ ...prev, page: 1 }));
+      searchArtisans(1, nextFilters);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
@@ -239,6 +253,7 @@ export default function PrescripteurArtisans() {
       longitude: null
     };
     setFilters(newFilters);
+    setSearchTerm('');
     setLocationStatus('');
     searchArtisans(1, newFilters);
     setShowFilters(false);
@@ -282,12 +297,8 @@ export default function PrescripteurArtisans() {
             <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
               placeholder={t('prescripteurArtisans.searchPlaceholder', 'Rechercher un artisan...')}
-              value={filters.specialty || filters.region}
-              onChange={(e) => {
-                const value = e.target.value;
-                setFilters(prev => ({ ...prev, specialty: value, region: value }));
-              }}
-              onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
             />
           </div>

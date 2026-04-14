@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Bot, FileSignature, Loader2, Plus, Sparkles, Trash2 } from "lucide-react";
+import { Bot, FileSignature, Loader2, Plus, Sparkles, Trash2 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import SimpleFooter from "../components/Footer";
@@ -291,14 +291,7 @@ export default function ArtisanDevisCreate() {
     <PageShell>
       <div className="min-h-screen bg-slate-50">
         <main className="mx-auto max-w-none px-4 py-8">
-          <button
-            onClick={() => navigate(-1)}
-            className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
-          >
-            <ArrowLeft className="h-4 w-4" /> Retour
-          </button>
-
-          <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex items-start gap-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-50 text-orange-600">
                 <FileSignature className="h-6 w-6" />

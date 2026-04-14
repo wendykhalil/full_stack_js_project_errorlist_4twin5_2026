@@ -1,9 +1,47 @@
 const Devis = require('../../models/Devis');
 const Facture = require('../../models/Facture');
 const Project = require('../../models/Project');
+const ActivityLog = require('../../models/ActivityLog');
+const { lookupIpGeo, isPrivateOrLocal } = require('../../utils/ipGeo');
 
 function getUserId(req) {
   return req.user?._id || req.user?.id || req.user?.sub || req.user?.userId;
+}
+
+function normalizeIp(ip) {
+  const raw = String(ip || '').trim();
+  if (!raw) return '';
+  const clean = raw.split(',')[0].trim();
+  if (clean.startsWith('::ffff:')) return clean.slice(7);
+  return clean;
+}
+
+function getRequestMeta(req) {
+  const forwarded = req.headers['x-forwarded-for'];
+  const realIp = req.headers['x-real-ip'];
+  const clientIp = req.headers['x-client-ip'];
+  const fallbackIp = normalizeIp(Array.isArray(forwarded) ? forwarded[0] : forwarded) || normalizeIp(realIp) || normalizeIp(req.ip) || '';
+  const ip = (!fallbackIp || isPrivateOrLocal(fallbackIp)) ? normalizeIp(clientIp) || fallbackIp : fallbackIp;
+  const userAgent = req.get('user-agent') || '';
+  const country = String(req.headers['x-client-country'] || '').trim();
+  const countryCode = String(req.headers['x-client-country-code'] || '').trim();
+  return { ip, userAgent, country, countryCode };
+}
+
+async function logActivity(req, userId, action, details = {}) {
+  try {
+    const { ip, userAgent, country: clientCountry, countryCode: clientCountryCode } = getRequestMeta(req);
+    const geo = await lookupIpGeo(ip, { country: clientCountry, countryCode: clientCountryCode });
+    await ActivityLog.create({
+      user: userId,
+      action,
+      details,
+      ip,
+      country: geo.country || clientCountry || '',
+      countryCode: geo.countryCode || clientCountryCode || '',
+      userAgent,
+    });
+  } catch (_) {}
 }
 
 function normalizeLines(lines = []) {
@@ -29,11 +67,51 @@ function computeTotals(lines, taxRate = 0.19, discount = 0) {
 async function listMyDocuments(req, res, next) {
   try {
     const artisanId = getUserId(req);
-    const [quotes, invoices] = await Promise.all([
-      Devis.find({ artisanId }).sort({ createdAt: -1 }).lean(),
-      Facture.find({ artisanId }).sort({ createdAt: -1 }).lean(),
+    const [quotesRaw, invoicesRaw] = await Promise.all([
+      Devis.find({ artisanId }).sort({ createdAt: -1 }).populate('projectId', 'title').lean(),
+      Facture.find({ artisanId }).sort({ createdAt: -1 }).populate('projectId', 'title').lean(),
     ]);
+
+    const quotes = (quotesRaw || []).map((quote) => ({
+      ...quote,
+      projectTitle:
+        quote?.projectTitle ||
+        quote?.projectName ||
+        quote?.projectId?.title ||
+        '',
+      project: quote?.projectId || null,
+    }));
+
+    const invoices = (invoicesRaw || []).map((invoice) => ({
+      ...invoice,
+      projectTitle:
+        invoice?.projectTitle ||
+        invoice?.projectName ||
+        invoice?.projectId?.title ||
+        '',
+      project: invoice?.projectId || null,
+    }));
+
     return res.json({ ok: true, quotes, invoices });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function listMyDocumentActivity(req, res, next) {
+  try {
+    const artisanId = getUserId(req);
+    const limit = Math.min(100, Math.max(10, Number(req.query.limit || 50)));
+
+    const items = await ActivityLog.find({
+      user: artisanId,
+      action: { $in: ['QUOTE_CREATE', 'INVOICE_CREATE'] },
+    })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .lean();
+
+    return res.json({ ok: true, items });
   } catch (err) {
     return next(err);
   }
@@ -60,6 +138,15 @@ async function createQuote(req, res, next) {
       discount: Number(discount),
       status,
       ...totals,
+    });
+
+    await logActivity(req, artisanId, 'QUOTE_CREATE', {
+      quoteId: quote._id,
+      projectId,
+      projectTitle: project.title || '',
+      lineCount: normalizedLines.length,
+      total: totals.total,
+      status,
     });
 
     const response = { ok: true, quote };
@@ -102,6 +189,16 @@ async function createInvoice(req, res, next) {
       ...(dueDate ? { dueDate: new Date(dueDate) } : {}),
     });
 
+    const project = await Project.findById(quote.projectId).select('title').lean();
+    await logActivity(req, artisanId, 'INVOICE_CREATE', {
+      invoiceId: invoice._id,
+      quoteId: devisId,
+      projectId: quote.projectId,
+      projectTitle: project?.title || '',
+      total: quote.total,
+      status,
+    });
+
     const response = { ok: true, invoice };
 
     // Add trial information if this was a trial attempt
@@ -120,6 +217,7 @@ async function createInvoice(req, res, next) {
 
 module.exports = {
   listMyDocuments,
+  listMyDocumentActivity,
   createQuote,
   createInvoice,
   normalizeLines,

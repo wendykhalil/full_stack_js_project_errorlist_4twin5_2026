@@ -105,7 +105,7 @@ export default function RoleWorkspace({
 
         {!isSidebarCollapsed ? (
           <>
-            <SectionLabel collapsed={isSidebarCollapsed}>Accessibility</SectionLabel>
+            <SectionLabel collapsed={isSidebarCollapsed}>Accessibilite</SectionLabel>
             <AccessibilityControls />
           </>
         ) : null}
@@ -114,7 +114,7 @@ export default function RoleWorkspace({
         <div className={`mt-4 ${isSidebarCollapsed ? "px-2" : "px-3"}`}>
           <NavLink
 to={"/" + role + "/AiChat"}            onClick={closeMobileMenu}
-            title={isSidebarCollapsed ? "AI Chat" : undefined}
+            title={isSidebarCollapsed ? "Assistant IA" : undefined}
             className={({ isActive }) =>
               `flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-200 ${
                 isActive
@@ -124,7 +124,7 @@ to={"/" + role + "/AiChat"}            onClick={closeMobileMenu}
             }
           >
             <Bot className="h-4 w-4" />
-            {!isSidebarCollapsed ? <span>AI Chat</span> : null}
+            {!isSidebarCollapsed ? <span>Assistant IA</span> : null}
           </NavLink>
         </div>
       </div>
@@ -157,7 +157,7 @@ to={"/" + role + "/AiChat"}            onClick={closeMobileMenu}
           type="button"
           onClick={() => setIsSidebarCollapsed((value) => !value)}
           className="absolute -right-3 top-20 flex h-6 w-6 items-center justify-center rounded-full border border-blue-300 bg-white text-blue-600 shadow-md transition-all"
-          aria-label="Collapse sidebar"
+          aria-label="Reduire la barre laterale"
         >
           {isSidebarCollapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
         </button>

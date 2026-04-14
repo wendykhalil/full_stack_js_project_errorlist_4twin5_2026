@@ -78,7 +78,7 @@ function ActionMenu({ open, onToggle, onView, onMessage, onCall, canMessage, can
           onToggle();
         }}
         className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-50"
-        aria-label="Project actions"
+        aria-label="Actions du projet"
       >
         <MoreVertical className="h-5 w-5" />
       </button>
@@ -87,7 +87,7 @@ function ActionMenu({ open, onToggle, onView, onMessage, onCall, canMessage, can
         <div className="absolute right-0 top-12 z-20 w-48 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl">
           <button onClick={(e) => { e.stopPropagation(); onView(); }} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50">
             <Eye className="h-4 w-4" />
-            Voir détails
+            Voir les details
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onMessage(); }}
@@ -176,7 +176,7 @@ function DetailsModal({ open, onClose, project, onMessage }) {
 
             <div className="space-y-4">
               <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
-                <h4 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Overview</h4>
+                <h4 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Apercu</h4>
                 <div className="mt-4 grid gap-4">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{tt("artisanProjects.budget", "Budget")}</p>
@@ -191,7 +191,7 @@ function DetailsModal({ open, onClose, project, onMessage }) {
                     <p className="mt-1 text-sm text-slate-700">{formatDate(project.startDate)} → {formatDate(project.endDate)}</p>
                   </div>
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{tt("artisanProjects.address", "Address")}</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{tt("artisanProjects.address", "Adresse")}</p>
                     <p className="mt-1 text-sm text-slate-700">{project.location?.address || "—"}</p>
                   </div>
                   <div>
@@ -202,7 +202,7 @@ function DetailsModal({ open, onClose, project, onMessage }) {
               </div>
 
               <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
-                <h4 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Materials</h4>
+                <h4 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Materiaux</h4>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {(project.materials || []).length ? (
                     project.materials.map((m, idx) => (
@@ -431,9 +431,9 @@ export default function PrescripteurProjects() {
 
         <div className="mt-8">
           {loading ? (
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 text-slate-600">Loading...</div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 text-slate-600">Chargement...</div>
           ) : filtered.length === 0 ? (
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 text-slate-600">No projects found.</div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 text-slate-600">Aucun projet trouve.</div>
           ) : (
             <>
               <div className="grid gap-6 xl:grid-cols-2">
