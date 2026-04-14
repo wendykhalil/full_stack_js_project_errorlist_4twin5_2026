@@ -7,12 +7,12 @@ const getProducts = async (req, res) => {
     const { page, limit, search, category, approved } = req.query;
     const products = await catalogService.getProducts({
       page: parseInt(page) || 1,
-      limit: parseInt(limit) || 12,
+      limit: parseInt(limit) || 8,
       search: search || '',
       category: category || '',
       approved
     });
-    apiResponse(res, 'Products retrieved', products);
+    apiResponse(res, 'Produits récupérés', products);
   } catch (error) {
     apiResponse(res, error.message, null, 400);
   }

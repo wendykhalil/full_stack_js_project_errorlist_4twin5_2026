@@ -93,13 +93,38 @@ export default function FournisseurMarketplace() {
   const [category, setCategory] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const limit = 8;
+
+  const buildPaginationItems = (page, pages) => {
+    const safePages = Math.max(1, Number(pages) || 1);
+    const safePage = Math.min(Math.max(1, Number(page) || 1), safePages);
+    if (safePages <= 7) return Array.from({ length: safePages }, (_, i) => i + 1);
+
+    const items = [];
+    const left = Math.max(2, safePage - 1);
+    const right = Math.min(safePages - 1, safePage + 1);
+
+    items.push(1);
+    if (left > 2) items.push('...');
+    for (let p = left; p <= right; p += 1) items.push(p);
+    if (right < safePages - 1) items.push('...');
+    items.push(safePages);
+
+    return items;
+  };
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, category]);
 
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
       setError(null);
       try {
-        const data = await getCatalogProducts({ search, category });
+        const data = await getCatalogProducts({ search, category, page: currentPage, limit });
         let productsArray = [];
         if (data?.data?.products) {
           productsArray = data.data.products;
@@ -109,17 +134,29 @@ export default function FournisseurMarketplace() {
           productsArray = data;
         }
         setProducts(productsArray);
+
+        const pagination = data?.data?.pagination || data?.pagination;
+        const apiTotalPages =
+          pagination?.totalPages ??
+          pagination?.pages ??
+          1;
+        setTotalPages(Math.max(1, Number(apiTotalPages) || 1));
       } catch (err) {
         console.error('Error fetching catalog products:', err);
         setError(err.message || 'Erreur lors du chargement');
         setProducts([]);
+        setTotalPages(1);
       } finally {
         setLoading(false);
       }
     };
 
     fetchProducts();
-  }, [search, category]);
+  }, [search, category, currentPage]);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentPage]);
 
   const handleDetailsClick = (product) => {
     navigate(`/fournisseur/product/${product._id}`);
@@ -170,25 +207,84 @@ export default function FournisseurMarketplace() {
       ) : products.length === 0 ? (
         <div className="mt-8 text-center py-12 text-slate-500">{t('fournisseurMarketplace.noProducts', 'Aucun produit trouvé')}</div>
       ) : (
-        <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {products.map((product) => {
-            const imageUrl = product.imageUrls?.[0] || 'https://via.placeholder.com/300x200?text=No+Image';
-            return (
-              <ProductCard
-                key={product._id}
-                product={product}
-                image={imageUrl}
-                category={product.categoryId?.name || 'Uncategorized'}
-                title={product.name}
-                description={product.description || 'No description'}
-                supplier={product.supplierId?.companyName || 'Unknown Supplier'}
-                price={product.price?.toFixed(2) || '0.00'}
-                unit={product.unit || 'piece'}
-                onDetailClick={handleDetailsClick}
-              />
-            );
-          })}
-        </div>
+        <>
+          <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {products.map((product) => {
+              const imageUrl = product.imageUrls?.[0] || 'https://via.placeholder.com/300x200?text=No+Image';
+              return (
+                <ProductCard
+                  key={product._id}
+                  product={product}
+                  image={imageUrl}
+                  category={product.categoryId?.name || 'Uncategorized'}
+                  title={product.name}
+                  description={product.description || 'No description'}
+                  supplier={product.supplierId?.companyName || 'Unknown Supplier'}
+                  price={product.price?.toFixed(2) || '0.00'}
+                  unit={product.unit || 'piece'}
+                  onDetailClick={handleDetailsClick}
+                />
+              );
+            })}
+          </div>
+
+          {totalPages > 1 && (
+            <div className="mt-10 flex items-center justify-center">
+              <nav className="inline-flex items-center gap-2" aria-label="Pagination">
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1 || loading}
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Précédent
+                </button>
+
+                <div className="flex items-center gap-2">
+                  {buildPaginationItems(currentPage, totalPages).map((item, idx) => {
+                    if (item === '...') {
+                      return (
+                        <span key={`ellipsis-${idx}`} className="px-2 text-sm text-slate-400 select-none">
+                          ...
+                        </span>
+                      );
+                    }
+
+                    const pageNumber = item;
+                    const isActive = pageNumber === currentPage;
+                    return (
+                      <button
+                        key={`page-${pageNumber}`}
+                        type="button"
+                        onClick={() => setCurrentPage(pageNumber)}
+                        disabled={loading}
+                        className={[
+                          "h-10 w-10 rounded-xl text-sm font-semibold transition-colors",
+                          isActive
+                            ? "bg-indigo-600 text-white"
+                            : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50",
+                          loading ? "opacity-70 cursor-not-allowed" : ""
+                        ].join(' ')}
+                        aria-current={isActive ? 'page' : undefined}
+                      >
+                        {pageNumber}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages || loading}
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Suivant
+                </button>
+              </nav>
+            </div>
+          )}
+        </>
       )}
 
       <SimpleFooter />
