@@ -89,9 +89,9 @@ export default function Profile() {
 
   // ✅ CORRECTION : Flag pour éviter les réinitialisations multiples
   const [isInitialized, setIsInitialized] = useState(false);
-useEffect(() => {
-  setIsInitialized(false);
-}, [user?.email]);
+  useEffect(() => {
+    setIsInitialized(false);
+  }, [user?.email]);
   // Determine user role
   const isArtisan = user?.role?.toLowerCase() === 'artisan';
   const isSupplier = user?.role?.toLowerCase() === 'supplier';
@@ -111,65 +111,65 @@ useEffect(() => {
 
   // ✅ CORRECTION : Réinitialiser le flag quand l'utilisateur change (déconnexion/connexion)
   useEffect(() => {
-  if (!user) {
-    // Si utilisateur déconnecté, réinitialiser
-    setIsInitialized(false);
-    setFirstName("");
-    setLastName("");
-    setPhone("");
-    setProfilePicture("");
-    setProfilePicturePreview("");
-    setCity("");
-    setZone("");
-    setLatitude("");
-    setLongitude("");
-    setYearsOfExperience("");
-    setSpecialty("");
-    setServiceRadius("");
-    setCompanyName("");
-    setCompanyPhone("");
-    setAddress("");
-    setDescription("");
-    setLogo("");
-    setLogoPreview("");
-    setSelectedCategories([]);
-    return;
-  }
-
-  // Quand user existe ET qu'on n'a pas encore initialisé le formulaire
-  if (!isInitialized) {
-    console.log("Initializing form fields with user data:", user);
-
-    setFirstName(user.firstName || "");
-    setLastName(user.lastName || "");
-    setPhone(user.phone || "");
-
-    setProfilePicture(user.profilePicture || "");
-    setProfilePicturePreview(user.profilePicture || "");
-    setCity(user.city || "");
-    setZone(user.zone || "");
-    setLatitude(user.latitude || "");
-    setLongitude(user.longitude || "");
-    setYearsOfExperience(user.yearsOfExperience || "");
-    setSpecialty(user.specialty || "");
-    setServiceRadius(user.serviceRadius || "");
-
-    if (user.supplierProfile) {
-      setCompanyName(user.supplierProfile.companyName || "");
-      setCompanyPhone(user.supplierProfile.phone || "");
-      setAddress(user.supplierProfile.address || "");
-      setDescription(user.supplierProfile.description || "");
-      setLogo(user.supplierProfile.logo || "");
-      setLogoPreview(user.supplierProfile.logo || "");
-      setCity(user.supplierProfile.city || user.city || "");
-      setLatitude(user.supplierProfile.latitude ?? user.latitude ?? "");
-      setLongitude(user.supplierProfile.longitude ?? user.longitude ?? "");
-      setSelectedCategories(user.supplierProfile.categories || []);
+    if (!user) {
+      // Si utilisateur déconnecté, réinitialiser
+      setIsInitialized(false);
+      setFirstName("");
+      setLastName("");
+      setPhone("");
+      setProfilePicture("");
+      setProfilePicturePreview("");
+      setCity("");
+      setZone("");
+      setLatitude("");
+      setLongitude("");
+      setYearsOfExperience("");
+      setSpecialty("");
+      setServiceRadius("");
+      setCompanyName("");
+      setCompanyPhone("");
+      setAddress("");
+      setDescription("");
+      setLogo("");
+      setLogoPreview("");
+      setSelectedCategories([]);
+      return;
     }
 
-    setIsInitialized(true);
-  }
-}, [user, isInitialized]);
+    // Quand user existe ET qu'on n'a pas encore initialisé le formulaire
+    if (!isInitialized) {
+      console.log("Initializing form fields with user data:", user);
+
+      setFirstName(user.firstName || "");
+      setLastName(user.lastName || "");
+      setPhone(user.phone || "");
+
+      setProfilePicture(user.profilePicture || "");
+      setProfilePicturePreview(user.profilePicture || "");
+      setCity(user.city || "");
+      setZone(user.zone || "");
+      setLatitude(user.latitude || "");
+      setLongitude(user.longitude || "");
+      setYearsOfExperience(user.yearsOfExperience || "");
+      setSpecialty(user.specialty || "");
+      setServiceRadius(user.serviceRadius || "");
+
+      if (user.supplierProfile) {
+        setCompanyName(user.supplierProfile.companyName || "");
+        setCompanyPhone(user.supplierProfile.phone || "");
+        setAddress(user.supplierProfile.address || "");
+        setDescription(user.supplierProfile.description || "");
+        setLogo(user.supplierProfile.logo || "");
+        setLogoPreview(user.supplierProfile.logo || "");
+        setCity(user.supplierProfile.city || user.city || "");
+        setLatitude(user.supplierProfile.latitude ?? user.latitude ?? "");
+        setLongitude(user.supplierProfile.longitude ?? user.longitude ?? "");
+        setSelectedCategories(user.supplierProfile.categories || []);
+      }
+
+      setIsInitialized(true);
+    }
+  }, [user, isInitialized]);
 
   // Load categories for supplier
   useEffect(() => {
@@ -482,6 +482,7 @@ useEffect(() => {
                 placeholder={t('profile.lastNamePlaceholder') || 'Votre nom'}
               />
               <FieldError error={profileFieldErrors.lastName || profileServerErrors.lastName} />
+            </div>
 
             <div className="sm:col-span-2">
               <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
