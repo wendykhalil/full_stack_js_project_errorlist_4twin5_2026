@@ -175,8 +175,119 @@ function Modal({ open, title, children, onClose, size = "md" }) {
   );
 }
 
+const TITLE_REGEX = /^[A-Za-zÀ-ÖØ-öø-ÿ][A-Za-zÀ-ÖØ-öø-ÿ\s'-]{2,}$/;
+const TEXT_REGEX = /^[A-Za-zÀ-ÖØ-öø-ÿ\s'-]+$/;
+const PHONE_REGEX = /^(?:\+216\s?)?[0-9]{8}$/;
+
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function stripHtml(value = "") {
+  return String(value).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function cleanNumber(value) {
+  const raw = String(value ?? "").replace(",", ".").trim();
+  if (!raw) return "";
+  const num = Number(raw);
+  return Number.isFinite(num) ? num : "";
+}
+
+function validateProjectForm(values, mode = "create") {
+  const errors = {};
+  const today = todayISO();
+
+  const title = stripHtml(values.title);
+  const category = stripHtml(values.category);
+  const description = stripHtml(values.description);
+  const city = stripHtml(values.city);
+  const address = stripHtml(values.address);
+  const phoneNumber = String(values.phoneNumber || "").trim();
+  const startDate = String(values.startDate || "").trim();
+  const endDate = String(values.endDate || "").trim();
+  const budgetTND = cleanNumber(values.budgetTND);
+  const surfaceM2 = cleanNumber(values.surfaceM2);
+  const materials = Array.isArray(values.materials)
+    ? values.materials.filter(Boolean)
+    : [];
+
+  if (!title) {
+    errors.title = "Le titre est obligatoire.";
+  } else if (title.length < 3) {
+    errors.title = "Le titre doit contenir au moins 3 caractères.";
+  } else if (!TITLE_REGEX.test(title)) {
+    errors.title =
+      "Le titre ne doit contenir que des lettres, espaces, apostrophes ou tirets.";
+  }
+
+  if (!category) {
+    errors.category = "La catégorie est obligatoire.";
+  } else if (category.length < 3) {
+    errors.category = "La catégorie doit contenir au moins 3 caractères.";
+  }
+
+  if (!description) {
+    errors.description = "La description est obligatoire.";
+  } else if (description.length < 20) {
+    errors.description = "La description doit contenir au moins 20 caractères.";
+  }
+
+  // CITY: only required, because it can come from Google Maps / reverse geocoding
+  if (!city) {
+    errors.city = "La ville est obligatoire.";
+  }
+
+  if (!address) {
+    errors.address = "L’adresse est obligatoire.";
+  } else if (address.length < 5) {
+    errors.address = "L’adresse doit contenir au moins 5 caractères.";
+  }
+
+  if (!startDate) {
+    errors.startDate = "La date de début est obligatoire.";
+  } else if (mode === "create" && startDate < today) {
+    errors.startDate = "La date de début doit être aujourd’hui ou après.";
+  }
+
+  if (!endDate) {
+    errors.endDate = "La date de fin est obligatoire.";
+  } else if (startDate && endDate < startDate) {
+    errors.endDate =
+      "La date de fin ne peut pas être avant la date de début.";
+  }
+
+  if (budgetTND === "") {
+    errors.budgetTND = "Le budget est obligatoire.";
+  } else if (Number(budgetTND) <= 0) {
+    errors.budgetTND = "Le budget doit être supérieur à 0.";
+  }
+
+  if (surfaceM2 === "") {
+    errors.surfaceM2 = "La surface est obligatoire.";
+  } else if (Number(surfaceM2) <= 0) {
+    errors.surfaceM2 = "La surface doit être supérieure à 0.";
+  }
+
+  if (!phoneNumber) {
+    errors.phoneNumber = "Le numéro de téléphone est obligatoire.";
+  } else if (!PHONE_REGEX.test(phoneNumber.replace(/\s+/g, ""))) {
+    errors.phoneNumber =
+      "Le numéro doit contenir 8 chiffres, avec ou sans +216.";
+  }
+
+  if (!materials.length) {
+    errors.materials = "Ajoutez au moins un matériau.";
+  }
+
+  return errors;
+}
+
 function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t, onOpenMap, fieldErrors = {} }) {
   const isEdit = mode === "edit";
+  const minStartDate = mode === "create" ? todayISO() : undefined;
+  const minEndDate = form.startDate || todayISO();
+
   return (
     <div className="space-y-6">
       <div className="grid gap-6 lg:grid-cols-[1.3fr,0.7fr]">
@@ -190,9 +301,11 @@ function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t,
                 onChange={(e) => setForm((s) => ({ ...s, title: e.target.value }))}
                 className={`mt-2 w-full rounded-xl border ${fieldErrors.title ? 'border-red-500' : 'border-slate-200'} bg-white px-4 py-3 text-sm outline-none ring-indigo-500 focus:ring-2`}
                 placeholder="e.g., Villa Ben Arous"
+                maxLength={80}
               />
               {fieldErrors.title && <p className="mt-1 text-sm text-red-600">{fieldErrors.title}</p>}
             </div>
+
             <div>
               <label className="text-sm font-medium text-slate-700">Category</label>
               <input
@@ -201,12 +314,14 @@ function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t,
                 list="project-categories"
                 className={`mt-2 w-full rounded-xl border ${fieldErrors.category ? 'border-red-500' : 'border-slate-200'} bg-white px-4 py-3 text-sm outline-none ring-indigo-500 focus:ring-2`}
                 placeholder="Choisir une catégorie…"
+                maxLength={60}
               />
               <datalist id="project-categories">
                 {PROJECT_CATEGORIES.map((opt) => <option key={opt} value={opt} />)}
               </datalist>
               {fieldErrors.category && <p className="mt-1 text-sm text-red-600">{fieldErrors.category}</p>}
             </div>
+
             <div>
               <label className="text-sm font-medium text-slate-700">Status</label>
               <select
@@ -219,6 +334,7 @@ function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t,
                 <option value="COMPLETED">{t("artisanProjects.status.completed")}</option>
               </select>
             </div>
+
             <div className="md:col-span-2">
               <label className="text-sm font-medium text-slate-700">Description</label>
               <textarea
@@ -227,6 +343,7 @@ function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t,
                 rows={5}
                 className={`mt-2 w-full rounded-xl border ${fieldErrors.description ? 'border-red-500' : 'border-slate-200'} bg-white px-4 py-3 text-sm outline-none ring-indigo-500 focus:ring-2`}
                 placeholder="What needs to be done? Requirements, constraints, style..."
+                maxLength={1500}
               />
               {fieldErrors.description && <p className="mt-1 text-sm text-red-600">{fieldErrors.description}</p>}
             </div>
@@ -240,12 +357,18 @@ function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t,
               <label className="text-sm font-medium text-slate-700">Start date</label>
               <input
                 value={form.startDate}
-                onChange={(e) => setForm((s) => ({ ...s, startDate: e.target.value }))}
+                onChange={(e) => setForm((s) => ({
+                  ...s,
+                  startDate: e.target.value,
+                  endDate: s.endDate && e.target.value && s.endDate < e.target.value ? e.target.value : s.endDate,
+                }))}
                 className={`mt-2 w-full rounded-xl border ${fieldErrors.startDate ? 'border-red-500' : 'border-slate-200'} bg-white px-4 py-3 text-sm outline-none ring-indigo-500 focus:ring-2`}
                 type="date"
+                min={minStartDate}
               />
               {fieldErrors.startDate && <p className="mt-1 text-sm text-red-600">{fieldErrors.startDate}</p>}
             </div>
+
             <div>
               <label className="text-sm font-medium text-slate-700">End date</label>
               <input
@@ -253,9 +376,11 @@ function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t,
                 onChange={(e) => setForm((s) => ({ ...s, endDate: e.target.value }))}
                 className={`mt-2 w-full rounded-xl border ${fieldErrors.endDate ? 'border-red-500' : 'border-slate-200'} bg-white px-4 py-3 text-sm outline-none ring-indigo-500 focus:ring-2`}
                 type="date"
+                min={minEndDate}
               />
               {fieldErrors.endDate && <p className="mt-1 text-sm text-red-600">{fieldErrors.endDate}</p>}
             </div>
+
             <div>
               <label className="text-sm font-medium text-slate-700">Phone number</label>
               <div className="relative mt-2">
@@ -265,6 +390,7 @@ function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t,
                   onChange={(e) => setForm((s) => ({ ...s, phoneNumber: e.target.value }))}
                   className={`w-full rounded-xl border ${fieldErrors.phoneNumber ? 'border-red-500' : 'border-slate-200'} bg-white py-3 pl-10 pr-4 text-sm outline-none ring-indigo-500 focus:ring-2`}
                   placeholder="+216 XX XXX XXX"
+                  maxLength={14}
                 />
               </div>
               {fieldErrors.phoneNumber && <p className="mt-1 text-sm text-red-600">{fieldErrors.phoneNumber}</p>}
@@ -285,12 +411,14 @@ function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t,
                 list="tunisia-cities"
                 className={`mt-2 w-full rounded-xl border ${fieldErrors.city ? 'border-red-500' : 'border-slate-200'} bg-white px-4 py-3 text-sm outline-none ring-indigo-500 focus:ring-2`}
                 placeholder="Choisir une ville…"
+                maxLength={50}
               />
               <datalist id="tunisia-cities">
                 {TUNISIA_CITIES.map((opt) => <option key={opt} value={opt} />)}
               </datalist>
               {fieldErrors.city && <p className="mt-1 text-sm text-red-600">{fieldErrors.city}</p>}
             </div>
+
             <div>
               <label className="text-sm font-medium text-slate-700">Address</label>
               <input
@@ -298,9 +426,11 @@ function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t,
                 onChange={(e) => setForm((s) => ({ ...s, address: e.target.value }))}
                 className={`mt-2 w-full rounded-xl border ${fieldErrors.address ? 'border-red-500' : 'border-slate-200'} bg-white px-4 py-3 text-sm outline-none ring-indigo-500 focus:ring-2`}
                 placeholder="Street / neighborhood"
+                maxLength={120}
               />
               {fieldErrors.address && <p className="mt-1 text-sm text-red-600">{fieldErrors.address}</p>}
             </div>
+
             <div className="md:col-span-2 rounded-2xl border border-slate-200 bg-white p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -311,6 +441,7 @@ function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t,
                   <MapPin className="h-4 w-4" /> Open map
                 </button>
               </div>
+
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
                 <div>
                   <div className="text-xs uppercase tracking-wide text-slate-400">Latitude</div>
@@ -322,23 +453,29 @@ function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t,
                 </div>
               </div>
             </div>
+
             <div>
               <label className="text-sm font-medium text-slate-700">Budget (TND)</label>
               <input
                 value={form.budgetTND}
                 onChange={(e) => setForm((s) => ({ ...s, budgetTND: e.target.value }))}
-                type="text"
+                type="number"
+                min="1"
+                step="0.001"
                 className={`mt-2 w-full rounded-xl border ${fieldErrors.budgetTND ? 'border-red-500' : 'border-slate-200'} bg-white px-4 py-3 text-sm outline-none ring-indigo-500 focus:ring-2`}
                 placeholder="e.g., 15000"
               />
               {fieldErrors.budgetTND && <p className="mt-1 text-sm text-red-600">{fieldErrors.budgetTND}</p>}
             </div>
+
             <div>
               <label className="text-sm font-medium text-slate-700">Surface (m²)</label>
               <input
                 value={form.surfaceM2}
                 onChange={(e) => setForm((s) => ({ ...s, surfaceM2: e.target.value }))}
-                type="text"
+                type="number"
+                min="1"
+                step="0.01"
                 className={`mt-2 w-full rounded-xl border ${fieldErrors.surfaceM2 ? 'border-red-500' : 'border-slate-200'} bg-white px-4 py-3 text-sm outline-none ring-indigo-500 focus:ring-2`}
                 placeholder="e.g., 120"
               />
@@ -350,16 +487,31 @@ function ProjectFormFields({ mode, form, setForm, images, setImages, editing, t,
         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
           <h4 className="text-base font-semibold text-slate-900">Images</h4>
           <div className="mt-4 rounded-xl border border-dashed border-slate-300 bg-white p-4">
-            <div className="flex items-center gap-2 text-sm text-slate-600"><ImageIcon className="h-4 w-4" /><span>{isEdit ? "Add images" : "Images"} (max 6)</span></div>
-            <input type="file" accept="image/png,image/jpeg,image/webp" multiple onChange={(e) => setImages(Array.from(e.target.files || []))} className="mt-3 block w-full text-sm" />
-            {images.length ? <div className="mt-3 text-xs text-slate-500">Selected: {images.length} file(s)</div> : isEdit && editing?.images?.length ? <div className="mt-3 text-xs text-slate-500">Existing images: {editing.images.length} (new uploads will be added)</div> : null}
+            <div className="flex items-center gap-2 text-sm text-slate-600">
+              <ImageIcon className="h-4 w-4" />
+              <span>{isEdit ? "Add images" : "Images"} (max 6)</span>
+            </div>
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              multiple
+              onChange={(e) => setImages(Array.from(e.target.files || []).slice(0, 6))}
+              className="mt-3 block w-full text-sm"
+            />
+            {images.length ? (
+              <div className="mt-3 text-xs text-slate-500">Selected: {images.length} file(s)</div>
+            ) : isEdit && editing?.images?.length ? (
+              <div className="mt-3 text-xs text-slate-500">Existing images: {editing.images.length} (new uploads will be added)</div>
+            ) : null}
           </div>
         </div>
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
         <h4 className="text-base font-semibold text-slate-900">Matériaux</h4>
-        <div className="mt-4"><MaterialsPicker value={form.materials} onChange={(arr) => setForm((s) => ({ ...s, materials: arr }))} /></div>
+        <div className="mt-4">
+          <MaterialsPicker value={form.materials} onChange={(arr) => setForm((s) => ({ ...s, materials: arr }))} />
+        </div>
         {fieldErrors.materials && <p className="mt-1 text-sm text-red-600">{fieldErrors.materials}</p>}
       </div>
     </div>
@@ -583,42 +735,64 @@ export default function ArtisanProjects() {
   };
 
   const autofillProjectForm = async () => {
-    const hasContext = [form.title, form.category, form.description, form.city].some((value) => String(value || '').trim());
-    if (!hasContext) {
-      setErr('Ajoutez au moins un titre, une catégorie ou une description pour lancer les suggestions IA.');
-      return;
+  const hasContext = [form.title, form.category, form.description, form.city].some((value) =>
+    String(value || "").trim()
+  );
+
+  if (!hasContext) {
+    setErr("");
+    setFieldErrors((prev) => ({
+      ...prev,
+      title: "Ajoutez au moins un titre, une catégorie, une ville ou une description pour lancer les suggestions IA.",
+    }));
+    return;
+  }
+
+  try {
+    setProjectSuggestLoading(true);
+    setErr("");
+    setFieldErrors({});
+
+    const response = await suggestProjectWithAI({
+      token,
+      payload: {
+        title: stripHtml(form.title),
+        category: stripHtml(form.category),
+        description: stripHtml(form.description),
+        city: stripHtml(form.city),
+        budgetTND: form.budgetTND,
+        surfaceM2: form.surfaceM2,
+      },
+    });
+
+    const data = response?.data || {};
+    const nextForm = {
+      ...form,
+      title: stripHtml(data.title || form.title),
+      category: stripHtml(data.category || form.category),
+      description: stripHtml(data.description || form.description),
+      city: stripHtml(data.city || form.city),
+      budgetTND: data.budgetTND ?? form.budgetTND,
+      surfaceM2: data.surfaceM2 ?? form.surfaceM2,
+      materials: Array.isArray(data.materials) && data.materials.length ? data.materials : form.materials,
+    };
+
+    if (!nextForm.startDate) {
+      nextForm.startDate = todayISO();
     }
-    try {
-      setProjectSuggestLoading(true);
-      setErr('');
-      const response = await suggestProjectWithAI({
-        token,
-        payload: {
-          title: form.title,
-          category: form.category,
-          description: form.description,
-          city: form.city,
-          budgetTND: form.budgetTND,
-          surfaceM2: form.surfaceM2,
-        },
-      });
-      const data = response?.data || {};
-      setForm((prev) => ({
-        ...prev,
-        title: data.title || prev.title,
-        category: data.category || prev.category,
-        description: data.description || prev.description,
-        city: data.city || prev.city,
-        budgetTND: data.budgetTND ?? prev.budgetTND,
-        surfaceM2: data.surfaceM2 ?? prev.surfaceM2,
-        materials: Array.isArray(data.materials) && data.materials.length ? data.materials : prev.materials,
-      }));
-    } catch (error) {
-      setErr(error.message || 'Suggestions IA indisponibles');
-    } finally {
-      setProjectSuggestLoading(false);
+    if (!nextForm.endDate && nextForm.startDate) {
+      const end = new Date(nextForm.startDate);
+      end.setDate(end.getDate() + 15);
+      nextForm.endDate = end.toISOString().slice(0, 10);
     }
-  };
+
+    setForm(nextForm);
+  } catch (error) {
+    setErr("Suggestions IA indisponibles pour le moment.");
+  } finally {
+    setProjectSuggestLoading(false);
+  }
+};
 
   const guardSubscription = (callback) => {
     callback();
@@ -648,94 +822,112 @@ export default function ArtisanProjects() {
 
 const onCreate = async (e) => {
   e.preventDefault();
-  console.log("=== onCreate DEBUT ===");
-  
-  setFieldErrors({});
-  setErr('');
+
+  setErr("");
+  const cleanedForm = {
+    ...form,
+    title: stripHtml(form.title),
+    category: stripHtml(form.category),
+    description: stripHtml(form.description),
+    city: stripHtml(form.city),
+    address: stripHtml(form.address),
+    phoneNumber: String(form.phoneNumber || "").trim(),
+    budgetTND: cleanNumber(form.budgetTND),
+    surfaceM2: cleanNumber(form.surfaceM2),
+  };
+
+  const validationErrors = validateProjectForm(cleanedForm, "create");
+  setFieldErrors(validationErrors);
+
+  if (Object.keys(validationErrors).length > 0) {
+    return;
+  }
 
   try {
-    const fd = toFormData(form, images);
-    
-    // Utilisation directe de fetch au lieu de apiFetch
+    const fd = toFormData(cleanedForm, images);
+
     const response = await fetch(`${API_URL}/projects`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       },
-      body: fd
+      body: fd,
     });
 
-    const data = await response.json();
+    let data = {};
+    try {
+      data = await response.json();
+    } catch {
+      data = {};
+    }
 
     if (!response.ok) {
-      console.log("Erreur HTTP:", response.status);
-      console.log("Données d'erreur:", data);
-      
-      if (response.status === 400) {
-        // Affiche les erreurs
-        if (data.errors && Array.isArray(data.errors)) {
-          setErr(data.errors.join(', '));
-        } else if (data.message) {
-          setErr(data.message);
-        } else {
-          setErr('Erreur de validation. Vérifiez les champs.');
-        }
-      } else if (response.status === 403) {
+      if (response.status === 403) {
         setShowSubscriptionAlert(true);
-      } else {
-        setErr(data.message || 'Create failed');
+        return;
       }
+
+      if (response.status === 400 && data?.field) {
+        setFieldErrors({ [data.field]: data.message || "Valeur invalide." });
+        return;
+      }
+
+      setErr("Impossible de créer le projet. Vérifiez vos champs puis réessayez.");
       return;
     }
 
-    // Succès
     setIsCreateOpen(false);
     setForm(emptyForm);
     setImages([]);
+    setFieldErrors({});
     await load();
-    
   } catch (error) {
-    console.log("Erreur réseau:", error);
-    setErr('Erreur réseau. Vérifiez votre connexion.');
+    setErr("Erreur réseau. Vérifiez votre connexion puis réessayez.");
   }
-  
-  console.log("=== onCreate FIN ===");
 };
 
  const onEdit = async (e) => {
   e.preventDefault();
-  setFieldErrors({});
-  setErr('');
+  setErr("");
+
   if (!editing?._id) return;
-  
+
+  const cleanedForm = {
+    ...form,
+    title: stripHtml(form.title),
+    category: stripHtml(form.category),
+    description: stripHtml(form.description),
+    city: stripHtml(form.city),
+    address: stripHtml(form.address),
+    phoneNumber: String(form.phoneNumber || "").trim(),
+    budgetTND: cleanNumber(form.budgetTND),
+    surfaceM2: cleanNumber(form.surfaceM2),
+  };
+
+  const validationErrors = validateProjectForm(cleanedForm, "edit");
+  setFieldErrors(validationErrors);
+
+  if (Object.keys(validationErrors).length > 0) {
+    return;
+  }
+
   try {
-    const fd = toFormData(form, images);
-    await apiFetch(`/projects/${editing._id}`, { token, method: 'PUT', body: fd });
+    const fd = toFormData(cleanedForm, images);
+    await apiFetch(`/projects/${editing._id}`, { token, method: "PUT", body: fd });
+
     setIsEditOpen(false);
     setEditing(null);
     setForm(emptyForm);
     setImages([]);
+    setFieldErrors({});
     await load();
   } catch (e2) {
-    console.error('Full error object:', e2);
-    
-    if (e2.status === 400) {
-      if (e2.errors && Array.isArray(e2.errors) && e2.errors.length > 0) {
-        setErr(e2.errors.join(', '));
-      } else if (e2.message) {
-        setErr(e2.message);
-      } else if (e2.data?.errors && Array.isArray(e2.data.errors)) {
-        setErr(e2.data.errors.join(', '));
-      } else if (e2.data?.message) {
-        setErr(e2.data.message);
-      } else {
-        setErr('Erreur de validation. Vérifiez les champs.');
-      }
-    } else if (e2.status === 403 || (e2.message && (e2.message.includes('essai gratuit') || e2.message.includes('Abonnement')))) {
+    if (e2.status === 403) {
       setShowSubscriptionAlert(true);
-    } else {
-      setErr(e2.message || 'Update failed');
+      return;
     }
+
+    setErr("Impossible de modifier le projet. Vérifiez vos champs puis réessayez.");
   }
 };
 
@@ -804,69 +996,197 @@ const onCreate = async (e) => {
             <div className="rounded-2xl border border-slate-200 bg-white p-6 text-slate-600">No projects yet.</div>
           ) : (
             paginated.map((p) => {
-              const cover = normalizeImageUrl(p.images?.[0]);
-              return (
-                <div key={p._id} className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-                  <div className="grid gap-0 lg:grid-cols-[360px,1fr]">
-                    <div className="relative min-h-[260px] bg-slate-100">
-                      {cover ? <img src={cover} alt={p.title} className="h-full w-full object-cover" /> : <div className="flex h-full min-h-[260px] items-center justify-center"><ImageIcon className="h-10 w-10 text-slate-400" /></div>}
-                    </div>
+  const cover = normalizeImageUrl(p.images?.[0]);
 
-                    <div className="relative p-6 lg:p-8">
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <div className="flex flex-wrap items-center gap-3">
-                            <h3 className="text-2xl font-semibold text-slate-900">{p.title}</h3>
-                            <StatusPill status={p.status} />
-                          </div>
-                          {p.description ? <p className="mt-3 max-w-none text-sm leading-7 text-slate-600">{p.description}</p> : null}
-                        </div>
+  return (
+    <div
+      key={p._id}
+      className="relative overflow-visible rounded-3xl border border-slate-200 bg-white shadow-sm"
+    >
+      <div className="grid gap-0 lg:grid-cols-[360px,1fr]">
+        <div className="relative min-h-[260px] rounded-l-3xl bg-slate-100">
+          {cover ? (
+            <img
+              src={cover}
+              alt={p.title}
+              className="h-full w-full rounded-l-3xl object-cover"
+            />
+          ) : (
+            <div className="flex h-full min-h-[260px] items-center justify-center">
+              <ImageIcon className="h-10 w-10 text-slate-400" />
+            </div>
+          )}
+        </div>
 
-                        <div className="relative">
-                          <button type="button" onClick={() => setOpenMenuId((current) => (current === p._id ? null : p._id))} className="rounded-xl border border-slate-200 p-2 text-slate-600 hover:bg-slate-50">
-                            <MoreVertical className="h-5 w-5" />
-                          </button>
-                          {openMenuId === p._id ? (
-                            <div className="absolute right-0 top-12 z-20 w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
-                              <button type="button" onClick={() => { setViewing(p); setIsViewOpen(true); setOpenMenuId(null); }} className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-slate-700 hover:bg-slate-50"><Eye className="h-4 w-4" /> View project</button>
-                              <button type="button" onClick={() => guardSubscription(() => { openEdit(p); setOpenMenuId(null); })} className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-slate-700 hover:bg-slate-50"><Pencil className="h-4 w-4" /> Edit project</button>
-                              <button type="button" onClick={() => guardSubscription(() => { navigate('/artisan/devis/create', { state: { projectId: p._id, projectTitle: p.title } }); setOpenMenuId(null); })} className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-slate-700 hover:bg-slate-50"><FileSignature className="h-4 w-4" /> Generate quote</button>
-                              <button type="button" onClick={() => guardSubscription(() => { navigate('/artisan/factures/new', { state: { projectId: p._id, projectTitle: p.title } }); setOpenMenuId(null); })} className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-slate-700 hover:bg-slate-50"><Receipt className="h-4 w-4" /> Generate invoice</button>
-                              <button type="button" onClick={() => onDelete(p._id)} className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-red-700 hover:bg-red-50"><Trash2 className="h-4 w-4" /> Delete project</button>
-                            </div>
-                          ) : null}
-                        </div>
-                      </div>
+        <div className="relative overflow-visible p-6 lg:p-8">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-3 pr-14">
+                <h3 className="text-2xl font-semibold text-slate-900">
+                  {p.title}
+                </h3>
+                <StatusPill status={p.status} />
+              </div>
 
-                      <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400"><Calendar className="h-4 w-4" /> Start</div>
-                          <div className="mt-2 text-sm font-medium text-slate-900">{formatDate(p.startDate || p.createdAt) || '—'}</div>
-                        </div>
-                        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400"><MapPin className="h-4 w-4" /> Location</div>
-                          <div className="mt-2 text-sm font-medium text-slate-900">{[p.location?.city, p.location?.address].filter(Boolean).join(' • ') || '—'}</div>
-                        </div>
-                        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400"><Wallet className="h-4 w-4" /> Budget</div>
-                          <div className="mt-2 text-sm font-medium text-slate-900">{p.budgetTND ? `${Number(p.budgetTND).toLocaleString()} TND` : '—'}</div>
-                        </div>
-                        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400"><Layers3 className="h-4 w-4" /> Category</div>
-                          <div className="mt-2 text-sm font-medium text-slate-900">{p.category || '—'}</div>
-                        </div>
-                      </div>
+              {p.description ? (
+                <p className="mt-3 max-w-none text-sm leading-7 text-slate-600">
+                  {p.description}
+                </p>
+              ) : null}
+            </div>
 
-                      {p.materials?.length ? (
-                        <div className="mt-5 flex flex-wrap gap-2">
-                          {p.materials.slice(0, 6).map((material, idx) => <span key={material + idx} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">{material}</span>)}
-                        </div>
-                      ) : null}
-                    </div>
-                  </div>
+            <div className="relative shrink-0 self-start">
+              <button
+                type="button"
+                onClick={() =>
+                  setOpenMenuId((current) =>
+                    current === p._id ? null : p._id
+                  )
+                }
+                className="rounded-xl border border-slate-200 bg-white p-2 text-slate-600 hover:bg-slate-50"
+              >
+                <MoreVertical className="h-5 w-5" />
+              </button>
+
+              {openMenuId === p._id ? (
+                <div className="absolute right-0 top-full z-[999] mt-2 w-64 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setViewing(p);
+                      setIsViewOpen(true);
+                      setOpenMenuId(null);
+                    }}
+                    className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-slate-700 hover:bg-slate-50"
+                  >
+                    <Eye className="h-4 w-4" />
+                    View project
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      guardSubscription(() => {
+                        openEdit(p);
+                        setOpenMenuId(null);
+                      })
+                    }
+                    className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-slate-700 hover:bg-slate-50"
+                  >
+                    <Pencil className="h-4 w-4" />
+                    Edit project
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      guardSubscription(() => {
+                        navigate("/artisan/devis/create", {
+                          state: {
+                            projectId: p._id,
+                            projectTitle: p.title,
+                          },
+                        });
+                        setOpenMenuId(null);
+                      })
+                    }
+                    className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-slate-700 hover:bg-slate-50"
+                  >
+                    <FileSignature className="h-4 w-4" />
+                    Generate quote
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      guardSubscription(() => {
+                        navigate("/artisan/factures/new", {
+                          state: {
+                            projectId: p._id,
+                            projectTitle: p.title,
+                          },
+                        });
+                        setOpenMenuId(null);
+                      })
+                    }
+                    className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-slate-700 hover:bg-slate-50"
+                  >
+                    <Receipt className="h-4 w-4" />
+                    Generate invoice
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => onDelete(p._id)}
+                    className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-red-700 hover:bg-red-50"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete project
+                  </button>
                 </div>
-              );
-            })
+              ) : null}
+            </div>
+          </div>
+
+          <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                <Calendar className="h-4 w-4" /> Start
+              </div>
+              <div className="mt-2 text-sm font-medium text-slate-900">
+                {formatDate(p.startDate || p.createdAt) || "—"}
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                <MapPin className="h-4 w-4" /> Location
+              </div>
+              <div className="mt-2 text-sm font-medium text-slate-900">
+                {[p.location?.city, p.location?.address]
+                  .filter(Boolean)
+                  .join(" • ") || "—"}
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                <Wallet className="h-4 w-4" /> Budget
+              </div>
+              <div className="mt-2 text-sm font-medium text-slate-900">
+                {p.budgetTND
+                  ? `${Number(p.budgetTND).toLocaleString()} TND`
+                  : "—"}
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                <Layers3 className="h-4 w-4" /> Category
+              </div>
+              <div className="mt-2 text-sm font-medium text-slate-900">
+                {p.category || "—"}
+              </div>
+            </div>
+          </div>
+
+          {p.materials?.length ? (
+            <div className="mt-5 flex flex-wrap gap-2">
+              {p.materials.slice(0, 6).map((material, idx) => (
+                <span
+                  key={material + idx}
+                  className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700"
+                >
+                  {material}
+                </span>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+})
           )} 
           {!loading && filtered.length > 0 ? <Pagination page={page} pages={pages} onPageChange={setPage} /> : null}
         </div>
