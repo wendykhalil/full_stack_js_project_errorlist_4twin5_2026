@@ -6,7 +6,6 @@ import { useTranslation } from '../i18n';
 import { useAuth } from "../auth/AuthContext.jsx";
 import { createProduct, getSupplierStats } from "../auth/api.js";
 import { useServerErrors } from "../hooks/useServerErrors";
-import { useFormValidation, rules } from "../hooks/useFormValidation";
 import FieldError from "../components/FieldError";
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -110,15 +109,7 @@ export default function FournisseurProduitNew() {
   const [stats, setStats] = useState({});
   const [categories, setCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
-  const [errors, setErrors] = useState({});
-  const [globalError, setGlobalError] = useState('');
 
-  const { errors: formErrors, validate } = useFormValidation({
-    name: [rules.required('Nom requis'), rules.minLength(2)],
-    price: [rules.required('Prix requis'), rules.positiveNumber('Doit être un nombre positif')],
-    stock: [rules.required('Stock requis'), rules.positiveNumber('Doit être un nombre positif')],
-    description: [rules.required('Description requise'), rules.minLength(10)],
-  });
   const { fieldErrors: serverErrors, globalError: serverGlobalError, handleError: handleServerError, clearErrors: clearServerErrors } = useServerErrors();
   
   const [showNewCategoryInput, setShowNewCategoryInput] = useState(false);
@@ -170,25 +161,7 @@ export default function FournisseurProduitNew() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    setErrors({});
-    setGlobalError('');
     clearServerErrors();
-
-    if (!validate({ name: formData.name, price: formData.price, stock: formData.stock, description: formData.description })) {
-      setSubmitting(false);
-      return;
-    }
-
-    // Validation frontend rapide
-    const frontendErrors = {};
-    if (!formData.name.trim()) frontendErrors.name = 'Le nom est requis';
-    if (!formData.price || parseFloat(formData.price) <= 0) frontendErrors.price = 'Prix invalide';
-    if (!formData.stock || parseInt(formData.stock) < 0) frontendErrors.stock = 'Stock invalide';
-    if (Object.keys(frontendErrors).length > 0) {
-      setErrors(frontendErrors);
-      setSubmitting(false);
-      return;
-    }
 
     try {
       const fd = new FormData();
@@ -196,8 +169,8 @@ export default function FournisseurProduitNew() {
       let categoryId = formData.category;
       const dataToSend = {
         name: formData.name,
-        price: parseFloat(formData.price),
-        stock: parseInt(formData.stock),
+        price: formData.price,
+        stock: formData.stock,
         description: formData.description
       };
 
@@ -206,50 +179,18 @@ export default function FournisseurProduitNew() {
         if (customCat) dataToSend.newCategory = customCat.name;
       } else if (categoryId) {
         dataToSend.categoryId = categoryId;
-      } else {
-        alert('Veuillez sélectionner une catégorie');
-        setSubmitting(false);
-        return;
       }
 
       fd.append('data', JSON.stringify(dataToSend));
       imageFiles.forEach(f => fd.append('media', f));
       docFiles.forEach(f => fd.append('media', f));
 
-      const response = await fetch(`${API_URL}/supplier/products`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: fd
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (response.status === 400) {
-          if (data.errors && Array.isArray(data.errors)) {
-            setGlobalError(data.errors.join(', '));
-          } else if (data.error) {
-            const errorMsg = data.error;
-            if (errorMsg.includes('nom')) setErrors({ name: errorMsg });
-            else if (errorMsg.includes('prix')) setErrors({ price: errorMsg });
-            else if (errorMsg.includes('stock')) setErrors({ stock: errorMsg });
-            else setGlobalError(errorMsg);
-          } else if (data.message) {
-            setGlobalError(data.message);
-          } else {
-            setGlobalError('Erreur de validation. Vérifiez les champs.');
-          }
-        } else {
-          setGlobalError('Erreur serveur. Veuillez réessayer.');
-        }
-        return;
-      }
+      await createProduct({ token, formData: fd });
 
       navigate('/fournisseur/produits');
     } catch (error) {
       console.error('Error creating product:', error);
       handleServerError(error);
-      setGlobalError('Erreur réseau. Vérifiez votre connexion.');
     } finally {
       setSubmitting(false);
     }
@@ -285,7 +226,7 @@ export default function FournisseurProduitNew() {
               placeholder={t('fournisseurProduitNew.productNamePlaceholder')}
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              error={formErrors.name || errors.name || serverErrors.name}
+              error={serverErrors.name}
             />
             
             {/* Catégorie avec gestion d'erreur */}
@@ -300,9 +241,9 @@ export default function FournisseurProduitNew() {
                       value={formData.category} 
                       onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                       disabled={loadingCategories}
-                      className={`w-full appearance-none rounded-xl border ${errors.category ? 'border-red-500' : 'border-slate-200'} bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none disabled:opacity-50`}
+                      className={`w-full appearance-none rounded-xl border ${serverErrors.category ? 'border-red-500' : 'border-slate-200'} bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none disabled:opacity-50`}
                     >
-                      <option value="">{loadingCategories ? 'Loading categories...' : t('fournisseurProduitNew.categoryPlaceholder')}</option>
+                      <option value="">{loadingCategories ? 'Chargement des catégories...' : t('fournisseurProduitNew.categoryPlaceholder')}</option>
                       {categoryOptions.map((opt, idx) => (
                         <option key={idx} value={opt.value}>{opt.label}</option>
                       ))}
@@ -313,7 +254,7 @@ export default function FournisseurProduitNew() {
                     <Plus className="h-5 w-5" />
                   </button>
                 </div>
-                {errors.category && <p className="mt-1 text-sm text-red-600">{errors.category}</p>}
+                {serverErrors.category && <p className="mt-1 text-sm text-red-600">{serverErrors.category}</p>}
 
                 {showNewCategoryInput && (
                   <div className="flex gap-2 mt-2">
@@ -331,7 +272,7 @@ export default function FournisseurProduitNew() {
               type="text"
               value={formData.price}
               onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-              error={formErrors.price || errors.price || serverErrors.price}
+              error={serverErrors.price}
             />
             
             <Input 
@@ -340,7 +281,7 @@ export default function FournisseurProduitNew() {
               type="text"
               value={formData.stock}
               onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-              error={formErrors.stock || errors.stock || serverErrors.stock}
+              error={serverErrors.stock}
             />
             <div />
           </div>
@@ -351,7 +292,7 @@ export default function FournisseurProduitNew() {
               placeholder={t('fournisseurProduitNew.descriptionPlaceholder')}
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              error={formErrors.description || errors.description || serverErrors.description}
+              error={serverErrors.description}
             />
           </div>
 
@@ -360,9 +301,9 @@ export default function FournisseurProduitNew() {
             <UploadBox title={t('fournisseurProduitNew.pdfUploadTitle')} subtitle={t('fournisseurProduitNew.pdfUploadSubtitle')} icon={<FileText className="h-5 w-5" />} files={docFiles} onChange={(e) => setDocFiles(Array.from(e.target.files))} />
           </div>
 
-          {(globalError || serverGlobalError) && (
+          {serverGlobalError && (
             <div className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">
-              {globalError || serverGlobalError}
+              {serverGlobalError}
             </div>
           )}
 

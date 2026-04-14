@@ -284,7 +284,7 @@ router.patch('/admin/users/:id/block', authRequired, requireRoles('ADMIN'), asyn
     };
 
     if (!MS[duration]) {
-      return res.status(400).json({ message: 'Invalid duration. Use: 1h, 3h, 1d, 3d, 1w, 1m' });
+      return res.status(400).json({ message: 'Durée invalide. Utilisez : 1h, 3h, 1d, 3d, 1w, 1m' });
     }
 
     const blockedUntil = new Date(Date.now() + MS[duration]);
@@ -295,7 +295,7 @@ router.patch('/admin/users/:id/block', authRequired, requireRoles('ADMIN'), asyn
       { new: true, select: 'firstName lastName email status blockedUntil' }
     );
 
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (!user) return res.status(404).json({ message: 'Utilisateur introuvable' });
 
     res.json({ ok: true, user });
   } catch (err) {
@@ -314,7 +314,7 @@ router.patch('/admin/users/:id/unblock', authRequired, requireRoles('ADMIN'), as
       { new: true, select: 'firstName lastName email status blockedUntil' }
     );
 
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (!user) return res.status(404).json({ message: 'Utilisateur introuvable' });
 
     res.json({ ok: true, user });
   } catch (err) {
@@ -601,7 +601,7 @@ router.get('/debug/all-products', authRequired, async (req, res) => {
     res.json({
       count: products.length,
       products: products,
-      message: 'All products in database'
+      message: 'Tous les produits en base de données'
     });
   } catch (error) {
     console.error('Debug error:', error);

@@ -43,11 +43,11 @@ async function createQuote(req, res, next) {
   try {
     const artisanId = getUserId(req);
     const { projectId, lines = [], taxRate = 0.19, discount = 0, status = 'DRAFT' } = req.body || {};
-    if (!projectId) return res.status(400).json({ message: 'projectId is required' });
+    if (!projectId) return res.status(400).json({ message: 'projectId est requis' });
 
     const project = await Project.findById(projectId).lean();
-    if (!project) return res.status(404).json({ message: 'Project not found' });
-    if (String(project.artisanId) !== String(artisanId)) return res.status(403).json({ message: 'Forbidden' });
+    if (!project) return res.status(404).json({ message: 'Projet introuvable' });
+    if (String(project.artisanId) !== String(artisanId)) return res.status(403).json({ message: 'Accès interdit' });
 
     const normalizedLines = normalizeLines(lines);
     const totals = computeTotals(normalizedLines, Number(taxRate), Number(discount));
@@ -82,11 +82,11 @@ async function createInvoice(req, res, next) {
   try {
     const artisanId = getUserId(req);
     const { devisId, dueDate, status = 'DRAFT' } = req.body || {};
-    if (!devisId) return res.status(400).json({ message: 'devisId is required' });
+    if (!devisId) return res.status(400).json({ message: 'devisId est requis' });
 
     const quote = await Devis.findById(devisId).lean();
-    if (!quote) return res.status(404).json({ message: 'Quote not found' });
-    if (String(quote.artisanId) !== String(artisanId)) return res.status(403).json({ message: 'Forbidden' });
+    if (!quote) return res.status(404).json({ message: 'Devis introuvable' });
+    if (String(quote.artisanId) !== String(artisanId)) return res.status(403).json({ message: 'Accès interdit' });
 
     const invoice = await Facture.create({
       devisId,

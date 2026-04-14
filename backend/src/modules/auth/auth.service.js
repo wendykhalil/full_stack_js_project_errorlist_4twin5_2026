@@ -75,12 +75,12 @@ function sanitizeUser(userDoc) {
 
 async function register({ firstName, lastName, email, password, phone, role }) {
   if (!ROLE_ENUM.includes(role)) {
-    const e = new Error('Invalid role'); e.statusCode = 400; throw e;
+    const e = new Error('Rôle invalide'); e.statusCode = 400; throw e;
   }
 
   const existing = await User.findOne({ email });
   if (existing) {
-    const e = new Error('Email already in use'); e.statusCode = 409; throw e;
+    const e = new Error('Email déjà utilisé'); e.statusCode = 409; throw e;
   }
 
   const hashed = await bcrypt.hash(password, 12);
@@ -110,7 +110,7 @@ async function login({ email, password }) {
   // Support login by email OR phone number
   const identifier = String(email || '').trim();
   if (!identifier) {
-    const e = new Error('Invalid credentials'); e.statusCode = 401; throw e;
+    const e = new Error('Identifiants invalides'); e.statusCode = 401; throw e;
   }
 
   const user = await User.findOne({
@@ -121,21 +121,21 @@ async function login({ email, password }) {
   });
 
   if (!user) {
-    const e = new Error('Invalid credentials'); e.statusCode = 401; throw e;
+    const e = new Error('Identifiants invalides'); e.statusCode = 401; throw e;
   }
 
   if (!user.password) {
-    const e = new Error('This account uses Google login'); e.statusCode = 400; throw e;
+    const e = new Error('Ce compte utilise la connexion Google'); e.statusCode = 400; throw e;
   }
 
   const ok = await bcrypt.compare(String(password || ''), user.password);
   if (!ok) {
-    const e = new Error('Invalid credentials'); e.statusCode = 401; throw e;
+    const e = new Error('Identifiants invalides'); e.statusCode = 401; throw e;
   }
 
   const loginByPhone = /^[+\d\s]{6,}$/.test(identifier) && !identifier.includes('@');
   if (!user.emailVerified && !loginByPhone) {
-    const e = new Error('Email not verified'); e.statusCode = 403; throw e;
+    const e = new Error('Email non vérifié'); e.statusCode = 403; throw e;
   }
 
   if (user.status === 'BLOCKED') {
@@ -152,7 +152,7 @@ async function login({ email, password }) {
   }
 
   if (user.status !== 'ACTIVE') {
-    const e = new Error('Account is not active'); e.statusCode = 403; throw e;
+    const e = new Error('Le compte n’est pas actif'); e.statusCode = 403; throw e;
   }
 
   const token = signJwt(user);
@@ -163,7 +163,7 @@ return { token, user: sanitizeUser(user) };
 async function me(userId) {
   const user = await User.findById(userId).populate('supplierProfile');
   if (!user) {
-    const e = new Error('User not found'); 
+    const e = new Error('Utilisateur introuvable'); 
     e.statusCode = 404; 
     throw e;
   }
@@ -173,7 +173,7 @@ async function me(userId) {
 
 async function verifyEmail({ token }) {
   if (!token) {
-    const e = new Error('Token missing'); e.statusCode = 400; throw e;
+    const e = new Error('Token manquant'); e.statusCode = 400; throw e;
   }
   const tokenHash = hashToken(token);
 
@@ -183,7 +183,7 @@ async function verifyEmail({ token }) {
   });
 
   if (!user) {
-    const e = new Error('Invalid or expired token'); e.statusCode = 400; throw e;
+    const e = new Error('Token invalide ou expiré'); e.statusCode = 400; throw e;
   }
 
   user.emailVerified = true;
@@ -191,21 +191,21 @@ async function verifyEmail({ token }) {
   user.emailVerificationTokenExpiresAt = null;
   await user.save();
 
-  return { ok: true, message: 'Email verified. You can now login.' };
+  return { ok: true, message: 'Email vérifié. Vous pouvez maintenant vous connecter.' };
 }
 
 async function resendVerification({ email }) {
   if (!email) {
-    const e = new Error('Email required'); e.statusCode = 400; throw e;
+    const e = new Error('Email requis'); e.statusCode = 400; throw e;
   }
 
   const user = await User.findOne({ email });
   if (!user) {
-    return { ok: true, message: 'If this email exists, a verification link was sent.' };
+    return { ok: true, message: 'Si cet email existe, un lien de vérification a été envoyé.' };
   }
 
   if (user.emailVerified) {
-    return { ok: true, message: 'Email already verified. You can login.' };
+    return { ok: true, message: 'Email déjà vérifié. Vous pouvez vous connecter.' };
   }
 
   const verificationToken = makeToken();
@@ -224,23 +224,23 @@ async function resendVerification({ email }) {
     console.log('[DEV] Email verification link:', devLink);
   }
 
-  return { ok: true, message: 'Verification email sent.', devLink };
+  return { ok: true, message: 'Email de vérification envoyé.', devLink };
 }
 
 async function googleLogin({ credential, role }) {
   if (!credential) {
-    const e = new Error('Google credential missing'); e.statusCode = 400; throw e;
+    const e = new Error('Identifiant Google manquant'); e.statusCode = 400; throw e;
   }
 
   // role is optional. If user exists, we keep their role.
   // For NEW users, we always start with REGISTER_ROLE so they choose once in the UI.
   if (role && !ROLE_ENUM.includes(role)) {
-    const e = new Error('Invalid role'); e.statusCode = 400; throw e;
+    const e = new Error('Rôle invalide'); e.statusCode = 400; throw e;
   }
 
   const { client, clientId } = getGoogleClient();
   if (!clientId || !client) {
-    const e = new Error('Server missing GOOGLE_CLIENT_ID'); e.statusCode = 500; throw e;
+    const e = new Error('Configuration serveur manquante (GOOGLE_CLIENT_ID)'); e.statusCode = 500; throw e;
   }
 
   // ✅ verify with correct audience
@@ -255,7 +255,7 @@ async function googleLogin({ credential, role }) {
   const sub = String(payload.sub || '');
 
   if (!email) {
-    const e = new Error('Google did not return an email'); e.statusCode = 400; throw e;
+    const e = new Error("Google n’a pas retourné d’email"); e.statusCode = 400; throw e;
   }
 
   let user = await User.findOne({ email });
@@ -299,7 +299,7 @@ async function googleLogin({ credential, role }) {
   }
 
   if (user.status !== 'ACTIVE') {
-    const e = new Error('Account is not active'); e.statusCode = 403; throw e;
+    const e = new Error('Le compte n’est pas actif'); e.statusCode = 403; throw e;
   }
 
   const token = signJwt(user);
@@ -420,18 +420,18 @@ async function updateProfile(userId, profileData) {
 async function changePassword(userId, { currentPassword, newPassword }) {
   const user = await User.findById(userId);
   if (!user) {
-    const e = new Error('User not found'); e.statusCode = 404; throw e;
+    const e = new Error('Utilisateur introuvable'); e.statusCode = 404; throw e;
   }
 
   if (!newPassword || String(newPassword).length < 6) {
-    const e = new Error('New password must be at least 6 characters'); e.statusCode = 400; throw e;
+    const e = new Error('Le nouveau mot de passe doit contenir au moins 6 caractères'); e.statusCode = 400; throw e;
   }
 
   // If account already has local password, require current password
   if (user.password) {
     const ok = await bcrypt.compare(String(currentPassword || ''), user.password);
     if (!ok) {
-      const e = new Error('Current password is incorrect'); e.statusCode = 401; throw e;
+      const e = new Error('Le mot de passe actuel est incorrect'); e.statusCode = 401; throw e;
     }
   }
 
@@ -449,7 +449,7 @@ function buildResetPasswordLink(token) {
 async function forgotPassword({ email }) {
   const cleanEmail = String(email || '').trim().toLowerCase();
   if (!cleanEmail) {
-    const e = new Error('Email required'); e.statusCode = 400; throw e;
+    const e = new Error('Email requis'); e.statusCode = 400; throw e;
   }
 
   const user = await User.findOne({ email: cleanEmail });
@@ -503,10 +503,10 @@ async function resetPassword({ token, newPassword }) {
   const np = String(newPassword || '');
 
   if (!t) {
-    const e = new Error('Token missing'); e.statusCode = 400; throw e;
+    const e = new Error('Token manquant'); e.statusCode = 400; throw e;
   }
   if (!np || np.length < 6) {
-    const e = new Error('New password must be at least 6 characters'); e.statusCode = 400; throw e;
+    const e = new Error('Le nouveau mot de passe doit contenir au moins 6 caractères'); e.statusCode = 400; throw e;
   }
 
   const tokenHash = hashToken(t);
@@ -517,7 +517,7 @@ async function resetPassword({ token, newPassword }) {
   });
 
   if (!user) {
-    const e = new Error('Invalid or expired token'); e.statusCode = 400; throw e;
+    const e = new Error('Token invalide ou expiré'); e.statusCode = 400; throw e;
   }
 
   user.password = await bcrypt.hash(np, 12);
@@ -534,12 +534,12 @@ async function resetPassword({ token, newPassword }) {
 async function phoneStart({ phone }) {
   const cleanPhone = String(phone || '').trim();
   if (!cleanPhone) {
-    const e = new Error('Phone required'); e.statusCode = 400; throw e;
+    const e = new Error('Téléphone requis'); e.statusCode = 400; throw e;
   }
 
   const user = await User.findOne({ phone: cleanPhone });
   if (!user) {
-    const e = new Error("Phone number doesn't exist"); e.statusCode = 404; throw e;
+    const e = new Error("Ce numéro de téléphone n’existe pas"); e.statusCode = 404; throw e;
   }
 
   if (user.status === 'BLOCKED') {
@@ -550,24 +550,24 @@ async function phoneStart({ phone }) {
   }
 
   await startPhoneVerification(cleanPhone);
-  return { ok: true, message: 'SMS sent' };
+  return { ok: true, message: 'SMS envoyé' };
 }
 
 async function phoneVerify({ phone, code }) {
   const cleanPhone = String(phone || '').trim();
   const cleanCode = String(code || '').trim();
   if (!cleanPhone || !cleanCode) {
-    const e = new Error('Phone and code are required'); e.statusCode = 400; throw e;
+    const e = new Error('Le téléphone et le code sont requis'); e.statusCode = 400; throw e;
   }
 
   const user = await User.findOne({ phone: cleanPhone });
   if (!user) {
-    const e = new Error("Phone number doesn't exist"); e.statusCode = 404; throw e;
+    const e = new Error("Ce numéro de téléphone n’existe pas"); e.statusCode = 404; throw e;
   }
 
   const check = await checkPhoneVerification(cleanPhone, cleanCode);
   if (check.status !== 'approved') {
-    const e = new Error('Invalid code'); e.statusCode = 401; throw e;
+    const e = new Error('Code invalide'); e.statusCode = 401; throw e;
   }
 
   // If user still needs to pick a role, issue a short-lived token
@@ -582,11 +582,11 @@ async function phoneVerify({ phone, code }) {
 
 async function setRole(userId, { role }) {
   if (!ROLE_ENUM.includes(role)) {
-    const e = new Error('Invalid role'); e.statusCode = 400; throw e;
+    const e = new Error('Rôle invalide'); e.statusCode = 400; throw e;
   }
   const user = await User.findById(userId);
   if (!user) {
-    const e = new Error('User not found'); e.statusCode = 404; throw e;
+    const e = new Error('Utilisateur introuvable'); e.statusCode = 404; throw e;
   }
 
   user.role = role;

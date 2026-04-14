@@ -88,7 +88,7 @@ export default function Messages() {
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-          <p className="text-sm text-slate-500">{t('messages.loading', 'Loading messages...')}</p>
+          <p className="text-sm text-slate-500">{t('messages.loading', 'Chargement des messages...')}</p>
         </div>
       </div>
     );
@@ -104,7 +104,7 @@ export default function Messages() {
             onClick={() => window.location.reload()}
             className="mt-4 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
           >
-            {t('common.retry', 'Retry')}
+            {t('common.retry', 'Réessayer')}
           </button>
         </div>
       </div>
@@ -122,7 +122,7 @@ export default function Messages() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-slate-900">{t('messages.title', 'Messages')}</h1>
             <p className="mt-1 text-slate-500">
-              {t('messages.subtitle', 'Your conversations with artisans and suppliers')}
+              {t('messages.subtitle', 'Vos conversations avec les artisans et les fournisseurs')}
             </p>
           </div>
         </div>
@@ -135,10 +135,10 @@ export default function Messages() {
             <Inbox className="h-8 w-8 text-slate-400" />
           </div>
           <h3 className="mt-4 text-lg font-semibold text-slate-900">
-            {t('messages.emptyTitle', 'No conversations yet')}
+            {t('messages.emptyTitle', 'Aucune conversation pour le moment')}
           </h3>
           <p className="mt-2 text-sm text-slate-500">
-            {t('messages.emptySubtitle', 'Messages you exchange will appear here')}
+            {t('messages.emptySubtitle', 'Les messages échangés apparaîtront ici')}
           </p>
         </div>
       ) : (

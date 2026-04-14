@@ -8,7 +8,6 @@ import { useAuth } from "../auth/AuthContext";
 import { apiFetch } from "../auth/api";
 import { roleToBasePath } from "../auth/role";
 import logo from "../assets/bmp-logo.svg";
-import { useFormValidation, rules } from "../hooks/useFormValidation";
 import FieldError from "../components/FieldError";
 import { useServerErrors } from "../hooks/useServerErrors";
 
@@ -81,16 +80,11 @@ export default function Login() {
     }
   }, [googleWidth, loginWithGoogle, navigate]);
 
-  const { errors: formErrors, validate } = useFormValidation({
-    emailOrPhone: [rules.required('Email ou téléphone requis'), rules.minLength(3)],
-    password: [rules.required('Mot de passe requis'), rules.minLength(6, 'Minimum 6 caractères')],
-  });
   const { fieldErrors, globalError, handleError, clearErrors } = useServerErrors();
 
   async function onSubmit(e) {
     e.preventDefault();
     clearErrors();
-    if (!validate({ emailOrPhone, password })) return;
     setLoading(true);
     try {
       const user = await login(emailOrPhone.trim(), password);
@@ -106,9 +100,9 @@ export default function Login() {
     setResendState({ loading: true, message: "" });
     try {
       await apiFetch("/auth/resend-verification", { method: "POST", body: { email: emailOrPhone.trim() } });
-      setResendState({ loading: false, message: "Verification email sent." });
+      setResendState({ loading: false, message: "Email de vérification envoyé." });
     } catch (e) {
-      setResendState({ loading: false, message: e.message || "Unable to resend verification" });
+      setResendState({ loading: false, message: e.message || "Impossible de renvoyer l’email de vérification" });
     }
   }
 
@@ -255,9 +249,9 @@ export default function Login() {
                   <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-blue-500 shadow-lg">
                     <Building2 className="h-7 w-7 text-white" />
                   </div>
-                  <h2 className="text-2xl font-bold text-slate-900">Welcome Back</h2>
+                  <h2 className="text-2xl font-bold text-slate-900">Bon retour</h2>
                   <p className="mt-2 text-sm text-slate-600">
-                    Sign in to your BMP.tn account
+                    Connectez-vous à votre compte BMP.tn
                   </p>
                 </div>
 
@@ -273,7 +267,7 @@ export default function Login() {
                   {/* Email/Phone Field */}
                   <div>
                     <label className="mb-1.5 block text-sm font-semibold text-slate-700">
-                      Email or Phone Number
+                      Email ou numéro de téléphone
                     </label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
@@ -282,17 +276,17 @@ export default function Login() {
                         onChange={(e) => { setEmailOrPhone(e.target.value); clearErrors(); }}
                         type="text"
                         autoComplete="username"
-                        placeholder="Enter your email or phone"
-                        className={`w-full rounded-xl border bg-white pl-10 pr-4 py-3 text-base text-slate-900 outline-none transition-all focus:ring-2 focus:ring-blue-500/20 ${formErrors.emailOrPhone ? 'border-red-400 focus:border-red-400' : 'border-slate-300 focus:border-blue-500'}`}
+                        placeholder="Saisissez votre email ou votre téléphone"
+                        className={`w-full rounded-xl border bg-white pl-10 pr-4 py-3 text-base text-slate-900 outline-none transition-all focus:ring-2 focus:ring-blue-500/20 ${fieldErrors.emailOrPhone ? 'border-red-400 focus:border-red-400' : 'border-slate-300 focus:border-blue-500'}`}
                       />
                     </div>
-                    <FieldError error={formErrors.emailOrPhone} />
+                    <FieldError error={fieldErrors.emailOrPhone} />
                   </div>
 
                   {/* Password Field with Show/Hide */}
                   <div>
                     <label className="mb-1.5 block text-sm font-semibold text-slate-700">
-                      Password
+                      Mot de passe
                     </label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
@@ -301,15 +295,15 @@ export default function Login() {
                         onChange={(e) => { setPassword(e.target.value); clearErrors(); }}
                         type={showPassword ? "text" : "password"}
                         autoComplete="current-password"
-                        placeholder="Enter your password"
-                        className={`w-full rounded-xl border bg-white pl-10 pr-12 py-3 text-base text-slate-900 outline-none transition-all focus:ring-2 focus:ring-blue-500/20 ${formErrors.password ? 'border-red-400 focus:border-red-400' : 'border-slate-300 focus:border-blue-500'}`}
+                        placeholder="Saisissez votre mot de passe"
+                        className={`w-full rounded-xl border bg-white pl-10 pr-12 py-3 text-base text-slate-900 outline-none transition-all focus:ring-2 focus:ring-blue-500/20 ${fieldErrors.password ? 'border-red-400 focus:border-red-400' : 'border-slate-300 focus:border-blue-500'}`}
                       />
                       <button type="button" onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-blue-600">
                         {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                       </button>
                     </div>
-                    <FieldError error={formErrors.password} />
+                    <FieldError error={fieldErrors.password} />
                   </div>
 
                   {/* Forgot Password Link */}
@@ -319,7 +313,7 @@ export default function Login() {
                       onClick={() => navigate("/forgot-password")}
                       className="text-sm font-medium text-blue-600 transition-colors hover:text-blue-700 hover:underline"
                     >
-                      Forgot password?
+                      Mot de passe oublié ?
                     </button>
                   </div>
 
@@ -335,7 +329,7 @@ export default function Login() {
                     <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <span className="text-sm text-blue-800">
-                          Need to verify your email?
+                          Besoin de vérifier votre email ?
                         </span>
                         <button
                           type="button"
@@ -343,7 +337,7 @@ export default function Login() {
                           disabled={resendState.loading}
                           className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-blue-700 shadow-sm transition-all hover:bg-blue-100 disabled:opacity-60"
                         >
-                          {resendState.loading ? "Sending..." : "Resend verification"}
+                          {resendState.loading ? "Envoi..." : "Renvoyer la vérification"}
                         </button>
                       </div>
                       {resendState.message && (
@@ -361,10 +355,10 @@ export default function Login() {
                     {loading ? (
                       <div className="flex items-center gap-2">
                         <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                        Signing in...
+                        Connexion...
                       </div>
                     ) : (
-                      "Sign In"
+                      "Se connecter"
                     )}
                   </button>
                 </form>
@@ -372,7 +366,7 @@ export default function Login() {
                 {/* Divider */}
                 <div className="my-6 flex items-center gap-4">
                   <div className="h-px flex-1 bg-slate-200" />
-                  <span className="text-xs font-medium uppercase text-slate-400">Or continue with</span>
+                  <span className="text-xs font-medium uppercase text-slate-400">Ou continuer avec</span>
                   <div className="h-px flex-1 bg-slate-200" />
                 </div>
 
@@ -390,32 +384,32 @@ export default function Login() {
                     className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition-all hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
                   >
                     <Phone className="h-4 w-4" />
-                    Sign in with phone number
+                    Se connecter avec un numéro de téléphone
                   </button>
                 </div>
 
                 {/* Sign Up Section */}
                 <div className="mt-6 rounded-xl bg-slate-50 p-4">
                   <p className="text-center text-sm text-slate-600">
-                    Don't have an account?{' '}
+                    Vous n’avez pas de compte ?{' '}
                     <Link
                       to="/register"
                       className="font-semibold text-blue-600 transition-colors hover:text-blue-700"
                     >
-                      Create one now
+                      Créez-en un maintenant
                     </Link>
                   </p>
                 </div>
 
                 {/* Terms */}
                 <p className="mt-4 text-center text-xs text-slate-500">
-                  By signing in, you agree to BMP.tn's{' '}
+                  En vous connectant, vous acceptez les{' '}
                   <Link to="/terms" className="text-blue-600 hover:underline">
-                    Terms of Service
+                    Conditions d’utilisation
                   </Link>{' '}
-                  and{' '}
+                  et la{' '}
                   <Link to="/privacy" className="text-blue-600 hover:underline">
-                    Privacy Policy
+                    Politique de confidentialité
                   </Link>
                 </p>
               </div>
@@ -435,32 +429,32 @@ export default function Login() {
                 <span className="text-lg font-bold text-slate-900">BMP.tn</span>
               </div>
               <p className="mt-4 text-sm text-slate-600 max-w-md">
-                Tunisia's leading construction and engineering platform connecting artisans, prescripteurs, and suppliers.
+                La plateforme de référence en Tunisie pour connecter artisans, prescripteurs et fournisseurs.
               </p>
               <p className="mt-4 text-xs text-slate-500">
-                © {new Date().getFullYear()} BMP.tn. All rights reserved.
+                © {new Date().getFullYear()} BMP.tn. Tous droits réservés.
               </p>
             </div>
 
             {/* Quick Links */}
             <div>
               <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-900">
-                Platform
+                Plateforme
               </h3>
               <ul className="mt-4 space-y-2">
                 <li>
                   <Link to="/about" className="text-sm text-slate-600 transition-colors hover:text-blue-600">
-                    About Us
+                    À propos
                   </Link>
                 </li>
                 <li>
                   <Link to="/how-it-works" className="text-sm text-slate-600 transition-colors hover:text-blue-600">
-                    How it Works
+                    Comment ça marche
                   </Link>
                 </li>
                 <li>
                   <Link to="/pricing" className="text-sm text-slate-600 transition-colors hover:text-blue-600">
-                    Pricing
+                    Tarifs
                   </Link>
                 </li>
               </ul>
@@ -474,17 +468,17 @@ export default function Login() {
               <ul className="mt-4 space-y-2">
                 <li>
                   <Link to="/contact" className="text-sm text-slate-600 transition-colors hover:text-blue-600">
-                    Contact Us
+                    Contact
                   </Link>
                 </li>
                 <li>
                   <Link to="/privacy" className="text-sm text-slate-600 transition-colors hover:text-blue-600">
-                    Privacy Policy
+                    Politique de confidentialité
                   </Link>
                 </li>
                 <li>
                   <Link to="/terms" className="text-sm text-slate-600 transition-colors hover:text-blue-600">
-                    Terms of Service
+                    Conditions d’utilisation
                   </Link>
                 </li>
               </ul>

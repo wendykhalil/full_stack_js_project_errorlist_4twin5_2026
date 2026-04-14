@@ -129,7 +129,7 @@ export default function FournisseurMarketplace() {
     <div className="flex-1">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-semibold text-slate-900">{t('fournisseurMarketplace.title', 'Marketplace')}</h1>
+          <h1 className="text-3xl font-semibold text-slate-900">{t('fournisseurMarketplace.title', 'Marché')}</h1>
           <p className="mt-2 text-sm text-slate-500">{t('fournisseurMarketplace.subtitle', 'Parcourez les produits disponibles')}</p>
         </div>
       </div>
@@ -164,9 +164,9 @@ export default function FournisseurMarketplace() {
       </div>
 
       {loading ? (
-        <div className="mt-8 text-center py-12">{t('common.loading', 'Loading...')}</div>
+        <div className="mt-8 text-center py-12">{t('common.loading', 'Chargement...')}</div>
       ) : error ? (
-        <div className="mt-8 text-center py-12 text-red-600">{t('common.error', 'Error')}: {error}</div>
+        <div className="mt-8 text-center py-12 text-red-600">{t('common.error', 'Erreur')} : {error}</div>
       ) : products.length === 0 ? (
         <div className="mt-8 text-center py-12 text-slate-500">{t('fournisseurMarketplace.noProducts', 'Aucun produit trouvé')}</div>
       ) : (

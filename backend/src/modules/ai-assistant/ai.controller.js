@@ -27,11 +27,11 @@ async function suggestQuoteFromProject(req, res, next) {
   try {
     const artisanId = getUserId(req);
     const { projectId } = req.body || {};
-    if (!projectId) return res.status(400).json({ message: 'projectId is required' });
+    if (!projectId) return res.status(400).json({ message: 'projectId est requis' });
 
     const project = await Project.findById(projectId).lean();
-    if (!project) return res.status(404).json({ message: 'Project not found' });
-    if (String(project.artisanId) !== String(artisanId)) return res.status(403).json({ message: 'Forbidden' });
+    if (!project) return res.status(404).json({ message: 'Projet introuvable' });
+    if (String(project.artisanId) !== String(artisanId)) return res.status(403).json({ message: 'Accès interdit' });
 
     const data = await aiService.suggestQuoteFromProject(project);
     res.json({ ok: true, data });

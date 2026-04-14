@@ -5,7 +5,6 @@ import { useAuth } from "../auth/AuthContext";
 import { apiFetch } from "../auth/api";
 import { roleToBasePath } from "../auth/role";
 import logo from "../assets/bmp-logo.svg";
-import { useFormValidation, rules } from "../hooks/useFormValidation";
 import { useServerErrors } from "../hooks/useServerErrors";
 import FieldError from "../components/FieldError";
 
@@ -40,14 +39,6 @@ export default function PhoneLogin() {
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
-  const [error, setError] = useState("");
-
-  const { errors: phoneFormErrors, validate: validatePhone } = useFormValidation({
-    phoneInput: [rules.required('Numéro de téléphone requis'), rules.minLength(6, 'Minimum 6 chiffres')],
-  });
-  const { errors: codeFormErrors, validate: validateCode } = useFormValidation({
-    code: [rules.required('Code requis'), rules.minLength(6, 'Le code doit contenir 6 chiffres'), rules.maxLength(6, 'Le code doit contenir 6 chiffres')],
-  });
   const { fieldErrors: phoneServerErrors, globalError: phoneGlobalError, handleError: handlePhoneError, clearErrors: clearPhoneErrors } = useServerErrors();
   const { fieldErrors: codeServerErrors, globalError: codeGlobalError, handleError: handleCodeError, clearErrors: clearCodeErrors } = useServerErrors();
 
@@ -56,9 +47,7 @@ export default function PhoneLogin() {
   async function sendCode(e) {
     e.preventDefault();
     clearPhoneErrors();
-    setError("");
     setMsg("");
-    if (!validatePhone({ phoneInput })) return;
     setLoading(true);
     try {
       const res = await apiFetch("/auth/phone/start", { method: "POST", body: { phone: normalizedPhone } });
@@ -66,7 +55,6 @@ export default function PhoneLogin() {
       setStep("CODE");
     } catch (err) {
       handlePhoneError(err);
-      setError(err.message || "Failed to send verification code.");
     } finally {
       setLoading(false);
     }
@@ -75,9 +63,7 @@ export default function PhoneLogin() {
   async function verifyCode(e) {
     e.preventDefault();
     clearCodeErrors();
-    setError("");
     setMsg("");
-    if (!validateCode({ code })) return;
     setLoading(true);
     try {
       const res = await apiFetch("/auth/phone/verify", { method: "POST", body: { phone: normalizedPhone, code: code.trim() } });
@@ -89,7 +75,6 @@ export default function PhoneLogin() {
       navigate(roleToBasePath(res.user.role), { replace: true });
     } catch (err) {
       handleCodeError(err);
-      setError(err.message || "Invalid verification code.");
     } finally {
       setLoading(false);
     }
@@ -139,7 +124,7 @@ export default function PhoneLogin() {
                 to="/register" 
                 className="rounded-full bg-blue-600 px-4 py-1.5 text-sm font-semibold text-white shadow-sm"
               >
-                Sign Up
+                S’inscrire
               </Link>
             </div>
           </div>
@@ -160,7 +145,7 @@ export default function PhoneLogin() {
               aria-label="Go back"
             >
               <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
-              Back to login
+              Retour à la connexion
             </button>
 
             {/* Phone Login Card */}
@@ -171,19 +156,19 @@ export default function PhoneLogin() {
                   <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-blue-500 shadow-lg">
                     <Smartphone className="h-7 w-7 text-white" />
                   </div>
-                  <h2 className="text-2xl font-bold text-slate-900">Phone Sign In</h2>
+                  <h2 className="text-2xl font-bold text-slate-900">Connexion par téléphone</h2>
                   <p className="mt-2 text-sm text-slate-600">
                     {step === "PHONE" 
-                      ? "Enter your phone number to receive a verification code"
-                      : "Enter the 6-digit code sent to your phone"
+                      ? "Saisissez votre numéro de téléphone pour recevoir un code de vérification"
+                      : "Saisissez le code à 6 chiffres envoyé sur votre téléphone"
                     }
                   </p>
                 </div>
 
                 {/* Error Message */}
-                {error && (
+                {(step === "PHONE" ? phoneGlobalError : codeGlobalError) && (
                   <div className="mb-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3">
-                    <p className="text-sm text-rose-700">{error}</p>
+                    <p className="text-sm text-rose-700">{step === "PHONE" ? phoneGlobalError : codeGlobalError}</p>
                   </div>
                 )}
 
@@ -202,7 +187,7 @@ export default function PhoneLogin() {
                   <form onSubmit={sendCode} className="space-y-5">
                     <div>
                       <label className="mb-1.5 block text-sm font-semibold text-slate-700">
-                        Phone Number
+                        Numéro de téléphone
                       </label>
                       <div className="grid gap-3 sm:grid-cols-[200px,1fr]">
                         {/* Country Code Select */}
@@ -226,18 +211,18 @@ export default function PhoneLogin() {
                           value={phoneInput}
                           onChange={(e) => {
                             setPhoneInput(e.target.value);
-                            setError("");
+                            clearPhoneErrors();
                           }}
                           placeholder="22 345 678"
                           inputMode="numeric"
-                          className={`w-full rounded-xl border ${phoneFormErrors.phoneInput || phoneServerErrors.phoneInput ? 'border-red-400' : 'border-slate-300'} bg-white px-4 py-3 text-base text-slate-900 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20`}
+                          className={`w-full rounded-xl border ${phoneServerErrors.phoneInput ? 'border-red-400' : 'border-slate-300'} bg-white px-4 py-3 text-base text-slate-900 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20`}
                         />
                       </div>
-                      <FieldError error={phoneFormErrors.phoneInput} />
+                      <FieldError error={phoneServerErrors.phoneInput} />
 
                       {/* Full Number Preview */}
                       <div className="mt-3 rounded-xl bg-slate-50 border border-slate-200 px-4 py-3">
-                        <p className="text-xs text-slate-500">Your full number:</p>
+                        <p className="text-xs text-slate-500">Votre numéro complet :</p>
                         <p className="mt-1 text-sm font-semibold text-slate-900">{normalizedPhone}</p>
                       </div>
                     </div>
@@ -250,11 +235,11 @@ export default function PhoneLogin() {
                       {loading ? (
                         <div className="flex items-center gap-2">
                           <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                          Sending...
+                          Envoi...
                         </div>
                       ) : (
                         <>
-                          Send verification code
+                          Envoyer le code de vérification
                           <PhoneCall className="h-4 w-4" />
                         </>
                       )}
@@ -263,7 +248,7 @@ export default function PhoneLogin() {
                     {/* Security Note */}
                     <div className="flex items-center justify-center gap-2 text-xs text-slate-500">
                       <Shield className="h-3 w-3" />
-                      <span>We'll send a 6-digit code via SMS</span>
+                      <span>Nous enverrons un code à 6 chiffres par SMS</span>
                     </div>
                   </form>
                 ) : (
@@ -271,21 +256,21 @@ export default function PhoneLogin() {
                   <form onSubmit={verifyCode} className="space-y-5">
                     <div>
                       <label className="mb-1.5 block text-sm font-semibold text-slate-700">
-                        Verification Code
+                        Code de vérification
                       </label>
                       <input
                         value={code}
-                        onChange={(e) => setCode(e.target.value)}
-                        placeholder="Enter 6-digit code"
+                        onChange={(e) => { setCode(e.target.value); clearCodeErrors(); }}
+                        placeholder="Saisissez le code à 6 chiffres"
                         inputMode="numeric"
                         maxLength="6"
-                        className={`w-full rounded-xl border ${codeFormErrors.code || codeServerErrors.code ? 'border-red-400' : 'border-slate-300'} bg-white px-4 py-3 text-center text-2xl font-semibold tracking-wider text-slate-900 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20`}
+                        className={`w-full rounded-xl border ${codeServerErrors.code ? 'border-red-400' : 'border-slate-300'} bg-white px-4 py-3 text-center text-2xl font-semibold tracking-wider text-slate-900 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20`}
                       />
-                      <FieldError error={codeFormErrors.code} />
+                      <FieldError error={codeServerErrors.code} />
                       
                       {/* Phone Number Reference */}
                       <div className="mt-3 rounded-xl bg-slate-50 border border-slate-200 px-4 py-3">
-                        <p className="text-xs text-slate-500">Verifying for:</p>
+                        <p className="text-xs text-slate-500">Vérification pour :</p>
                         <p className="mt-1 text-sm font-semibold text-slate-900">{normalizedPhone}</p>
                       </div>
                     </div>
@@ -298,11 +283,11 @@ export default function PhoneLogin() {
                       {loading ? (
                         <div className="flex items-center gap-2">
                           <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                          Verifying...
+                          Vérification...
                         </div>
                       ) : (
                         <>
-                          Verify & Sign In
+                          Vérifier et se connecter
                           <BadgeCheck className="h-4 w-4" />
                         </>
                       )}
@@ -314,17 +299,16 @@ export default function PhoneLogin() {
                       onClick={() => {
                         setStep("PHONE");
                         setCode("");
-                        setError("");
                         setMsg("");
                       }}
                       className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition-all hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
                     >
-                      ← Edit phone number
+                      ← Modifier le numéro
                     </button>
 
                     {/* Resend Hint */}
                     <p className="text-center text-xs text-slate-500">
-                      Didn't receive the code? Check your SMS or try again
+                      Vous n’avez pas reçu le code ? Vérifiez vos SMS ou réessayez
                     </p>
                   </form>
                 )}
@@ -332,7 +316,7 @@ export default function PhoneLogin() {
                 {/* Divider */}
                 <div className="my-6 flex items-center gap-4">
                   <div className="h-px flex-1 bg-slate-200" />
-                  <span className="text-xs font-medium uppercase text-slate-400">or</span>
+                  <span className="text-xs font-medium uppercase text-slate-400">ou</span>
                   <div className="h-px flex-1 bg-slate-200" />
                 </div>
 
@@ -342,31 +326,31 @@ export default function PhoneLogin() {
                   onClick={() => navigate("/login")}
                   className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition-all hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
                 >
-                  Sign in with email instead
+                  Se connecter avec l’email
                 </button>
 
                 {/* Sign Up Link */}
                 <div className="mt-6 rounded-xl bg-slate-50 p-4">
                   <p className="text-center text-sm text-slate-600">
-                    Don't have an account?{' '}
+                    Vous n’avez pas de compte ?{' '}
                     <Link
                       to="/register"
                       className="font-semibold text-blue-600 transition-colors hover:text-blue-700"
                     >
-                      Create one now
+                      Créez-en un maintenant
                     </Link>
                   </p>
                 </div>
 
                 {/* Terms */}
                 <p className="mt-4 text-center text-xs text-slate-500">
-                  By signing in, you agree to BMP.tn's{' '}
+                  En vous connectant, vous acceptez les{' '}
                   <Link to="/terms" className="text-blue-600 hover:underline">
-                    Terms of Service
+                    Conditions d’utilisation
                   </Link>{' '}
-                  and{' '}
+                  et la{' '}
                   <Link to="/privacy" className="text-blue-600 hover:underline">
-                    Privacy Policy
+                    Politique de confidentialité
                   </Link>
                 </p>
               </div>
@@ -386,32 +370,32 @@ export default function PhoneLogin() {
                 <span className="text-lg font-bold text-slate-900">BMP.tn</span>
               </div>
               <p className="mt-4 text-sm text-slate-600 max-w-md">
-                Tunisia's leading construction and engineering platform connecting professionals across North Africa and beyond.
+                La plateforme de référence en Tunisie pour connecter les professionnels du bâtiment en Afrique du Nord et au-delà.
               </p>
               <p className="mt-4 text-xs text-slate-500">
-                © {new Date().getFullYear()} BMP.tn. All rights reserved.
+                © {new Date().getFullYear()} BMP.tn. Tous droits réservés.
               </p>
             </div>
 
             {/* Quick Links */}
             <div>
               <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-900">
-                Platform
+                Plateforme
               </h3>
               <ul className="mt-4 space-y-2">
                 <li>
                   <Link to="/about" className="text-sm text-slate-600 transition-colors hover:text-blue-600">
-                    About Us
+                    À propos
                   </Link>
                 </li>
                 <li>
                   <Link to="/how-it-works" className="text-sm text-slate-600 transition-colors hover:text-blue-600">
-                    How it Works
+                    Comment ça marche
                   </Link>
                 </li>
                 <li>
                   <Link to="/pricing" className="text-sm text-slate-600 transition-colors hover:text-blue-600">
-                    Pricing
+                    Tarifs
                   </Link>
                 </li>
               </ul>
@@ -425,17 +409,17 @@ export default function PhoneLogin() {
               <ul className="mt-4 space-y-2">
                 <li>
                   <Link to="/contact" className="text-sm text-slate-600 transition-colors hover:text-blue-600">
-                    Contact Us
+                    Contact
                   </Link>
                 </li>
                 <li>
                   <Link to="/privacy" className="text-sm text-slate-600 transition-colors hover:text-blue-600">
-                    Privacy Policy
+                    Politique de confidentialité
                   </Link>
                 </li>
                 <li>
                   <Link to="/terms" className="text-sm text-slate-600 transition-colors hover:text-blue-600">
-                    Terms of Service
+                    Conditions d’utilisation
                   </Link>
                 </li>
               </ul>

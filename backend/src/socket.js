@@ -19,7 +19,7 @@ function initSocket(httpServer, { corsOrigin }) {
         (socket.handshake.headers.authorization || '').split(' ')[1] ||
         '';
 
-      if (!token) return next(new Error('Unauthorized'));
+      if (!token) return next(new Error('Non autorisé'));
 
       const payload = jwt.verify(token, process.env.JWT_SECRET);
       socket.user = payload; // { sub, role }
@@ -32,7 +32,7 @@ function initSocket(httpServer, { corsOrigin }) {
       }
       return next();
     } catch (e) {
-      return next(new Error('Unauthorized'));
+      return next(new Error('Non autorisé'));
     }
   });
 
@@ -45,7 +45,7 @@ function initSocket(httpServer, { corsOrigin }) {
 }
 
 function getIO() {
-  if (!io) throw new Error('Socket.io not initialized');
+  if (!io) throw new Error('Socket.io non initialisé');
   return io;
 }
 

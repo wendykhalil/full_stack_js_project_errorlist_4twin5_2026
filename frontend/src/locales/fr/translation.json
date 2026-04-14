@@ -28,7 +28,7 @@
     "copyright": "© {{year}} BMP.tn - Tous droits réservés.",
     "copyrightExtra": "Plateforme digitale pour le secteur du bâtiment en Tunisie.",
     "version": "Version {{version}}",
-    "madeWith": "Made with ♥ in Tunisia"
+    "madeWith": "Fait avec ♥ en Tunisie"
   },
   "artisanDashboard": {
     "title": "Tableau de Bord",
@@ -188,8 +188,8 @@
     "roles": {
       "artisan": "Artisan",
       "prescripteur": "Prescripteur",
-      "supplier": "Supplier",
-      "admin": "Admin"
+      "supplier": "Fournisseur",
+      "admin": "Administrateur"
     },
     "status": {
       "active": "Actif",
@@ -244,7 +244,7 @@
     "projects": "Projets",
     "createQuote": "Créer un devis",
     "invoices": "Factures",
-    "marketplace": "Marketplace",
+    "marketplace": "Marché",
     "logout": "Déconnexion"
   },
 
@@ -334,7 +334,7 @@
     "sendButton": "Envoyer au client"
   },
    "artisanMarketplace": {
-    "title": "Marketplace",
+    "title": "Marché",
     "subtitle": "Découvrez et commandez des matériaux de construction",
     "searchPlaceholder": "Rechercher des produits...",
     "filterAllCategories": "Toutes catégories",
@@ -479,7 +479,7 @@
       "desc": "Gérer votre catalogue de produits"
     },
     "admin": {
-      "title": "Admin",
+      "title": "Administrateur",
       "desc": "Administrer la plateforme"
     },
     "alreadyAccount": "Vous avez déjà un compte?",

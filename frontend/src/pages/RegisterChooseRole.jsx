@@ -17,7 +17,7 @@ const RoleCard = ({ icon, title, desc, onClick }) => (
         {icon}
       </div>
       <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500 transition group-hover:bg-blue-50 group-hover:text-blue-700">
-        Select
+        Sélectionner
       </span>
     </div>
 
@@ -46,8 +46,8 @@ export default function RegisterChooseRole() {
 
           <div className="mt-8 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-2xl shadow-slate-200/70 sm:p-7 lg:p-8">
             <div className="mb-5 flex flex-col gap-2 text-center sm:mb-7">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-600">Account setup</p>
-              <p className="text-sm text-slate-500">Choose the role that best matches how you will use the platform.</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-600">Configuration du compte</p>
+              <p className="text-sm text-slate-500">Choisissez le rôle qui correspond le mieux à votre utilisation de la plateforme.</p>
             </div>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

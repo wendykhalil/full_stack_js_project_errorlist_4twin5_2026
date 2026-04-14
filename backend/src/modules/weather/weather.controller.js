@@ -10,13 +10,13 @@ exports.getWeatherByCoords = async (req, res) => {
 
     // Validate coordinates
     if (!lat || !lon) {
-      return apiResponse(res, 'Latitude and longitude are required', null, 400);
+      return apiResponse(res, 'La latitude et la longitude sont requises', null, 400);
     }
 
     // Validate API key
     if (!OPENWEATHER_API_KEY) {
       console.error('OpenWeatherMap API key not configured');
-      return apiResponse(res, 'Weather service not configured', null, 500);
+      return apiResponse(res, 'Service météo non configuré', null, 500);
     }
 
     // Call OpenWeatherMap API
@@ -25,14 +25,14 @@ exports.getWeatherByCoords = async (req, res) => {
     const response = await fetch(url);
 
     if (!response.ok) {
-      let errorMessage = 'Unable to fetch weather data';
+      let errorMessage = 'Impossible de récupérer les données météo';
       
       if (response.status === 401) {
-        errorMessage = 'API key is invalid or not yet active. Please wait a few hours for activation.';
+        errorMessage = 'La clé API est invalide ou pas encore active. Veuillez patienter quelques heures pour l’activation.';
       } else if (response.status === 429) {
-        errorMessage = 'API rate limit exceeded. Please try again later.';
+        errorMessage = 'Limite de requêtes API dépassée. Veuillez réessayer plus tard.';
       } else if (response.status === 404) {
-        errorMessage = 'Location not found.';
+        errorMessage = 'Localisation introuvable.';
       }
       
       return apiResponse(res, errorMessage, null, response.status);
@@ -40,10 +40,10 @@ exports.getWeatherByCoords = async (req, res) => {
 
     const data = await response.json();
     
-    return apiResponse(res, 'Weather data fetched successfully', data);
+    return apiResponse(res, 'Données météo récupérées avec succès', data);
   } catch (err) {
     console.error('Weather API Error:', err);
-    return apiResponse(res, 'Failed to fetch weather data', null, 500);
+    return apiResponse(res, 'Échec de récupération des données météo', null, 500);
   }
 };
 
@@ -54,13 +54,13 @@ exports.getWeatherByCity = async (req, res) => {
 
     // Validate city
     if (!city) {
-      return apiResponse(res, 'City name is required', null, 400);
+      return apiResponse(res, 'Le nom de la ville est requis', null, 400);
     }
 
     // Validate API key
     if (!OPENWEATHER_API_KEY) {
       console.error('OpenWeatherMap API key not configured');
-      return apiResponse(res, 'Weather service not configured', null, 500);
+      return apiResponse(res, 'Service météo non configuré', null, 500);
     }
 
     // Call OpenWeatherMap API
@@ -69,14 +69,14 @@ exports.getWeatherByCity = async (req, res) => {
     const response = await fetch(url);
 
     if (!response.ok) {
-      let errorMessage = 'Unable to fetch weather data';
+      let errorMessage = 'Impossible de récupérer les données météo';
       
       if (response.status === 401) {
-        errorMessage = 'API key is invalid or not yet active. Please wait a few hours for activation.';
+        errorMessage = 'La clé API est invalide ou pas encore active. Veuillez patienter quelques heures pour l’activation.';
       } else if (response.status === 429) {
-        errorMessage = 'API rate limit exceeded. Please try again later.';
+        errorMessage = 'Limite de requêtes API dépassée. Veuillez réessayer plus tard.';
       } else if (response.status === 404) {
-        errorMessage = 'City not found.';
+        errorMessage = 'Ville introuvable.';
       }
       
       return apiResponse(res, errorMessage, null, response.status);
@@ -84,9 +84,9 @@ exports.getWeatherByCity = async (req, res) => {
 
     const data = await response.json();
     
-    return apiResponse(res, 'Weather data fetched successfully', data);
+    return apiResponse(res, 'Données météo récupérées avec succès', data);
   } catch (err) {
     console.error('Weather API Error:', err);
-    return apiResponse(res, 'Failed to fetch weather data', null, 500);
+    return apiResponse(res, 'Échec de récupération des données météo', null, 500);
   }
 };

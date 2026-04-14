@@ -63,7 +63,7 @@ async function createProject(req, res, next) {
     } = req.body || {};
 
     if (!title || typeof title !== 'string' || !title.trim()) {
-      return res.status(400).json({ message: 'Title is required' });
+      return res.status(400).json({ message: 'Le titre est requis' });
     }
 
     const images = await mapFilesToImages(req);
@@ -141,12 +141,12 @@ async function getProjectById(req, res, next) {
       .populate('artisanId', 'firstName lastName email role')
       .lean();
 
-    if (!project) return res.status(404).json({ message: 'Project not found' });
+    if (!project) return res.status(404).json({ message: 'Projet introuvable' });
 
     const role = req.user?.role;
 
     if (role === 'ARTISAN' && String(project.artisanId?._id || project.artisanId) !== String(getUserId(req))) {
-      return res.status(403).json({ message: 'Forbidden' });
+      return res.status(403).json({ message: 'Accès interdit' });
     }
 
     return res.json({ ok: true, project });
@@ -177,15 +177,15 @@ async function updateProject(req, res, next) {
     } = req.body || {};
 
     const project = await Project.findById(req.params.id);
-    if (!project) return res.status(404).json({ message: 'Project not found' });
+    if (!project) return res.status(404).json({ message: 'Projet introuvable' });
 
     if (String(project.artisanId) !== String(getUserId(req))) {
-      return res.status(403).json({ message: 'Forbidden' });
+      return res.status(403).json({ message: 'Accès interdit' });
     }
 
     if (title !== undefined) {
       if (typeof title !== 'string' || !title.trim()) {
-        return res.status(400).json({ message: 'Title must be a non-empty string' });
+        return res.status(400).json({ message: 'Le titre doit être une chaîne non vide' });
       }
       project.title = title.trim();
     }
@@ -206,19 +206,19 @@ async function updateProject(req, res, next) {
     }
 
     const b = toNumber(budgetTND);
-    if (budgetTND !== undefined && b === undefined) return res.status(400).json({ message: 'budgetTND must be a number' });
+    if (budgetTND !== undefined && b === undefined) return res.status(400).json({ message: 'budgetTND doit être un nombre' });
     if (b !== undefined) project.budgetTND = b;
 
     const s = toNumber(surfaceM2);
-    if (surfaceM2 !== undefined && s === undefined) return res.status(400).json({ message: 'surfaceM2 must be a number' });
+    if (surfaceM2 !== undefined && s === undefined) return res.status(400).json({ message: 'surfaceM2 doit être un nombre' });
     if (s !== undefined) project.surfaceM2 = s;
 
     const sd = toDate(startDate);
-    if (startDate !== undefined && !sd) return res.status(400).json({ message: 'startDate must be a valid date' });
+    if (startDate !== undefined && !sd) return res.status(400).json({ message: 'startDate doit être une date valide' });
     if (sd) project.startDate = sd;
 
     const ed = toDate(endDate);
-    if (endDate !== undefined && !ed) return res.status(400).json({ message: 'endDate must be a valid date' });
+    if (endDate !== undefined && !ed) return res.status(400).json({ message: 'endDate doit être une date valide' });
     if (ed) project.endDate = ed;
 
     if (contactPhone !== undefined || phoneNumber !== undefined) {
@@ -252,10 +252,10 @@ async function updateProject(req, res, next) {
 async function deleteProject(req, res, next) {
   try {
     const project = await Project.findById(req.params.id);
-    if (!project) return res.status(404).json({ message: 'Project not found' });
+    if (!project) return res.status(404).json({ message: 'Projet introuvable' });
 
     if (String(project.artisanId) !== String(getUserId(req))) {
-      return res.status(403).json({ message: 'Forbidden' });
+      return res.status(403).json({ message: 'Accès interdit' });
     }
 
     await Project.deleteOne({ _id: project._id });

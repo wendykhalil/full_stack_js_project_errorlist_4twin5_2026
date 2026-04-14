@@ -5,11 +5,10 @@ import SimpleFooter from "../components/Footer";
 import { useTranslation } from '../i18n';
 import { useAuth } from "../auth/AuthContext";
 import { getMyProducts, updateProduct } from "../auth/api.js";
-import { useFormValidation, rules } from "../hooks/useFormValidation";
 import { useServerErrors } from "../hooks/useServerErrors";
 import FieldError from "../components/FieldError";
 
-// Input with error support
+// Champ avec gestion d'erreur
 const Input = ({ label, placeholder, type = "text", value, onChange, error }) => (
   <div>
     <label className="mb-2 block text-sm font-semibold text-slate-900">{label}</label>
@@ -127,12 +126,6 @@ export default function FournisseurProduitEdit() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  const { errors: formErrors, validate } = useFormValidation({
-    name: [rules.required('Nom requis'), rules.minLength(2)],
-    price: [rules.required('Prix requis'), rules.positiveNumber('Doit être un nombre positif')],
-    stock: [rules.required('Stock requis'), rules.positiveNumber('Doit être un nombre positif')],
-    description: [rules.required('Description requise'), rules.minLength(10)],
-  });
   const { fieldErrors: serverErrors, globalError: serverGlobalError, handleError, clearErrors } = useServerErrors();
   
   // États pour les catégories
@@ -267,11 +260,6 @@ export default function FournisseurProduitEdit() {
     e.preventDefault();
     clearErrors();
     setSubmitting(true);
-    setError('');
-    if (!validate({ name: formData.name, price: formData.price, stock: formData.stock, description: formData.description })) {
-      setSubmitting(false);
-      return;
-    }
     try {
       const fd = new FormData();
       
@@ -279,8 +267,8 @@ export default function FournisseurProduitEdit() {
       
       const dataToSend = {
         name: formData.name,
-        price: parseFloat(formData.price) || 0,
-        stock: parseInt(formData.stock) || 0,
+        price: formData.price,
+        stock: formData.stock,
         description: formData.description,
         // Envoyer les fichiers existants qui n'ont pas été supprimés
         existingImages: existingImages,
@@ -310,7 +298,6 @@ export default function FournisseurProduitEdit() {
     } catch (error) {
       console.error('Error updating product:', error);
       handleError(error);
-      setError(error.message || 'Error updating product');
     } finally {
       setSubmitting(false);
     }
@@ -319,7 +306,7 @@ export default function FournisseurProduitEdit() {
   if (loading || loadingCategories) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <div className="text-center">Loading product data...</div>
+        <div className="text-center">Chargement des données du produit...</div>
       </div>
     );
   }
@@ -350,7 +337,7 @@ export default function FournisseurProduitEdit() {
               placeholder={t('fournisseurProduitNew.productNamePlaceholder')}
               value={formData.name}
               onChange={(e) => setFormData({...formData, name: e.target.value})}
-              error={formErrors.name || serverErrors.name}
+              error={serverErrors.name}
             />
             
             {/* Catégorie avec option d'ajout */}
@@ -421,7 +408,7 @@ export default function FournisseurProduitEdit() {
               type="text"
               value={formData.price}
               onChange={(e) => setFormData({...formData, price: e.target.value})}
-              error={formErrors.price || serverErrors.price}
+              error={serverErrors.price}
             />
 
             <Input 
@@ -430,7 +417,7 @@ export default function FournisseurProduitEdit() {
               type="text"
               value={formData.stock}
               onChange={(e) => setFormData({...formData, stock: e.target.value})}
-              error={formErrors.stock || serverErrors.stock}
+              error={serverErrors.stock}
             />
             <div />
           </div>
@@ -441,7 +428,7 @@ export default function FournisseurProduitEdit() {
               placeholder={t('fournisseurProduitNew.descriptionPlaceholder')} 
               value={formData.description}
               onChange={(e) => setFormData({...formData, description: e.target.value})}
-              error={formErrors.description || serverErrors.description}
+              error={serverErrors.description}
             />
           </div>
 
@@ -466,9 +453,9 @@ export default function FournisseurProduitEdit() {
             />
           </div>
 
-          {(error || serverGlobalError) && (
+          {serverGlobalError && (
             <div className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">
-              {error || serverGlobalError}
+              {serverGlobalError}
             </div>
           )}
 

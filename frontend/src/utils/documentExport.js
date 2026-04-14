@@ -115,7 +115,7 @@ export function exportDocumentPdf(docType, docData) {
   pdf.setFontSize(9);
   pdf.setTextColor(100, 116, 139);
   pdf.text('Generated from BMP.tn', 14, footerY);
-  pdf.text('Thank you for your trust.', pageWidth - 14, footerY, { align: 'right' });
+  pdf.text('Merci pour votre confiance.', pageWidth - 14, footerY, { align: 'right' });
   pdf.save(`${title.toLowerCase()}-${ref}.pdf`);
 }
 

@@ -8,7 +8,7 @@ router.get("/public/products", async (req, res) => {
     const apiKey = req.headers["x-api-key"];
 
     if (!apiKey || apiKey !== process.env.API_KEY) {
-      return res.status(401).json({ message: "Unauthorized" });
+      return res.status(401).json({ message: "Non autorisé" });
     }
 
     const products = await Product.find({ isApproved: true });

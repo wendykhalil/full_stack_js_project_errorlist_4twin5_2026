@@ -7,6 +7,7 @@ import { useTranslation } from "../i18n";
 import Footer from "../components/Footer";
 import PublicNavbar from "../components/PublicNavbar";
 import logo from "../assets/bmp-logo.svg";
+import { useServerErrors } from "../hooks/useServerErrors";
 
 function PasswordStrength({ password }) {
   const { t } = useTranslation();
@@ -155,10 +156,10 @@ function PhoneInput({ label, countryCode, setCountryCode, phoneNumber, setPhoneN
 }
 
 const roleDetails = {
-  artisan: { icon: UserPlus, title: "Artisan", text: "Create a professional account to manage projects, quotes and invoices." },
-  prescripteur: { icon: ShieldCheck, title: "Prescripteur", text: "Register to discover artisans and products in a structured workflow." },
-  fournisseur: { icon: Building2, title: "Fournisseur", text: "Open your supplier account and manage products and incoming orders." },
-  admin: { icon: ShieldCheck, title: "Admin", text: "Set up an internal administration account with the same secure registration flow." },
+  artisan: { icon: UserPlus, title: "Artisan", text: "Créez un compte professionnel pour gérer vos projets, devis et factures." },
+  prescripteur: { icon: ShieldCheck, title: "Prescripteur", text: "Inscrivez-vous pour découvrir des artisans et des produits dans un parcours structuré." },
+  fournisseur: { icon: Building2, title: "Fournisseur", text: "Ouvrez votre compte fournisseur et gérez vos produits ainsi que vos commandes." },
+  admin: { icon: ShieldCheck, title: "Administrateur", text: "Créez un compte interne pour administrer la plateforme en toute sécurité." },
 };
 
 export default function RegisterForm() {
@@ -177,70 +178,14 @@ export default function RegisterForm() {
   const [countryCode, setCountryCode] = useState("+216");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({});
-  const [serverError, setServerError] = useState("");
-
-  function validate() {
-    const errors = {};
-
-    if (!lastName.trim()) {
-      errors.lastName = t("registerForm.errors.lastNameRequired") || "Le nom est requis";
-    } else if (lastName.trim().length < 2) {
-      errors.lastName = t("registerForm.errors.lastNameMin") || "Le nom doit contenir au moins 2 caractères";
-    } else if (lastName.trim().length > 60) {
-      errors.lastName = t("registerForm.errors.lastNameMax") || "Le nom ne peut pas dépasser 60 caractères";
-    }
-
-    if (!firstName.trim()) {
-      errors.firstName = t("registerForm.errors.firstNameRequired") || "Le prénom est requis";
-    } else if (firstName.trim().length < 2) {
-      errors.firstName = t("registerForm.errors.firstNameMin") || "Le prénom doit contenir au moins 2 caractères";
-    } else if (firstName.trim().length > 60) {
-      errors.firstName = t("registerForm.errors.firstNameMax") || "Le prénom ne peut pas dépasser 60 caractères";
-    }
-
-    if (!email.trim()) {
-      errors.email = t("registerForm.errors.emailRequired") || "L'email est requis";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      errors.email = t("registerForm.errors.emailInvalid") || "Format d'email invalide (ex: nom@domaine.com)";
-    }
-
-    if (!password) {
-      errors.password = t("registerForm.errors.passwordRequired") || "Le mot de passe est requis";
-    } else if (password.length < 8) {
-      errors.password = t("registerForm.errors.passwordMin") || "Le mot de passe doit contenir au moins 8 caractères";
-    } else if (!/[A-Z]/.test(password)) {
-      errors.password = t("registerForm.errors.passwordUppercase") || "Le mot de passe doit contenir au moins une majuscule";
-    } else if (!/[0-9]/.test(password)) {
-      errors.password = t("registerForm.errors.passwordNumber") || "Le mot de passe doit contenir au moins un chiffre";
-    }
-
-    const cleaned = phoneNumber.replace(/\s+/g, "");
-    if (!cleaned) {
-      errors.phoneNumber = t("registerForm.errors.phoneRequired") || "Le numéro de téléphone est requis";
-    } else if (!/^\d{6,14}$/.test(cleaned)) {
-      errors.phoneNumber = t("registerForm.errors.phoneInvalid") || "Le numéro de téléphone doit contenir entre 6 et 14 chiffres";
-    }
-
-    return errors;
-  }
-
-  function clearError(field) {
-    setErrors((prev) => ({ ...prev, [field]: undefined }));
-  }
+  const { fieldErrors, globalError, handleError, clearErrors } = useServerErrors();
 
   async function onSubmit(e) {
     e.preventDefault();
-    setServerError("");
+    clearErrors();
 
     if (!roleEnum) {
-      setServerError(t("registerForm.errors.invalidRole") || "Rôle invalide");
-      return;
-    }
-
-    const fieldErrors = validate();
-    if (Object.keys(fieldErrors).length > 0) {
-      setErrors(fieldErrors);
+      handleError(new Error(t("registerForm.errors.invalidRole") || "Rôle invalide"));
       return;
     }
 
@@ -259,7 +204,7 @@ export default function RegisterForm() {
         state: { info: t("registerForm.successMessage") || "Inscription réussie ! Vous pouvez maintenant vous connecter." },
       });
     } catch (err) {
-      setServerError(err.message || t("registerForm.errors.registerError") || "Une erreur est survenue lors de l'inscription");
+      handleError(err);
     } finally {
       setLoading(false);
     }
@@ -275,7 +220,7 @@ export default function RegisterForm() {
         <div className="relative z-10 w-full max-w-3xl">
           <div className="mx-auto max-w-xl text-center">
             <img src={logo} alt="BMP.tn logo" className="mx-auto h-12 w-12 rounded-2xl border border-slate-200 bg-white p-1 shadow-sm" />
-            <h1 className="mt-5 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">{t("registerForm.title") || "Create your account"}</h1>
+            <h1 className="mt-5 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">{t("registerForm.title") || "Créer votre compte"}</h1>
             <p className="mt-3 text-sm leading-6 text-slate-500 sm:text-base">{t("registerForm.subtitle")}</p>
           </div>
 
@@ -286,7 +231,7 @@ export default function RegisterForm() {
                   <RoleIcon className="h-5 w-5 text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-600">Selected role</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-600">Rôle sélectionné</p>
                   <p className="mt-1 text-lg font-semibold text-slate-900">{roleMeta.title}</p>
                   <p className="mt-1 text-sm text-slate-500">{roleMeta.text}</p>
                 </div>
@@ -297,7 +242,7 @@ export default function RegisterForm() {
                 className="inline-flex items-center gap-2 self-start rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
               >
                 <ArrowLeft className="h-4 w-4" />
-                Change role
+                Changer de rôle
               </button>
             </div>
 
@@ -309,9 +254,9 @@ export default function RegisterForm() {
                   value={lastName}
                   onChange={(v) => {
                     setLastName(v);
-                    clearError("lastName");
+                    clearErrors();
                   }}
-                  error={errors.lastName}
+                  error={fieldErrors.lastName}
                 />
                 <Input
                   label={t("registerForm.firstNameLabel")}
@@ -319,9 +264,9 @@ export default function RegisterForm() {
                   value={firstName}
                   onChange={(v) => {
                     setFirstName(v);
-                    clearError("firstName");
+                    clearErrors();
                   }}
-                  error={errors.firstName}
+                  error={fieldErrors.firstName}
                 />
               </div>
 
@@ -332,9 +277,9 @@ export default function RegisterForm() {
                 value={email}
                 onChange={(v) => {
                   setEmail(v);
-                  clearError("email");
+                  clearErrors();
                 }}
-                error={errors.email}
+                error={fieldErrors.email}
               />
 
               <div>
@@ -345,9 +290,9 @@ export default function RegisterForm() {
                   value={password}
                   onChange={(v) => {
                     setPassword(v);
-                    clearError("password");
+                    clearErrors();
                   }}
-                  error={errors.password}
+                  error={fieldErrors.password}
                   hint={t("registerForm.passwordHint")}
                 />
                 <PasswordStrength password={password} />
@@ -360,14 +305,14 @@ export default function RegisterForm() {
                 phoneNumber={phoneNumber}
                 setPhoneNumber={(v) => {
                   setPhoneNumber(v);
-                  clearError("phoneNumber");
+                  clearErrors();
                 }}
-                error={errors.phoneNumber}
+                error={fieldErrors.phoneNumber}
               />
 
-              {serverError && (
+              {globalError && (
                 <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                  {serverError}
+                  {globalError}
                 </div>
               )}
 

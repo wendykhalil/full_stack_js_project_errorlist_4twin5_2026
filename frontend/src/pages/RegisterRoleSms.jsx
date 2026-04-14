@@ -6,9 +6,9 @@ import { useAuth } from "../auth/AuthContext";
 import { UserCheck } from "lucide-react";
 
 const roles = [
-  { key: Roles.ARTISAN, label: "Artisan", desc: "Projects, quotes, invoices..." },
-  { key: Roles.PRESCRIPTEUR, label: "Prescripteur", desc: "Browse products & artisans" },
-  { key: Roles.SUPPLIER, label: "Fournisseur", desc: "Manage products & sales" },
+  { key: Roles.ARTISAN, label: "Artisan", desc: "Projets, devis, factures..." },
+  { key: Roles.PRESCRIPTEUR, label: "Prescripteur", desc: "Découvrir des produits et des artisans" },
+  { key: Roles.SUPPLIER, label: "Fournisseur", desc: "Gérer les produits et les ventes" },
 ];
 
 export default function RegisterRoleSms() {
@@ -26,7 +26,7 @@ export default function RegisterRoleSms() {
       setSession(res.token, res.user);
       navigate(roleToBasePath(res.user.role), { replace: true });
     } catch (e) {
-      setError(e.message || "Failed to set role");
+      setError(e.message || "Impossible de définir le rôle");
     } finally {
       setLoading(false);
     }
@@ -40,8 +40,8 @@ export default function RegisterRoleSms() {
             <UserCheck className="h-5 w-5" />
           </div>
           <div>
-            <div className="text-lg font-semibold text-slate-900 dark:text-white">Choose your role</div>
-            <div className="text-sm text-slate-500 dark:text-slate-400">One-time setup after SMS login.</div>
+            <div className="text-lg font-semibold text-slate-900 dark:text-white">Choisissez votre rôle</div>
+            <div className="text-sm text-slate-500 dark:text-slate-400">Configuration unique après connexion par SMS.</div>
           </div>
         </div>
 
@@ -76,14 +76,14 @@ export default function RegisterRoleSms() {
             onClick={submit}
             className="flex-1 rounded-xl bg-indigo-600 text-white px-4 py-3 font-medium hover:bg-indigo-700 disabled:opacity-60"
           >
-            {loading ? "Saving..." : "Continue"}
+            {loading ? "Enregistrement..." : "Continuer"}
           </button>
           <button
             type="button"
             onClick={() => navigate("/login")}
             className="flex-1 rounded-xl border border-slate-300 px-4 py-3 font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-700/40"
           >
-            Back to login
+            Retour à la connexion
           </button>
         </div>
       </div>

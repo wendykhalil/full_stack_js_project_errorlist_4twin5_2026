@@ -68,10 +68,10 @@ export default function RegisterRole() {
   const from = location.state?.from;
   const subtitle =
     from === "google"
-      ? "One-time setup after Google login"
+      ? "Configuration unique après connexion Google"
       : from === "sms"
-      ? "One-time setup after SMS login"
-      : "Choose your role (one-time)";
+      ? "Configuration unique après connexion par SMS"
+      : "Choisissez votre rôle (une seule fois)";
 
   async function choose(role) {
     setError("");
@@ -85,7 +85,7 @@ export default function RegisterRole() {
       setSession(res.token, res.user);
       navigate(roleToBasePath(res.user.role), { replace: true });
     } catch (e) {
-      setError(e.message || "Failed to set role");
+      setError(e.message || "Impossible de définir le rôle");
     } finally {
       setLoading(false);
     }
@@ -200,10 +200,10 @@ export default function RegisterRole() {
         </div>
 
         <h1 className="mt-4 sm:mt-6 text-2xl sm:text-3xl font-semibold text-center text-slate-900 dark:text-white px-2">
-          Choose your role
+          Choisissez votre rôle
         </h1>
         <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-center text-slate-500 dark:text-slate-400 max-w-md px-4 mx-auto">
-          {subtitle}. You will be asked only the first time.
+          {subtitle}. Cette étape ne vous sera demandée qu’une seule fois.
         </p>
 
         {error && (
@@ -216,30 +216,30 @@ export default function RegisterRole() {
           <RoleCard
             icon={<HardHat className="h-5 w-5 sm:h-6 sm:w-6" />}
             title="Artisan"
-            desc="Projects, quotes, invoices..."
+            desc="Projets, devis, factures..."
             disabled={loading}
             onClick={() => choose(Roles.ARTISAN)}
           />
           <RoleCard
             icon={<User className="h-5 w-5 sm:h-6 sm:w-6" />}
             title="Prescripteur"
-            desc="Browse products & artisans"
+            desc="Découvrir des produits et des artisans"
             disabled={loading}
             onClick={() => choose(Roles.PRESCRIPTEUR)}
           />
           <RoleCard
             icon={<Package className="h-5 w-5 sm:h-6 sm:w-6" />}
             title="Fournisseur"
-            desc="Manage products & sales"
+            desc="Gérer les produits et les ventes"
             disabled={loading}
             onClick={() => choose(Roles.SUPPLIER)}
           />
         </div>
 
         <div className="mt-8 sm:mt-10 text-xs sm:text-sm text-center text-slate-500 dark:text-slate-400">
-          If you want to cancel, go back to{" "}
+          Pour annuler, retournez à la{" "}
           <Link to="/login" className="font-semibold text-indigo-700 hover:underline dark:text-indigo-400">
-            login
+            page de connexion
           </Link>
           .
         </div>

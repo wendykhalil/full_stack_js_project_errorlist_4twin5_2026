@@ -11,20 +11,20 @@ async function create(req, res, next) {
     const authorId = uid(req);
     const { targetId, targetType, rating, comment, sourceId } = req.body || {};
 
-    if (!targetId) return res.status(400).json({ message: "targetId is required" });
+    if (!targetId) return res.status(400).json({ message: "targetId est requis" });
     if (!targetType || !["ARTISAN", "PRESCRIPTEUR"].includes(targetType)) {
-      return res.status(400).json({ message: "targetType must be ARTISAN or PRESCRIPTEUR" });
+      return res.status(400).json({ message: "targetType doit être ARTISAN ou PRESCRIPTEUR" });
     }
     if (!rating || rating < 1 || rating > 5) {
-      return res.status(400).json({ message: "rating must be between 1 and 5" });
+      return res.status(400).json({ message: "La note doit être comprise entre 1 et 5" });
     }
 
     // Verify the service request is completed and involves both users
     if (sourceId) {
       const sr = await ServiceRequest.findById(sourceId).lean();
-      if (!sr) return res.status(404).json({ message: "Service request not found" });
+      if (!sr) return res.status(404).json({ message: "Demande de service introuvable" });
       if (!['COMPLETED', 'ASSIGNED'].includes(sr.status)) {
-        return res.status(400).json({ message: "Can only review after an accepted or completed service request" });
+        return res.status(400).json({ message: "Vous ne pouvez laisser un avis qu’après acceptation ou clôture de la demande de service" });
       }
 
       const authorStr = String(authorId);
@@ -32,13 +32,13 @@ async function create(req, res, next) {
       const isArtisan = String(sr.assignedArtisanId) === authorStr;
 
       if (!isPrescrip && !isArtisan) {
-        return res.status(403).json({ message: "You were not part of this service request" });
+        return res.status(403).json({ message: "Vous ne faites pas partie de cette demande de service" });
       }
     }
 
     // Prevent self-review
     if (String(authorId) === String(targetId)) {
-      return res.status(400).json({ message: "You cannot review yourself" });
+      return res.status(400).json({ message: "Vous ne pouvez pas vous évaluer vous-même" });
     }
 
     const review = await Review.create({
@@ -57,7 +57,7 @@ async function create(req, res, next) {
     return res.status(201).json({ ok: true, review: populated });
   } catch (err) {
     if (err.code === 11000) {
-      return res.status(409).json({ message: "You already reviewed this service request" });
+      return res.status(409).json({ message: "Vous avez déjà évalué cette demande de service" });
     }
     return next(err);
   }
@@ -129,9 +129,9 @@ async function getPending(req, res, next) {
 async function remove(req, res, next) {
   try {
     const review = await Review.findById(req.params.id);
-    if (!review) return res.status(404).json({ message: "Not found" });
+    if (!review) return res.status(404).json({ message: "Introuvable" });
     if (String(review.authorId) !== String(uid(req))) {
-      return res.status(403).json({ message: "Forbidden" });
+      return res.status(403).json({ message: "Accès interdit" });
     }
     await Review.deleteOne({ _id: review._id });
     return res.json({ ok: true });

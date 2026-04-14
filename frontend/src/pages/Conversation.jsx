@@ -174,7 +174,7 @@ export default function Conversation() {
             onClick={() => window.location.reload()}
             className="mt-4 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
           >
-            {t('common.retry', 'Retry')}
+            {t('common.retry', 'Réessayer')}
           </button>
         </div>
       </div>
@@ -209,9 +209,9 @@ export default function Conversation() {
                 </div>
                 <div>
                   <h2 className="font-semibold text-slate-900">
-                    <span data-no-auto-translate translate="no">{otherUser ? `${otherUser.firstName} ${otherUser.lastName}` : t('messages.userFallback', 'User')}</span>
+                    <span data-no-auto-translate translate="no">{otherUser ? `${otherUser.firstName} ${otherUser.lastName}` : t('messages.userFallback', 'Utilisateur')}</span>
                   </h2>
-                  <p className="text-xs text-slate-400">{t('messages.online', 'Online')}</p>
+                  <p className="text-xs text-slate-400">{t('messages.online', 'En ligne')}</p>
                 </div>
               </div>
             </div>
@@ -236,9 +236,9 @@ export default function Conversation() {
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
                   <MessageCircle className="h-8 w-8 text-slate-400" />
                 </div>
-                <h3 className="mt-4 text-lg font-semibold text-slate-900">{t('messages.emptyConversationTitle', 'No messages yet')}</h3>
+                <h3 className="mt-4 text-lg font-semibold text-slate-900">{t('messages.emptyConversationTitle', 'Aucun message pour le moment')}</h3>
                 <p className="mt-1 text-sm text-slate-500">
-                  {t('messages.emptyConversationSubtitle', 'Send a message to start the conversation')}
+                  {t('messages.emptyConversationSubtitle', 'Envoyez un message pour démarrer la conversation')}
                 </p>
               </div>
             ) : (
@@ -310,7 +310,7 @@ export default function Conversation() {
                 type="text"
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
-                placeholder={t('messages.writePlaceholder', 'Write your message...')}
+                placeholder={t('messages.writePlaceholder', 'Écrivez votre message...')}
                 className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
                 disabled={sending}
               />
