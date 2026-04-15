@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeftRight, History, LayoutDashboard, Shield, UserCircle2, Users, Tag } from "lucide-react";
+import { ArrowLeftRight, History, LayoutDashboard, Shield, UserCircle2, Users, Tag, Flag } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import RoleWorkspace from "../components/RoleWorkspace";
 
@@ -14,6 +14,7 @@ export default function AdminLayout() {
     { to: "/admin/activity", label: "Activite", icon: <History className="h-5 w-5" /> },
     { to: "/admin/transactions", label: "Transactions", icon: <ArrowLeftRight className="h-5 w-5" /> },
     { to: "/admin/promo-codes", label: "Codes Promo", icon: <Tag className="h-5 w-5" /> },
+    { to: "/admin/reports", label: "Signalements", icon: <Flag className="h-5 w-5" /> },
   ];
 
   return (

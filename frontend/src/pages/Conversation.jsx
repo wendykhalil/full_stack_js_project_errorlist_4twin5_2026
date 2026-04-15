@@ -17,7 +17,11 @@ import {
   MoreVertical,
   CheckCheck,
   Check,
-  MessageCircle
+  MessageCircle,
+  Edit3,
+  Trash2,
+  X,
+  Save
 } from 'lucide-react';
 import SimpleFooter from '../components/Footer';
 
