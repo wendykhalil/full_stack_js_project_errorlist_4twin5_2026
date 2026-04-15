@@ -73,6 +73,7 @@ import Conversation from './pages/Conversation';
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Profile from "./pages/Profile";
+import AccessibilitySettings from "./pages/AccessibilitySettings";
 import AppErrorBoundary from "./components/AppErrorBoundary";
 import AiChat from "./components/ai-chat"; // ton composant chat modernisé
 
@@ -115,6 +116,7 @@ export default function App() {
                     <Route path="/admin" element={<AdminLayout />}>
                         <Route index element={<AdminDashboard />} />
                         <Route path="profile" element={<Profile />} />
+                        <Route path="accessibility" element={<AccessibilitySettings />} />
                         <Route path="users" element={<AdminUsers />} />
                         <Route path="activity" element={<AdminActivityLogs />} />
                         <Route path="transactions" element={<AdminTransactions />} />
@@ -129,6 +131,7 @@ export default function App() {
                     <Route path="/artisan" element={<ArtisanLayout />}>
                         <Route index element={<ArtisanDashboard />} />
                         <Route path="profile" element={<ArtisanProfile />} />
+                        <Route path="accessibility" element={<AccessibilitySettings />} />
                         <Route path="profile/edit" element={<ArtisanProfileEdit />} />
                         <Route path="subscription" element={<ArtisanSubscription />} />
                         <Route path="marketplace" element={<ArtisanMarketplace />} />
@@ -160,6 +163,7 @@ export default function App() {
                     <Route path="/prescripteur" element={<PrescripteurLayout />}>
                         <Route index element={<PrescripteurProduits />} />
                         <Route path="profile" element={<Profile />} />
+                        <Route path="accessibility" element={<AccessibilitySettings />} />
                         <Route path="search" element={<PrescripteurSearch />} />
                         <Route path="artisan/:id" element={<ArtisanPublicProfile />} />
                         <Route path="artisans" element={<PrescripteurArtisans />} />
@@ -184,6 +188,7 @@ export default function App() {
                         <Route path="orders" element={<FournisseurOrders />} />
                         <Route path="orders/:id" element={<OrderDetails />} />
                         <Route path="profile" element={<Profile />} />
+                        <Route path="accessibility" element={<AccessibilitySettings />} />
                         <Route path="messages" element={<Messages />} />
                         <Route path="messages/:userId" element={<Conversation />} />
                         {/* AI Chat pour Fournisseur */}

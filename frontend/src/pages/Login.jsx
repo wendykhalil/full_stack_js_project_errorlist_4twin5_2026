@@ -109,7 +109,6 @@ export default function Login() {
   const showResend = globalError?.toLowerCase().includes("verif") || globalError?.toLowerCase().includes("email not");
 
   return (
-    <>
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
       {/* Professional Navbar with Role Dropdown */}
       <nav className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
@@ -236,14 +235,13 @@ export default function Login() {
       </nav>
 
       {/* Main Content */}
-      <div className="relative min-h-[calc(100vh-4rem)]">
+      <div className="relative flex min-h-[calc(100vh-5rem)] items-center justify-center">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50/20 via-transparent to-orange-50/20" />
         
-        <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
-          <div className="mx-auto max-w-md">
-            {/* Login Card */}
-            <div className="rounded-2xl bg-white/90 backdrop-blur-sm border border-slate-200/80 shadow-xl">
-              <div className="p-6 sm:p-8">
+        <div className="relative w-full max-w-md px-4 sm:px-6">
+          {/* Login Card */}
+          <div className="rounded-2xl bg-white/90 backdrop-blur-sm border border-slate-200/80 shadow-xl">
+            <div className="p-6 sm:p-8">
                 {/* Header */}
                 <div className="mb-6 text-center">
                   <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-blue-500 shadow-lg">
@@ -416,10 +414,9 @@ export default function Login() {
             </div>
           </div>
         </div>
-      </div>
 
       {/* Professional Footer */}
-      <footer className="border-t border-slate-200 bg-white mt-auto">
+      <footer className="border-t border-slate-200 bg-white">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
             {/* Brand Column */}
@@ -487,7 +484,5 @@ export default function Login() {
         </div>
       </footer>
     </div>
-    </>
-
   );
 }

@@ -27,13 +27,7 @@ export default function PrescripteurLayout() {
     { to: "/prescripteur/projects", label: "Projets", icon: <FolderKanban className="h-5 w-5" /> },
     { to: "/prescripteur/service-requests", label: "Demandes", icon: <ClipboardList className="h-5 w-5" /> },
     { to: "/prescripteur/search", label: "Rechercher", icon: <Search className="h-5 w-5" /> },
-    { to: "/prescripteur/profile", label: "Profil", icon: <UserCircle2 className="h-5 w-5" /> },
     { to: "/prescripteur/messages", label: "Messages", icon: messageIcon },
-  ];
-
-  const settingsItems = [
-    { to: "/prescripteur/profile", label: "Profil", icon: <UserCircle2 className="h-4 w-4" /> },
-    { to: "/prescripteur/profile", label: "Reinitialiser le mot de passe", icon: <Shield className="h-4 w-4" /> },
   ];
 
   return (
@@ -44,7 +38,6 @@ export default function PrescripteurLayout() {
       unreadCount={unreadCount}
       navItems={navItems}
       footerMeta="Prescripteur"
-      settingsItems={settingsItems}
       avatar={<UserCircle2 className="h-10 w-10 text-slate-500 dark:text-slate-300" />}
       onLogout={() => {
         logout();

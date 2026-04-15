@@ -4,9 +4,14 @@ import { useAuth } from "../auth/AuthContext";
 import { useTranslation } from '../i18n';
 import Footer from "../components/Footer";
 import MapPickerModal from "../components/MapPickerModal";
+import LiveLocationSection from "../components/LiveLocationSection";
 import { useFormValidation, rules } from "../hooks/useFormValidation";
 import { useServerErrors } from "../hooks/useServerErrors";
 import FieldError from "../components/FieldError";
+import { useNotification } from "../hooks/useNotification";
+import { getCurrentPositionWithAddress, updateLocationOnServer } from "../utils/geolocation";
+import { getStoredLocationUpdate, updateProfileLocation, isRecentLocationUpdate } from "../services/profileService";
+import Notification from "../components/Notification";
 import { 
   Building, 
   MapPin, 
@@ -21,13 +26,15 @@ import {
   Send,
   Loader2,
   AlertCircle,
-  CheckCircle
+  CheckCircle,
+  Zap
 } from "lucide-react";
 
 export default function Profile() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, refreshMe, updateProfile, changePassword, forgotPassword } = useAuth();
+  const { notification, showNotification, hideNotification } = useNotification();
 
   // URL de base pour les images
   const SERVER_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
@@ -117,6 +124,8 @@ export default function Profile() {
       await refreshMe();
     } catch (error) {
       console.error('Error loading user:', error);
+      // Don't throw the error to prevent logout, just log it
+      // The user might still be valid even if refresh fails
     }
   }, [refreshMe]);
 
@@ -172,11 +181,12 @@ export default function Profile() {
       const fetchCategories = async () => {
         setLoadingCategories(true);
         try {
-          const response = await fetch('/api/categories');
+          const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/categories`);
           const data = await response.json();
           setAllCategories(data.data || []);
         } catch (error) {
           console.error('Error fetching categories:', error);
+          // Don't throw the error, just log it to avoid causing logout
         } finally {
           setLoadingCategories(false);
         }
@@ -184,6 +194,58 @@ export default function Profile() {
       fetchCategories();
     }
   }, [isSupplier]);
+
+  // Listen for location updates from navbar
+  useEffect(() => {
+    const handleLocationUpdate = (event) => {
+      const locationData = event.detail;
+      if (locationData && isRecentLocationUpdate(locationData.timestamp)) {
+        // Auto-fill address fields based on detected location
+        setLatitude(String(locationData.latitude || ''));
+        setLongitude(String(locationData.longitude || ''));
+        
+        if (locationData.address) {
+          setCity(locationData.address.city || '');
+          
+          if (isSupplier) {
+            // For suppliers, use the full address
+            setAddress(locationData.address.fullAddress || locationData.address.street || '');
+          } else {
+            // For artisans and other users, use zone/quartier
+            setZone(locationData.address.suburb || locationData.address.street || '');
+          }
+        }
+        
+        showNotification('Adresse mise à jour automatiquement depuis votre position !', 'success');
+      }
+    };
+
+    // Check for stored location update on component mount
+    const storedUpdate = getStoredLocationUpdate();
+    if (storedUpdate && isRecentLocationUpdate(storedUpdate.timestamp)) {
+      setLatitude(String(storedUpdate.latitude || ''));
+      setLongitude(String(storedUpdate.longitude || ''));
+      
+      if (storedUpdate.address) {
+        setCity(storedUpdate.address.city || '');
+        
+        if (isSupplier) {
+          setAddress(storedUpdate.address.fullAddress || storedUpdate.address.street || '');
+        } else {
+          setZone(storedUpdate.address.suburb || storedUpdate.address.street || '');
+        }
+      }
+      
+      showNotification('Adresse mise à jour automatiquement depuis votre position !', 'success');
+    }
+
+    // Listen for future location updates
+    window.addEventListener('locationUpdated', handleLocationUpdate);
+    
+    return () => {
+      window.removeEventListener('locationUpdated', handleLocationUpdate);
+    };
+  }, [isSupplier, showNotification]);
 
   // Artisan file handlers
   const handleFileChange = (e) => {
@@ -256,17 +318,29 @@ export default function Profile() {
   };
 
   const applyMapSelection = ({ latitude: nextLatitude, longitude: nextLongitude, city: nextCity, address: nextAddress }) => {
-    setLatitude(String(nextLatitude ?? ""));
-    setLongitude(String(nextLongitude ?? ""));
+    // Ensure coordinates are properly converted to strings
+    const lat = nextLatitude !== undefined && nextLatitude !== null ? String(nextLatitude) : "";
+    const lng = nextLongitude !== undefined && nextLongitude !== null ? String(nextLongitude) : "";
+    
+    setLatitude(lat);
+    setLongitude(lng);
+    
     if (nextCity) {
       setCity(nextCity);
-      // Keep region/zone aligned with selected city for non-supplier roles
-      if (!isSupplier) setZone(nextCity);
     }
+    
     if (nextAddress) {
-      if (isSupplier) setAddress(nextAddress);
-      else setZone(nextAddress.split(',')[0]?.trim() || nextAddress);
+      if (isSupplier) {
+        // For suppliers, use the full address
+        setAddress(nextAddress);
+      } else {
+        // For artisans and other users, extract zone/quartier from address
+        const addressParts = nextAddress.split(',');
+        const zone = addressParts[0]?.trim() || nextAddress;
+        setZone(zone);
+      }
     }
+    
     setIsMapPickerOpen(false);
   };
 
@@ -434,6 +508,7 @@ export default function Profile() {
 
   return (
     <>
+      <Notification notification={notification} onClose={hideNotification} />
       <div className="space-y-6 lg:space-y-8">
         {/* Header */}
         <div>
@@ -521,6 +596,23 @@ export default function Profile() {
               <FieldError error={profilePhoneErrors.phone || profileServerErrors.phone} />
             </div>
 
+            {/* Live Location Section */}
+            <LiveLocationSection 
+              city={city}
+              setCity={setCity}
+              zone={zone}
+              setZone={setZone}
+              latitude={latitude}
+              setLatitude={setLatitude}
+              longitude={longitude}
+              setLongitude={setLongitude}
+              address={address}
+              setAddress={setAddress}
+              isSupplier={isSupplier}
+              onOpenMap={() => setIsMapPickerOpen(true)}
+              onMapSelection={applyMapSelection}
+            />
+
             {/* Profile image for non-supplier users */}
             {!isSupplier && (
               <div className="sm:col-span-2">
@@ -563,140 +655,8 @@ export default function Profile() {
               </div>
             )}
 
-            {isGenericProfile && (
-              <>
-                <div>
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Ville
-                  </label>
-                  <input
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
-                    placeholder="Ex : Tunis"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Region / quartier
-                  </label>
-                  <input
-                    value={zone}
-                    onChange={(e) => setZone(e.target.value)}
-                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
-                    placeholder="Ex : Lac 2"
-                  />
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Localisation sur la carte</label>
-                  <div className="mt-2 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/30 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="text-sm text-slate-600 dark:text-slate-300">
-                      {city || zone ? `${city || 'Ville selectionnee'}${zone ? ` - ${zone}` : ''}` : 'Choisissez votre emplacement sur la carte ou utilisez votre position actuelle.'}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setIsMapPickerOpen(true)}
-                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
-                    >
-                      <MapPin className="h-4 w-4" /> Ouvrir la carte
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Latitude</label>
-                  <input
-                    value={latitude}
-                    onChange={(e) => setLatitude(e.target.value)}
-                    type="text"
-                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
-                    placeholder="Ex : 36.8065"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Longitude</label>
-                  <input
-                    value={longitude}
-                    onChange={(e) => setLongitude(e.target.value)}
-                    type="text"
-                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
-                    placeholder="Ex : 10.1815"
-                  />
-                </div>
-              </>
-            )}
-
             {isArtisan && (
               <>
-                <div>
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Ville
-                  </label>
-                  <input
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
-                    placeholder="Ex : Tunis"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Zone / Quartier
-                  </label>
-                  <input
-                    value={zone}
-                    onChange={(e) => setZone(e.target.value)}
-                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
-                    placeholder="Ex : Lac 2"
-                  />
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Localisation sur la carte</label>
-                  <div className="mt-2 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/30 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="text-sm text-slate-600 dark:text-slate-300">
-                      {city || address ? `${city || 'Ville selectionnee'}${address ? ` - ${address}` : ''}` : 'Choisissez votre emplacement sur la carte ou utilisez votre position actuelle.'}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setIsMapPickerOpen(true)}
-                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
-                    >
-                      <MapPin className="h-4 w-4" /> Ouvrir la carte
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Latitude
-                  </label>
-                  <input
-                    value={latitude}
-                    onChange={(e) => setLatitude(e.target.value)}
-                    type="text"
-                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
-                    placeholder="Ex : 36.8065"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Longitude
-                  </label>
-                  <input
-                    value={longitude}
-                    onChange={(e) => setLongitude(e.target.value)}
-                    type="text"
-                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
-                    placeholder="Ex : 10.1815"
-                  />
-                </div>
-
                 <div>
                   <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
                     Années d'expérience
@@ -719,30 +679,31 @@ export default function Profile() {
                     onChange={(e) => setSpecialty(e.target.value)}
                     className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
                   >
-                    <option value="">Sélectionnez un métier</option>
-                    <option value="electricien">Électricien</option>
-                    <option value="plombier">Plombier</option>
-                    <option value="menuisier">Menuisier</option>
-                    <option value="peintre">Peintre</option>
-                    <option value="maçon">Maçon</option>
-                    <option value="carreleur">Carreleur</option>
-                    <option value="chauffagiste">Chauffagiste</option>
-                    <option value="climatisation">Climatisation</option>
-                    <option value="jardinier">Jardinier</option>
-                    <option value="autre">Autre</option>
+                    <option value="">Sélectionnez votre spécialité</option>
+                    <option value="Maçonnerie">Maçonnerie</option>
+                    <option value="Plomberie">Plomberie</option>
+                    <option value="Électricité">Électricité</option>
+                    <option value="Peinture">Peinture</option>
+                    <option value="Carrelage">Carrelage</option>
+                    <option value="Menuiserie">Menuiserie</option>
+                    <option value="Climatisation">Climatisation</option>
+                    <option value="Isolation">Isolation</option>
+                    <option value="Toiture">Toiture</option>
+                    <option value="Jardinage">Jardinage</option>
+                    <option value="Autre">Autre</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Rayon de service (km)
+                    Rayon d'intervention (km)
                   </label>
                   <input
                     value={serviceRadius}
                     onChange={(e) => setServiceRadius(e.target.value)}
                     type="text"
                     className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-950"
-                    placeholder="Ex : 30"
+                    placeholder="Ex : 25"
                   />
                 </div>
               </>

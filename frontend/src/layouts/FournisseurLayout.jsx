@@ -34,7 +34,6 @@ export default function FournisseurLayout() {
   );
 
   const navItems = [
-    { to: "/fournisseur/profile", label: "Profil", icon: <UserCircle2 className="h-5 w-5" /> },
     { to: "/fournisseur", label: "Tableau de bord", icon: <LayoutDashboard className="h-5 w-5" />, end: true },
     { to: "/fournisseur/orders", label: "Commandes", icon: <ShoppingBag className="h-5 w-5" /> },
     { to: "/fournisseur/marketplace", label: "Place de marche", icon: <Eye className="h-5 w-5" /> },
@@ -54,11 +53,6 @@ export default function FournisseurLayout() {
     <UserCircle2 className="h-10 w-10 text-slate-500 dark:text-slate-300" />
   );
 
-  const settingsItems = [
-    { to: "/fournisseur/profile", label: "Profil", icon: <UserCircle2 className="h-4 w-4" /> },
-    { to: "/fournisseur/profile", label: "Reinitialiser le mot de passe", icon: <Shield className="h-4 w-4" /> },
-  ];
-
   return (
     <RoleWorkspace
       role="SUPPLIER"
@@ -67,7 +61,6 @@ export default function FournisseurLayout() {
       unreadCount={unreadCount}
       navItems={navItems}
       footerMeta={user?.supplierProfile?.companyName || "Fournisseur"}
-      settingsItems={settingsItems}
       avatar={avatar}
       onLogout={() => {
         logout();

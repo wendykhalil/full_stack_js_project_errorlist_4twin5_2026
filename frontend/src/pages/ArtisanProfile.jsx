@@ -20,7 +20,8 @@ import {
   Key,
   Send,
   Shield,
-  Sparkles
+  Sparkles,
+  Zap
 } from 'lucide-react';
 import SimpleFooter from '../components/Footer';
 import PageShell from '../components/PageShell';
@@ -28,6 +29,10 @@ import MapPickerModal from '../components/MapPickerModal';
 import { useFormValidation, rules } from '../hooks/useFormValidation';
 import { useServerErrors } from '../hooks/useServerErrors';
 import FieldError from '../components/FieldError';
+import { useNotification } from '../hooks/useNotification';
+import { getCurrentPositionWithAddress, updateLocationOnServer } from '../utils/geolocation';
+import { getStoredLocationUpdate, updateProfileLocation, isRecentLocationUpdate } from '../services/profileService';
+import Notification from '../components/Notification';
 
 const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '');
 
@@ -56,10 +61,12 @@ export default function ArtisanProfile() {
   const navigate = useNavigate();
   const { token, user, refreshMe, changePassword, forgotPassword } = useAuth();
   const fileInputRef = useRef(null);
+  const { notification, showNotification, hideNotification } = useNotification();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [updatingLocation, setUpdatingLocation] = useState(false);
+  const [autoDetecting, setAutoDetecting] = useState(false);
   const [isMapPickerOpen, setIsMapPickerOpen] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -153,6 +160,52 @@ export default function ArtisanProfile() {
 
     if (token) fetchProfile();
   }, [token, user]);
+
+  // Listen for location updates from navbar
+  useEffect(() => {
+    const handleLocationUpdate = (event) => {
+      const locationData = event.detail;
+      if (locationData && isRecentLocationUpdate(locationData.timestamp)) {
+        const updatedProfile = updateProfileLocation(profile, locationData);
+        setProfile(updatedProfile);
+        showNotification('Adresse mise à jour automatiquement depuis votre position !', 'success');
+      }
+    };
+
+    // Check for stored location update on component mount
+    const storedUpdate = getStoredLocationUpdate();
+    if (storedUpdate && isRecentLocationUpdate(storedUpdate.timestamp)) {
+      const updatedProfile = updateProfileLocation(profile, storedUpdate);
+      setProfile(updatedProfile);
+      showNotification('Adresse mise à jour automatiquement depuis votre position !', 'success');
+    }
+
+    // Listen for future location updates
+    window.addEventListener('locationUpdated', handleLocationUpdate);
+    
+    return () => {
+      window.removeEventListener('locationUpdated', handleLocationUpdate);
+    };
+  }, [profile, showNotification]);
+
+  const handleAutoDetectLocation = async () => {
+    setAutoDetecting(true);
+    try {
+      const locationData = await getCurrentPositionWithAddress();
+      await updateLocationOnServer(locationData.latitude, locationData.longitude, token, 'artisan');
+      
+      // Update the profile state with new coordinates and address info
+      const updatedProfile = updateProfileLocation(profile, locationData);
+      setProfile(updatedProfile);
+      
+      showNotification('Votre position et adresse ont été mises à jour avec succès !', 'success');
+    } catch (error) {
+      console.error('Error auto-detecting location:', error);
+      showNotification(error.message || 'Erreur lors de la détection automatique de la position', 'error');
+    } finally {
+      setAutoDetecting(false);
+    }
+  };
 
   const openMapPicker = () => {
     setError('');
@@ -314,7 +367,9 @@ export default function ArtisanProfile() {
   }
 
   return (
-    <PageShell>
+    <>
+      <Notification notification={notification} onClose={hideNotification} />
+      <PageShell>
     <div className="mx-auto max-w-none flex-1 space-y-6">
       {/* Header with back button */}
       <div className="flex items-center justify-between">
@@ -477,6 +532,54 @@ export default function ArtisanProfile() {
                 <FieldError error={profileFormErrors.description || profileServerErrors.description} />
                 <p className="mt-1 text-xs text-slate-400">Maximum 500 caracteres</p>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Live Map Section */}
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-100 bg-gradient-to-r from-emerald-50 to-white px-6 py-4">
+            <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900">
+              <Zap className="h-5 w-5 text-emerald-600" />
+              Localisation en direct
+            </h2>
+            <p className="mt-1 text-xs text-slate-500">Détection automatique de votre position actuelle.</p>
+          </div>
+          <div className="p-6">
+            <div className="flex flex-col items-center gap-4 text-center">
+              <div className="rounded-full bg-emerald-100 p-4">
+                <MapPin className="h-8 w-8 text-emerald-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900">Mise à jour automatique</h3>
+                <p className="mt-1 text-sm text-slate-600">
+                  Cliquez pour détecter automatiquement votre position actuelle et la mettre à jour.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleAutoDetectLocation}
+                disabled={autoDetecting}
+                className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-emerald-700 hover:shadow-md disabled:opacity-50"
+              >
+                {autoDetecting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Détection en cours...
+                  </>
+                ) : (
+                  <>
+                    <Zap className="h-4 w-4" />
+                    Détecter ma position
+                  </>
+                )}
+              </button>
+              {profile.location.latitude !== 0 && (
+                <div className="mt-3 rounded-xl bg-emerald-50 p-3 text-xs text-emerald-700">
+                  <span className="font-medium">Dernière position:</span>{' '}
+                  {profile.location.latitude.toFixed(6)}°, {profile.location.longitude.toFixed(6)}°
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -715,5 +818,6 @@ export default function ArtisanProfile() {
       />
     </div>
     </PageShell>
+    </>
   );
 }

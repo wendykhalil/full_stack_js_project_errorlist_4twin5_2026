@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
-import { Bot } from "lucide-react";
-import { NavLink, Outlet } from "react-router-dom";
+import { Bot, MessageCircle, MapPin, Loader2 } from "lucide-react";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   Bell,
   ChevronLeft,
@@ -10,8 +10,13 @@ import {
   X,
 } from "lucide-react";
 import DashboardTopbar from "./DashboardTopbar";
-import AccessibilityControls from "./AccessibilityControls";
+import CollapsibleNavItem from "./CollapsibleNavItem";
 import logo from "../assets/bmp-logo.svg";
+import { useAuth } from "../auth/AuthContext";
+import { useNotification } from "../hooks/useNotification";
+import { getCurrentPositionWithAddress, updateLocationOnServer } from "../utils/geolocation";
+import { storeLocationUpdate } from "../services/profileService";
+import Notification from "./Notification";
 
 function SidebarLink({ item, collapsed, onClick }) {
   return (
@@ -45,14 +50,54 @@ export default function RoleWorkspace({
   user,
   unreadCount = 0,
   navItems = [],
+  collapsibleItems = [],
   footerMeta,
   avatar,
   onLogout,
   settingsItems = [],
 }) {
+  const navigate = useNavigate();
+  const { token } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
+  const { notification, showNotification, hideNotification } = useNotification();
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
+
+  const getRoleBasePath = (userRole) => {
+    switch (userRole?.toLowerCase()) {
+      case 'admin':
+        return '/admin';
+      case 'artisan':
+        return '/artisan';
+      case 'prescripteur':
+        return '/prescripteur';
+      case 'supplier':
+        return '/fournisseur';
+      default:
+        return '/';
+    }
+  };
+
+  const handleAutoDetectLocation = async () => {
+    setIsUpdatingLocation(true);
+    try {
+      const locationData = await getCurrentPositionWithAddress();
+      await updateLocationOnServer(locationData.latitude, locationData.longitude, token, role);
+      
+      // Store location data for profile pages to use
+      storeLocationUpdate(locationData);
+      
+      showNotification('Votre position a été mise à jour avec succès !', 'success');
+    } catch (error) {
+      console.error('Error updating location:', error);
+      showNotification(error.message || 'Erreur lors de la mise à jour de la position', 'error');
+      // Still navigate to profile on error so user can manually update
+      setTimeout(() => navigate(`${getRoleBasePath(role)}/profile`), 1500);
+    } finally {
+      setIsUpdatingLocation(false);
+    }
+  };
 
   const mainItems = useMemo(() => navItems.slice(0, 6), [navItems]);
   const extraItems = useMemo(() => navItems.slice(6), [navItems]);
@@ -81,6 +126,25 @@ export default function RoleWorkspace({
           ))}
         </div>
 
+        {/* Collapsible Items */}
+        {collapsibleItems.length > 0 && (
+          <>
+            <SectionLabel collapsed={isSidebarCollapsed}>Gestion</SectionLabel>
+            <div className="space-y-1">
+              {collapsibleItems.map((collapsibleItem) => (
+                <CollapsibleNavItem
+                  key={collapsibleItem.title}
+                  title={collapsibleItem.title}
+                  icon={collapsibleItem.icon}
+                  items={collapsibleItem.items}
+                  collapsed={isSidebarCollapsed}
+                  onClick={closeMobileMenu}
+                />
+              ))}
+            </div>
+          </>
+        )}
+
         {extraItems.length ? (
           <>
             <SectionLabel collapsed={isSidebarCollapsed}>Plus</SectionLabel>
@@ -92,28 +156,11 @@ export default function RoleWorkspace({
           </>
         ) : null}
 
-        {settingsItems.length ? (
-          <>
-            <SectionLabel collapsed={isSidebarCollapsed}>Paramètres</SectionLabel>
-            <div className="space-y-1">
-              {settingsItems.map((item, index) => (
-                <SidebarLink key={`${item.to}-${index}`} item={item} collapsed={isSidebarCollapsed} onClick={closeMobileMenu} />
-              ))}
-            </div>
-          </>
-        ) : null}
-
-        {!isSidebarCollapsed ? (
-          <>
-            <SectionLabel collapsed={isSidebarCollapsed}>Accessibilite</SectionLabel>
-            <AccessibilityControls />
-          </>
-        ) : null}
-
         {/* AI CHAT BUTTON */}
-        <div className={`mt-4 ${isSidebarCollapsed ? "px-2" : "px-3"}`}>
+        <div className="mt-4">
           <NavLink
-to={"/" + role + "/AiChat"}            onClick={closeMobileMenu}
+            to={"/chat"}
+            onClick={closeMobileMenu}
             title={isSidebarCollapsed ? "Assistant IA" : undefined}
             className={({ isActive }) =>
               `flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-200 ${
@@ -123,8 +170,8 @@ to={"/" + role + "/AiChat"}            onClick={closeMobileMenu}
               } ${isSidebarCollapsed ? "justify-center px-2" : ""}`
             }
           >
-            <Bot className="h-4 w-4" />
-            {!isSidebarCollapsed ? <span>Assistant IA</span> : null}
+            <Bot className="h-4 w-4 flex-shrink-0" />
+            {!isSidebarCollapsed ? <span className="truncate">Assistant IA</span> : null}
           </NavLink>
         </div>
       </div>
@@ -145,7 +192,9 @@ to={"/" + role + "/AiChat"}            onClick={closeMobileMenu}
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
+    <>
+      <Notification notification={notification} onClose={hideNotification} />
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
       {/* Sidebar */}
       <aside
         className={`fixed inset-y-0 left-0 z-30 hidden border-r border-blue-800/30 bg-gradient-to-b from-blue-800 via-blue-700 to-blue-800 shadow-xl transition-all duration-300 xl:flex xl:flex-col ${
@@ -176,6 +225,30 @@ to={"/" + role + "/AiChat"}            onClick={closeMobileMenu}
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <button 
+                onClick={() => navigate(`${getRoleBasePath(role)}/messages`)}
+                className="relative rounded-full p-2 text-blue-200 hover:bg-white/10"
+                title="Messages"
+              >
+                <MessageCircle className="h-4 w-4" />
+                {unreadCount > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
+              </button>
+              <button 
+                onClick={handleAutoDetectLocation}
+                disabled={isUpdatingLocation}
+                className="relative rounded-full p-2 text-blue-200 hover:bg-white/10 disabled:opacity-50"
+                title={isUpdatingLocation ? "Mise à jour de la position..." : "Localisation rapide"}
+              >
+                {isUpdatingLocation ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <MapPin className="h-4 w-4" />
+                )}
+              </button>
               <button className="rounded-full p-2 text-blue-200 hover:bg-white/10">
                 <Bell className="h-4 w-4" />
               </button>
@@ -191,7 +264,11 @@ to={"/" + role + "/AiChat"}            onClick={closeMobileMenu}
 
         {/* Desktop top bar */}
         <div className="sticky top-0 z-20 hidden xl:block">
-          <DashboardTopbar role={role} unreadCount={unreadCount} />
+          <DashboardTopbar 
+            role={role} 
+            unreadCount={unreadCount} 
+            onLogout={onLogout}
+          />
         </div>
 
         {/* Mobile menu overlay */}
@@ -210,6 +287,7 @@ to={"/" + role + "/AiChat"}            onClick={closeMobileMenu}
           <Outlet />
         </main>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

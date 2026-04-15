@@ -1,9 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { Search, ChevronDown, User, Settings, LogOut, Accessibility, MessageCircle, MapPin, Loader2 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { apiFetch } from "../auth/api";
 import { useAuth } from "../auth/AuthContext";
 import NotificationBell from "./NotificationBell";
+import { useNotification } from "../hooks/useNotification";
+import { getCurrentPositionWithAddress, updateLocationOnServer } from "../utils/geolocation";
+import { storeLocationUpdate } from "../services/profileService";
+import Notification from "./Notification";
 
 const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "");
 
@@ -85,7 +89,7 @@ function initialsFromUser(user) {
   return initials || "BM";
 }
 
-export default function DashboardTopbar({ role = "ARTISAN", unreadCount = 0 }) {
+export default function DashboardTopbar({ role = "ARTISAN", unreadCount = 0, onLogout }) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { user, token } = useAuth();
@@ -93,6 +97,9 @@ export default function DashboardTopbar({ role = "ARTISAN", unreadCount = 0 }) {
   const [isFocused, setIsFocused] = useState(false);
   const [now, setNow] = useState(() => new Date());
   const [avatarUrl, setAvatarUrl] = useState("");
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
+  const { notification, showNotification, hideNotification } = useNotification();
   const config = ROLE_CONFIG[role] ?? ROLE_CONFIG.ARTISAN;
 
   useEffect(() => {
@@ -164,8 +171,45 @@ export default function DashboardTopbar({ role = "ARTISAN", unreadCount = 0 }) {
     setIsFocused(false);
   };
 
+  const getRoleBasePath = (userRole) => {
+    switch (userRole?.toLowerCase()) {
+      case 'admin':
+        return '/admin';
+      case 'artisan':
+        return '/artisan';
+      case 'prescripteur':
+        return '/prescripteur';
+      case 'supplier':
+        return '/fournisseur';
+      default:
+        return '/';
+    }
+  };
+
+  const handleAutoDetectLocation = async () => {
+    setIsUpdatingLocation(true);
+    try {
+      const locationData = await getCurrentPositionWithAddress();
+      await updateLocationOnServer(locationData.latitude, locationData.longitude, token, role);
+      
+      // Store location data for profile pages to use
+      storeLocationUpdate(locationData);
+      
+      showNotification('Votre position a été mise à jour avec succès !', 'success');
+    } catch (error) {
+      console.error('Error updating location:', error);
+      showNotification(error.message || 'Erreur lors de la mise à jour de la position', 'error');
+      // Still navigate to profile on error so user can manually update
+      setTimeout(() => navigate(`${getRoleBasePath(role)}/profile`), 1500);
+    } finally {
+      setIsUpdatingLocation(false);
+    }
+  };
+
   return (
-    <div className="flex h-16 items-center justify-between gap-4 border-b border-slate-200 bg-white px-5 dark:border-slate-800 dark:bg-slate-900">
+    <>
+      <Notification notification={notification} onClose={hideNotification} />
+      <div className="flex h-16 items-center justify-between gap-4 border-b border-slate-200 bg-white px-5 dark:border-slate-800 dark:bg-slate-900">
       <div className="min-w-[180px] text-sm font-medium text-slate-600 dark:text-slate-300">
         {new Intl.DateTimeFormat("fr-FR", {
           weekday: "short",
@@ -220,33 +264,135 @@ export default function DashboardTopbar({ role = "ARTISAN", unreadCount = 0 }) {
       </div>
 
       <div className="flex items-center gap-3">
-        <span className="hidden rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600 md:inline-flex dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
-          {config.roleLabel}
-        </span>
         <NotificationBell />
-
-        <div className="flex items-center gap-2">
-          {avatarUrl ? (
-            <img
-              src={avatarUrl}
-              alt=""
-              className="h-11 w-11 rounded-full object-cover ring-2 ring-slate-200 dark:ring-slate-700"
-              onError={(event) => {
-                event.currentTarget.style.display = "none";
-              }}
-            />
-          ) : (
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-200 text-sm font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-100">
-              {initialsFromUser(user)}
-            </div>
-          )}
-          {user?.firstName || user?.lastName ? (
-            <span className="ml-2 font-bold text-blue-900 dark:text-blue-200 text-base">
-              {user?.firstName} {user?.lastName}
+        
+        {/* Messages Icon */}
+        <button
+          onClick={() => navigate(`${getRoleBasePath(role)}/messages`)}
+          className="relative rounded-lg p-2 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800"
+          title="Messages"
+        >
+          <MessageCircle className="h-5 w-5 text-slate-600 dark:text-slate-300" />
+          {unreadCount > 0 && (
+            <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white">
+              {unreadCount > 99 ? "99+" : unreadCount}
             </span>
-          ) : null}
+          )}
+        </button>
+
+        {/* Live Map Icon */}
+        <button
+          onClick={handleAutoDetectLocation}
+          disabled={isUpdatingLocation}
+          className="relative rounded-lg p-2 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50"
+          title={isUpdatingLocation ? "Mise à jour de la position..." : "Localisation rapide"}
+        >
+          {isUpdatingLocation ? (
+            <Loader2 className="h-5 w-5 text-slate-600 dark:text-slate-300 animate-spin" />
+          ) : (
+            <MapPin className="h-5 w-5 text-slate-600 dark:text-slate-300" />
+          )}
+        </button>
+
+        {/* User Dropdown */}
+        <div className="relative">
+          <button
+            onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+            className="flex items-center gap-2 rounded-lg px-2 py-1 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800"
+          >
+            <div className="flex items-center gap-2">
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt=""
+                  className="h-11 w-11 rounded-full object-cover ring-2 ring-slate-200 dark:ring-slate-700"
+                  onError={(event) => {
+                    event.currentTarget.style.display = "none";
+                  }}
+                />
+              ) : (
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-200 text-sm font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-100">
+                  {initialsFromUser(user)}
+                </div>
+              )}
+              {user?.firstName || user?.lastName ? (
+                <span className="font-bold text-blue-900 dark:text-blue-200 text-base">
+                  {user?.firstName} {user?.lastName}
+                </span>
+              ) : null}
+            </div>
+            <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${userDropdownOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {userDropdownOpen && (
+            <>
+              <div 
+                className="fixed inset-0 z-10" 
+                onClick={() => setUserDropdownOpen(false)}
+              />
+              <div className="absolute right-0 mt-2 w-64 rounded-xl border border-slate-200 bg-white shadow-xl z-20 overflow-hidden dark:border-slate-700 dark:bg-slate-800">
+                <div className="px-4 py-4 border-b border-slate-100 dark:border-slate-700">
+                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
+                    {user?.firstName} {user?.lastName}
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-1">
+                    {user?.email}
+                  </p>
+                </div>
+                
+                <div className="py-2">
+                  <button
+                    onClick={() => {
+                      navigate(`${getRoleBasePath(role)}/profile`);
+                      setUserDropdownOpen(false);
+                    }}
+                    className="flex items-center gap-3 w-full px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 transition-colors dark:text-slate-300 dark:hover:bg-slate-700"
+                  >
+                    <User className="h-4 w-4 text-slate-500" />
+                    <span>Profil</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      navigate(`${getRoleBasePath(role)}/profile`);
+                      setUserDropdownOpen(false);
+                    }}
+                    className="flex items-center gap-3 w-full px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 transition-colors dark:text-slate-300 dark:hover:bg-slate-700"
+                  >
+                    <Settings className="h-4 w-4 text-slate-500" />
+                    <span>Réinitialiser le mot de passe</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      navigate(`${getRoleBasePath(role)}/accessibility`);
+                      setUserDropdownOpen(false);
+                    }}
+                    className="flex items-center gap-3 w-full px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 transition-colors dark:text-slate-300 dark:hover:bg-slate-700"
+                  >
+                    <Accessibility className="h-4 w-4 text-slate-500" />
+                    <span>Accessibilité</span>
+                  </button>
+                </div>
+                
+                <div className="border-t border-slate-100 dark:border-slate-700">
+                  <button
+                    onClick={() => {
+                      if (onLogout) onLogout();
+                      setUserDropdownOpen(false);
+                    }}
+                    className="flex items-center gap-3 w-full px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors dark:text-red-400 dark:hover:bg-red-900/20"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Déconnexion</span>
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
