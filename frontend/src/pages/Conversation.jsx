@@ -161,7 +161,7 @@ export default function Conversation() {
 
   // Edit message function
   const handleEditMessage = async (messageId) => {
-    if (!editText.trim()) return;
+    if (!editText || !editText.trim()) return;
     
     try {
       const response = await fetch(`http://localhost:5000/api/messages/${messageId}`, {

@@ -2,9 +2,9 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
-// const Report = require('../src/models/Report'); // TODO: Create this model
-// const { authRequired } = require('../src/middleware/authMiddleware');
-// const { requireRoles } = require('../src/middleware/roleMiddleware');
+const Report = require('../src/models/Report');
+const { authRequired } = require('../src/middleware/authMiddleware');
+const { requireRoles } = require('../src/middleware/roleMiddleware');
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -32,7 +32,7 @@ const upload = multer({
 });
 
 // POST /api/reports - Create a new report
-router.post('/', upload.single('evidence'), async (req, res) => {
+router.post('/', authRequired, upload.single('evidence'), async (req, res) => {
   try {
     const {
       reportedUserId,
@@ -57,12 +57,11 @@ router.post('/', upload.single('evidence'), async (req, res) => {
       });
     }
 
-    // Get reporter info from token (assuming you have auth middleware)
-    const reporterId = req.user.id;
+    // Get reporter info from token
+    const reporterId = req.user.id || req.user._id;
 
     // Create report object
     const reportData = {
-      id: Date.now().toString(), // Use proper ID generation in production
       reportedUser: {
         id: reportedUserId,
         name: reportedUserName
@@ -80,16 +79,15 @@ router.post('/', upload.single('evidence'), async (req, res) => {
       evidenceImage: req.file ? req.file.filename : null
     };
 
-    // TODO: Save to database
-    // await Report.create(reportData);
+    // Save to database
+    const report = await Report.create(reportData);
 
-    // For now, just log it
-    console.log('New report received:', reportData);
+    console.log('New report created:', report._id);
 
     res.json({
       success: true,
       message: 'Signalement créé avec succès',
-      data: reportData
+      data: report
     });
 
   } catch (error) {
@@ -102,22 +100,31 @@ router.post('/', upload.single('evidence'), async (req, res) => {
 });
 
 // GET /api/admin/reports - Get all reports (admin only)
-router.get('/admin/reports', async (req, res) => {
+router.get('/admin/reports', authRequired, requireRoles('ADMIN'), async (req, res) => {
   try {
-    // TODO: Check if user is admin
-    // if (req.user.role !== 'ADMIN') {
-    //   return res.status(403).json({ success: false, message: 'Accès refusé' });
-    // }
+    // Fetch from database with pagination
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
 
-    // TODO: Fetch from database
-    // const reports = await Report.find().populate('reportedUser reportedBy');
+    const reports = await Report.find()
+      .populate('reportedUser.id', 'firstName lastName email profileImage')
+      .populate('reportedBy.id', 'firstName lastName email')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
 
-    // For now, return empty array
-    const reports = [];
+    const total = await Report.countDocuments();
 
     res.json({
       success: true,
-      data: reports
+      data: reports,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
     });
 
   } catch (error) {
@@ -130,15 +137,10 @@ router.get('/admin/reports', async (req, res) => {
 });
 
 // PATCH /api/admin/reports/:id/action - Take action on a report (admin only)
-router.patch('/admin/reports/:id/action', async (req, res) => {
+router.patch('/admin/reports/:id/action', authRequired, requireRoles('ADMIN'), async (req, res) => {
   try {
     const { id } = req.params;
     const { action, reason } = req.body;
-
-    // TODO: Check if user is admin
-    // if (req.user.role !== 'ADMIN') {
-    //   return res.status(403).json({ success: false, message: 'Accès refusé' });
-    // }
 
     // Validate action
     if (!['warn', 'ban', 'dismiss'].includes(action)) {
@@ -148,14 +150,21 @@ router.patch('/admin/reports/:id/action', async (req, res) => {
       });
     }
 
-    // TODO: Update report in database
-    // const report = await Report.findByIdAndUpdate(id, {
-    //   status: 'resolved',
-    //   action,
-    //   actionReason: reason,
-    //   actionTakenBy: req.user.id,
-    //   actionTakenAt: new Date()
-    // });
+    // Update report in database
+    const report = await Report.findByIdAndUpdate(id, {
+      status: 'resolved',
+      action,
+      actionReason: reason,
+      actionTakenBy: req.user._id || req.user.id,
+      actionTakenAt: new Date()
+    }, { new: true });
+
+    if (!report) {
+      return res.status(404).json({
+        success: false,
+        message: 'Signalement introuvable'
+      });
+    }
 
     // TODO: Take appropriate action on the reported user
     // if (action === 'warn') {
@@ -168,7 +177,8 @@ router.patch('/admin/reports/:id/action', async (req, res) => {
 
     res.json({
       success: true,
-      message: `Action ${action} effectuée avec succès`
+      message: `Action ${action} effectuée avec succès`,
+      data: report
     });
 
   } catch (error) {

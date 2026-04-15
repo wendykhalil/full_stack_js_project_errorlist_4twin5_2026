@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const Message = require('../src/models/Message');
 
 // PATCH /api/messages/:id - Edit a message
 router.patch('/:id', async (req, res) => {
@@ -23,45 +24,40 @@ router.patch('/:id', async (req, res) => {
       });
     }
 
-    // TODO: Find message and check ownership
-    // const message = await Message.findById(id);
-    // if (!message) {
-    //   return res.status(404).json({
-    //     success: false,
-    //     message: 'Message introuvable'
-    //   });
-    // }
+    // Find message and check ownership
+    const message = await Message.findById(id);
+    if (!message) {
+      return res.status(404).json({
+        success: false,
+        message: 'Message introuvable'
+      });
+    }
 
-    // if (message.senderId.toString() !== userId.toString()) {
-    //   return res.status(403).json({
-    //     success: false,
-    //     message: 'Vous ne pouvez modifier que vos propres messages'
-    //   });
-    // }
+    if (message.senderId.toString() !== userId.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Vous ne pouvez modifier que vos propres messages'
+      });
+    }
 
-    // TODO: Update message in database
-    // const updatedMessage = await Message.findByIdAndUpdate(
-    //   id,
-    //   { 
-    //     content: content.trim(),
-    //     edited: true,
-    //     editedAt: new Date()
-    //   },
-    //   { new: true }
-    // );
+    // Update message in database
+    const updatedMessage = await Message.findByIdAndUpdate(
+      id,
+      { 
+        content: content.trim(),
+        edited: true,
+        editedAt: new Date()
+      },
+      { new: true }
+    ).populate('senderId', 'firstName lastName profileImage')
+     .populate('receiverId', 'firstName lastName profileImage');
 
-    // For now, simulate success
     console.log(`Message ${id} edited by user ${userId}: "${content.trim()}"`);
 
     res.json({
       success: true,
       message: 'Message modifié avec succès',
-      data: {
-        _id: id,
-        content: content.trim(),
-        edited: true,
-        editedAt: new Date()
-      }
+      data: updatedMessage
     });
 
   } catch (error) {
@@ -79,26 +75,25 @@ router.delete('/:id', async (req, res) => {
     const { id } = req.params;
     const userId = req.user?.id || req.user?._id;
 
-    // TODO: Find message and check ownership
-    // const message = await Message.findById(id);
-    // if (!message) {
-    //   return res.status(404).json({
-    //     success: false,
-    //     message: 'Message introuvable'
-    //   });
-    // }
+    // Find message and check ownership
+    const message = await Message.findById(id);
+    if (!message) {
+      return res.status(404).json({
+        success: false,
+        message: 'Message introuvable'
+      });
+    }
 
-    // if (message.senderId.toString() !== userId.toString()) {
-    //   return res.status(403).json({
-    //     success: false,
-    //     message: 'Vous ne pouvez supprimer que vos propres messages'
-    //   });
-    // }
+    if (message.senderId.toString() !== userId.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Vous ne pouvez supprimer que vos propres messages'
+      });
+    }
 
-    // TODO: Delete message from database
-    // await Message.findByIdAndDelete(id);
+    // Delete message from database
+    await Message.findByIdAndDelete(id);
 
-    // For now, simulate success
     console.log(`Message ${id} deleted by user ${userId}`);
 
     res.json({
