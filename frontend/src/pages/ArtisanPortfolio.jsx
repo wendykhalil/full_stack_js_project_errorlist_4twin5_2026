@@ -13,7 +13,11 @@ import {
   MapPin,
   Image as ImageIcon,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Tag
 } from 'lucide-react';
 import SimpleFooter from '../components/Footer';
 import SubscriptionAlert from '../components/SubscriptionAlert';
@@ -30,6 +34,8 @@ export default function ArtisanPortfolio() {
   const [subscription, setSubscription] = useState(null);
   const [checkingSubscription, setCheckingSubscription] = useState(true);
   const [showSubscriptionAlert, setShowSubscriptionAlert] = useState(false);
+  const [viewingProject, setViewingProject] = useState(null);
+  const [imageIndex, setImageIndex] = useState(0);
   const isSubscribed = subscription?.plan && subscription.plan !== 'FREE' && subscription.status === 'ACTIVE';
 
   // Utilisation de useCallback pour mémoriser la fonction
@@ -222,7 +228,7 @@ export default function ArtisanPortfolio() {
                 {/* Actions */}
                 <div className="flex gap-2 border-t border-slate-100 pt-3">
                   <button
-                    onClick={() => navigate(`/artisan/portfolio/${project._id}`)}
+                    onClick={() => { setViewingProject(project); setImageIndex(0); }}
                     className="flex-1 flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium text-indigo-600 hover:bg-indigo-50 rounded-lg"
                   >
                     <Eye className="h-3 w-3" />
@@ -255,6 +261,112 @@ export default function ArtisanPortfolio() {
       )}
 
       <SimpleFooter />
+
+      {/* Project Detail Modal */}
+      {viewingProject && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
+          onClick={() => setViewingProject(null)}
+        >
+          <div
+            className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Image gallery */}
+            {viewingProject.images && viewingProject.images.length > 0 ? (
+              <div className="relative h-64 bg-slate-100 rounded-t-2xl overflow-hidden">
+                <img
+                  src={viewingProject.images[imageIndex]}
+                  alt={viewingProject.title}
+                  className="w-full h-full object-cover"
+                />
+                {viewingProject.images.length > 1 && (
+                  <>
+                    <button
+                      onClick={() => setImageIndex((imageIndex - 1 + viewingProject.images.length) % viewingProject.images.length)}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white rounded-full p-1 hover:bg-black/70"
+                    >
+                      <ChevronLeft className="h-5 w-5" />
+                    </button>
+                    <button
+                      onClick={() => setImageIndex((imageIndex + 1) % viewingProject.images.length)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white rounded-full p-1 hover:bg-black/70"
+                    >
+                      <ChevronRight className="h-5 w-5" />
+                    </button>
+                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+                      {viewingProject.images.map((_, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setImageIndex(i)}
+                          className={`h-1.5 rounded-full transition-all ${i === imageIndex ? 'w-4 bg-white' : 'w-1.5 bg-white/60'}`}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : (
+              <div className="h-40 bg-slate-100 rounded-t-2xl flex items-center justify-center">
+                <ImageIcon className="h-12 w-12 text-slate-400" />
+              </div>
+            )}
+
+            {/* Content */}
+            <div className="p-6">
+              <div className="flex items-start justify-between mb-4">
+                <h2 className="text-xl font-semibold text-slate-900">{viewingProject.title}</h2>
+                <button
+                  onClick={() => setViewingProject(null)}
+                  className="ml-4 p-1 rounded-lg hover:bg-slate-100 text-slate-500"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <p className="text-sm text-slate-600 mb-4 leading-relaxed">{viewingProject.description}</p>
+
+              <div className="flex flex-wrap gap-4 text-sm text-slate-500 mb-4">
+                <div className="flex items-center gap-1.5">
+                  <Calendar className="h-4 w-4" />
+                  <span>{formatDate(viewingProject.date)}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <MapPin className="h-4 w-4" />
+                  <span>{viewingProject.location}</span>
+                </div>
+              </div>
+
+              {viewingProject.tags && viewingProject.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {viewingProject.tags.map((tag, i) => (
+                    <span key={i} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-medium">
+                      <Tag className="h-3 w-3" />
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-4 border-t border-slate-100">
+                <button
+                  onClick={() => { setViewingProject(null); navigate(`/artisan/portfolio/edit/${viewingProject._id}`); }}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                >
+                  <Edit className="h-4 w-4" />
+                  Modifier
+                </button>
+                <button
+                  onClick={() => setViewingProject(null)}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 text-sm font-medium text-white hover:bg-indigo-700"
+                >
+                  Fermer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <SubscriptionAlert
         isVisible={showSubscriptionAlert}

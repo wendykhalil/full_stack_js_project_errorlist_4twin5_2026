@@ -55,6 +55,7 @@ import PrescripteurArtisans from "./pages/PrescripteurArtisans";
 import PrescripteurProjects from "./pages/PrescripteurProjects";
 import PrescripteurSearch from './pages/PrescripteurSearch';
 import ArtisanPublicProfile from './pages/ArtisanPublicProfile';
+import PrescripteurProductDetails from './pages/PrescripteurProductDetails';
 
 // FOURNISSEUR
 import FournisseurLayout from "./layouts/FournisseurLayout";
@@ -169,6 +170,7 @@ export default function App() {
                         <Route path="search" element={<PrescripteurSearch />} />
                         <Route path="artisan/:id" element={<ArtisanPublicProfile />} />
                         <Route path="artisans" element={<PrescripteurArtisans />} />
+                        <Route path="product/:id" element={<PrescripteurProductDetails />} />
                         <Route path="projects" element={<PrescripteurProjects />} />
                         <Route path="service-requests" element={<PrescripteurServiceRequests />} />
                         <Route path="messages" element={<Messages />} />

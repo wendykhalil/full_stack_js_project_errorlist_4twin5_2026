@@ -29,7 +29,7 @@ const getProducts = async ({ page = 1, limit = 12, search = '', category = '', a
   const skip = (safePage - 1) * safeLimit;
   const products = await Product.find(query)
     .populate('categoryId', 'name slug')
-    .populate('supplierId', 'companyName')
+    .populate('supplierId', 'companyName firstName lastName email phone')
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(safeLimit)

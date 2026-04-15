@@ -64,6 +64,14 @@ export default function FournisseurProductDetails() {
 
   const supplier = product.supplierId || {};
   const images = product.imageUrls || [];
+  const supplierName =
+    supplier.companyName ||
+    (supplier.firstName || supplier.lastName
+      ? `${supplier.firstName || ''} ${supplier.lastName || ''}`.trim()
+      : null) ||
+    t('common.notAvailable', 'Non disponible');
+  const hasSheet = !!(product.technicalSheet || product.documentation?.length > 0);
+  const sheet = product.technicalSheet || product.documentation?.[0];
 
   return (
     <div className="flex-1">
@@ -139,17 +147,17 @@ export default function FournisseurProductDetails() {
                 <Building className="h-4 w-4" />
                 {t('product.supplier', 'Fournisseur')}
               </h3>
-              <p className="mt-2 font-medium text-slate-900">
-                {supplier.companyName || supplier.supplierProfile?.companyName || t('common.notAvailable', 'Nom non disponible')}
+              <p className="mt-2 font-semibold text-slate-900">
+                {supplierName}
               </p>
               {supplier.supplierProfile?.description && (
                 <p className="mt-2 text-sm text-slate-600">{supplier.supplierProfile.description}</p>
               )}
             </div>
 
-            {(product.technicalSheet || product.documentation?.length > 0) && (
+            {hasSheet && (
               <div className="mt-4">
-                <TechnicalSheetViewer sheet={product.technicalSheet || product.documentation?.[0]} title={product.name} />
+                <TechnicalSheetViewer sheet={sheet} title={product.name} />
               </div>
             )}
 

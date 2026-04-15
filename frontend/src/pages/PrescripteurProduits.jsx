@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Search, ChevronDown, FileText } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
 import { useTranslation } from "../i18n";
 import { getCatalogProducts } from "../auth/api.js";
 
-const Card = ({ cat, title, desc, supplier, price, unit }) => {
+const Card = ({ cat, title, desc, supplier, price, unit, onDetails }) => {
   const { t } = useTranslation();
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -13,7 +14,7 @@ const Card = ({ cat, title, desc, supplier, price, unit }) => {
       </span>
 
       <h3 className="mt-4 text-lg font-semibold text-slate-900">{title}</h3>
-      <p className="mt-1 text-sm text-slate-500">{desc}</p>
+      <p className="mt-1 text-sm text-slate-500 line-clamp-2">{desc}</p>
 
       <div className="mt-4 flex items-center gap-2 text-sm text-slate-600">
         <FileText className="h-4 w-4 text-slate-400" />
@@ -26,7 +27,10 @@ const Card = ({ cat, title, desc, supplier, price, unit }) => {
           <div className="text-xs text-slate-500">{unit}</div>
         </div>
 
-        <button className="rounded-xl bg-indigo-600 px-5 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
+        <button
+          onClick={onDetails}
+          className="rounded-xl bg-indigo-600 px-5 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors"
+        >
           {t('prescripteurProduits.detailsButton')}
         </button>
       </div>
@@ -36,6 +40,7 @@ const Card = ({ cat, title, desc, supplier, price, unit }) => {
 
 export default function PrescripteurProduits() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
@@ -155,9 +160,15 @@ export default function PrescripteurProduits() {
                 cat={product.categoryId?.name || 'N/A'}
                 title={product.name}
                 desc={product.description}
-                supplier={product.supplierId?.companyName || 'Supplier'}
+                supplier={
+                  product.supplierId?.companyName ||
+                  (product.supplierId?.firstName
+                    ? `${product.supplierId.firstName} ${product.supplierId.lastName || ''}`.trim()
+                    : 'Fournisseur')
+                }
                 price={product?.price}
                 unit="TND"
+                onDetails={() => navigate(`/prescripteur/product/${product._id}`)}
               />
             ))}
           </div>
