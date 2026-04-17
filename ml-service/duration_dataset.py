@@ -55,14 +55,34 @@ def generate_duration_data(n_samples=2000):
         num_workers = np.random.randint(1, 11)  # 1-10 workers
         complexity = np.random.randint(1, 6)    # 1-5 complexity
         
-        # Calculate duration based on realistic factors including location and materials
-        base_duration = (size_sqm / 10) * type_multipliers[project_type]
-        worker_factor = max(0.3, 1 / np.sqrt(num_workers))  # more workers = faster
-        complexity_factor = complexity * 0.3
-        location_factor = location_multipliers[location]  # location impact
-        material_factor = material_multipliers[material]  # material impact
+        # Calculate duration based on realistic factors
+        # Base: 1 day per 20m² for houses, adjusted by type
+        if project_type == 'house':
+            base_days_per_sqm = 0.8  # 0.8 days per m²
+        elif project_type == 'renovation':
+            base_days_per_sqm = 0.5  # renovation faster
+        elif project_type == 'commercial':
+            base_days_per_sqm = 1.2  # commercial takes longer
+        else:  # landscaping
+            base_days_per_sqm = 0.3  # landscaping fastest
         
-        duration_days = base_duration * worker_factor * (1 + complexity_factor) * location_factor * material_factor
+        # Base duration from size
+        base_duration = size_sqm * base_days_per_sqm
+        
+        # Worker efficiency: more workers = faster (but with diminishing returns)
+        worker_efficiency = 1.0 / (1 + (num_workers - 1) * 0.15)  # each extra worker adds 15% efficiency
+        
+        # Complexity factor: higher complexity = longer duration
+        complexity_factor = 1 + (complexity - 1) * 0.4  # each complexity level adds 40%
+        
+        # Location factor: rural takes longer, urban faster
+        location_factor = location_multipliers[location]
+        
+        # Material factor: premium materials take longer to install
+        material_factor = material_multipliers[material]
+        
+        # Final calculation
+        duration_days = base_duration * worker_efficiency * complexity_factor * location_factor * material_factor
         
         # Add some noise
         duration_days *= np.random.normal(1, 0.15)
