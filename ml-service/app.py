@@ -165,7 +165,7 @@ def _validate_pricing_features(data: dict):
     """Validate pricing prediction input."""
     errors, values = [], []
     
-    # Mappings
+    # Mappings - must match the order used in training: project_type_encoded, surface_area, materials_encoded, location_encoded, complexity
     project_type_map = {'house': 0, 'renovation': 1, 'commercial': 2, 'landscaping': 3}
     materials_map = {'basic': 0, 'standard': 1, 'premium': 2}
     location_map = {'rural': 0, 'suburban': 1, 'urban': 2}
@@ -218,6 +218,7 @@ def _validate_pricing_features(data: dict):
     if errors:
         return None, "; ".join(errors)
     
+    # Return features in the exact order expected by the model: [project_type_encoded, surface_area, materials_encoded, location_encoded, complexity]
     return np.array([[project_type_encoded, surface_area, materials_encoded, location_encoded, complexity]], dtype=float), None
 
 def _validate_features(data: dict):

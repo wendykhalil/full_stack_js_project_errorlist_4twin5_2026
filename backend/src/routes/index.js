@@ -731,6 +731,188 @@ router.get('/admin/ai-insights', authRequired, requireRoles('ADMIN'), async (req
   }
 });
 
+// Admin: Detailed User Statistics
+router.get('/admin/user-statistics', authRequired, requireRoles('ADMIN'), async (req, res, next) => {
+  try {
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    // Most Active Users (based on recent activity)
+    const [recentProjects, recentOrders, recentMessages] = await Promise.all([
+      Project.aggregate([
+        { $match: { updatedAt: { $gte: thirtyDaysAgo } } },
+        { $group: { _id: '$artisanId', projectCount: { $sum: 1 }, lastActivity: { $max: '$updatedAt' } } },
+        { $lookup: { from: 'users', localField: '_id', foreignField: '_id', as: 'user' } },
+        { $unwind: '$user' },
+        { $sort: { projectCount: -1 } },
+        { $limit: 10 }
+      ]),
+      Order.aggregate([
+        { $match: { createdAt: { $gte: thirtyDaysAgo } } },
+        { $group: { _id: '$supplierId', orderCount: { $sum: 1 }, totalRevenue: { $sum: '$lineTotal' }, lastActivity: { $max: '$createdAt' } } },
+        { $lookup: { from: 'users', localField: '_id', foreignField: '_id', as: 'user' } },
+        { $unwind: '$user' },
+        { $sort: { orderCount: -1 } },
+        { $limit: 10 }
+      ]),
+      User.aggregate([
+        { $match: { lastLoginAt: { $gte: sevenDaysAgo } } },
+        { $sort: { lastLoginAt: -1 } },
+        { $limit: 20 }
+      ])
+    ]);
+
+    // Inactive Users (no activity in last 15 days)
+    const fifteenDaysAgo = new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000);
+    const inactiveUsers = await User.find({
+      $or: [
+        { lastLoginAt: { $lt: fifteenDaysAgo } },
+        { lastLoginAt: { $exists: false } }
+      ],
+      createdAt: { $lt: fifteenDaysAgo }
+    })
+    .select('firstName lastName role lastLoginAt createdAt')
+    .sort({ lastLoginAt: 1 })
+    .limit(10)
+    .lean();
+
+    // Top Buyers (based on order totals)
+    const topBuyers = await Order.aggregate([
+      { $match: { status: { $in: ['DELIVERED', 'ACCEPTED'] } } },
+      { $group: { 
+        _id: '$artisanId', 
+        totalSpent: { $sum: '$lineTotal' }, 
+        orderCount: { $sum: 1 } 
+      }},
+      { $lookup: { from: 'users', localField: '_id', foreignField: '_id', as: 'user' } },
+      { $unwind: '$user' },
+      { $sort: { totalSpent: -1 } },
+      { $limit: 10 }
+    ]);
+
+    // Project Leaders (artisans with most completed projects)
+    const projectLeaders = await Project.aggregate([
+      { $group: { 
+        _id: '$artisanId', 
+        totalProjects: { $sum: 1 },
+        completedProjects: { $sum: { $cond: [{ $eq: ['$status', 'COMPLETED'] }, 1, 0] } }
+      }},
+      { $addFields: { 
+        completionRate: { 
+          $multiply: [
+            { $divide: ['$completedProjects', '$totalProjects'] }, 
+            100
+          ] 
+        }
+      }},
+      { $match: { totalProjects: { $gte: 3 } } },
+      { $lookup: { from: 'users', localField: '_id', foreignField: '_id', as: 'user' } },
+      { $unwind: '$user' },
+      { $sort: { totalProjects: -1 } },
+      { $limit: 10 }
+    ]);
+
+    // Weekly Activity Data
+    const weeklyActivity = await User.aggregate([
+      {
+        $group: {
+          _id: {
+            $dayOfWeek: { $ifNull: ['$lastLoginAt', '$createdAt'] }
+          },
+          activeUsers: {
+            $sum: {
+              $cond: [
+                { $gte: [{ $ifNull: ['$lastLoginAt', '$createdAt'] }, sevenDaysAgo] },
+                1,
+                0
+              ]
+            }
+          },
+          inactiveUsers: {
+            $sum: {
+              $cond: [
+                { $lt: [{ $ifNull: ['$lastLoginAt', '$createdAt'] }, sevenDaysAgo] },
+                1,
+                0
+              ]
+            }
+          }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+
+    const dayNames = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+    const activityData = weeklyActivity.map(item => ({
+      period: dayNames[item._id - 1] || 'N/A',
+      active: item.activeUsers,
+      inactive: item.inactiveUsers
+    }));
+
+    // Format the response data
+    const mostActiveUsers = [
+      ...recentProjects.map(item => ({
+        name: `${item.user.firstName} ${item.user.lastName}`,
+        role: 'Artisan',
+        projects: item.projectCount,
+        revenue: 0, // Projects don't have direct revenue
+        lastActive: formatRelativeDate(item.lastActivity)
+      })),
+      ...recentOrders.map(item => ({
+        name: `${item.user.firstName} ${item.user.lastName}`,
+        role: 'Fournisseur',
+        orders: item.orderCount,
+        revenue: item.totalRevenue || 0,
+        lastActive: formatRelativeDate(item.lastActivity)
+      }))
+    ].slice(0, 5);
+
+    const formattedInactiveUsers = inactiveUsers.map(user => ({
+      name: `${user.firstName} ${user.lastName}`,
+      role: user.role,
+      lastActive: user.lastLoginAt ? formatRelativeDate(user.lastLoginAt) : 'Jamais connecté',
+      projects: 0 // Could be enhanced with actual project count
+    }));
+
+    const formattedTopBuyers = topBuyers.map(buyer => ({
+      name: `${buyer.user.firstName} ${buyer.user.lastName}`,
+      role: buyer.user.role,
+      totalSpent: buyer.totalSpent || 0,
+      orders: buyer.orderCount || 0
+    }));
+
+    const formattedProjectLeaders = projectLeaders.map(leader => ({
+      name: `${leader.user.firstName} ${leader.user.lastName}`,
+      role: leader.user.role,
+      projects: leader.totalProjects || 0,
+      completionRate: Math.round(leader.completionRate || 0)
+    }));
+
+    await auditAdminAction(req, 'ADMIN_VIEW_USER_STATISTICS', {
+      timestamp: new Date(),
+      dataPoints: {
+        activeUsers: mostActiveUsers.length,
+        inactiveUsers: formattedInactiveUsers.length,
+        topBuyers: formattedTopBuyers.length,
+        projectLeaders: formattedProjectLeaders.length
+      }
+    });
+
+    res.json({
+      ok: true,
+      mostActiveUsers,
+      inactiveUsers: formattedInactiveUsers,
+      topBuyers: formattedTopBuyers,
+      projectLeaders: formattedProjectLeaders,
+      activityData,
+      generatedAt: new Date()
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get('/admin/transactions', authRequired, requireRoles('ADMIN'), async (req, res, next) => {
   try {
     const Order = require('../models/Order');

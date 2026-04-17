@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import RealtimeNotifications from "./components/RealtimeNotifications";
 import ArtisanLocationPromptModal from "./components/ArtisanLocationPromptModal";
+import ReadPageButton from "./components/ReadPageButton";
 import ArtisanProfile from './pages/ArtisanProfile';
 import MLPredictionsPage from './pages/MLPredictions';
 
@@ -22,6 +23,7 @@ import AdminPromoCodes from "./pages/AdminPromoCodes";
 import AdminTransactions from "./pages/AdminTransactions";
 import AdminReports from "./pages/AdminReports";
 import AdminAiInsights from "./pages/AdminAiInsights";
+import AdminUserStatisticsPage from "./pages/AdminUserStatistics";
 
 // REGISTER
 import RegisterChooseRole from "./pages/RegisterChooseRole";
@@ -81,6 +83,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Profile from "./pages/Profile";
 import AccessibilitySettings from "./pages/AccessibilitySettings";
+import AccessibilityDemo from "./pages/AccessibilityDemo";
 import AppErrorBoundary from "./components/AppErrorBoundary";
 import AiChat from "./components/ai-chat"; // ton composant chat modernisé
 
@@ -91,6 +94,7 @@ export default function App() {
             <AppErrorBoundary></AppErrorBoundary>
             <AppErrorBoundary><RealtimeNotifications /></AppErrorBoundary>
             <AppErrorBoundary><ArtisanLocationPromptModal /></AppErrorBoundary>
+            <ReadPageButton />
             <Routes>
                 {/* Routes publiques */}
                 <Route path="/" element={<Navigate to="/login" replace />} />
@@ -103,6 +107,7 @@ export default function App() {
                 <Route path="/verify-email" element={<VerifyEmail />} />
                 <Route path="/unauthorized" element={<Unauthorized />} />
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/accessibility-demo" element={<AccessibilityDemo />} />
                 {/* La route AiChat a été retirée d'ici : elle est maintenant dans chaque layout protégé */}
 
                 {/* Register */}
@@ -131,6 +136,7 @@ export default function App() {
                         <Route path="promo-codes" element={<AdminPromoCodes />} />
                         <Route path="reports" element={<AdminReports />} />
                         <Route path="ai-insights" element={<AdminAiInsights />} />
+                        <Route path="user-statistics" element={<AdminUserStatisticsPage />} />
                         {/* AI Chat pour Admin */}
                         <Route path="AiChat" element={<AiChat />} />
                     </Route>

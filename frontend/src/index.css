@@ -67,6 +67,7 @@
 [dir="rtl"] .space-x-4 > :not([hidden]) ~ :not([hidden]) {
   --tw-space-x-reverse: 1;
 }
+
 /* Accessibility preferences */
 :root.a11y-large-text {
   font-size: 18px;
@@ -105,4 +106,99 @@
   animation: none !important;
   transition: none !important;
   scroll-behavior: auto !important;
+}
+
+/* Simple Mode Styles */
+:root.simple-mode {
+  /* Larger base font size */
+  font-size: 20px;
+}
+
+:root.simple-mode * {
+  /* Simplified borders and shadows */
+  border-radius: 12px !important;
+  box-shadow: none !important;
+}
+
+:root.simple-mode button {
+  /* Bigger, more accessible buttons */
+  min-height: 48px !important;
+  padding: 12px 24px !important;
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  border: 2px solid currentColor !important;
+}
+
+:root.simple-mode .text-sm {
+  font-size: 16px !important;
+}
+
+:root.simple-mode .text-xs {
+  font-size: 14px !important;
+}
+
+:root.simple-mode .text-lg {
+  font-size: 22px !important;
+}
+
+:root.simple-mode .text-xl {
+  font-size: 26px !important;
+}
+
+:root.simple-mode .text-2xl {
+  font-size: 30px !important;
+}
+
+:root.simple-mode .grid {
+  /* Simplified grid layouts */
+  grid-template-columns: 1fr !important;
+  gap: 24px !important;
+}
+
+:root.simple-mode .space-y-2 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 16px !important;
+}
+
+:root.simple-mode .space-y-4 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 24px !important;
+}
+
+:root.simple-mode .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 32px !important;
+}
+
+/* Hide complex elements in simple mode */
+:root.simple-mode .simple-mode-hide {
+  display: none !important;
+}
+
+/* Highlight important elements */
+:root.simple-mode .simple-mode-highlight {
+  background-color: #fef3c7 !important;
+  border: 3px solid #f59e0b !important;
+  padding: 16px !important;
+}
+
+/* Step-by-step indicators */
+:root.simple-mode .simple-step {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 16px !important;
+  background-color: #eff6ff !important;
+  border: 2px solid #3b82f6 !important;
+  margin-bottom: 16px !important;
+}
+
+:root.simple-mode .simple-step-number {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 32px !important;
+  height: 32px !important;
+  background-color: #3b82f6 !important;
+  color: white !important;
+  border-radius: 50% !important;
+  font-weight: bold !important;
+  font-size: 18px !important;
 }

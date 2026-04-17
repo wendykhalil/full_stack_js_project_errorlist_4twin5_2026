@@ -38,7 +38,7 @@ def generate_duration_data(n_samples=2000):
     for _ in range(n_samples):
         project_type = np.random.choice(project_types)
         location = np.random.choice(locations)
-        materials = np.random.choice(materials)
+        material = np.random.choice(materials)
         
         # Size varies by project type
         if project_type == 'house':
@@ -60,7 +60,7 @@ def generate_duration_data(n_samples=2000):
         worker_factor = max(0.3, 1 / np.sqrt(num_workers))  # more workers = faster
         complexity_factor = complexity * 0.3
         location_factor = location_multipliers[location]  # location impact
-        material_factor = material_multipliers[materials]  # material impact
+        material_factor = material_multipliers[material]  # material impact
         
         duration_days = base_duration * worker_factor * (1 + complexity_factor) * location_factor * material_factor
         
@@ -73,7 +73,7 @@ def generate_duration_data(n_samples=2000):
             'size_sqm': round(size_sqm, 1),
             'num_workers': num_workers,
             'location': location,
-            'materials': materials,
+            'materials': material,
             'complexity': complexity,
             'duration_days': duration_days
         })

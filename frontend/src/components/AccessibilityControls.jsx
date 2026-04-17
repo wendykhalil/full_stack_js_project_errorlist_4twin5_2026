@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
-import { Accessibility, Contrast, Minus, MonitorSpeaker, Plus } from "lucide-react";
+import { Accessibility, Contrast, Minus, MonitorSpeaker, Plus, Volume2, Mic } from "lucide-react";
+import TextToSpeech from "./TextToSpeech";
+import VoiceInput from "./VoiceInput";
+import SimpleModeToggle from "./SimpleModeToggle";
 
 const STORAGE_KEY = "bmp_accessibility_settings";
 
@@ -242,6 +245,30 @@ export default function AccessibilityControls({ a11y }) {
           enabled={settings.reducedMotion}
           onClick={() => toggleSetting("reducedMotion")}
         />
+
+        {/* ── Simple Mode Toggle ── */}
+        <div className="rounded-md border border-slate-200 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-800">
+          <SimpleModeToggle className="w-full justify-center" />
+        </div>
+
+        {/* ── Text-to-Speech Demo ── */}
+        <div className="rounded-md border border-slate-200 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-800">
+          <p className="mb-2 text-xs font-medium text-slate-600 dark:text-slate-400">Text-to-Speech</p>
+          <TextToSpeech 
+            text="Bienvenue dans les paramètres d'accessibilité. Ces options vous aident à personnaliser votre expérience selon vos besoins."
+            className="w-full justify-center"
+          />
+        </div>
+
+        {/* ── Voice Input Demo ── */}
+        <div className="rounded-md border border-slate-200 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-800">
+          <p className="mb-2 text-xs font-medium text-slate-600 dark:text-slate-400">Voice Input</p>
+          <VoiceInput 
+            onResult={(text) => console.log('Voice input:', text)}
+            placeholder="Testez la saisie vocale ici..."
+            className="w-full"
+          />
+        </div>
       </div>
     </section>
   );
