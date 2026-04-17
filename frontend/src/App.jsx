@@ -39,6 +39,8 @@ import ArtisanMarketplace from "./pages/ArtisanMarketplace";
 import ArtisanProductDetails from "./pages/ArtisanProductDetails";
 import ArtisanOrderRequest from "./pages/ArtisanOrderRequest";
 import ArtisanOrders from "./pages/ArtisanOrders";
+import ArtisanCart from "./pages/ArtisanCart";
+import ArtisanFavorites from "./pages/ArtisanFavorites";
 import ArtisanSubscription from './pages/ArtisanSubscription';
 import RequireSubscription from './components/RequireSubscription';
 
@@ -155,6 +157,8 @@ export default function App() {
                         <Route path="order-request/:productId" element={<RequireSubscription><ArtisanOrderRequest /></RequireSubscription>} />
                         <Route path="orders" element={<RequireSubscription><ArtisanOrders /></RequireSubscription>} />
                         <Route path="orders/:id" element={<RequireSubscription><OrderDetails /></RequireSubscription>} />
+                        <Route path="cart" element={<RequireSubscription><ArtisanCart /></RequireSubscription>} />
+                        <Route path="favorites" element={<ArtisanFavorites />} />
                         <Route path="weather" element={<ArtisanWeather />} />
                         <Route path="availability" element={<ArtisanAvailability />} />
                         <Route path="service-requests" element={<ArtisanServiceRequests />} />

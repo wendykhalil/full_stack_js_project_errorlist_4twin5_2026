@@ -5,16 +5,28 @@ const Category = require('../../models/Category');
 const { buildRecommendationFilter, scoreRecommendations } = require('./recommendations');
 const { getProductVideo } = require('./video.service');
 
+// ── In-process cache invalidation hook (imported lazily to avoid circular deps)
+function invalidateInsightsCache(supplierId) {
+  try {
+    // The aiInsights cache is keyed by supplierId — we need the product's supplierId
+    // We call this after a rating update so ML always gets fresh data
+    const { cache: insightsCache } = require('../supplier/aiInsights.service');
+    if (insightsCache && supplierId) insightsCache.delete(String(supplierId));
+  } catch {
+    // Non-critical — ignore if module not loaded
+  }
+}
+
 // GET /api/catalog/products
 const getProducts = async (req, res) => {
   try {
     const { page, limit, search, category, approved } = req.query;
     const products = await catalogService.getProducts({
-      page: parseInt(page) || 1,
-      limit: parseInt(limit) || 8,
-      search: search || '',
+      page:     parseInt(page)  || 1,
+      limit:    parseInt(limit) || 8,
+      search:   search   || '',
       category: category || '',
-      approved
+      approved,
     });
     apiResponse(res, 'Produits récupérés', products);
   } catch (error) {
@@ -47,7 +59,7 @@ const getRecommendations = async (req, res) => {
     if (!product) return res.status(404).json({ message: 'Produit non trouvé' });
 
     const allCategories = await Category.find().lean();
-    const filter = buildRecommendationFilter(product, allCategories);
+    const filter        = buildRecommendationFilter(product, allCategories);
 
     const candidates = await Product.find(filter)
       .populate('categoryId', 'name slug')
@@ -55,9 +67,7 @@ const getRecommendations = async (req, res) => {
       .limit(20)
       .lean();
 
-    const scored = scoreRecommendations(candidates, product).slice(0, 6);
-
-    // Remove internal score field before sending
+    const scored          = scoreRecommendations(candidates, product).slice(0, 6);
     const recommendations = scored.map(({ _score, ...p }) => p);
 
     apiResponse(res, 'Recommandations récupérées', { recommendations, total: recommendations.length });
@@ -76,10 +86,7 @@ const getVideo = async (req, res) => {
     if (!product) return res.status(404).json({ message: 'Produit non trouvé' });
 
     const video = await getProductVideo(product);
-
-    if (!video) {
-      return apiResponse(res, 'Aucune vidéo disponible', { video: null });
-    }
+    if (!video) return apiResponse(res, 'Aucune vidéo disponible', { video: null });
 
     apiResponse(res, 'Vidéo récupérée', { video });
   } catch (error) {
@@ -87,15 +94,28 @@ const getVideo = async (req, res) => {
   }
 };
 
+// POST /api/catalog/products/:id/rate
 const rateProduct = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id }     = req.params;
     const { rating } = req.body;
-    const updatedProduct = await catalogService.rateProduct(id, rating);
-    apiResponse(res, 'Rating added successfully', { rating: updatedProduct.rating, ratingCount: updatedProduct.ratingCount });
+    const userId     = req.user?._id;
+
+    const result = await catalogService.rateProduct(id, rating, userId);
+
+    // Invalidate the supplier's ML insights cache so next /ai-insights fetch
+    // uses the updated rating value
+    const product = await Product.findById(id).select('supplierId').lean();
+    if (product?.supplierId) invalidateInsightsCache(product.supplierId);
+
+    apiResponse(res, 'Note enregistrée', {
+      rating:      result.rating,
+      ratingCount: result.ratingCount,
+    });
   } catch (error) {
-    apiResponse(res, error.message, null, error.statusCode || 400);
+    res.status(error.statusCode || 400).json({ message: error.message });
   }
 };
 
 module.exports = { getProducts, getProductById, getRecommendations, getVideo, rateProduct };
+

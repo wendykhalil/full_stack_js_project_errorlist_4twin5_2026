@@ -17,7 +17,6 @@ import { useNotification } from "../hooks/useNotification";
 import { getCurrentPositionWithAddress, updateLocationOnServer } from "../utils/geolocation";
 import { storeLocationUpdate } from "../services/profileService";
 import Notification from "./Notification";
-
 function SidebarLink({ item, collapsed, onClick }) {
   return (
     <NavLink
@@ -55,6 +54,7 @@ export default function RoleWorkspace({
   avatar,
   onLogout,
   settingsItems = [],
+  headerExtra = null,
 }) {
   const navigate = useNavigate();
   const { token } = useAuth();
@@ -193,7 +193,6 @@ export default function RoleWorkspace({
 
   return (
     <>
-      <Notification notification={notification} onClose={hideNotification} />
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
       {/* Sidebar */}
       <aside
@@ -266,8 +265,9 @@ export default function RoleWorkspace({
         <div className="sticky top-0 z-20 hidden xl:block">
           <DashboardTopbar 
             role={role} 
-            unreadCount={unreadCount} 
+            unreadCount={unreadCount}
             onLogout={onLogout}
+            headerExtra={headerExtra}
           />
         </div>
 

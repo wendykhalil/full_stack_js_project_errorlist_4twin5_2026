@@ -14,16 +14,13 @@ import {
   Send,
   ChevronLeft,
   Clock,
-  CheckCircle,
-  XCircle,
-  Truck,
-  PackageCheck,
   FileText,
   Loader2,
   AlertCircle
 } from 'lucide-react';
 import { getOrderById, sendMessage, getOrderMessages, markMessageAsRead } from '../auth/api';
 import OrderStatusBadge from '../components/OrderStatusBadge';
+import OrderReviewForm from '../components/OrderReviewForm';
 import SimpleFooter from '../components/Footer';
 
 export default function OrderDetails() {
@@ -295,9 +292,17 @@ export default function OrderDetails() {
                 </div>
               </div>
 
+              {/* Verified-purchase review — artisan only, delivered orders */}
+              {isArtisan && order.status === 'DELIVERED' && (
+                <OrderReviewForm
+                  order={order}
+                  token={token}
+                  onReviewed={fetchOrderDetails}
+                />
+              )}
+
               {/* Adresse de livraison */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">                <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
                   <MapPin className="h-5 w-5" />
                   {t('orders.deliveryAddress', 'Adresse de livraison')}
                 </h2>

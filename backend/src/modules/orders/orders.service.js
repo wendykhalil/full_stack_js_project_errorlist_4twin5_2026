@@ -2,6 +2,8 @@ const Order = require('../../models/Order');
 const Product = require('../../models/Product');
 const User = require('../../models/User');
 const { sendNewOrderEmailToSupplier, sendOrderStatusUpdateEmailToArtisan } = require('../../utils/orderEmail');
+const { notify } = require('../../utils/notify');
+const { notifySupplierNewOrder } = require('../../socket');
 
 // Créer une commande
 // Créer une commande
@@ -84,6 +86,35 @@ async function createOrder(orderData) {
     } catch (emailError) {
       console.error('Erreur envoi email (non bloquante):', emailError);
       // Ne pas bloquer la création de la commande si l'email échoue
+    }
+
+    // ✅ REAL-TIME: notify supplier via Socket.io + persist notification
+    try {
+      const artisanName = `${artisan.firstName || ''} ${artisan.lastName || ''}`.trim() || 'Artisan';
+      const orderPayload = {
+        orderId:     String(order._id),
+        orderNumber: order.orderNumber,
+        productName: product.name,
+        artisanName,
+        totalPrice:  order.lineTotal,
+        quantity:    order.quantity,
+        status:      'PENDING',
+        createdAt:   order.createdAt,
+      };
+
+      // Emit new_order event to supplier's dedicated room
+      notifySupplierNewOrder(String(product.supplierId._id), orderPayload);
+
+      // Persist notification + emit notification event (for bell badge)
+      await notify({
+        userId:  product.supplierId._id,
+        type:    'NEW_ORDER',
+        title:   'Nouvelle commande reçue',
+        message: `${artisanName} a commandé ${order.quantity}× ${product.name} — ${order.lineTotal.toFixed(2)} TND`,
+        link:    `/fournisseur/orders/${order._id}`,
+      });
+    } catch (socketErr) {
+      console.error('Erreur notification temps réel (non bloquante):', socketErr.message);
     }
 
     return order;
@@ -469,5 +500,99 @@ module.exports = {
   getOrdersBySupplier,
   updateOrderStatus,
   addSupplierNote,
-  getOrderById
+  getOrderById,
+  submitReview,
 };
+
+/**
+ * Submit a verified-purchase review for a delivered order.
+ * Business rules enforced here:
+ *  - caller must be the order's artisan
+ *  - order must be DELIVERED
+ *  - order must not already have a review
+ *  - rating must be 1–5
+ * After saving, product rating is recomputed from ALL reviewed orders.
+ */
+async function submitReview(orderId, artisanId, { rating, comment }) {
+  const parsedRating = Number(rating);
+  if (!Number.isFinite(parsedRating) || parsedRating < 1 || parsedRating > 5) {
+    const err = new Error('La note doit être un entier entre 1 et 5');
+    err.statusCode = 400;
+    throw err;
+  }
+  const score = Math.round(parsedRating);
+
+  const order = await Order.findById(orderId);
+  if (!order) {
+    const err = new Error('Commande non trouvée');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  if (order.artisanId.toString() !== artisanId.toString()) {
+    const err = new Error('Non autorisé — vous n\'êtes pas l\'acheteur de cette commande');
+    err.statusCode = 403;
+    throw err;
+  }
+
+  if (order.status !== 'DELIVERED') {
+    const err = new Error('Vous ne pouvez noter qu\'une commande livrée');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  if (order.review?.isReviewed) {
+    const err = new Error('Vous avez déjà noté cette commande');
+    err.statusCode = 409;
+    throw err;
+  }
+
+  // Save review on the order
+  await Order.updateOne(
+    { _id: orderId },
+    {
+      $set: {
+        'review.rating':     score,
+        'review.comment':    (comment || '').trim().slice(0, 1000),
+        'review.createdAt':  new Date(),
+        'review.isReviewed': true,
+      },
+    }
+  );
+
+  // Recompute product rating from ALL reviewed orders (single aggregation)
+  const productId = order.productId;
+  const [stats] = await Order.aggregate([
+    { $match: { productId, 'review.isReviewed': true } },
+    {
+      $group: {
+        _id:       '$productId',
+        avgRating: { $avg: '$review.rating' },
+        count:     { $sum: 1 },
+      },
+    },
+  ]);
+
+  await Product.updateOne(
+    { _id: productId },
+    {
+      $set: {
+        rating:      stats ? Number(stats.avgRating.toFixed(2)) : 0,
+        ratingCount: stats ? stats.count : 0,
+      },
+    }
+  );
+
+  // Invalidate ML insights cache for this supplier
+  try {
+    const product = await Product.findById(productId).select('supplierId').lean();
+    if (product?.supplierId) {
+      const { cache: insightsCache } = require('../supplier/aiInsights.service');
+      if (insightsCache) insightsCache.delete(String(product.supplierId));
+    }
+  } catch { /* non-critical */ }
+
+  return Order.findById(orderId)
+    .populate('productId', 'name price imageUrls rating ratingCount')
+    .lean();
+}

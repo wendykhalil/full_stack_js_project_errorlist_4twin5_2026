@@ -89,7 +89,7 @@ function initialsFromUser(user) {
   return initials || "BM";
 }
 
-export default function DashboardTopbar({ role = "ARTISAN", unreadCount = 0, onLogout }) {
+export default function DashboardTopbar({ role = "ARTISAN", unreadCount = 0, onLogout, headerExtra = null }) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { user, token } = useAuth();
@@ -264,7 +264,8 @@ export default function DashboardTopbar({ role = "ARTISAN", unreadCount = 0, onL
       </div>
 
       <div className="flex items-center gap-3">
-        <NotificationBell />
+        {/* Show the supplier-specific bell when headerExtra is provided, otherwise show the global bell */}
+        {headerExtra ? headerExtra : <NotificationBell />}
         
         {/* Messages Icon */}
         <button

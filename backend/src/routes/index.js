@@ -23,6 +23,7 @@ const reviewsRoutes = require('../modules/reviews/reviews.routes');
 const promoRoutes = require('../modules/promo/promo.routes');
 const availabilityRoutes = require('../modules/availability/availability.routes');
 const notificationsRoutes = require('../modules/notifications/notifications.routes');
+const marketplaceRoutes   = require('../modules/marketplace/marketplace.routes');
 
 const { authRequired } = require('../middleware/authMiddleware');
 const { requireRoles } = require('../middleware/roleMiddleware');
@@ -220,6 +221,7 @@ router.use('/reviews', reviewsRoutes);
 router.use('/promo', promoRoutes);
 router.use('/availability', availabilityRoutes);
 router.use('/notifications', notificationsRoutes);
+router.use('/marketplace',  marketplaceRoutes);
 router.use(productRoutes);
 
 // Admin routes

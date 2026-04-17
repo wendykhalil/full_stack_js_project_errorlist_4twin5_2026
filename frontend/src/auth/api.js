@@ -96,6 +96,50 @@ export async function getSupplierStats({ token }) {
   return apiFetch('/supplier/stats', { token });
 }
 
+export async function getSupplierAiInsights({ token, refresh = false } = {}) {
+  const params = refresh ? '?refresh=true' : '';
+  return apiFetch(`/supplier/ai-insights${params}`, { token });
+}
+
+export async function postSupplierAiRetrain({ token } = {}) {
+  return apiFetch('/supplier/ai-retrain', { token, method: 'POST' });
+}
+
+export async function getSupplierModelMeta({ token } = {}) {
+  return apiFetch('/supplier/ai-model-meta', { token });
+}
+
+// ── Favorites ─────────────────────────────────────────────────────────────────
+export async function getFavorites({ token }) {
+  return apiFetch('/marketplace/favorites', { token });
+}
+export async function toggleFavorite({ token, productId }) {
+  return apiFetch(`/marketplace/favorites/${productId}`, { token, method: 'POST' });
+}
+export async function removeFavorite({ token, productId }) {
+  return apiFetch(`/marketplace/favorites/${productId}`, { token, method: 'DELETE' });
+}
+
+// ── Cart ──────────────────────────────────────────────────────────────────────
+export async function getCart({ token }) {
+  return apiFetch('/marketplace/cart', { token });
+}
+export async function addToCart({ token, productId, quantity = 1 }) {
+  return apiFetch('/marketplace/cart/add', { token, method: 'POST', body: { productId, quantity } });
+}
+export async function removeFromCart({ token, productId }) {
+  return apiFetch('/marketplace/cart/remove', { token, method: 'POST', body: { productId } });
+}
+export async function updateCartQty({ token, productId, quantity }) {
+  return apiFetch('/marketplace/cart/update-qty', { token, method: 'PATCH', body: { productId, quantity } });
+}
+export async function clearCart({ token }) {
+  return apiFetch('/marketplace/cart', { token, method: 'DELETE' });
+}
+export async function checkoutCart({ token, deliveryAddress, artisanMessage = '' }) {
+  return apiFetch('/marketplace/orders/from-cart', { token, method: 'POST', body: { deliveryAddress, artisanMessage } });
+}
+
 export async function createProduct({ token, formData }) {
   return apiFetch('/supplier/products', { 
     token, 
@@ -207,6 +251,14 @@ export async function addSupplierNote({ token, orderId, note }) {
 
 export async function getOrderById({ token, orderId }) {
   return apiFetch(`/orders/${orderId}`, { token });
+}
+
+export async function submitOrderReview({ token, orderId, rating, comment }) {
+  return apiFetch(`/orders/${orderId}/review`, {
+    token,
+    method: 'POST',
+    body: { rating, comment },
+  });
 }
 
 // ========== MESSAGES API ==========

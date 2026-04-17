@@ -139,7 +139,19 @@ const orderSchema = new mongoose.Schema(
       phone: String,
       email: String,
       notes: String
-    }
+    },
+
+    // ── Verified purchase review (one per order, artisan only) ────────────────
+    review: {
+      rating:     { type: Number, min: 1, max: 5, default: null },
+      comment:    { type: String, trim: true, maxlength: 1000, default: '' },
+      createdAt:  { type: Date, default: null },
+      isReviewed: { type: Boolean, default: false },
+    },
+
+    // ── Bulk checkout fields ──────────────────────────────────────────────────
+    checkoutId:  { type: String, default: null, index: true },
+    isBulkOrder: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
@@ -160,5 +172,6 @@ orderSchema.pre("save", function () {
 
 orderSchema.index({ status: 1, createdAt: -1 });
 orderSchema.index({ artisanId: 1, createdAt: -1 });
+orderSchema.index({ productId: 1, 'review.isReviewed': 1 });
 
 module.exports = mongoose.model("Order", orderSchema);

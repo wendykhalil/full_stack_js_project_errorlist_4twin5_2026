@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { useTranslation } from '../i18n';
@@ -16,12 +16,14 @@ import {
   Mail,
   Loader2,
   AlertCircle,
-  Edit3
+  Edit3,
+  Sparkles,
 } from 'lucide-react';
 import { getSupplierOrders, updateOrderStatus, addSupplierNote } from '../auth/api';
 import OrderStatusBadge from '../components/OrderStatusBadge';
 import OrderTabs from '../components/OrderTabs';
 import SimpleFooter from '../components/Footer';
+import { useSupplierOrders } from '../context/SupplierOrderContext';
 
 export default function FournisseurOrders() {
   const { t } = useTranslation();
@@ -59,11 +61,34 @@ export default function FournisseurOrders() {
   const [supplierNote, setSupplierNote] = useState('');
   const [updating, setUpdating] = useState(false);
 
+  // Track IDs of orders that just arrived via socket (for NEW badge)
+  const [newOrderIds, setNewOrderIds] = useState(new Set());
+
+  // ── Real-time: use global context (socket is handled in FournisseurLayout) ─
+  const { newOrderIds: globalNewOrderIds, setInitialCount } = useSupplierOrders();
+
+  // Sync global newOrderIds into local display state
+  useEffect(() => {
+    setNewOrderIds(globalNewOrderIds);
+  }, [globalNewOrderIds]);
+
+  // ── Inject real-time orders into the list ─────────────────────────────────
+  // Orders arrive via FournisseurLayout socket → context → re-render triggers fetchOrders
+  // We listen for new IDs appearing and refetch to get the full populated order
+  const prevNewIdsRef = React.useRef(new Set());
+  useEffect(() => {
+    const prev = prevNewIdsRef.current;
+    const hasNew = [...globalNewOrderIds].some(id => !prev.has(id));
+    if (hasNew && activeTab === 'active') {
+      fetchOrders();
+    }
+    prevNewIdsRef.current = new Set(globalNewOrderIds);
+  }, [globalNewOrderIds, activeTab]); // eslint-disable-line
+
   const fetchOrders = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      // Filtrer selon l'onglet actif
       const statusFilter = activeTab === 'active' 
         ? ['PENDING', 'ACCEPTED', 'PREPARING', 'SHIPPED'].join(',')
         : ['DELIVERED', 'CANCELLED', 'REFUSED'].join(',');
@@ -88,13 +113,21 @@ export default function FournisseurOrders() {
 
       setOrders(ordersArray);
       setPagination(paginationData);
+
+      // Sync active pending count to global context
+      if (activeTab === 'active') {
+        const pending = ordersArray.filter(o =>
+          ['PENDING', 'ACCEPTED', 'PREPARING'].includes(o.status)
+        ).length;
+        setInitialCount(paginationData.total ?? ordersArray.length);
+      }
     } catch (err) {
       console.error('Error fetching orders:', err);
       setError(err.message || t('orders.loadError', 'Erreur lors du chargement des commandes'));
     } finally {
       setLoading(false);
     }
-  }, [token, page, activeTab, t]);
+  }, [token, page, activeTab, t, setInitialCount]);
 
   useEffect(() => {
     if (token) {
@@ -241,9 +274,17 @@ export default function FournisseurOrders() {
           {orders.map((order) => {
             const artisan = getArtisanName(order);
             const contact = getArtisanContact(order);
+            const isNew   = newOrderIds.has(String(order._id));
             
             return (
-              <div key={order._id} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div
+                key={order._id}
+                className={`rounded-2xl border bg-white p-6 shadow-sm transition-all ${
+                  isNew
+                    ? 'border-indigo-400 ring-2 ring-indigo-300 animate-pulse-once'
+                    : 'border-slate-200'
+                }`}
+              >
                 {/* En-tête */}
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                   <div className="flex items-center gap-4">
@@ -251,9 +292,16 @@ export default function FournisseurOrders() {
                       <Package className="h-6 w-6 text-indigo-600" />
                     </div>
                     <div>
-                      <p className="text-sm text-slate-500">
-                        {t('orders.orderNumber', 'Commande')} #{order.orderNumber}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm text-slate-500">
+                          {t('orders.orderNumber', 'Commande')} #{order.orderNumber}
+                        </p>
+                        {isNew && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-indigo-600 px-2 py-0.5 text-xs font-bold text-white">
+                            <Sparkles className="h-3 w-3" /> NOUVEAU
+                          </span>
+                        )}
+                      </div>
                       <p className="font-semibold text-slate-900">
                         {order.productId?.name || t('orders.productUnavailable', 'Produit non disponible')}
                       </p>

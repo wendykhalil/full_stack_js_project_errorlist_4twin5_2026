@@ -192,9 +192,20 @@ module.exports = {
   updateOrderStatus,
   addSupplierNote,
   getOrderById,
-  // Nouvelles fonctions
   getArtisanActiveOrders,
   getArtisanOrderHistory,
   getSupplierActiveOrders,
-  getSupplierOrderHistory
+  getSupplierOrderHistory,
+  submitReview,
 };
+
+async function submitReview(req, res) {
+  try {
+    const { id }              = req.params;
+    const { rating, comment } = req.body;
+    const order = await ordersService.submitReview(id, req.user._id, { rating, comment });
+    return apiResponse(res, 'Avis enregistré avec succès', order);
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({ message: error.message });
+  }
+}

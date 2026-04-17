@@ -7,6 +7,7 @@ const { requireRoles } = require('../../middleware/roleMiddleware');
 // Routes pour les artisans
 router.post('/', authRequired, requireRoles('ARTISAN'), ordersController.createOrder);
 router.get('/my-orders', authRequired, requireRoles('ARTISAN'), ordersController.getMyOrders);
+router.post('/:id/review', authRequired, requireRoles('ARTISAN'), ordersController.submitReview);
 
 // Routes pour les fournisseurs
 router.get('/supplier', authRequired, requireRoles('SUPPLIER'), ordersController.getSupplierOrders);
@@ -15,11 +16,8 @@ router.post('/:id/note', authRequired, requireRoles('SUPPLIER'), ordersControlle
 
 // Route commune (accessible par les deux rôles)
 router.get('/:id', authRequired, ordersController.getOrderById);
-// Routes pour les artisans
 router.get('/artisan/active', authRequired, requireRoles('ARTISAN'), ordersController.getArtisanActiveOrders);
 router.get('/artisan/history', authRequired, requireRoles('ARTISAN'), ordersController.getArtisanOrderHistory);
-
-// Routes pour les fournisseurs
 router.get('/supplier/active', authRequired, requireRoles('SUPPLIER'), ordersController.getSupplierActiveOrders);
 router.get('/supplier/history', authRequired, requireRoles('SUPPLIER'), ordersController.getSupplierOrderHistory);
 

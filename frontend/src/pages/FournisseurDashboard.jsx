@@ -6,6 +6,7 @@ import {
   DollarSign, BarChart2, Lightbulb, AlertCircle, CheckCircle,
   Minus, ArrowUpRight, ArrowDownRight, Star, AlertTriangle,
 } from 'lucide-react';
+import AiInsightsPanel from '../components/supplier/AiInsightsPanel';
 
 /* ─────────────────────────── helpers ─────────────────────────── */
 
@@ -554,6 +555,9 @@ export default function FournisseurDashboard() {
           </div>
         </div>
       </div>
+
+      {/* ── AI Insights ── */}
+      <AiInsightsPanel token={token} />
 
       {/* ── Advice ── */}
       <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">

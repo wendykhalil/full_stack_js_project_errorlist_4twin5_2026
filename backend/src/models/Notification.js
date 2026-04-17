@@ -10,7 +10,7 @@ const notificationSchema = new mongoose.Schema(
         "APPLICATION_ACCEPTED", "APPLICATION_REJECTED",
         "REVIEW_RECEIVED", "SERVICE_REQUEST_ASSIGNED",
         "SERVICE_REQUEST_COMPLETED", "SUBSCRIPTION_EXPIRING",
-        "NEW_SERVICE_REQUEST", "GENERAL",
+        "NEW_SERVICE_REQUEST", "NEW_ORDER", "GENERAL",
       ],
       default: "GENERAL",
     },

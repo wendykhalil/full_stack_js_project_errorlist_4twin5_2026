@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, ChevronDown, ShoppingCart, Star, Eye } from "lucide-react";
+import { Heart, Search, ChevronDown, ShoppingCart, Star, Eye } from "lucide-react";
 import SimpleFooter from "../components/Footer";
 import { useTranslation } from '../i18n';
-import { getCatalogProducts, rateCatalogProduct, getMySubscription } from "../auth/api.js";
+import { getCatalogProducts, getMySubscription, getFavorites, toggleFavorite } from "../auth/api.js";
 import { useAuth } from "../auth/AuthContext";
+import { useCart } from "../context/CartContext";
 import SubscriptionAlert from '../components/SubscriptionAlert';
 
 const ProductCard = ({
@@ -18,48 +19,24 @@ const ProductCard = ({
   unit,
   onDetailsClick,
   onOrderClick,
-  onRate
+  isFavorited,
+  onToggleFavorite,
+  onAddToCart,
+  addingToCart,
 }) => {
- 
-  const [imgError, setImgError] = useState(false);
+  const [imgError,  setImgError]  = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
 
-  const productRating = Number(product?.rating ?? product?.avgRating ?? 4.5);
-  const normalizedRating = Number.isFinite(productRating) ? Math.max(0, Math.min(5, productRating)) : 4.5;
-  const starCount = Math.round(normalizedRating);
+  const hasRating   = product.ratingCount > 0;
+  const avgRating   = hasRating ? Number(product.rating) : 0;
+  const filledStars = hasRating ? Math.round(avgRating) : 0;
 
-  const [selectedRating, setSelectedRating] = useState(0);
-
-  const renderProductStars = () => {
-    return [0, 1, 2, 3, 4].map((index) => (
-      <Star
-        key={`product-star-${index}`}
-        className={`h-4 w-4 ${index < starCount ? 'fill-orange-500 text-orange-500' : 'text-slate-300'}`}
-      />
-    ));
-  };
-
-  const renderRatingPicker = () => {
-    return [1, 2, 3, 4, 5].map((value) => (
-      <button
-        key={`pick-${value}`}
-        type="button"
-        onClick={() => {
-          setSelectedRating(value);
-          onRate?.(product._id, value);
-        }}
-        className={`p-1 ${selectedRating >= value ? 'text-orange-500' : 'text-slate-300'}`}
-      >
-        <Star className="h-4 w-4" />
-      </button>
-    ));
-  };
-  
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
+      {/* Image */}
       <div className="relative h-48 w-full">
         {!imgLoaded && !imgError && (
-          <div className="absolute inset-0 flex items-center justify-center bg-slate-100 rounded-xl">
+          <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-slate-100">
             <span className="text-slate-400">Chargement...</span>
           </div>
         )}
@@ -71,6 +48,15 @@ const ProductCard = ({
           onLoad={() => setImgLoaded(true)}
           style={{ display: imgLoaded && !imgError ? 'block' : 'none' }}
         />
+        {/* Favorite button */}
+        <button
+          type="button"
+          onClick={() => onToggleFavorite(product._id)}
+          className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 shadow transition-transform hover:scale-110"
+          aria-label={isFavorited ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+        >
+          <Heart className={`h-4 w-4 ${isFavorited ? 'fill-red-500 text-red-500' : 'text-slate-400'}`} />
+        </button>
       </div>
 
       <div className="mt-4">
@@ -80,45 +66,51 @@ const ProductCard = ({
 
         <h3 className="mt-3 text-lg font-semibold text-slate-900">{title}</h3>
         <p className="mt-1 text-sm text-slate-500 line-clamp-2">{description}</p>
-
         <div className="mt-2 text-sm text-slate-600">{supplier}</div>
 
         <div className="mt-4 flex items-center justify-between">
           <div>
-            <div className="text-xl font-semibold text-indigo-700">
-              {price} TND
-            </div>
+            <div className="text-xl font-semibold text-indigo-700">{price} TND</div>
             <div className="text-xs text-slate-500">{unit}</div>
           </div>
-
-          <div className="flex flex-col items-end gap-1 text-sm text-orange-500">
+          <div className="flex flex-col items-end gap-1">
             <div className="flex items-center gap-1">
-              {renderProductStars()}
-              <span className="text-slate-800 ml-1">{normalizedRating.toFixed(1)}</span>
+              {[1,2,3,4,5].map(s => (
+                <Star key={s} className={`h-4 w-4 ${s <= filledStars ? 'fill-amber-400 text-amber-400' : 'fill-slate-200 text-slate-200'}`} />
+              ))}
             </div>
-            <div className="flex items-center gap-1" title="Cliquez pour noter">
-              {renderRatingPicker()}
-              <span className="text-xs text-slate-500">Noter</span>
-            </div>
+            <span className="text-xs text-slate-500">
+              {hasRating
+                ? <>{avgRating.toFixed(1)} <span className="text-slate-400">({product.ratingCount})</span></>
+                : <span className="text-slate-400">Pas d'avis</span>
+              }
+            </span>
           </div>
         </div>
 
-        {/* Boutons */}
-        <div className="mt-4 flex gap-2">
+        {/* Action buttons */}
+        <div className="mt-4 grid grid-cols-3 gap-1.5">
           <button
             onClick={() => onDetailsClick(product)}
-            className="flex-1 rounded-xl border border-indigo-200 bg-indigo-50 py-2 text-sm font-semibold text-indigo-700 hover:bg-indigo-100 flex items-center justify-center gap-1"
+            className="flex items-center justify-center gap-1 rounded-xl border border-indigo-200 bg-indigo-50 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-100"
           >
-            <Eye className="h-4 w-4" />
+            <Eye className="h-3.5 w-3.5" />
             Détails
+          </button>
+          <button
+            onClick={() => onAddToCart(product)}
+            disabled={product.stock <= 0 || addingToCart}
+            className="flex items-center justify-center gap-1 rounded-xl border border-emerald-200 bg-emerald-50 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <ShoppingCart className="h-3.5 w-3.5" />
+            Panier
           </button>
           <button
             onClick={() => onOrderClick(product)}
             disabled={product.stock <= 0}
-            className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-indigo-600 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center justify-center gap-1 rounded-xl bg-indigo-600 py-2 text-xs font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <ShoppingCart className="h-4 w-4" />
-            Demander
+            Commander
           </button>
         </div>
       </div>
@@ -141,6 +133,9 @@ export default function ArtisanMarketplace() {
   const [subscription, setSubscription] = useState({ plan: 'FREE', status: 'INACTIVE' });
   const [checkingSubscription, setCheckingSubscription] = useState(true);
   const [showSubscriptionAlert, setShowSubscriptionAlert] = useState(false);
+  const [favoritedIds, setFavoritedIds] = useState(new Set());
+  const [addingToCart, setAddingToCart] = useState(null);
+  const { addItem: addToCartCtx, itemCount } = useCart();
 
   const buildPaginationItems = (page, pages) => {
     const safePages = Math.max(1, Number(pages) || 1);
@@ -181,6 +176,17 @@ export default function ArtisanMarketplace() {
   }, [token]);
 
   const isSubscribed = subscription?.plan && subscription.plan !== 'FREE' && subscription.status === 'ACTIVE';
+
+  // Load favorites
+  useEffect(() => {
+    if (!token) return;
+    getFavorites({ token })
+      .then(res => {
+        const ids = new Set((res?.products || []).map(p => String(p._id)));
+        setFavoritedIds(ids);
+      })
+      .catch(() => {});
+  }, [token]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -230,28 +236,40 @@ export default function ArtisanMarketplace() {
   };
 
   const handleOrderClick = (product) => {
-    if (!isSubscribed) {
-      setShowSubscriptionAlert(true);
-      return;
-    }
+    if (!isSubscribed) { setShowSubscriptionAlert(true); return; }
     navigate(`/artisan/order-request/${product._id}`);
   };
 
-  const handleRateProduct = async (productId, rating) => {
+  const handleToggleFavorite = useCallback(async (productId) => {
+    if (!token) return;
+    const wasFav = favoritedIds.has(String(productId));
+    // Optimistic
+    setFavoritedIds(prev => {
+      const n = new Set(prev);
+      wasFav ? n.delete(String(productId)) : n.add(String(productId));
+      return n;
+    });
     try {
-      const data = await rateCatalogProduct({ productId, rating, token });
-      setProducts((prev) =>
-        prev.map((p) =>
-          p._id === productId
-            ? { ...p, rating: data?.data?.rating ?? p.rating, ratingCount: data?.data?.ratingCount ?? p.ratingCount }
-            : p
-        )
-      );
-    } catch (err) {
-      console.error('Failed to rate product', err);
-      alert(err.message || 'Erreur lors de l\'envoi de la note');
+      await toggleFavorite({ token, productId });
+    } catch {
+      // Revert
+      setFavoritedIds(prev => {
+        const n = new Set(prev);
+        wasFav ? n.add(String(productId)) : n.delete(String(productId));
+        return n;
+      });
     }
-  };
+  }, [token, favoritedIds]);
+
+  const handleAddToCart = useCallback(async (product) => {
+    if (!isSubscribed) { setShowSubscriptionAlert(true); return; }
+    setAddingToCart(product._id);
+    try {
+      await addToCartCtx(product._id, 1);
+    } finally {
+      setAddingToCart(null);
+    }
+  }, [isSubscribed, addToCartCtx]);
 
   return (
     <div className="flex-1">
@@ -267,18 +285,11 @@ export default function ArtisanMarketplace() {
         </div>
 
         <button 
-          onClick={() => {
-            if (!isSubscribed) {
-              alert(t('subscription.required', 'Vous devez avoir un abonnement actif pour accéder à vos commandes.'));
-              navigate('/artisan/subscription');
-              return;
-            }
-            navigate('/artisan/orders');
-          }}
+          onClick={() => navigate('/artisan/cart')}
           className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium hover:bg-slate-50 flex items-center gap-2"
         >
           <ShoppingCart className="h-4 w-4" />
-          {t('artisanMarketplace.cartButton', { count: 0 })}
+          Panier {itemCount > 0 && <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-xs font-bold text-white">{itemCount}</span>}
         </button>
       </div>
 
@@ -343,7 +354,10 @@ export default function ArtisanMarketplace() {
                   unit={product.unit || 'piece'}
                   onDetailsClick={handleDetailsClick}
                   onOrderClick={handleOrderClick}
-                  onRate={handleRateProduct}
+                  isFavorited={favoritedIds.has(String(product._id))}
+                  onToggleFavorite={handleToggleFavorite}
+                  onAddToCart={handleAddToCart}
+                  addingToCart={addingToCart === product._id}
                 />
               );
             })}

@@ -11,7 +11,6 @@ function initSocket(httpServer, { corsOrigin }) {
     },
   });
 
-  // Authenticate sockets using JWT (sent via auth.token or Authorization header)
   io.use((socket, next) => {
     try {
       const token =
@@ -23,13 +22,16 @@ function initSocket(httpServer, { corsOrigin }) {
 
       const payload = jwt.verify(token, process.env.JWT_SECRET);
       socket.user = payload; // { sub, role }
-      // Join per-user room for targeted notifications
+
+      // Per-user room for targeted notifications
       socket.join(`user:${payload.sub}`);
 
-      // Admin room for broadcast notifications
-      if (String(payload.role || '').toUpperCase() === 'ADMIN') {
-        socket.join('admins');
-      }
+      // Role-based rooms
+      const role = String(payload.role || '').toUpperCase();
+      if (role === 'ADMIN')    socket.join('admins');
+      if (role === 'SUPPLIER') socket.join(`supplier:${payload.sub}`);
+      if (role === 'ARTISAN')  socket.join(`artisan:${payload.sub}`);
+
       return next();
     } catch (e) {
       return next(new Error('Non autorisé'));
@@ -37,7 +39,6 @@ function initSocket(httpServer, { corsOrigin }) {
   });
 
   io.on('connection', (socket) => {
-    // You can add more listeners here if needed
     socket.emit('connected', { ok: true });
   });
 
@@ -63,4 +64,15 @@ function notifyAdmins(payload) {
   } catch (_) {}
 }
 
-module.exports = { initSocket, getIO, notifyUser, notifyAdmins };
+/**
+ * Emit a new_order event to the supplier's dedicated room.
+ * Also emits a notification event so the bell updates.
+ */
+function notifySupplierNewOrder(supplierId, orderPayload) {
+  try {
+    if (!io) return;
+    io.to(`supplier:${supplierId}`).emit('new_order', orderPayload);
+  } catch (_) {}
+}
+
+module.exports = { initSocket, getIO, notifyUser, notifyAdmins, notifySupplierNewOrder };
