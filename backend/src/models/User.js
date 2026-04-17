@@ -101,9 +101,19 @@ const userSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'SupplierProfile',
       default: null
+    },
+
+    location: {
+      lat: { type: Number, default: null },
+      lng: { type: Number, default: null },
+      updatedAt: { type: Date, default: null },
     }
   },
   { timestamps: true }
 );
+
+userSchema.index({ role: 1, status: 1, createdAt: -1 });
+userSchema.index({ email: 1, createdAt: -1 });
+userSchema.index({ 'location.updatedAt': -1 });
 
 module.exports = mongoose.model("User", userSchema);

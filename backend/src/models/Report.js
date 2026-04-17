@@ -1,5 +1,38 @@
 const mongoose = require('mongoose');
 
+const actionHistorySchema = new mongoose.Schema({
+  fromStatus: {
+    type: String,
+    enum: ['PENDING', 'UNDER_REVIEW', 'RESOLVED', 'REJECTED'],
+    required: true,
+  },
+  toStatus: {
+    type: String,
+    enum: ['PENDING', 'UNDER_REVIEW', 'RESOLVED', 'REJECTED'],
+    required: true,
+  },
+  action: {
+    type: String,
+    enum: ['REVIEW', 'WARN', 'BAN', 'REJECT'],
+    required: true,
+  },
+  note: {
+    type: String,
+    default: '',
+    trim: true,
+    maxlength: 1000,
+  },
+  performedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
+  performedAt: {
+    type: Date,
+    default: Date.now,
+  },
+}, { _id: false });
+
 const reportSchema = new mongoose.Schema({
   reportedUser: {
     id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -35,8 +68,8 @@ const reportSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'resolved', 'dismissed'],
-    default: 'pending'
+    enum: ['PENDING', 'UNDER_REVIEW', 'RESOLVED', 'REJECTED'],
+    default: 'PENDING'
   },
   severity: {
     type: String,
@@ -45,7 +78,7 @@ const reportSchema = new mongoose.Schema({
   },
   action: {
     type: String,
-    enum: ['warn', 'ban', 'dismiss'],
+    enum: ['WARN', 'BAN', 'REJECT'],
     default: null
   },
   actionReason: {
@@ -60,7 +93,17 @@ const reportSchema = new mongoose.Schema({
   actionTakenAt: {
     type: Date,
     default: null
-  }
+  },
+  adminNote: {
+    type: String,
+    default: '',
+    trim: true,
+    maxlength: 1000,
+  },
+  actionHistory: {
+    type: [actionHistorySchema],
+    default: [],
+  },
 }, {
   timestamps: true
 });
@@ -69,5 +112,6 @@ const reportSchema = new mongoose.Schema({
 reportSchema.index({ status: 1, createdAt: -1 });
 reportSchema.index({ 'reportedUser.id': 1 });
 reportSchema.index({ 'reportedBy.id': 1 });
+reportSchema.index({ severity: 1, createdAt: -1 });
 
 module.exports = mongoose.model('Report', reportSchema);

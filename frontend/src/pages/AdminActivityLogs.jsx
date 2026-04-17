@@ -160,19 +160,20 @@ export default function AdminActivityLogs() {
   const { token } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [data, setData] = useState({ page: 1, limit: 50, total: 0, items: [] });
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [data, setData] = useState({ data: [], currentPage: 1, totalPages: 1, totalItems: 0 });
   const [q, setQ] = useState("");
   const [action, setAction] = useState("ALL");
   const [open, setOpen] = useState(null);
 
-  const pages = useMemo(() => Math.max(1, Math.ceil((data.total || 0) / (data.limit || 50))), [data.total, data.limit]);
-
-  async function load(page = data.page) {
+  async function load(targetPage = page) {
     setLoading(true);
     setError("");
     try {
-      const res = await apiFetch(`/admin/activity-logs?page=${page}&limit=${data.limit}`, { token });
+      const res = await apiFetch(`/admin/activity-logs?page=${targetPage}&limit=${limit}`, { token });
       setData(res);
+      setPage(res.currentPage || targetPage);
     } catch (e) {
       setError(e.message || "Impossible de charger les journaux d'activite");
     } finally {
@@ -183,7 +184,7 @@ export default function AdminActivityLogs() {
   useEffect(() => { load(1); }, []);
 
   const filtered = useMemo(() => {
-    const items = data.items || [];
+    const items = data.data || [];
     const qq = q.trim().toLowerCase();
     return items.filter((it) => {
       if (action !== "ALL" && it.action !== action) return false;
@@ -194,7 +195,7 @@ export default function AdminActivityLogs() {
       const det = JSON.stringify(it.details || {}).toLowerCase();
       return name.includes(qq) || email.includes(qq) || phone.includes(qq) || String(it.action).toLowerCase().includes(qq) || det.includes(qq);
     });
-  }, [data.items, q, action]);
+  }, [data.data, q, action]);
 
   return (
     <>
@@ -208,7 +209,7 @@ export default function AdminActivityLogs() {
             <p className="mt-1 text-sm text-slate-600 sm:text-base">Historique administratif des mises a jour de profil, connexions, changements de role et actions de compte.</p>
           </div>
 
-          <button onClick={() => load(data.page)} className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto">
+          <button onClick={() => load(page)} className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto">
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             Actualiser
           </button>
@@ -240,10 +241,10 @@ export default function AdminActivityLogs() {
               </div>
             </div>
 
-            <div className="text-xs text-slate-500">Affichage de <b>{filtered.length}</b> sur <b>{(data.items || []).length}</b> sur cette page</div>
+            <div className="text-xs text-slate-500">Affichage de <b>{filtered.length}</b> sur <b>{(data.data || []).length}</b> sur cette page</div>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className={`overflow-x-auto transition-opacity duration-200 ${loading ? "opacity-60" : "opacity-100"}`}>
             <table className="min-w-full divide-y divide-slate-200">
               <thead className="bg-slate-50">
                 <tr>
@@ -294,10 +295,10 @@ export default function AdminActivityLogs() {
           </div>
 
           <div className="flex flex-col gap-3 border-t border-slate-200 bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="text-sm text-slate-600">Page <b>{data.page}</b> sur <b>{pages}</b></div>
+            <div className="text-sm text-slate-600">Page <b>{data.currentPage}</b> sur <b>{data.totalPages}</b> - <b>{data.totalItems}</b> éléments</div>
             <div className="flex items-center gap-2">
-              <button disabled={data.page <= 1 || loading} onClick={() => load(data.page - 1)} className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 disabled:opacity-50">Precedent</button>
-              <button disabled={data.page >= pages || loading} onClick={() => load(data.page + 1)} className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 disabled:opacity-50">Suivant</button>
+              <button disabled={data.currentPage <= 1 || loading} onClick={() => load(data.currentPage - 1)} className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 disabled:opacity-50">Precedent</button>
+              <button disabled={data.currentPage >= data.totalPages || loading} onClick={() => load(data.currentPage + 1)} className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 disabled:opacity-50">Suivant</button>
             </div>
           </div>
         </div>

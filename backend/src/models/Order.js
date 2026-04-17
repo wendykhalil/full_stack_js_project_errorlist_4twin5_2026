@@ -158,4 +158,7 @@ orderSchema.pre("save", function () {
   }
 });
 
+orderSchema.index({ status: 1, createdAt: -1 });
+orderSchema.index({ artisanId: 1, createdAt: -1 });
+
 module.exports = mongoose.model("Order", orderSchema);

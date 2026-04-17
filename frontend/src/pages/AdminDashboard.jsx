@@ -2,11 +2,27 @@ import React, { useEffect, useState } from "react";
 import {
   AlertCircle,
   ArrowLeftRight,
+  TrendingUp,
   Package,
   ShieldAlert,
   ShoppingCart,
   Users,
 } from "lucide-react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import Footer from "../components/Footer";
 import { useAuth } from "../auth/AuthContext";
 import { getAdminDashboardSummary } from "../auth/api";
@@ -68,11 +84,14 @@ const money = new Intl.NumberFormat("fr-TN", {
   maximumFractionDigits: 0,
 });
 
+const PIE_COLORS = ["#4f46e5", "#f97316", "#10b981", "#64748b", "#ef4444", "#06b6d4"];
+
 export default function AdminDashboard() {
   const { token } = useAuth();
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [days, setDays] = useState(30);
 
   useEffect(() => {
     let active = true;
@@ -80,7 +99,7 @@ export default function AdminDashboard() {
     async function load() {
       try {
         setLoading(true);
-        const data = await getAdminDashboardSummary({ token });
+        const data = await getAdminDashboardSummary({ token, days });
         if (active) {
           setSummary(data);
           setError("");
@@ -96,7 +115,7 @@ export default function AdminDashboard() {
     return () => {
       active = false;
     };
-  }, [token]);
+  }, [token, days]);
 
   const stats = summary?.stats || {
     activeUsers: 0,
@@ -114,6 +133,15 @@ export default function AdminDashboard() {
     prescripteurs: 0,
     admins: 0,
   };
+  const charts = summary?.charts || {
+    userGrowth: [],
+    revenueOverTime: [],
+    ordersStatusDistribution: [],
+    roleDistribution: [],
+  };
+  const changes = summary?.changes || { userGrowthPct: 0, ordersGrowthPct: 0 };
+  const highlights = summary?.highlights || { mostActiveRole: { role: "N/A", count: 0 }, revenueTrend: 0 };
+  const locationAnalytics = summary?.locationAnalytics || { trackedUsers: 0 };
 
   return (
     <div className="space-y-6 lg:space-y-8">
@@ -124,6 +152,18 @@ export default function AdminDashboard() {
         <p className="mt-1 text-sm text-slate-500 sm:text-base">
           Vue live de la plateforme sans cartes ni chiffres statiques.
         </p>
+        <div className="mt-4 inline-flex rounded-xl border border-slate-200 bg-white p-1 text-sm">
+          {[7, 30, 90].map((value) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setDays(value)}
+              className={`rounded-lg px-3 py-1.5 ${days === value ? "bg-indigo-600 text-white" : "text-slate-600 hover:bg-slate-100"}`}
+            >
+              {value}j
+            </button>
+          ))}
+        </div>
       </div>
 
       {loading ? (
@@ -171,6 +211,28 @@ export default function AdminDashboard() {
             />
           </section>
 
+          <section className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="text-sm text-slate-500">Croissance utilisateurs</div>
+              <div className="mt-2 text-2xl font-semibold text-slate-900">{changes.userGrowthPct}%</div>
+              <div className={`mt-2 inline-flex items-center gap-1 text-sm ${changes.userGrowthPct >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                <TrendingUp className="h-4 w-4" /> {changes.userGrowthPct >= 0 ? "Hausse" : "Baisse"} vs période précédente
+              </div>
+            </div>
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="text-sm text-slate-500">Rôle le plus actif</div>
+              <div className="mt-2 text-2xl font-semibold text-slate-900">{highlights.mostActiveRole.role}</div>
+              <div className="mt-2 text-sm text-slate-600">{highlights.mostActiveRole.count} utilisateurs</div>
+            </div>
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="text-sm text-slate-500">Tendance revenus</div>
+              <div className={`mt-2 text-2xl font-semibold ${highlights.revenueTrend >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                {money.format(highlights.revenueTrend || 0)}
+              </div>
+              <div className="mt-2 text-sm text-slate-600">Variation sur la fenêtre sélectionnée</div>
+            </div>
+          </section>
+
           <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.1fr_0.9fr]">
             <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 lg:p-8">
               <div className="flex items-center justify-between gap-4">
@@ -206,6 +268,93 @@ export default function AdminDashboard() {
                     Aucune activité récente à afficher.
                   </div>
                 )}
+              </div>
+            </div>
+          </section>
+
+          <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+              <h2 className="text-lg font-semibold text-slate-900">Croissance utilisateurs</h2>
+              <div className="mt-4 h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={charts.userGrowth}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                    <YAxis tick={{ fontSize: 12 }} />
+                    <Tooltip />
+                    <Line type="monotone" dataKey="users" stroke="#4f46e5" strokeWidth={2} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+              <h2 className="text-lg font-semibold text-slate-900">Revenus dans le temps</h2>
+              <div className="mt-4 h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={charts.revenueOverTime}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                    <YAxis tick={{ fontSize: 12 }} />
+                    <Tooltip />
+                    <Bar dataKey="revenue" fill="#16a34a" radius={[8, 8, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </section>
+
+          <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+              <h2 className="text-lg font-semibold text-slate-900">Répartition statuts commandes</h2>
+              <div className="mt-4 h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={charts.ordersStatusDistribution} dataKey="count" nameKey="status" outerRadius={110} label>
+                      {charts.ordersStatusDistribution.map((entry, index) => (
+                        <Cell key={entry.status} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+              <h2 className="text-lg font-semibold text-slate-900">Répartition des rôles</h2>
+              <div className="mt-4 h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={charts.roleDistribution} dataKey="count" nameKey="role" outerRadius={110} label>
+                      {charts.roleDistribution.map((entry, index) => (
+                        <Cell key={entry.role} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </section>
+
+          <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+            <h2 className="text-lg font-semibold text-slate-900">Analyse de localisation</h2>
+            <p className="mt-1 text-sm text-slate-500">Basé sur les profils ayant une position enregistrée.</p>
+            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div className="rounded-2xl bg-slate-50 p-4">
+                <div className="text-sm text-slate-500">Utilisateurs géolocalisés</div>
+                <div className="mt-1 text-xl font-semibold text-slate-900">{locationAnalytics.trackedUsers || 0}</div>
+              </div>
+              <div className="rounded-2xl bg-slate-50 p-4">
+                <div className="text-sm text-slate-500">Latitude moyenne</div>
+                <div className="mt-1 text-xl font-semibold text-slate-900">{locationAnalytics.avgLat?.toFixed?.(4) ?? "N/A"}</div>
+              </div>
+              <div className="rounded-2xl bg-slate-50 p-4">
+                <div className="text-sm text-slate-500">Longitude moyenne</div>
+                <div className="mt-1 text-xl font-semibold text-slate-900">{locationAnalytics.avgLng?.toFixed?.(4) ?? "N/A"}</div>
               </div>
             </div>
           </section>

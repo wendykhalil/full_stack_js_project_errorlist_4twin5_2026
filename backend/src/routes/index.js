@@ -34,6 +34,8 @@ const Order = require('../models/Order');
 const Devis = require('../models/Devis');
 const productRoutes = require("./products.routes");
 const Facture = require('../models/Facture');
+const Subscription = require('../models/Subscription');
+const { notifyAdmins } = require('../socket');
 
 // ✅ Créer le router APRÈS tous les imports
 const router = express.Router();
@@ -131,8 +133,68 @@ function formatRelativeDate(dateInput) {
   return `il y a ${diffMonths} mois`;
 }
 
+async function auditAdminAction(req, action, details = {}) {
+  try {
+    await ActivityLog.create({
+      user: req.user?._id,
+      action,
+      details,
+      ip: req.ip || '',
+      userAgent: req.get('user-agent') || '',
+      country: String(req.headers['x-client-country'] || ''),
+      countryCode: String(req.headers['x-client-country-code'] || ''),
+    });
+  } catch (_) {
+    // do not fail request because of logging
+  }
+}
+
 
 router.get('/health', (req, res) => res.json({ ok: true }));
+
+router.post('/users/update-location', authRequired, requireRoles('ARTISAN'), async (req, res, next) => {
+  try {
+    const lat = Number(req.body?.lat);
+    const lng = Number(req.body?.lng);
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+      return res.status(400).json({ message: 'Latitude/longitude invalides' });
+    }
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      return res.status(400).json({ message: 'Coordonnées hors limites' });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      {
+        $set: {
+          location: {
+            lat,
+            lng,
+            updatedAt: new Date(),
+          },
+        },
+      },
+      {
+        new: true,
+        runValidators: true,
+        select: '-password',
+      }
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: 'Utilisateur introuvable' });
+    }
+
+    res.json({
+      ok: true,
+      message: 'Position mise à jour',
+      user,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
 
 router.use('/auth', authRoutes);
 router.use('/projects', projectsRoutes);
@@ -182,15 +244,26 @@ router.get('/admin/auth-logs', authRequired, requireRoles('ADMIN'), async (req, 
     const page = Math.max(1, parseInt(req.query.page || '1', 10) || 1);
     const limit = Math.min(200, Math.max(10, parseInt(req.query.limit || '50', 10) || 50));
     const skip = (page - 1) * limit;
+    const match = {};
+    if (req.query.action) match.action = String(req.query.action).toUpperCase();
+    if (req.query.from || req.query.to) {
+      match.createdAt = {};
+      if (req.query.from) match.createdAt.$gte = new Date(req.query.from);
+      if (req.query.to) {
+        const to = new Date(req.query.to);
+        to.setHours(23, 59, 59, 999);
+        match.createdAt.$lte = to;
+      }
+    }
 
     const [items, total] = await Promise.all([
-      AuthLog.find()
+      AuthLog.find(match)
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .populate('user', 'firstName lastName email role')
         .lean(),
-      AuthLog.countDocuments(),
+      AuthLog.countDocuments(match),
     ]);
 
     res.json({ page, limit, total, items });
@@ -203,20 +276,37 @@ router.get('/admin/auth-logs', authRequired, requireRoles('ADMIN'), async (req, 
 router.get('/admin/activity-logs', authRequired, requireRoles('ADMIN'), async (req, res, next) => {
   try {
     const page = Math.max(1, parseInt(req.query.page || '1', 10) || 1);
-    const limit = Math.min(200, Math.max(10, parseInt(req.query.limit || '50', 10) || 50));
+    const limit = Math.min(200, Math.max(1, parseInt(req.query.limit || '10', 10) || 10));
     const skip = (page - 1) * limit;
+    const match = {};
+    if (req.query.action) match.action = String(req.query.action);
+    if (req.query.from || req.query.to) {
+      match.createdAt = {};
+      if (req.query.from) match.createdAt.$gte = new Date(req.query.from);
+      if (req.query.to) {
+        const to = new Date(req.query.to);
+        to.setHours(23, 59, 59, 999);
+        match.createdAt.$lte = to;
+      }
+    }
 
     const [items, total] = await Promise.all([
-      ActivityLog.find()
+      ActivityLog.find(match)
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
-        .populate('user', 'firstName lastName email phone role')
+        .populate('user', 'firstName lastName email')
         .lean(),
-      ActivityLog.countDocuments(),
+      ActivityLog.countDocuments(match),
     ]);
 
-    res.json({ page, limit, total, items });
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+    res.json({
+      data: items,
+      currentPage: page,
+      totalPages,
+      totalItems: total,
+    });
   } catch (err) {
     next(err);
   }
@@ -229,10 +319,27 @@ router.get('/admin/users', authRequired, requireRoles('ADMIN'), async (req, res,
     const limit = Math.min(200, Math.max(10, parseInt(req.query.limit || '50', 10) || 50));
     const skip = (page - 1) * limit;
 
-    const User = require('../models/User');
-      const Subscription = require('../models/Subscription');
+    const roleFilter = String(req.query.role || '').toUpperCase();
+    const statusFilter = String(req.query.status || '').toUpperCase();
+    const from = req.query.from ? new Date(req.query.from) : null;
+    const to = req.query.to ? new Date(req.query.to) : null;
+    if (to) to.setHours(23, 59, 59, 999);
+    const q = String(req.query.q || '').trim();
+    const match = {};
+    if (roleFilter) match.role = roleFilter;
+    if (statusFilter) match.status = statusFilter;
+    if (from || to) {
+      match.createdAt = {};
+      if (from) match.createdAt.$gte = from;
+      if (to) match.createdAt.$lte = to;
+    }
+    if (q) {
+      const regex = new RegExp(q, 'i');
+      match.$or = [{ firstName: regex }, { lastName: regex }, { email: regex }, { phone: regex }];
+    }
 
       const users = await User.aggregate([
+        { $match: match },
         { $sort: { createdAt: -1 } },
         { $project: {
             firstName: 1,
@@ -265,7 +372,7 @@ router.get('/admin/users', authRequired, requireRoles('ADMIN'), async (req, res,
         { $limit: limit },
       ]);
 
-      const total = await User.countDocuments();
+      const total = await User.countDocuments(match);
 
       res.json({ page, limit, total, users });
     } catch (err) {
@@ -292,16 +399,25 @@ router.patch('/admin/users/:id/block', authRequired, requireRoles('ADMIN'), asyn
     }
 
     const blockedUntil = new Date(Date.now() + MS[duration]);
+    const target = await User.findById(req.params.id).select('firstName lastName email role status blockedUntil');
+    if (!target) return res.status(404).json({ message: 'Utilisateur introuvable' });
+    if (target.role === 'ADMIN') {
+      return res.status(403).json({ message: 'Impossible de bloquer un administrateur' });
+    }
+    target.status = 'BLOCKED';
+    target.blockedUntil = blockedUntil;
+    await target.save();
 
-    const user = await User.findByIdAndUpdate(
-      req.params.id,
-      { status: 'BLOCKED', blockedUntil },
-      { new: true, select: 'firstName lastName email status blockedUntil' }
-    );
+    await auditAdminAction(req, 'ADMIN_BLOCK_USER', {
+      targetUserId: req.params.id,
+      duration,
+      blockedUntil,
+    });
+    try {
+      notifyAdmins({ title: 'Utilisateur bloqué', message: `${target.firstName} ${target.lastName}` });
+    } catch (_) {}
 
-    if (!user) return res.status(404).json({ message: 'Utilisateur introuvable' });
-
-    res.json({ ok: true, user });
+    res.json({ ok: true, user: target });
   } catch (err) {
     next(err);
   }
@@ -312,15 +428,16 @@ router.patch('/admin/users/:id/unblock', authRequired, requireRoles('ADMIN'), as
   try {
     const User = require('../models/User');
 
-    const user = await User.findByIdAndUpdate(
-      req.params.id,
-      { status: 'ACTIVE', blockedUntil: null },
-      { new: true, select: 'firstName lastName email status blockedUntil' }
-    );
-
-    if (!user) return res.status(404).json({ message: 'Utilisateur introuvable' });
-
-    res.json({ ok: true, user });
+    const target = await User.findById(req.params.id).select('firstName lastName email role status blockedUntil');
+    if (!target) return res.status(404).json({ message: 'Utilisateur introuvable' });
+    target.status = 'ACTIVE';
+    target.blockedUntil = null;
+    await target.save();
+    await auditAdminAction(req, 'ADMIN_UNBLOCK_USER', { targetUserId: req.params.id });
+    try {
+      notifyAdmins({ title: 'Utilisateur débloqué', message: `${target.firstName} ${target.lastName}` });
+    } catch (_) {}
+    res.json({ ok: true, user: target });
   } catch (err) {
     next(err);
   }
@@ -435,6 +552,14 @@ router.get('/artisan/dashboard-summary', authRequired, requireRoles('ARTISAN'), 
 // Admin: dashboard summary with live data
 router.get('/admin/dashboard-summary', authRequired, requireRoles('ADMIN'), async (req, res, next) => {
   try {
+    const now = new Date();
+    const days = Math.min(365, Math.max(7, parseInt(req.query.days || '30', 10) || 30));
+    const periodStart = new Date(now);
+    periodStart.setDate(periodStart.getDate() - days + 1);
+    periodStart.setHours(0, 0, 0, 0);
+    const previousPeriodStart = new Date(periodStart);
+    previousPeriodStart.setDate(previousPeriodStart.getDate() - days);
+
     const [
       totalUsers,
       activeUsers,
@@ -448,6 +573,15 @@ router.get('/admin/dashboard-summary', authRequired, requireRoles('ADMIN'), asyn
       recentUsers,
       recentActivity,
       recentAuthLogs,
+      newUsersCount,
+      previousUsersCount,
+      newOrdersCount,
+      previousOrdersCount,
+      revenueRaw,
+      userGrowthRaw,
+      orderStatusRaw,
+      locationCentroid,
+      locationRoleCoverage,
     ] = await Promise.all([
       User.countDocuments(),
       User.countDocuments({ status: 'ACTIVE' }),
@@ -461,6 +595,35 @@ router.get('/admin/dashboard-summary', authRequired, requireRoles('ADMIN'), asyn
       User.find({}, 'firstName lastName role status createdAt').sort({ createdAt: -1 }).limit(4).lean(),
       ActivityLog.find().sort({ createdAt: -1 }).limit(4).populate('user', 'firstName lastName role').lean(),
       AuthLog.find().sort({ createdAt: -1 }).limit(4).populate('user', 'firstName lastName role').lean(),
+      User.countDocuments({ createdAt: { $gte: periodStart } }),
+      User.countDocuments({ createdAt: { $gte: previousPeriodStart, $lt: periodStart } }),
+      Order.countDocuments({ createdAt: { $gte: periodStart } }),
+      Order.countDocuments({ createdAt: { $gte: previousPeriodStart, $lt: periodStart } }),
+      Order.aggregate([
+        { $match: { createdAt: { $gte: periodStart } } },
+        {
+          $group: {
+            _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+            users: { $sum: 0 },
+            revenue: { $sum: { $cond: [{ $eq: ['$status', 'DELIVERED'] }, '$lineTotal', 0] } },
+            orders: { $sum: 1 },
+          },
+        },
+        { $sort: { _id: 1 } },
+      ]),
+      User.aggregate([
+        { $match: { createdAt: { $gte: periodStart } } },
+        {
+          $group: {
+            _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+            users: { $sum: 1 },
+          },
+        },
+        { $sort: { _id: 1 } },
+      ]),
+      Order.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
+      User.aggregate([{ $match: { 'location.lat': { $ne: null }, 'location.lng': { $ne: null } } }, { $group: { _id: null, avgLat: { $avg: '$location.lat' }, avgLng: { $avg: '$location.lng' }, trackedUsers: { $sum: 1 } } }]),
+      User.aggregate([{ $match: { 'location.updatedAt': { $ne: null } } }, { $group: { _id: '$role', count: { $sum: 1 } } }]),
     ]);
 
     const roleCounts = usersByRole.reduce((acc, item) => {
@@ -494,6 +657,20 @@ router.get('/admin/dashboard-summary', authRequired, requireRoles('ADMIN'), asyn
       })),
     ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5);
 
+    const userSeriesMap = new Map(userGrowthRaw.map((item) => [item._id, item.users]));
+    const revenueSeries = revenueRaw.map((item) => ({ date: item._id, revenue: Number((item.revenue || 0).toFixed(2)), orders: item.orders || 0 }));
+    const userGrowth = revenueSeries.map((item) => ({ date: item.date, users: userSeriesMap.get(item.date) || 0 }));
+    const mostActiveRole = Object.entries(roleCounts).sort((a, b) => b[1] - a[1])[0] || ['N/A', 0];
+    const userGrowthDeltaPct = previousUsersCount ? Number((((newUsersCount - previousUsersCount) / previousUsersCount) * 100).toFixed(1)) : (newUsersCount > 0 ? 100 : 0);
+    const orderDeltaPct = previousOrdersCount ? Number((((newOrdersCount - previousOrdersCount) / previousOrdersCount) * 100).toFixed(1)) : (newOrdersCount > 0 ? 100 : 0);
+    const orderStatusDistribution = orderStatusRaw.map((row) => ({ status: row._id, count: row.count }));
+    const roleDistributionChart = Object.entries({
+      ARTISAN: roleCounts.ARTISAN || 0,
+      SUPPLIER: roleCounts.SUPPLIER || 0,
+      PRESCRIPTEUR: roleCounts.PRESCRIPTEUR || 0,
+      ADMIN: roleCounts.ADMIN || 0,
+    }).map(([role, count]) => ({ role, count }));
+
     res.json({
       ok: true,
       stats: {
@@ -512,6 +689,26 @@ router.get('/admin/dashboard-summary', authRequired, requireRoles('ADMIN'), asyn
         prescripteurs: roleCounts.PRESCRIPTEUR || 0,
         admins: roleCounts.ADMIN || 0,
       },
+      charts: {
+        userGrowth,
+        revenueOverTime: revenueSeries,
+        ordersStatusDistribution: orderStatusDistribution,
+        roleDistribution: roleDistributionChart,
+      },
+      highlights: {
+        mostActiveRole: { role: mostActiveRole[0], count: mostActiveRole[1] },
+        revenueTrend: revenueSeries.length > 1 ? (revenueSeries[revenueSeries.length - 1].revenue - revenueSeries[0].revenue) : 0,
+      },
+      changes: {
+        userGrowthPct: userGrowthDeltaPct,
+        ordersGrowthPct: orderDeltaPct,
+      },
+      locationAnalytics: {
+        trackedUsers: locationCentroid?.[0]?.trackedUsers || 0,
+        avgLat: locationCentroid?.[0]?.avgLat || null,
+        avgLng: locationCentroid?.[0]?.avgLng || null,
+        roleCoverage: locationRoleCoverage || [],
+      },
       alerts,
     });
   } catch (err) {
@@ -525,16 +722,37 @@ router.get('/admin/transactions', authRequired, requireRoles('ADMIN'), async (re
     const Subscription = require('../models/Subscription');
     const Facture = require('../models/Facture');
 
+    const from = req.query.from ? new Date(req.query.from) : null;
+    const to = req.query.to ? new Date(req.query.to) : null;
+    if (to) to.setHours(23, 59, 59, 999);
+    const statusFilter = req.query.status ? String(req.query.status).toUpperCase() : '';
+    const dateQuery = {};
+    if (from) dateQuery.$gte = from;
+    if (to) dateQuery.$lte = to;
+    const hasDate = Object.keys(dateQuery).length > 0;
+    const orderMatch = {
+      ...(hasDate ? { createdAt: dateQuery } : {}),
+      ...(statusFilter ? { status: statusFilter } : {}),
+    };
+    const subscriptionMatch = {
+      ...(hasDate ? { createdAt: dateQuery } : {}),
+      ...(statusFilter ? { status: statusFilter } : {}),
+    };
+    const invoiceMatch = {
+      ...(hasDate ? { createdAt: dateQuery } : {}),
+      ...(statusFilter ? { status: statusFilter } : {}),
+    };
+
     const [orders, subscriptions, invoices] = await Promise.all([
-      Order.find().sort({ createdAt: -1 })
+      Order.find(orderMatch).sort({ createdAt: -1 })
         .populate('artisanId', 'firstName lastName email')
         .populate('supplierId', 'firstName lastName email')
         .populate('productId', 'name')
         .lean(),
-      Subscription.find().sort({ createdAt: -1 })
+      Subscription.find(subscriptionMatch).sort({ createdAt: -1 })
         .populate('userId', 'firstName lastName email')
         .lean(),
-      Facture.find().sort({ createdAt: -1 })
+      Facture.find(invoiceMatch).sort({ createdAt: -1 })
         .populate('artisanId', 'firstName lastName email')
         .populate('projectId', 'title')
         .lean(),

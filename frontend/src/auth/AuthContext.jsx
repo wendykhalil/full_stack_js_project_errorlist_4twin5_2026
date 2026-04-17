@@ -30,6 +30,10 @@ export function AuthProvider({ children }) {
     persist(nextToken, nextUser);
   }, [persist]);
 
+  const updateSessionUser = useCallback((nextUser) => {
+    persist(token, nextUser || null);
+  }, [persist, token]);
+
   const login = useCallback(async (email, password) => {
     const data = await apiFetch('/auth/login', { method: 'POST', body: { email, password } });
     persist(data.token, data.user);
@@ -99,6 +103,7 @@ export function AuthProvider({ children }) {
       changePassword, 
       logout,
       setSession,
+      updateSessionUser,
       forgotPassword, 
       resetPassword
     }),
@@ -114,6 +119,7 @@ export function AuthProvider({ children }) {
       changePassword, 
       logout,
       setSession,
+      updateSessionUser,
       forgotPassword, 
       resetPassword
     ]

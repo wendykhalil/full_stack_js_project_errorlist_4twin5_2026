@@ -12,4 +12,6 @@ const AuthLogSchema = new mongoose.Schema(
   { timestamps: { createdAt: true, updatedAt: false } }
 );
 
+AuthLogSchema.index({ createdAt: -1, action: 1 });
+
 module.exports = mongoose.model('AuthLog', AuthLogSchema);

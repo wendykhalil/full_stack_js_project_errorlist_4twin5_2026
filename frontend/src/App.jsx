@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import RealtimeNotifications from "./components/RealtimeNotifications";
+import ArtisanLocationPromptModal from "./components/ArtisanLocationPromptModal";
 import ArtisanProfile from './pages/ArtisanProfile';
 
 import Login from "./pages/Login";
@@ -85,6 +86,7 @@ export default function App() {
         <BrowserRouter>
             <AppErrorBoundary></AppErrorBoundary>
             <AppErrorBoundary><RealtimeNotifications /></AppErrorBoundary>
+            <AppErrorBoundary><ArtisanLocationPromptModal /></AppErrorBoundary>
             <Routes>
                 {/* Routes publiques */}
                 <Route path="/" element={<Navigate to="/login" replace />} />

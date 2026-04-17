@@ -136,6 +136,14 @@ export async function getSupplierCategories({ token }) {
   return apiFetch('/supplier/categories', { token });
 }
 
+export async function updateUserLocation({ token, lat, lng }) {
+  return apiFetch('/users/update-location', {
+    token,
+    method: 'POST',
+    body: { lat, lng },
+  });
+}
+
 export async function getMySubscription({ token }) {
   return apiFetch('/subscriptions/me', { token });
 }
@@ -217,8 +225,9 @@ export async function getArtisanDashboardSummary({ token }) {
   return apiFetch('/artisan/dashboard-summary', { token });
 }
 
-export async function getAdminDashboardSummary({ token }) {
-  return apiFetch('/admin/dashboard-summary', { token });
+export async function getAdminDashboardSummary({ token, days = 30 } = {}) {
+  const params = new URLSearchParams({ days: String(days) });
+  return apiFetch(`/admin/dashboard-summary?${params.toString()}`, { token });
 }
 
 
