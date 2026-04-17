@@ -124,6 +124,18 @@ export async function getCatalogProducts({ page = 1, limit = 12, search = '', ca
   return apiFetch(`/catalog/products?${params}`);
 }
 
+export async function getCatalogProductById({ id } = {}) {
+  return apiFetch(`/catalog/products/${id}`);
+}
+
+export async function getProductRecommendations({ id } = {}) {
+  return apiFetch(`/catalog/products/${id}/recommendations`);
+}
+
+export async function getProductVideo({ id } = {}) {
+  return apiFetch(`/catalog/products/${id}/video`);
+}
+
 export async function rateCatalogProduct({ productId, rating, token }) {
   return apiFetch(`/catalog/products/${productId}/rate`, {
     token,
