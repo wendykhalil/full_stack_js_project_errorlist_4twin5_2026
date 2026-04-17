@@ -146,8 +146,11 @@ function ToggleRow({ icon, label, enabled, onClick }) {
 
 /* ── main component ──────────────────────────────────────────────── */
 
-export default function AccessibilityControls() {
-  const { settings, toggleSetting, setFontSizeIndex, setColorblindMode } = useAccessibilitySettings();
+export default function AccessibilityControls({ a11y }) {
+  // If a shared hook instance is passed from the parent, use it.
+  // Otherwise fall back to an internal instance (backward-compatible).
+  const internal = useAccessibilitySettings();
+  const { settings, toggleSetting, setFontSizeIndex, setColorblindMode } = a11y ?? internal;
 
   return (
     <section className="rounded-md border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
