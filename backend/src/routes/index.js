@@ -1,5 +1,6 @@
 const express = require('express');
 
+const { getAiInsights } = require('../modules/admin/aiInsights.service');
 const authRoutes = require('../modules/auth/auth.routes');
 const projectsRoutes = require('../modules/projects/projects.routes');
 const supplierRoutes = require('../modules/supplier/supplier.routes');
@@ -711,6 +712,18 @@ router.get('/admin/dashboard-summary', authRequired, requireRoles('ADMIN'), asyn
       },
       alerts,
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Admin: AI-powered insights
+router.get('/admin/ai-insights', authRequired, requireRoles('ADMIN'), async (req, res, next) => {
+  try {
+    const days = Math.min(90, Math.max(7, parseInt(req.query.days || '30', 10) || 30));
+    const forceRefresh = req.query.refresh === 'true';
+    const report = await getAiInsights(days, forceRefresh);
+    res.json({ ok: true, ...report });
   } catch (err) {
     next(err);
   }

@@ -230,6 +230,13 @@ export async function getAdminDashboardSummary({ token, days = 30 } = {}) {
   return apiFetch(`/admin/dashboard-summary?${params.toString()}`, { token });
 }
 
+export async function getAdminAiInsights({ token, days = 30, refresh = false } = {}) {
+  const params = new URLSearchParams({ days: String(days) });
+  if (refresh) params.append('refresh', 'true');
+  return apiFetch(`/admin/ai-insights?${params.toString()}`, { token });
+}
+
+
 
 export async function suggestProjectWithAI({ token, payload }) {
   return apiFetch('/ai/suggest/project', {

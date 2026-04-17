@@ -20,6 +20,7 @@ import AdminActivityLogs from "./pages/AdminActivityLogs";
 import AdminPromoCodes from "./pages/AdminPromoCodes";
 import AdminTransactions from "./pages/AdminTransactions";
 import AdminReports from "./pages/AdminReports";
+import AdminAiInsights from "./pages/AdminAiInsights";
 
 // REGISTER
 import RegisterChooseRole from "./pages/RegisterChooseRole";
@@ -126,6 +127,7 @@ export default function App() {
                         <Route path="transactions" element={<AdminTransactions />} />
                         <Route path="promo-codes" element={<AdminPromoCodes />} />
                         <Route path="reports" element={<AdminReports />} />
+                        <Route path="ai-insights" element={<AdminAiInsights />} />
                         {/* AI Chat pour Admin */}
                         <Route path="AiChat" element={<AiChat />} />
                     </Route>
