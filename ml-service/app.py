@@ -1,9 +1,11 @@
 """
-app.py — Flask ML microservice for product performance prediction.
+app.py — Flask ML microservice for multiple predictions.
 
 Endpoints:
   POST /predict-product-performance   — predict a single product
   POST /predict-batch                 — predict a list of products
+  POST /predict-duration              — predict project duration
+  POST /predict-pricing               — predict project cost
   GET  /health                        — liveness check
   POST /retrain                       — retrain on live supplier data (from Node.js)
 
@@ -20,6 +22,7 @@ import joblib
 import numpy as np
 import pandas as pd
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
@@ -27,10 +30,15 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
 MODEL_PATH    = os.path.join(os.path.dirname(__file__), "model.joblib")
 CLASSES_PATH  = os.path.join(os.path.dirname(__file__), "classes.json")
 META_PATH     = os.path.join(os.path.dirname(__file__), "model_meta.json")
+
+# New model paths
+DURATION_MODEL_PATH = os.path.join(os.path.dirname(__file__), "duration_model.joblib")
+PRICING_MODEL_PATH = os.path.join(os.path.dirname(__file__), "pricing_model.joblib")
 
 # ── Load model at startup ─────────────────────────────────────────────────────
 
@@ -47,6 +55,24 @@ def load_model():
 
 
 pipeline, CLASSES = load_model()
+
+# Load duration and pricing models
+def load_duration_model():
+    if not os.path.exists(DURATION_MODEL_PATH):
+        print("[ML] duration_model.joblib not found — training now...")
+        from train_duration import train_duration_model
+        train_duration_model(regen=True)
+    return joblib.load(DURATION_MODEL_PATH)
+
+def load_pricing_model():
+    if not os.path.exists(PRICING_MODEL_PATH):
+        print("[ML] pricing_model.joblib not found — training now...")
+        from train_pricing import train_pricing_model
+        train_pricing_model(regen=True)
+    return joblib.load(PRICING_MODEL_PATH)
+
+duration_pipeline = load_duration_model()
+pricing_pipeline = load_pricing_model()
 
 # ── Recommendation messages ───────────────────────────────────────────────────
 
@@ -69,6 +95,130 @@ def _auto_label(price, stock, orders, rating):
     return "NORMAL"
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
+
+def _validate_duration_features(data: dict):
+    """Validate duration prediction input."""
+    errors, values = [], []
+    
+    # Project type mapping
+    project_type_map = {'house': 0, 'renovation': 1, 'commercial': 2, 'landscaping': 3}
+    
+    project_type = data.get("project_type", "").lower()
+    if project_type not in project_type_map:
+        errors.append(f"project_type must be one of: {list(project_type_map.keys())}")
+    else:
+        values.append(project_type_map[project_type])
+    
+    for field in ("size_sqm", "num_workers"):
+        raw = data.get(field)
+        if raw is None:
+            errors.append(f"Missing field: {field}")
+            continue
+        try:
+            v = float(raw)
+        except (TypeError, ValueError):
+            errors.append(f"Field '{field}' must be numeric, got: {raw!r}")
+            continue
+        values.append(v)
+    
+    # Location mapping
+    location_map = {'rural': 0, 'suburban': 1, 'urban': 2}
+    location = data.get("location", "").lower()
+    if location not in location_map:
+        errors.append(f"location must be one of: {list(location_map.keys())}")
+    else:
+        values.append(location_map[location])
+    
+    # Materials mapping
+    materials_map = {'basic': 0, 'standard': 1, 'premium': 2}
+    materials = data.get("materials", "").lower()
+    if materials not in materials_map:
+        errors.append(f"materials must be one of: {list(materials_map.keys())}")
+    else:
+        values.append(materials_map[materials])
+    
+    # Complexity
+    complexity = data.get("complexity")
+    if complexity is None:
+        errors.append("Missing field: complexity")
+    else:
+        try:
+            complexity = float(complexity)
+            values.append(complexity)
+        except (TypeError, ValueError):
+            errors.append(f"complexity must be numeric, got: {complexity!r}")
+    
+    if errors:
+        return None, "; ".join(errors)
+    
+    project_type_encoded, size_sqm, num_workers, location_encoded, materials_encoded, complexity = values
+    if size_sqm <= 0: errors.append("size_sqm must be > 0")
+    if num_workers <= 0: errors.append("num_workers must be > 0")
+    if not (1 <= complexity <= 5): errors.append("complexity must be between 1 and 5")
+    
+    if errors:
+        return None, "; ".join(errors)
+    
+    return np.array([[project_type_encoded, size_sqm, num_workers, location_encoded, materials_encoded, complexity]], dtype=float), None
+
+def _validate_pricing_features(data: dict):
+    """Validate pricing prediction input."""
+    errors, values = [], []
+    
+    # Mappings
+    project_type_map = {'house': 0, 'renovation': 1, 'commercial': 2, 'landscaping': 3}
+    materials_map = {'basic': 0, 'standard': 1, 'premium': 2}
+    location_map = {'rural': 0, 'suburban': 1, 'urban': 2}
+    
+    project_type = data.get("project_type", "").lower()
+    if project_type not in project_type_map:
+        errors.append(f"project_type must be one of: {list(project_type_map.keys())}")
+    else:
+        values.append(project_type_map[project_type])
+    
+    surface_area = data.get("surface_area")
+    if surface_area is None:
+        errors.append("Missing field: surface_area")
+    else:
+        try:
+            surface_area = float(surface_area)
+            values.append(surface_area)
+        except (TypeError, ValueError):
+            errors.append(f"surface_area must be numeric, got: {surface_area!r}")
+    
+    materials = data.get("materials", "").lower()
+    if materials not in materials_map:
+        errors.append(f"materials must be one of: {list(materials_map.keys())}")
+    else:
+        values.append(materials_map[materials])
+    
+    location = data.get("location", "").lower()
+    if location not in location_map:
+        errors.append(f"location must be one of: {list(location_map.keys())}")
+    else:
+        values.append(location_map[location])
+    
+    complexity = data.get("complexity")
+    if complexity is None:
+        errors.append("Missing field: complexity")
+    else:
+        try:
+            complexity = float(complexity)
+            values.append(complexity)
+        except (TypeError, ValueError):
+            errors.append(f"complexity must be numeric, got: {complexity!r}")
+    
+    if errors:
+        return None, "; ".join(errors)
+    
+    project_type_encoded, surface_area, materials_encoded, location_encoded, complexity = values
+    if surface_area <= 0: errors.append("surface_area must be > 0")
+    if not (1 <= complexity <= 5): errors.append("complexity must be between 1 and 5")
+    
+    if errors:
+        return None, "; ".join(errors)
+    
+    return np.array([[project_type_encoded, surface_area, materials_encoded, location_encoded, complexity]], dtype=float), None
 
 def _validate_features(data: dict):
     errors, values = [], []
@@ -327,6 +477,59 @@ def retrain():
             "classes":       CLASSES,
         })
 
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/predict-duration", methods=["POST"])
+def predict_duration():
+    """Predict project duration in days."""
+    body = request.get_json(silent=True) or {}
+    features, err = _validate_duration_features(body)
+    if err:
+        return jsonify({"error": err}), 400
+    
+    try:
+        duration_days = duration_pipeline.predict(features)[0]
+        duration_days = max(1, round(duration_days))  # minimum 1 day
+        
+        return jsonify({
+            "project_type": body.get("project_type", ""),
+            "size_sqm": body.get("size_sqm"),
+            "num_workers": body.get("num_workers"),
+            "location": body.get("location", ""),
+            "materials": body.get("materials", ""),
+            "complexity": body.get("complexity"),
+            "estimated_duration_days": duration_days,
+            "message": f"Estimated project duration: {duration_days} days"
+        })
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/predict-pricing", methods=["POST"])
+def predict_pricing():
+    """Predict project cost in euros."""
+    body = request.get_json(silent=True) or {}
+    features, err = _validate_pricing_features(body)
+    if err:
+        return jsonify({"error": err}), 400
+    
+    try:
+        estimated_cost = pricing_pipeline.predict(features)[0]
+        estimated_cost = max(1000, round(estimated_cost))  # minimum €1000
+        
+        return jsonify({
+            "project_type": body.get("project_type", ""),
+            "surface_area": body.get("surface_area"),
+            "materials": body.get("materials", ""),
+            "location": body.get("location", ""),
+            "complexity": body.get("complexity"),
+            "estimated_cost_euros": estimated_cost,
+            "message": f"Estimated project cost: €{estimated_cost:,}"
+        })
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500

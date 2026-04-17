@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   FileText, FolderKanban, Heart, Image as ImageIcon, LayoutDashboard,
   MessageCircle, Package, Receipt, ShieldCheck, ShoppingCart,
-  UserCircle2, Cloud, ClipboardList, CalendarDays, Briefcase, Store,
+  UserCircle2, Cloud, ClipboardList, CalendarDays, Briefcase, Store, Brain,
 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { getMySubscription } from "../auth/api";
@@ -103,9 +103,10 @@ function ArtisanLayoutInner() {
       icon: <Briefcase className="h-5 w-5" />,
       storageKey: "artisan-projets-open",
       items: [
-        { to: "/artisan/projects",     label: "Projets",        icon: <FolderKanban className="h-4 w-4" /> },
-        { to: "/artisan/devis/create", label: "Créer un devis", icon: <FileText className="h-4 w-4" /> },
-        { to: "/artisan/factures",     label: "Factures",       icon: <Receipt className="h-4 w-4" /> },
+        { to: "/artisan/projects",        label: "Projets",           icon: <FolderKanban className="h-4 w-4" /> },
+        { to: "/artisan/devis/create",    label: "Créer un devis",    icon: <FileText className="h-4 w-4" /> },
+        { to: "/artisan/factures",        label: "Factures",          icon: <Receipt className="h-4 w-4" /> },
+        { to: "/artisan/ml-predictions",  label: "Prédictions IA",    icon: <Brain className="h-4 w-4" /> },
       ],
     },
   ];

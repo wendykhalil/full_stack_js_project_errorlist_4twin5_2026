@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { FolderKanban, MessageCircle, PackageSearch, Search, Shield, UserCircle2, Users, ClipboardList } from "lucide-react";
+import { FolderKanban, MessageCircle, PackageSearch, Search, Shield, UserCircle2, Users, ClipboardList, Brain } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import RoleWorkspace from "../components/RoleWorkspace";
 import { useUnreadMessages } from "../hooks/useUnreadMessages";
@@ -26,6 +26,7 @@ export default function PrescripteurLayout() {
     { to: "/prescripteur/artisans", label: "Artisans", icon: <Users className="h-5 w-5" /> },
     { to: "/prescripteur/projects", label: "Projets", icon: <FolderKanban className="h-5 w-5" /> },
     { to: "/prescripteur/service-requests", label: "Demandes", icon: <ClipboardList className="h-5 w-5" /> },
+    { to: "/prescripteur/ml-predictions", label: "Prédictions IA", icon: <Brain className="h-5 w-5" /> },
     { to: "/prescripteur/search", label: "Rechercher", icon: <Search className="h-5 w-5" /> },
     { to: "/prescripteur/messages", label: "Messages", icon: messageIcon },
   ];

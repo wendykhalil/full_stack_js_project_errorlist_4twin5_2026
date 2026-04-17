@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import RealtimeNotifications from "./components/RealtimeNotifications";
 import ArtisanLocationPromptModal from "./components/ArtisanLocationPromptModal";
 import ArtisanProfile from './pages/ArtisanProfile';
+import MLPredictionsPage from './pages/MLPredictions';
 
 import Login from "./pages/Login";
 import PhoneLogin from "./pages/PhoneLogin";
@@ -162,6 +163,7 @@ export default function App() {
                         <Route path="weather" element={<ArtisanWeather />} />
                         <Route path="availability" element={<ArtisanAvailability />} />
                         <Route path="service-requests" element={<ArtisanServiceRequests />} />
+                        <Route path="ml-predictions" element={<MLPredictionsPage />} />
                         <Route path="messages" element={<RequireSubscription><Messages /></RequireSubscription>} />
                         <Route path="messages/:userId" element={<RequireSubscription><Conversation /></RequireSubscription>} />
                         {/* AI Chat pour Artisan */}
@@ -181,6 +183,7 @@ export default function App() {
                         <Route path="product/:id" element={<PrescripteurProductDetails />} />
                         <Route path="projects" element={<PrescripteurProjects />} />
                         <Route path="service-requests" element={<PrescripteurServiceRequests />} />
+                        <Route path="ml-predictions" element={<MLPredictionsPage />} />
                         <Route path="messages" element={<Messages />} />
                         <Route path="messages/:userId" element={<Conversation />} />
                         {/* AI Chat pour Prescripteur */}

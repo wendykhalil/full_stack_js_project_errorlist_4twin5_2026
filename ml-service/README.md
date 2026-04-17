@@ -1,6 +1,9 @@
-# ML Service — Product Performance Classifier
+# ML Service — Multi-Model Prediction Service
 
-A Flask microservice that uses a **RandomForestClassifier** (scikit-learn) to classify supplier products into:
+A Flask microservice with three ML models:
+
+## 1. Product Performance Classifier
+Uses **RandomForestClassifier** to classify supplier products:
 
 | Label | Meaning |
 |---|---|
@@ -8,6 +11,12 @@ A Flask microservice that uses a **RandomForestClassifier** (scikit-learn) to cl
 | `RESTOCK` | High demand but critically low stock |
 | `UNDERPERFORMING` | Low orders, poor rating |
 | `NORMAL` | Stable, no action needed |
+
+## 2. Project Duration Predictor
+Uses **RandomForestRegressor** to predict project completion time in days.
+
+## 3. Project Pricing Predictor  
+Uses **RandomForestRegressor** to predict project cost in euros.
 
 ## Setup
 
@@ -22,11 +31,20 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## Train the model
+## Train the models
 
 ```bash
+# Product performance classifier
 python train.py          # uses existing data.csv or generates it
 python train.py --regen  # force-regenerate data.csv then train
+
+# Duration predictor
+python train_duration.py          # train duration model
+python train_duration.py --regen  # regenerate duration data then train
+
+# Pricing predictor
+python train_pricing.py          # train pricing model
+python train_pricing.py --regen  # regenerate pricing data then train
 ```
 
 ## Start the service
@@ -65,6 +83,50 @@ python app.py
 
 // Response
 { "results": [ { "productName": "...", "label": "RESTOCK", "confidence": 0.94, ... } ] }
+```
+
+### `POST /predict-duration`
+```json
+// Request
+{
+  "project_type": "house",
+  "size_sqm": 150,
+  "num_workers": 4,
+  "complexity": 3
+}
+
+// Response
+{
+  "project_type": "house",
+  "size_sqm": 150,
+  "num_workers": 4,
+  "complexity": 3,
+  "estimated_duration_days": 45,
+  "message": "Estimated project duration: 45 days"
+}
+```
+
+### `POST /predict-pricing`
+```json
+// Request
+{
+  "project_type": "renovation",
+  "surface_area": 80,
+  "materials": "standard",
+  "location": "urban",
+  "complexity": 2
+}
+
+// Response
+{
+  "project_type": "renovation",
+  "surface_area": 80,
+  "materials": "standard",
+  "location": "urban",
+  "complexity": 2,
+  "estimated_cost_euros": 85600,
+  "message": "Estimated project cost: €85,600"
+}
 ```
 
 ### `POST /retrain`
