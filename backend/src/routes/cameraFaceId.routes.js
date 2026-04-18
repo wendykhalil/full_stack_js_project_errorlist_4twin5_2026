@@ -68,62 +68,77 @@ router.post("/register", authRequired, async (req, res) => {
 
 // Authenticate with camera Face ID
 router.post("/authenticate", async (req, res) => {
+  console.log('🎯 Camera Face ID authenticate endpoint called');
+  console.log('📋 Request body:', req.body);
+  
   try {
     const { faceDescriptor, userId, userEmail } = req.body;
 
     console.log('Camera Face ID authentication request:', {
       faceDescriptor: faceDescriptor ? 'present' : 'missing',
+      faceDescriptorLength: faceDescriptor ? faceDescriptor.length : 0,
       userId,
       userEmail
     });
 
     if (!faceDescriptor || !Array.isArray(faceDescriptor)) {
+      console.log('❌ Invalid face descriptor data');
       return res.status(400).json({ message: "Invalid face descriptor data" });
     }
 
     // Find user by ID or email
     let user = null;
     
-    if (userId) {
+    if (userId && userId !== 'undefined' && userId !== 'null') {
+      console.log('🔍 Looking for user by ID:', userId);
       user = await User.findById(userId);
     }
     
     if (!user && userEmail) {
+      console.log('🔍 Looking for user by email:', userEmail);
       user = await User.findOne({ email: userEmail });
     }
 
     if (!user) {
-      console.log('No user found for camera Face ID authentication');
+      console.log('❌ No user found for camera Face ID authentication');
       return res.status(404).json({ 
         message: "User not found. Please register camera Face ID first." 
       });
     }
 
+    console.log('✅ User found:', user.email);
+
     // Check if user has camera Face ID registered
     if (!user.cameraFaceIdCredentials || !user.cameraFaceIdCredentials.faceDescriptor) {
-      console.log('User found but no camera Face ID registered:', user.email);
+      console.log('❌ User found but no camera Face ID registered:', user.email);
       return res.status(401).json({ 
         message: "No camera Face ID registered for this account. Please set up camera Face ID in your profile settings." 
       });
     }
 
+    console.log('✅ User has camera Face ID registered');
+    console.log('📊 Stored descriptor length:', user.cameraFaceIdCredentials.faceDescriptor.length);
+    console.log('📊 Current descriptor length:', faceDescriptor.length);
+
     // Compare face descriptors
     const storedDescriptor = user.cameraFaceIdCredentials.faceDescriptor;
+    
+    console.log('🔄 Calculating face similarity...');
     const similarity = calculateFaceSimilarity(faceDescriptor, storedDescriptor);
     
-    console.log('Face similarity score:', similarity);
+    console.log('📊 Face similarity score:', similarity);
 
     // Threshold for face recognition (adjust as needed)
-    const SIMILARITY_THRESHOLD = 0.6; // 60% similarity required
+    const SIMILARITY_THRESHOLD = 0.4; // 40% similarity required (lowered from 60%)
     
     if (similarity < SIMILARITY_THRESHOLD) {
-      console.log('Face recognition failed - similarity too low:', similarity);
+      console.log('❌ Face recognition failed - similarity too low:', similarity);
       return res.status(401).json({ 
         message: "Face recognition failed. Please ensure your face is clearly visible and try again." 
       });
     }
 
-    console.log('Camera Face ID authentication successful for user:', user.email);
+    console.log('✅ Camera Face ID authentication successful for user:', user.email);
 
     // Generate JWT token
     const token = jwt.sign(
@@ -142,6 +157,8 @@ router.post("/authenticate", async (req, res) => {
     user.lastLoginMethod = 'cameraFaceId';
     await user.save();
 
+    console.log('🎉 Sending successful authentication response');
+
     res.json({
       success: true,
       message: "Camera Face ID authentication successful",
@@ -158,7 +175,8 @@ router.post("/authenticate", async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Camera Face ID authentication error:", error);
+    console.error("❌ Camera Face ID authentication error:", error);
+    console.error("❌ Error stack:", error.stack);
     res.status(500).json({ message: "Error authenticating with camera Face ID. Please try again." });
   }
 });

@@ -103,6 +103,30 @@ const userSchema = new mongoose.Schema(
       default: null
     },
 
+    // Face ID credentials for WebAuthn (passkey)
+    faceIdCredentials: {
+      credentialId: { type: String, default: null },
+      publicKey: { type: String, default: null },
+      registeredAt: { type: Date, default: null },
+      deviceInfo: { type: mongoose.Schema.Types.Mixed, default: {} }
+    },
+
+    // Camera Face ID credentials
+    cameraFaceIdCredentials: {
+      faceDescriptor: { type: [Number], default: null },
+      landmarks: { type: mongoose.Schema.Types.Mixed, default: [] },
+      registeredAt: { type: Date, default: null },
+      deviceInfo: { type: mongoose.Schema.Types.Mixed, default: {} }
+    },
+
+    // Authentication tracking
+    lastLogin: { type: Date, default: null },
+    lastLoginMethod: { 
+      type: String, 
+      enum: ['password', 'google', 'faceId', 'cameraFaceId', 'phone'], 
+      default: null 
+    },
+
     location: {
       lat: { type: Number, default: null },
       lng: { type: Number, default: null },

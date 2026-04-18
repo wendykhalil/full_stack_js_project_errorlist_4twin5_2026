@@ -291,16 +291,44 @@ const CameraFaceIdSetup = () => {
   const removeRegistration = async () => {
     try {
       setLoading(true);
-      const success = await removeCameraFaceIdRegistration();
+      setMessage('Removing camera Face ID registration...');
       
-      if (success) {
+      console.log('Attempting to remove camera Face ID registration...');
+      
+      // Get the correct token
+      const token = localStorage.getItem('bmptn_token') || localStorage.getItem('token');
+      
+      if (!token) {
+        throw new Error('No authentication token found. Please login again.');
+      }
+
+      const response = await fetch('/api/camera-faceid/remove', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      console.log('Remove camera Face ID response status:', response.status);
+
+      if (response.ok) {
+        // Remove local storage
+        localStorage.removeItem('cameraFaceId_registered');
+        localStorage.removeItem('cameraFaceId_userId');
+        localStorage.removeItem('cameraFaceId_userEmail');
+        
         setIsRegistered(false);
         setMessage('Camera Face ID registration removed successfully.');
-        setMessageType('info');
+        setMessageType('success');
+        
+        console.log('Camera Face ID registration removed successfully');
       } else {
-        throw new Error('Failed to remove registration');
+        const errorData = await response.json().catch(() => ({ message: 'Server error' }));
+        throw new Error(errorData.message || `Server error: ${response.status}`);
       }
     } catch (error) {
+      console.error('Error removing camera Face ID registration:', error);
       setMessage('Failed to remove registration: ' + error.message);
       setMessageType('error');
     } finally {

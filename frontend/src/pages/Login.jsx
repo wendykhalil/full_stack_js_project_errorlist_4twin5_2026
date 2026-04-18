@@ -269,10 +269,10 @@ export default function Login() {
       </nav>
 
       {/* Main Content */}
-      <div className="relative flex min-h-[calc(100vh-5rem)] items-center justify-center">
+      <div className="relative flex min-h-[calc(100vh-5rem)] items-center justify-center py-8">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50/20 via-transparent to-orange-50/20" />
         
-        <div className="relative w-full max-w-md px-4 sm:px-6">
+        <div className="relative w-full max-w-lg px-4 sm:px-6">
           {/* Login Card */}
           <div className="rounded-2xl bg-white/90 backdrop-blur-sm border border-slate-200/80 shadow-xl">
             <div className="p-6 sm:p-8">

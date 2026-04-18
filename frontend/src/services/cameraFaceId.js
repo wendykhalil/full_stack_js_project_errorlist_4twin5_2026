@@ -148,11 +148,20 @@ export const captureFaceData = async (videoElement) => {
 // Register camera Face ID
 export const registerCameraFaceId = async (userId, userEmail, faceData) => {
   try {
+    // Get the correct token from localStorage
+    const token = localStorage.getItem('bmptn_token') || localStorage.getItem('token');
+    
+    if (!token) {
+      throw new Error('No authentication token found. Please login again.');
+    }
+
+    console.log('Registering camera Face ID for user:', userId, userEmail);
+    
     const response = await fetch('/api/camera-faceid/register', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify({
         userId,
@@ -163,12 +172,16 @@ export const registerCameraFaceId = async (userId, userEmail, faceData) => {
       })
     });
     
+    console.log('Camera Face ID registration response status:', response.status);
+    
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = await response.json().catch(() => ({ message: 'Server error' }));
+      console.error('Camera Face ID registration failed:', errorData);
       throw new Error(errorData.message || 'Failed to register camera Face ID');
     }
     
     const result = await response.json();
+    console.log('Camera Face ID registration successful:', result);
     
     // Store registration locally
     localStorage.setItem('cameraFaceId_registered', 'true');
@@ -189,8 +202,27 @@ export const registerCameraFaceId = async (userId, userEmail, faceData) => {
 // Authenticate with camera Face ID
 export const authenticateCameraFaceId = async (videoElement) => {
   try {
+    console.log('🎯 Starting authenticateCameraFaceId service...');
+    
     // Capture current face
+    console.log('📸 Capturing face data...');
     const currentFace = await captureFaceData(videoElement);
+    
+    console.log('✅ Face data captured:', {
+      descriptorLength: currentFace.descriptor?.length,
+      hasLandmarks: !!currentFace.landmarks,
+      hasImageData: !!currentFace.imageData
+    });
+    
+    // Get stored user info
+    const userId = localStorage.getItem('cameraFaceId_userId');
+    const userEmail = localStorage.getItem('cameraFaceId_userEmail');
+    
+    console.log('📋 Sending authentication request with:', {
+      userId,
+      userEmail,
+      descriptorLength: currentFace.descriptor?.length
+    });
     
     // Send to server for comparison
     const response = await fetch('/api/camera-faceid/authenticate', {
@@ -200,20 +232,35 @@ export const authenticateCameraFaceId = async (videoElement) => {
       },
       body: JSON.stringify({
         faceDescriptor: currentFace.descriptor,
-        userId: localStorage.getItem('cameraFaceId_userId'),
-        userEmail: localStorage.getItem('cameraFaceId_userEmail')
+        userId: userId,
+        userEmail: userEmail
       })
     });
     
+    console.log('🌐 Server response status:', response.status);
+    console.log('🌐 Server response headers:', Object.fromEntries(response.headers.entries()));
+    
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorText = await response.text();
+      console.error('❌ Server response text:', errorText);
+      
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch (parseError) {
+        errorData = { message: errorText || 'Server error' };
+      }
+      
+      console.error('❌ Server authentication failed:', errorData);
       throw new Error(errorData.message || 'Camera Face ID authentication failed');
     }
     
     const result = await response.json();
+    console.log('✅ Server authentication successful:', result);
+    
     return result;
   } catch (error) {
-    console.error('Camera Face ID authentication error:', error);
+    console.error('❌ Camera Face ID authentication error:', error);
     throw error;
   }
 };
@@ -226,10 +273,13 @@ export const isCameraFaceIdRegistered = () => {
 // Remove camera Face ID registration
 export const removeCameraFaceIdRegistration = async () => {
   try {
+    // Get the correct token from localStorage
+    const token = localStorage.getItem('bmptn_token') || localStorage.getItem('token');
+    
     const response = await fetch('/api/camera-faceid/remove', {
       method: 'DELETE',
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
+        'Authorization': `Bearer ${token}`
       }
     });
     

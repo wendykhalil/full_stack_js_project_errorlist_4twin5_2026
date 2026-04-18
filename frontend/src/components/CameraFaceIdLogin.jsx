@@ -25,6 +25,7 @@ const CameraFaceIdLogin = ({ onSuccess, onError, disabled }) => {
   const [faceDetected, setFaceDetected] = useState(false);
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
+  const [showCameraInterface, setShowCameraInterface] = useState(false);
 
   useEffect(() => {
     checkRegistrationStatus();
@@ -36,13 +37,26 @@ const CameraFaceIdLogin = ({ onSuccess, onError, disabled }) => {
   }, []);
 
   const checkRegistrationStatus = () => {
-    setIsRegistered(isCameraFaceIdRegistered());
+    const registered = isCameraFaceIdRegistered();
+    const hasLocalStorage = localStorage.getItem('cameraFaceId_registered');
+    const userId = localStorage.getItem('cameraFaceId_userId');
+    const userEmail = localStorage.getItem('cameraFaceId_userEmail');
+    
+    console.log('Camera Face ID registration check for login:', {
+      registered,
+      hasLocalStorage,
+      userId,
+      userEmail
+    });
+    
+    setIsRegistered(registered);
   };
 
   const initializeFaceApi = async () => {
     try {
       const loaded = await loadFaceApiModels();
       setModelsLoaded(loaded);
+      console.log('Face API models loaded for login:', loaded);
     } catch (error) {
       console.error('Failed to load face recognition models:', error);
     }
@@ -51,97 +65,42 @@ const CameraFaceIdLogin = ({ onSuccess, onError, disabled }) => {
   const startCamera = async () => {
     try {
       setLoading(true);
-      setMessage('Requesting camera access...');
+      setShowCameraInterface(true); // Force show interface
+      setMessage('Starting camera...');
       
-      // Check if camera is available first
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error('Camera not supported by this browser. Please use Chrome, Firefox, or Safari.');
+      console.log('Starting camera for login...');
+      
+      const available = await isCameraAvailable();
+      if (!available) {
+        throw new Error('Camera not available. Please check camera permissions.');
       }
 
-      // Request camera permission with better constraints
-      const constraints = {
+      const stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          width: { ideal: 1280, max: 1920 },
-          height: { ideal: 720, max: 1080 },
-          facingMode: 'user', // Front camera
-          frameRate: { ideal: 30, max: 60 }
-        },
-        audio: false // We don't need audio
-      };
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          facingMode: 'user'
+        }
+      });
 
-      console.log('Requesting camera access for login with constraints:', constraints);
-      
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      
-      console.log('Camera access granted for login, stream:', stream);
+      console.log('Camera stream obtained for login:', stream);
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        videoRef.current.play();
+        setCameraStream(stream);
+        setIsRecording(true);
+        setMessage('Position your face in the camera and click "Authenticate"');
         
-        // Wait for video to be ready
-        videoRef.current.onloadedmetadata = () => {
-          console.log('Login video metadata loaded, starting playback');
-          videoRef.current.play().then(() => {
-            setCameraStream(stream);
-            setIsRecording(true);
-            setMessage('Position your face in the camera and click "Authenticate"');
-            
-            // Start face detection after a short delay
-            setTimeout(() => {
-              startFaceDetection();
-            }, 1000);
-          }).catch(error => {
-            console.error('Error playing login video:', error);
-            setMessage('Failed to start video playback: ' + error.message);
-            onError?.(error.message);
-          });
-        };
-
-        videoRef.current.onerror = (error) => {
-          console.error('Login video error:', error);
-          setMessage('Video error occurred. Please try again.');
-          onError?.('Video error occurred');
-        };
+        // Start face detection
+        setTimeout(() => {
+          startFaceDetection();
+        }, 1000);
       }
     } catch (error) {
       console.error('Camera start error for login:', error);
-      
-      let errorMessage = 'Failed to start camera: ' + error.message;
-      
-      if (error.name === 'NotAllowedError') {
-        errorMessage = 'Camera access denied. Please allow camera access in your browser settings and try again.';
-      } else if (error.name === 'NotFoundError') {
-        errorMessage = 'No camera found. Please connect a camera and try again.';
-      } else if (error.name === 'NotReadableError') {
-        errorMessage = 'Camera is being used by another application. Please close other apps using the camera and try again.';
-      } else if (error.name === 'OverconstrainedError') {
-        errorMessage = 'Camera constraints not supported. Trying with basic settings...';
-        
-        // Try with simpler constraints
-        try {
-          const simpleStream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: 'user' },
-            audio: false 
-          });
-          
-          if (videoRef.current) {
-            videoRef.current.srcObject = simpleStream;
-            videoRef.current.play();
-            setCameraStream(simpleStream);
-            setIsRecording(true);
-            setMessage('Camera started with basic settings! Position your face and click "Authenticate".');
-            startFaceDetection();
-            return;
-          }
-        } catch (simpleError) {
-          errorMessage = 'Camera not available with any settings: ' + simpleError.message;
-        }
-      } else if (error.name === 'SecurityError') {
-        errorMessage = 'Camera access blocked for security reasons. Please ensure you are on HTTPS and allow camera access.';
-      }
-      
-      setMessage(errorMessage);
-      onError?.(errorMessage);
+      setMessage('Failed to start camera: ' + error.message);
+      onError?.(error.message);
     } finally {
       setLoading(false);
     }
@@ -155,6 +114,7 @@ const CameraFaceIdLogin = ({ onSuccess, onError, disabled }) => {
     setIsRecording(false);
     setFaceDetected(false);
     setMessage('');
+    setShowCameraInterface(false); // Hide interface when stopping
   };
 
   const startFaceDetection = async () => {
@@ -238,9 +198,9 @@ const CameraFaceIdLogin = ({ onSuccess, onError, disabled }) => {
   };
 
   const authenticateWithCamera = async () => {
-    if (!videoRef.current || !faceDetected) {
-      setMessage('No face detected. Please ensure your face is clearly visible.');
-      onError?.('No face detected');
+    if (!videoRef.current) {
+      setMessage('Camera not available. Please try again.');
+      onError?.('Camera not available');
       return;
     }
 
@@ -248,7 +208,21 @@ const CameraFaceIdLogin = ({ onSuccess, onError, disabled }) => {
       setLoading(true);
       setMessage('Authenticating with face recognition...');
 
+      console.log('Starting camera Face ID authentication...');
+
+      // Check if we have any registration data
+      const userId = localStorage.getItem('cameraFaceId_userId');
+      const userEmail = localStorage.getItem('cameraFaceId_userEmail');
+      
+      console.log('Authentication data:', { userId, userEmail });
+
+      if (!userId && !userEmail) {
+        throw new Error('No camera Face ID registration found. Please set up camera Face ID in your profile first.');
+      }
+
       const result = await authenticateCameraFaceId(videoRef.current);
+      
+      console.log('Camera Face ID authentication result:', result);
       
       if (result.success) {
         setMessage('Authentication successful!');
@@ -266,16 +240,17 @@ const CameraFaceIdLogin = ({ onSuccess, onError, disabled }) => {
     }
   };
 
-  if (!isRegistered) {
-    return (
-      <div className="text-center py-4">
-        <Camera className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-        <p className="text-sm text-gray-600">
-          Camera Face ID not set up. Please register in your profile settings first.
-        </p>
-      </div>
-    );
-  }
+  // Don't block login if not registered - let user try anyway
+  // if (!isRegistered) {
+  //   return (
+  //     <div className="text-center py-4">
+  //       <Camera className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+  //       <p className="text-sm text-gray-600">
+  //         Camera Face ID not set up. Please register in your profile settings first.
+  //       </p>
+  //     </div>
+  //   );
+  // }
 
   if (!modelsLoaded) {
     return (
@@ -288,7 +263,7 @@ const CameraFaceIdLogin = ({ onSuccess, onError, disabled }) => {
 
   return (
     <div className="space-y-4">
-      {!isRecording ? (
+      {(!isRecording && !showCameraInterface) ? (
         /* Camera Start Button */
         <button
           onClick={startCamera}
@@ -308,7 +283,7 @@ const CameraFaceIdLogin = ({ onSuccess, onError, disabled }) => {
           )}
         </button>
       ) : (
-        /* Camera Interface - MUCH BIGGER */
+        /* Camera Interface - ALWAYS SHOW WHEN CAMERA IS STARTING */
         <div className="space-y-4">
           {/* Camera View - MUCH BIGGER */}
           <div className="relative bg-gray-900 rounded-xl overflow-hidden">
