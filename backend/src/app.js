@@ -9,6 +9,8 @@ const aiRoutes = require("./routes/ai.routes");
 const adminRoutes = require("./routes/admin.routes");
 const fraudRoutes = require("./routes/fraud.routes");
 const analyticsRoutes = require("./routes/analytics.routes");
+const faceIdRoutes = require("./routes/faceId.routes");
+const cameraFaceIdRoutes = require("./routes/cameraFaceId.routes");
 const paymentRoutes = require('./routes/payment.routes');
 
 function createApp() {
@@ -24,6 +26,8 @@ app.use("/api/ai", aiRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/fraud", fraudRoutes);
 app.use("/api/analytics", analyticsRoutes);
+app.use("/api/faceid", faceIdRoutes);
+app.use("/api/camera-faceid", cameraFaceIdRoutes);
 
   app.use('/api', routes);
 app.use('/api/payments', paymentRoutes);

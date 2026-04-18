@@ -9,12 +9,14 @@ import { apiFetch } from "../auth/api";
 import { roleToBasePath } from "../auth/role";
 import logo from "../assets/bmp-logo.svg";
 import FieldError from "../components/FieldError";
+import FaceIdLogin from "../components/FaceIdLogin";
+import CameraFaceIdLogin from "../components/CameraFaceIdLogin";
 import { useServerErrors } from "../hooks/useServerErrors";
 
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, loginWithGoogle } = useAuth();
+  const { login, loginWithGoogle, setSession } = useAuth();
   const [emailOrPhone, setEmailOrPhone] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -107,6 +109,38 @@ export default function Login() {
   }
 
   const showResend = globalError?.toLowerCase().includes("verif") || globalError?.toLowerCase().includes("email not");
+
+  // Handle Face ID authentication success
+  const handleFaceIdSuccess = async (result) => {
+    try {
+      setLoading(true);
+      clearErrors();
+      
+      console.log('Face ID authentication result:', result);
+      
+      // The result now contains user and token from server
+      if (result.success && result.user && result.token) {
+        // Use AuthContext's setSession to properly set authentication state
+        setSession(result.token, result.user);
+        
+        // Navigate to appropriate dashboard
+        console.log('Navigating to:', roleToBasePath(result.user.role));
+        navigate(roleToBasePath(result.user.role), { replace: true });
+      } else {
+        throw new Error('Invalid Face ID authentication response');
+      }
+    } catch (error) {
+      console.error('Face ID login error:', error);
+      handleError(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle Face ID authentication error
+  const handleFaceIdError = (error) => {
+    handleError(new Error(error));
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
@@ -370,6 +404,20 @@ export default function Login() {
 
                 {/* Alternative Login Methods */}
                 <div className="space-y-3">
+                  {/* Face ID Button */}
+                  <FaceIdLogin 
+                    onSuccess={handleFaceIdSuccess}
+                    onError={handleFaceIdError}
+                    disabled={loading}
+                  />
+
+                  {/* Camera Face ID Button */}
+                  <CameraFaceIdLogin 
+                    onSuccess={handleFaceIdSuccess}
+                    onError={handleFaceIdError}
+                    disabled={loading}
+                  />
+
                   {/* Google Button */}
                   <div className="flex min-h-[54px] items-center justify-center rounded-xl border border-slate-200 bg-white p-2 transition-all hover:border-blue-300 hover:shadow-md">
                     <div ref={googleBtnRef} className="flex justify-center" />

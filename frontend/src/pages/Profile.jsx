@@ -5,6 +5,7 @@ import { useTranslation } from '../i18n';
 import Footer from "../components/Footer";
 import MapPickerModal from "../components/MapPickerModal";
 import LiveLocationSection from "../components/LiveLocationSection";
+import FaceIdSettings from "../components/FaceIdSettings";
 import { useFormValidation, rules } from "../hooks/useFormValidation";
 import { useServerErrors } from "../hooks/useServerErrors";
 import FieldError from "../components/FieldError";
@@ -1023,6 +1024,26 @@ export default function Profile() {
               </button>
             </div>
           </div>
+        </div>
+
+        {/* Security & Authentication Section */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900/40 sm:p-6 lg:p-8">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-lg">
+              <Lock className="h-5 w-5 text-blue-600" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+                Security & Authentication
+              </h2>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                Manage your account security and biometric authentication
+              </p>
+            </div>
+          </div>
+          
+          {/* Face ID Settings */}
+          <FaceIdSettings />
         </div>
 
         <MapPickerModal

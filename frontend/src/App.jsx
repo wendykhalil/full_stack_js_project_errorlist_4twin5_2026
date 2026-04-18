@@ -26,6 +26,7 @@ import AdminReports from "./pages/AdminReports";
 import AdminAiInsights from "./pages/AdminAiInsights";
 import AdminUserStatisticsPage from "./pages/AdminUserStatistics";
 import AdminFraudAnalytics from "./pages/AdminFraudAnalytics";
+import FaceIdDemo from "./pages/FaceIdDemo";
 
 // REGISTER
 import RegisterChooseRole from "./pages/RegisterChooseRole";
@@ -110,6 +111,7 @@ export default function App() {
                 <Route path="/unauthorized" element={<Unauthorized />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/accessibility-demo" element={<AccessibilityDemo />} />
+                <Route path="/faceid-demo" element={<FaceIdDemo />} />
                 {/* La route AiChat a été retirée d'ici : elle est maintenant dans chaque layout protégé */}
 
                 {/* Register */}

@@ -26,6 +26,7 @@ import {
 import SimpleFooter from '../components/Footer';
 import PageShell from '../components/PageShell';
 import MapPickerModal from '../components/MapPickerModal';
+import FaceIdSettings from '../components/FaceIdSettings';
 import { useFormValidation, rules } from '../hooks/useFormValidation';
 import { useServerErrors } from '../hooks/useServerErrors';
 import FieldError from '../components/FieldError';
@@ -800,6 +801,28 @@ export default function ArtisanProfile() {
                 )}
               </button>
             </div>
+          </div>
+        </div>
+
+        {/* Security & Authentication Section */}
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white px-6 py-4">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-lg">
+                <Lock className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <h2 className="text-base font-semibold text-slate-900">
+                  Security & Authentication
+                </h2>
+                <p className="text-xs text-slate-500">
+                  Manage your account security and biometric authentication
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="p-6">
+            <FaceIdSettings />
           </div>
         </div>
       </div>
