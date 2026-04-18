@@ -29,8 +29,13 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
+from fraud_detection import FraudDetectionEngine
+
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
+
+# Initialize fraud detection engine
+fraud_engine = FraudDetectionEngine()
 
 MODEL_PATH    = os.path.join(os.path.dirname(__file__), "model.joblib")
 CLASSES_PATH  = os.path.join(os.path.dirname(__file__), "classes.json")
@@ -1075,10 +1080,422 @@ def get_meta():
     return jsonify({"meta": meta})
 
 
+@app.route("/detect-fraud-artisan", methods=["POST"])
+def detect_fraud_artisan():
+    """Detect potentially fake artisan profiles."""
+    body = request.get_json(silent=True) or {}
+    
+    try:
+        result = fraud_engine.detect_fake_artisan(body)
+        return jsonify({
+            "artisan_id": body.get("artisan_id", ""),
+            "fraud_analysis": result,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        })
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/detect-fraud-project", methods=["POST"])
+def detect_fraud_project():
+    """Detect spam or fake project postings."""
+    body = request.get_json(silent=True) or {}
+    
+    try:
+        result = fraud_engine.detect_spam_project(body)
+        return jsonify({
+            "project_id": body.get("project_id", ""),
+            "fraud_analysis": result,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        })
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/detect-fraud-pricing", methods=["POST"])
+def detect_fraud_pricing():
+    """Detect unrealistic or manipulated pricing."""
+    body = request.get_json(silent=True) or {}
+    
+    try:
+        result = fraud_engine.detect_price_manipulation(body)
+        return jsonify({
+            "quote_id": body.get("quote_id", ""),
+            "fraud_analysis": result,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        })
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/detect-fraud-behavior", methods=["POST"])
+def detect_fraud_behavior():
+    """Detect suspicious user behavior patterns."""
+    body = request.get_json(silent=True) or {}
+    
+    try:
+        result = fraud_engine.detect_suspicious_behavior(body)
+        return jsonify({
+            "user_id": body.get("user_id", ""),
+            "fraud_analysis": result,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        })
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/fraud-batch-scan", methods=["POST"])
+def fraud_batch_scan():
+    """Batch fraud detection for multiple entities."""
+    body = request.get_json(silent=True) or {}
+    scan_type = body.get("scan_type")  # 'artisans', 'projects', 'pricing', 'behavior'
+    entities = body.get("entities", [])
+    
+    if not scan_type or not entities:
+        return jsonify({"error": "Missing scan_type or entities"}), 400
+    
+    try:
+        results = []
+        
+        for entity in entities:
+            if scan_type == "artisans":
+                fraud_result = fraud_engine.detect_fake_artisan(entity)
+            elif scan_type == "projects":
+                fraud_result = fraud_engine.detect_spam_project(entity)
+            elif scan_type == "pricing":
+                fraud_result = fraud_engine.detect_price_manipulation(entity)
+            elif scan_type == "behavior":
+                fraud_result = fraud_engine.detect_suspicious_behavior(entity)
+            else:
+                fraud_result = {"error": f"Unknown scan_type: {scan_type}"}
+            
+            results.append({
+                "entity_id": entity.get("id", ""),
+                "fraud_analysis": fraud_result
+            })
+        
+        # Summary statistics
+        fraud_levels = [r["fraud_analysis"].get("fraud_level", "UNKNOWN") for r in results if "fraud_analysis" in r]
+        summary = {
+            "total_scanned": len(results),
+            "high_risk": fraud_levels.count("HIGH"),
+            "medium_risk": fraud_levels.count("MEDIUM"),
+            "low_risk": fraud_levels.count("LOW"),
+            "scan_type": scan_type,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+        return jsonify({
+            "summary": summary,
+            "results": results
+        })
+        
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+
 # ── Entry point ───────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     port = int(os.environ.get("ML_PORT", 5001))
     print(f"[ML] Starting on port {port}")
+    print(f"[ML] Fraud Detection Engine initialized")
     app.run(host="0.0.0.0", port=port, debug=False)
 
+
+# ── Fraud Detection Routes ────────────────────────────────────────────────────
+
+@app.route("/detect-fraud-artisan", methods=["POST"])
+def detect_fraud_artisan():
+    """Detect fraud in artisan profiles using ML analysis."""
+    try:
+        data = request.get_json(silent=True) or {}
+        
+        # Use the fraud detection engine
+        result = fraud_engine.detect_artisan_fraud(data)
+        
+        return jsonify({
+            "fraud_analysis": result,
+            "timestamp": datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/detect-fraud-project", methods=["POST"])
+def detect_fraud_project():
+    """Detect fraud in project listings using ML analysis."""
+    try:
+        data = request.get_json(silent=True) or {}
+        
+        # Use the fraud detection engine
+        result = fraud_engine.detect_project_fraud(data)
+        
+        return jsonify({
+            "fraud_analysis": result,
+            "timestamp": datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/fraud-batch-scan", methods=["POST"])
+def fraud_batch_scan():
+    """Perform batch fraud detection on multiple entities."""
+    try:
+        data = request.get_json(silent=True) or {}
+        scan_type = data.get("scan_type")
+        entities = data.get("entities", [])
+        
+        if not scan_type or not entities:
+            return jsonify({"error": "Missing scan_type or entities"}), 400
+        
+        results = []
+        
+        if scan_type == "artisans":
+            for artisan in entities:
+                fraud_result = fraud_engine.detect_artisan_fraud(artisan)
+                results.append({
+                    "entity_id": artisan.get("id"),
+                    "entity_type": "ARTISAN",
+                    "name": f"{artisan.get('firstName', '')} {artisan.get('lastName', '')}".strip(),
+                    "fraud_analysis": fraud_result
+                })
+        elif scan_type == "projects":
+            for project in entities:
+                fraud_result = fraud_engine.detect_project_fraud(project)
+                results.append({
+                    "entity_id": project.get("id"),
+                    "entity_type": "PROJECT",
+                    "title": project.get("title", ""),
+                    "fraud_analysis": fraud_result
+                })
+        
+        # Calculate summary statistics
+        high_risk_count = len([r for r in results if r["fraud_analysis"]["risk_level"] == "HIGH"])
+        medium_risk_count = len([r for r in results if r["fraud_analysis"]["risk_level"] == "MEDIUM"])
+        low_risk_count = len([r for r in results if r["fraud_analysis"]["risk_level"] == "LOW"])
+        
+        return jsonify({
+            "scan_type": scan_type,
+            "total_scanned": len(results),
+            "summary": {
+                "high_risk": high_risk_count,
+                "medium_risk": medium_risk_count,
+                "low_risk": low_risk_count,
+                "fraud_rate": round((high_risk_count / max(len(results), 1)) * 100, 1)
+            },
+            "results": results,
+            "timestamp": datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+# ── Smart Analytics Routes ─────────────────────────────────────────────────────
+
+@app.route("/smart-analytics", methods=["POST"])
+def smart_analytics():
+    """Generate comprehensive smart analytics for admin dashboard."""
+    try:
+        from smart_analytics import SmartAnalyticsEngine
+        
+        data = request.get_json(silent=True) or {}
+        projects_data = data.get("projects", [])
+        artisans_data = data.get("artisans", [])
+        reviews_data = data.get("reviews", [])
+        period_days = data.get("period_days", 30)
+        
+        analytics_engine = SmartAnalyticsEngine()
+        
+        # Generate comprehensive analytics
+        demand_analysis = analytics_engine.analyze_service_demand(projects_data, period_days)
+        pricing_analysis = analytics_engine.analyze_pricing_trends(projects_data)
+        performance_analysis = analytics_engine.analyze_artisan_performance(artisans_data, projects_data, reviews_data)
+        
+        return jsonify({
+            "demand_analysis": demand_analysis,
+            "pricing_analysis": pricing_analysis,
+            "performance_analysis": performance_analysis,
+            "period_days": period_days,
+            "timestamp": datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/demand-forecast", methods=["POST"])
+def demand_forecast():
+    """Generate service demand forecasts."""
+    try:
+        from smart_analytics import SmartAnalyticsEngine
+        
+        data = request.get_json(silent=True) or {}
+        projects_data = data.get("projects", [])
+        service_filter = data.get("service_filter")
+        forecast_days = data.get("forecast_days", 30)
+        
+        analytics_engine = SmartAnalyticsEngine()
+        result = analytics_engine.analyze_service_demand(projects_data, forecast_days)
+        
+        # Filter by service if specified
+        if service_filter:
+            result["demand_trends"] = [
+                trend for trend in result["demand_trends"] 
+                if trend["service"] == service_filter
+            ]
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/pricing-trends", methods=["POST"])
+def pricing_trends():
+    """Analyze pricing trends across services and regions."""
+    try:
+        from smart_analytics import SmartAnalyticsEngine
+        
+        data = request.get_json(silent=True) or {}
+        projects_data = data.get("projects", [])
+        
+        analytics_engine = SmartAnalyticsEngine()
+        result = analytics_engine.analyze_pricing_trends(projects_data)
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/artisan-clustering", methods=["POST"])
+def artisan_clustering():
+    """Perform artisan performance clustering analysis."""
+    try:
+        from smart_analytics import SmartAnalyticsEngine
+        
+        data = request.get_json(silent=True) or {}
+        artisans_data = data.get("artisans", [])
+        artisan_profiles = data.get("artisan_profiles", [])
+        projects_data = data.get("projects", [])
+        reviews_data = data.get("reviews", [])
+        
+        analytics_engine = SmartAnalyticsEngine()
+        result = analytics_engine.analyze_artisan_performance(artisans_data, projects_data, reviews_data)
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/regional-analysis", methods=["POST"])
+def regional_analysis():
+    """Analyze regional market performance and trends."""
+    try:
+        from smart_analytics import SmartAnalyticsEngine
+        
+        data = request.get_json(silent=True) or {}
+        projects_data = data.get("projects", [])
+        artisan_profiles = data.get("artisan_profiles", [])
+        
+        analytics_engine = SmartAnalyticsEngine()
+        
+        # Create a simplified regional analysis
+        regional_stats = {}
+        tunisian_regions = [
+            'Tunis', 'Ariana', 'Ben Arous', 'Manouba', 'Nabeul', 'Zaghouan',
+            'Bizerte', 'Béja', 'Jendouba', 'Kef', 'Siliana', 'Kairouan',
+            'Kasserine', 'Sidi Bouzid', 'Sousse', 'Monastir', 'Mahdia',
+            'Sfax', 'Gafsa', 'Tozeur', 'Kebili', 'Gabès', 'Medenine', 'Tataouine'
+        ]
+        
+        for region in tunisian_regions:
+            region_projects = [p for p in projects_data if region.lower() in str(p.get('region', '')).lower()]
+            region_artisans = [a for a in artisan_profiles if region.lower() in str(a.get('region', '')).lower()]
+            
+            if region_projects or region_artisans:
+                avg_budget = sum(p.get('budgetTND', 0) for p in region_projects) / max(len(region_projects), 1)
+                
+                regional_stats[region] = {
+                    "total_projects": len(region_projects),
+                    "total_artisans": len(region_artisans),
+                    "avg_project_budget": round(avg_budget, 0),
+                    "market_activity": "HIGH" if len(region_projects) > 10 else "MEDIUM" if len(region_projects) > 3 else "LOW"
+                }
+        
+        return jsonify({
+            "regional_stats": regional_stats,
+            "top_regions": sorted(regional_stats.items(), key=lambda x: x[1]["total_projects"], reverse=True)[:10],
+            "timestamp": datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/market-insights", methods=["POST"])
+def market_insights():
+    """Generate market insights and predictions."""
+    try:
+        from smart_analytics import SmartAnalyticsEngine
+        
+        data = request.get_json(silent=True) or {}
+        projects_data = data.get("projects", [])
+        artisans_data = data.get("artisans", [])
+        timeframe = data.get("timeframe", "monthly")
+        
+        analytics_engine = SmartAnalyticsEngine()
+        
+        # Generate market insights
+        total_projects = len(projects_data)
+        total_artisans = len(artisans_data)
+        
+        # Calculate growth trends (simplified)
+        current_month_projects = len([p for p in projects_data if 
+            datetime.fromisoformat(p['createdAt'].replace('Z', '+00:00')).month == datetime.now().month])
+        
+        # Market insights
+        insights = {
+            "market_size": {
+                "total_projects": total_projects,
+                "total_artisans": total_artisans,
+                "monthly_projects": current_month_projects,
+                "market_growth": "GROWING" if current_month_projects > total_projects * 0.1 else "STABLE"
+            },
+            "top_services": [],
+            "price_trends": {},
+            "predictions": {
+                "next_month_demand": round(current_month_projects * 1.1, 0),
+                "growth_rate": "8-12%",
+                "hot_services": ["Plombier", "Électricien", "Peintre"]
+            }
+        }
+        
+        # Calculate top services
+        service_counts = {}
+        for project in projects_data:
+            service = project.get('category', 'Autre')
+            service_counts[service] = service_counts.get(service, 0) + 1
+        
+        insights["top_services"] = sorted(service_counts.items(), key=lambda x: x[1], reverse=True)[:5]
+        
+        return jsonify({
+            "market_insights": insights,
+            "timeframe": timeframe,
+            "timestamp": datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500

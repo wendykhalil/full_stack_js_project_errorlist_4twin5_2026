@@ -259,11 +259,15 @@ export default function MapPickerModal({
               <div className="mt-3 space-y-2">
                 <div>
                   <div className="text-xs uppercase tracking-wide text-slate-400">Latitude</div>
-                  <div className="mt-1 font-medium text-slate-900">{selected.lat.toFixed(6)}</div>
+                  <div className="mt-1 font-medium text-slate-900">
+                    {typeof selected.lat === 'number' && !isNaN(selected.lat) ? selected.lat.toFixed(6) : '—'}
+                  </div>
                 </div>
                 <div>
                   <div className="text-xs uppercase tracking-wide text-slate-400">Longitude</div>
-                  <div className="mt-1 font-medium text-slate-900">{selected.lng.toFixed(6)}</div>
+                  <div className="mt-1 font-medium text-slate-900">
+                    {typeof selected.lng === 'number' && !isNaN(selected.lng) ? selected.lng.toFixed(6) : '—'}
+                  </div>
                 </div>
                 <div>
                   <div className="text-xs uppercase tracking-wide text-slate-400">Ville</div>
@@ -280,12 +284,17 @@ export default function MapPickerModal({
               <button type="button" onClick={onClose} className="rounded-xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100">Annuler</button>
               <button
                 type="button"
-                onClick={() => onUsePlace({
-                  latitude: Number(selected.lat.toFixed(6)),
-                  longitude: Number(selected.lng.toFixed(6)),
-                  city: selected.city,
-                  address: selected.address,
-                })}
+                onClick={() => {
+                  const lat = typeof selected.lat === 'number' && !isNaN(selected.lat) ? selected.lat : DEFAULT_CENTER.lat;
+                  const lng = typeof selected.lng === 'number' && !isNaN(selected.lng) ? selected.lng : DEFAULT_CENTER.lng;
+                  
+                  onUsePlace({
+                    latitude: Number(lat.toFixed(6)),
+                    longitude: Number(lng.toFixed(6)),
+                    city: selected.city,
+                    address: selected.address,
+                  });
+                }}
                 className="rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white hover:bg-indigo-700"
               >
                 Utiliser ce lieu

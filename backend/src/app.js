@@ -7,6 +7,8 @@ const { errorHandler } = require('./middleware/errorMiddleware');
 const productRoutes = require("./routes/products.routes");
 const aiRoutes = require("./routes/ai.routes");
 const adminRoutes = require("./routes/admin.routes");
+const fraudRoutes = require("./routes/fraud.routes");
+const analyticsRoutes = require("./routes/analytics.routes");
 const paymentRoutes = require('./routes/payment.routes');
 
 function createApp() {
@@ -20,6 +22,8 @@ function createApp() {
 
 app.use("/api/ai", aiRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/fraud", fraudRoutes);
+app.use("/api/analytics", analyticsRoutes);
 
   app.use('/api', routes);
 app.use('/api/payments', paymentRoutes);

@@ -8,10 +8,12 @@ import { SimpleModeProvider } from './context/SimpleModeContext.jsx';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <SimpleModeProvider>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
-    </SimpleModeProvider>
+    <ThemeProvider>
+      <SimpleModeProvider>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </SimpleModeProvider>
+    </ThemeProvider>
   </StrictMode>
 );

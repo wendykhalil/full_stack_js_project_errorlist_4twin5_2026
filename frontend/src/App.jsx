@@ -25,6 +25,7 @@ import AdminTransactions from "./pages/AdminTransactions";
 import AdminReports from "./pages/AdminReports";
 import AdminAiInsights from "./pages/AdminAiInsights";
 import AdminUserStatisticsPage from "./pages/AdminUserStatistics";
+import AdminFraudAnalytics from "./pages/AdminFraudAnalytics";
 
 // REGISTER
 import RegisterChooseRole from "./pages/RegisterChooseRole";
@@ -138,6 +139,7 @@ export default function App() {
                         <Route path="promo-codes" element={<AdminPromoCodes />} />
                         <Route path="reports" element={<AdminReports />} />
                         <Route path="ai-insights" element={<AdminAiInsights />} />
+                        <Route path="fraud-analytics" element={<AdminFraudAnalytics />} />
                         <Route path="user-statistics" element={<AdminUserStatisticsPage />} />
                         {/* AI Chat pour Admin */}
                         <Route path="AiChat" element={<AiChat />} />
