@@ -1,6 +1,6 @@
 import React from 'react';
 import MLPredictions from '../components/MLPredictions';
-import { Brain, TrendingUp, Clock, DollarSign } from 'lucide-react';
+import { Brain, TrendingUp, Clock, DollarSign, AlertTriangle } from 'lucide-react';
 
 const MLPredictionsPage = () => {
   return (
@@ -48,12 +48,12 @@ const MLPredictionsPage = () => {
 
           <div className="bg-white p-6 rounded-lg shadow-sm border">
             <div className="flex items-center gap-3 mb-3">
-              <TrendingUp className="text-purple-600" size={24} />
-              <h3 className="font-semibold text-gray-900">IA Avancée</h3>
+              <AlertTriangle className="text-red-600" size={24} />
+              <h3 className="font-semibold text-gray-900">Risque de Retard</h3>
             </div>
             <p className="text-gray-600 text-sm">
-              Modèles d'apprentissage automatique entraînés sur des milliers 
-              de projets pour des prédictions précises.
+              Évaluez le risque de retard de votre projet en analysant les facteurs 
+              de complexité, budget, délais et conditions météorologiques.
             </p>
           </div>
         </div>
@@ -66,7 +66,7 @@ const MLPredictionsPage = () => {
           <h3 className="text-lg font-semibold text-blue-900 mb-3">
             Comment ça marche ?
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-blue-800">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-blue-800">
             <div>
               <h4 className="font-medium mb-2">Prédiction de Durée</h4>
               <ul className="space-y-1 list-disc list-inside">
@@ -83,6 +83,15 @@ const MLPredictionsPage = () => {
                 <li>Intégrez le coût des matériaux choisis</li>
                 <li>Ajustez selon la localisation géographique</li>
                 <li>Considérez la complexité technique</li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-medium mb-2">Risque de Retard</h4>
+              <ul className="space-y-1 list-disc list-inside">
+                <li>Analyse la pression temporelle (délai vs réalité)</li>
+                <li>Évalue l'expérience de l'artisan</li>
+                <li>Considère les conditions météorologiques</li>
+                <li>Intègre les contraintes budgétaires</li>
               </ul>
             </div>
           </div>

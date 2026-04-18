@@ -39,6 +39,7 @@ META_PATH     = os.path.join(os.path.dirname(__file__), "model_meta.json")
 # New model paths
 DURATION_MODEL_PATH = os.path.join(os.path.dirname(__file__), "duration_model.joblib")
 PRICING_MODEL_PATH = os.path.join(os.path.dirname(__file__), "pricing_model.joblib")
+DELAY_MODEL_PATH = os.path.join(os.path.dirname(__file__), "delay_model.joblib")
 
 # ── Load model at startup ─────────────────────────────────────────────────────
 
@@ -71,8 +72,19 @@ def load_pricing_model():
         train_pricing_model(regen=True)
     return joblib.load(PRICING_MODEL_PATH)
 
+def load_delay_model():
+    if not os.path.exists(DELAY_MODEL_PATH):
+        print("[ML] delay_model.joblib not found — using fallback delay risk assessment")
+        return None  # Return None to indicate fallback mode
+    try:
+        return joblib.load(DELAY_MODEL_PATH)
+    except Exception as e:
+        print(f"[ML] Error loading delay model: {e} — using fallback")
+        return None
+
 duration_pipeline = load_duration_model()
 pricing_pipeline = load_pricing_model()
+delay_pipeline = load_delay_model()  # Can be None
 
 # ── Recommendation messages ───────────────────────────────────────────────────
 
@@ -248,6 +260,352 @@ def _validate_features(data: dict):
         return None, "; ".join(errors)
 
     return np.array([[price, stock, orders, rating]], dtype=float), None
+
+def _validate_delay_features(data: dict):
+    """Validate delay risk prediction input."""
+    errors, values = [], []
+    
+    # Mappings
+    project_type_map = {'house': 0, 'renovation': 1, 'commercial': 2, 'landscaping': 3}
+    location_map = {'rural': 0, 'suburban': 1, 'urban': 2}
+    materials_map = {'basic': 0, 'standard': 1, 'premium': 2}
+    season_map = {'winter': 0, 'spring': 1, 'summer': 2, 'autumn': 3}
+    
+    # Project type
+    project_type = data.get("project_type", "").lower()
+    if project_type not in project_type_map:
+        errors.append(f"project_type must be one of: {list(project_type_map.keys())}")
+    else:
+        values.append(project_type_map[project_type])
+    
+    # Numeric fields
+    for field in ("size_sqm", "num_workers", "budget_tnd", "requested_duration", "artisan_experience"):
+        raw = data.get(field)
+        if raw is None:
+            errors.append(f"Missing field: {field}")
+            continue
+        try:
+            v = float(raw)
+            values.append(v)
+        except (TypeError, ValueError):
+            errors.append(f"Field '{field}' must be numeric, got: {raw!r}")
+            continue
+    
+    # Location
+    location = data.get("location", "").lower()
+    if location not in location_map:
+        errors.append(f"location must be one of: {list(location_map.keys())}")
+    else:
+        values.append(location_map[location])
+    
+    # Materials
+    materials = data.get("materials", "").lower()
+    if materials not in materials_map:
+        errors.append(f"materials must be one of: {list(materials_map.keys())}")
+    else:
+        values.append(materials_map[materials])
+    
+    # Complexity
+    complexity = data.get("complexity")
+    if complexity is None:
+        errors.append("Missing field: complexity")
+    else:
+        try:
+            complexity = float(complexity)
+            values.append(complexity)
+        except (TypeError, ValueError):
+            errors.append(f"complexity must be numeric, got: {complexity!r}")
+    
+    # Season (optional, default to summer)
+    season = data.get("season", "summer").lower()
+    if season not in season_map:
+        season = "summer"  # default
+    values.append(season_map[season])
+    
+    # Weather risk (optional, calculated from season)
+    weather_risk = 0.8 if season == "winter" else 0.3 if season == "autumn" else 0.1
+    values.append(weather_risk)
+    
+    if errors:
+        return None, "; ".join(errors)
+    
+    # Validate ranges
+    project_type_encoded, size_sqm, num_workers, budget_tnd, requested_duration, artisan_experience, location_encoded, materials_encoded, complexity, season_encoded, weather_risk = values
+    
+    if size_sqm <= 0: errors.append("size_sqm must be > 0")
+    if num_workers <= 0: errors.append("num_workers must be > 0")
+    if budget_tnd <= 0: errors.append("budget_tnd must be > 0")
+    if requested_duration <= 0: errors.append("requested_duration must be > 0")
+    if artisan_experience < 0: errors.append("artisan_experience must be >= 0")
+    if not (1 <= complexity <= 5): errors.append("complexity must be between 1 and 5")
+    
+    if errors:
+        return None, "; ".join(errors)
+    
+    # Return features in the exact order expected by the model
+    return np.array([[
+        project_type_encoded, size_sqm, num_workers, location_encoded, 
+        materials_encoded, complexity, budget_tnd, requested_duration, 
+        artisan_experience, season_encoded, weather_risk
+    ]], dtype=float), None
+
+
+def _fallback_delay_risk_assessment(data: dict):
+    """Enhanced delay risk assessment with improved accuracy and more factors."""
+    
+    # Extract key parameters
+    requested_duration = float(data.get("requested_duration", 30))
+    size_sqm = float(data.get("size_sqm", 100))
+    complexity = float(data.get("complexity", 3))
+    artisan_experience = float(data.get("artisan_experience", 3))
+    num_workers = int(data.get("num_workers", 3))
+    season = data.get("season", "summer")
+    budget_tnd = float(data.get("budget_tnd", 50000))
+    project_type = data.get("project_type", "house")
+    location = data.get("location", "suburban")
+    materials = data.get("materials", "standard")
+    
+    # Enhanced realistic duration calculation with project-specific factors
+    import math
+    
+    # Base duration calculation per project type (days per sqm)
+    base_rates = {
+        'house': 0.35,      # New construction is complex
+        'renovation': 0.25,  # Renovation can be faster but unpredictable
+        'commercial': 0.45,  # Commercial projects are more complex
+        'landscaping': 0.15  # Outdoor work is generally faster
+    }
+    
+    base_duration = size_sqm * base_rates.get(project_type, 0.3)
+    
+    # Complexity multiplier (non-linear scaling)
+    complexity_multiplier = 0.6 + (complexity ** 1.5) / 10
+    base_duration *= complexity_multiplier
+    
+    # Materials impact on duration
+    material_factors = {
+        'basic': 0.85,     # Basic materials are faster to work with
+        'standard': 1.0,   # Standard baseline
+        'premium': 1.25    # Premium materials need more care/time
+    }
+    base_duration *= material_factors.get(materials, 1.0)
+    
+    # Location impact (logistics, access, regulations)
+    location_factors = {
+        'rural': 1.15,     # Harder access, fewer suppliers
+        'suburban': 1.0,   # Baseline
+        'urban': 0.95      # Better access but more regulations
+    }
+    base_duration *= location_factors.get(location, 1.0)
+    
+    # Team size efficiency (with diminishing returns and coordination overhead)
+    if num_workers <= 2:
+        team_efficiency = 1.0
+    elif num_workers <= 4:
+        team_efficiency = 0.75  # Good team size
+    elif num_workers <= 6:
+        team_efficiency = 0.65  # Still efficient
+    else:
+        team_efficiency = 0.7   # Coordination overhead kicks in
+    
+    base_duration *= team_efficiency
+    
+    # Experience factor (exponential improvement with experience)
+    experience_factor = max(0.6, 1.3 - (artisan_experience ** 0.7) / 8)
+    base_duration *= experience_factor
+    
+    # Seasonal adjustments
+    seasonal_factors = {
+        'winter': 1.2,   # Weather delays, shorter days
+        'autumn': 1.1,   # Some weather issues
+        'spring': 0.95,  # Good working conditions
+        'summer': 1.0    # Baseline but can be hot
+    }
+    base_duration *= seasonal_factors.get(season, 1.0)
+    
+    realistic_duration = max(3, int(base_duration))
+    
+    # Advanced risk scoring with weighted factors
+    risk_score = 0
+    risk_factors = []
+    confidence_adjustments = []
+    
+    # 1. Timeline Pressure Analysis (35% weight)
+    timeline_ratio = requested_duration / realistic_duration
+    if timeline_ratio < 0.6:
+        risk_score += 0.45
+        risk_factors.append("Extremely tight deadline - project needs 67% more time")
+        confidence_adjustments.append(0.15)
+    elif timeline_ratio < 0.75:
+        risk_score += 0.35
+        risk_factors.append("Very tight deadline - project needs 33% more time")
+        confidence_adjustments.append(0.1)
+    elif timeline_ratio < 0.9:
+        risk_score += 0.2
+        risk_factors.append("Tight deadline - limited buffer for issues")
+        confidence_adjustments.append(0.05)
+    elif timeline_ratio > 1.5:
+        risk_score -= 0.1  # Generous timeline reduces risk
+        confidence_adjustments.append(0.05)
+    
+    # 2. Experience & Skill Analysis (25% weight)
+    if artisan_experience < 1:
+        risk_score += 0.3
+        risk_factors.append("Novice artisan - high learning curve risk")
+        confidence_adjustments.append(0.1)
+    elif artisan_experience < 2:
+        risk_score += 0.2
+        risk_factors.append("Limited experience - may face unexpected challenges")
+        confidence_adjustments.append(0.05)
+    elif artisan_experience < 5:
+        risk_score += 0.1
+        risk_factors.append("Moderate experience - some risk of delays")
+    elif artisan_experience > 10:
+        risk_score -= 0.05  # Very experienced reduces risk
+        confidence_adjustments.append(0.05)
+    
+    # 3. Project Complexity Analysis (20% weight)
+    if complexity >= 4.5:
+        risk_score += 0.25
+        risk_factors.append("Very high complexity - many potential complications")
+        confidence_adjustments.append(0.1)
+    elif complexity >= 3.5:
+        risk_score += 0.15
+        risk_factors.append("High complexity - requires careful planning")
+        confidence_adjustments.append(0.05)
+    elif complexity <= 1.5:
+        risk_score -= 0.05  # Simple projects have lower risk
+    
+    # 4. Resource & Team Analysis (15% weight)
+    optimal_team_size = max(2, min(6, int(size_sqm / 50)))  # Rough optimal team calculation
+    team_size_ratio = num_workers / optimal_team_size
+    
+    if team_size_ratio < 0.6:
+        risk_score += 0.2
+        risk_factors.append("Understaffed team - workload may cause delays")
+        confidence_adjustments.append(0.05)
+    elif team_size_ratio > 2:
+        risk_score += 0.1
+        risk_factors.append("Oversized team - coordination challenges possible")
+    
+    # 5. Environmental & External Factors (15% weight)
+    if season == "winter":
+        risk_score += 0.15
+        risk_factors.append("Winter season - weather delays likely")
+        confidence_adjustments.append(0.05)
+    elif season == "autumn":
+        risk_score += 0.08
+        risk_factors.append("Autumn season - some weather risk")
+    
+    if location == "rural":
+        risk_score += 0.08
+        risk_factors.append("Rural location - supply chain and access challenges")
+    
+    # 6. Budget Pressure Analysis (10% weight)
+    # Enhanced cost estimation based on Tunisian market rates
+    cost_per_sqm_base = {
+        'house': 400,        # TND per sqm for house construction
+        'renovation': 250,   # TND per sqm for renovation
+        'commercial': 500,   # TND per sqm for commercial
+        'landscaping': 150   # TND per sqm for landscaping
+    }
+    
+    base_cost = size_sqm * cost_per_sqm_base.get(project_type, 350)
+    
+    # Adjust for complexity and materials
+    complexity_cost_multiplier = 0.7 + (complexity / 5) * 0.8
+    material_cost_multipliers = {'basic': 0.8, 'standard': 1.0, 'premium': 1.4}
+    
+    estimated_cost = base_cost * complexity_cost_multiplier * material_cost_multipliers.get(materials, 1.0)
+    
+    budget_ratio = budget_tnd / estimated_cost
+    
+    if budget_ratio < 0.7:
+        risk_score += 0.2
+        risk_factors.append("Severely underfunded - quality/speed compromises likely")
+        confidence_adjustments.append(0.1)
+    elif budget_ratio < 0.85:
+        risk_score += 0.12
+        risk_factors.append("Tight budget - may affect material quality or workforce")
+        confidence_adjustments.append(0.05)
+    elif budget_ratio < 0.95:
+        risk_score += 0.05
+        risk_factors.append("Limited budget buffer - little room for cost overruns")
+    
+    # 7. Project Type Specific Risks
+    type_specific_risks = {
+        'renovation': 0.1,   # Hidden issues often discovered
+        'commercial': 0.08,  # More regulations and inspections
+        'house': 0.05,      # Generally predictable
+        'landscaping': 0.03  # Weather dependent but simpler
+    }
+    risk_score += type_specific_risks.get(project_type, 0.05)
+    
+    if project_type == 'renovation':
+        risk_factors.append("Renovation project - hidden issues may be discovered")
+    elif project_type == 'commercial':
+        risk_factors.append("Commercial project - additional regulations and inspections")
+    
+    # 8. Size-based risk adjustments
+    if size_sqm > 300:
+        risk_score += 0.08
+        risk_factors.append("Large project - coordination and logistics complexity")
+    elif size_sqm < 50:
+        risk_score += 0.05
+        risk_factors.append("Small project - efficiency challenges")
+    
+    # Normalize risk score
+    risk_score = max(0, min(1, risk_score))
+    
+    # Determine risk level with improved thresholds
+    if risk_score > 0.65:
+        delay_risk = "HIGH"
+        base_confidence = 0.82
+    elif risk_score > 0.4:
+        delay_risk = "MEDIUM"
+        base_confidence = 0.78
+    else:
+        delay_risk = "LOW"
+        base_confidence = 0.75
+    
+    # Adjust confidence based on data quality and risk factors
+    confidence_adjustment = sum(confidence_adjustments) / len(confidence_adjustments) if confidence_adjustments else 0
+    final_confidence = min(0.95, base_confidence + confidence_adjustment)
+    
+    # Create more nuanced probability distribution
+    if delay_risk == "HIGH":
+        probabilities = {
+            "LOW": max(0.05, 0.15 - risk_score * 0.1),
+            "MEDIUM": max(0.15, 0.35 - risk_score * 0.2),
+            "HIGH": min(0.8, 0.5 + risk_score * 0.3)
+        }
+    elif delay_risk == "MEDIUM":
+        probabilities = {
+            "LOW": max(0.1, 0.4 - risk_score * 0.3),
+            "MEDIUM": min(0.7, 0.4 + risk_score * 0.3),
+            "HIGH": max(0.1, risk_score * 0.4)
+        }
+    else:
+        probabilities = {
+            "LOW": min(0.8, 0.6 + (1 - risk_score) * 0.2),
+            "MEDIUM": max(0.15, risk_score * 0.5),
+            "HIGH": max(0.05, risk_score * 0.2)
+        }
+    
+    # Normalize probabilities to sum to 1
+    total_prob = sum(probabilities.values())
+    probabilities = {k: round(v / total_prob, 3) for k, v in probabilities.items()}
+    
+    # Add insights about the realistic timeline
+    if realistic_duration != requested_duration:
+        if realistic_duration > requested_duration:
+            days_diff = realistic_duration - requested_duration
+            risk_factors.append(f"Realistic timeline: {realistic_duration} days (+{days_diff} days needed)")
+        else:
+            days_diff = requested_duration - realistic_duration
+            risk_factors.append(f"Timeline has {days_diff} days buffer - good planning")
+    
+    return delay_risk, final_confidence, probabilities, risk_factors
 
 
 def _predict_one(features_array):
@@ -531,6 +889,178 @@ def predict_pricing():
             "estimated_cost_euros": estimated_cost,
             "message": f"Estimated project cost: €{estimated_cost:,}"
         })
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/predict-delay-risk", methods=["POST"])
+def predict_delay_risk():
+    """Predict project delay risk."""
+    body = request.get_json(silent=True) or {}
+    features, err = _validate_delay_features(body)
+    if err:
+        return jsonify({"error": err}), 400
+    
+    try:
+        # Use ML model if available, otherwise use fallback
+        if delay_pipeline is not None:
+            delay_risk = delay_pipeline.predict(features)[0]
+            delay_proba = delay_pipeline.predict_proba(features)[0]
+            
+            # Get class probabilities
+            classes = delay_pipeline.classes_
+            proba_dict = {cls: float(round(p, 3)) for cls, p in zip(classes, delay_proba)}
+            confidence = float(round(delay_proba.max(), 3))
+            
+            # Generate risk explanation using ML model results
+            risk_factors = []
+            
+            # Analyze key risk factors from input
+            requested_duration = body.get("requested_duration", 0)
+            budget_tnd = body.get("budget_tnd", 0)
+            size_sqm = body.get("size_sqm", 0)
+            artisan_experience = body.get("artisan_experience", 0)
+            complexity = body.get("complexity", 1)
+            num_workers = body.get("num_workers", 1)
+            
+            # Estimate realistic duration for comparison
+            estimated_realistic = size_sqm * 0.3 * (complexity / 3.0)
+            if requested_duration < estimated_realistic * 0.8:
+                risk_factors.append("Deadline too short for project size")
+            
+            if artisan_experience < 2:
+                risk_factors.append("Limited artisan experience")
+            
+            if complexity > 4:
+                risk_factors.append("High project complexity")
+            
+            if num_workers < 2:
+                risk_factors.append("Small team size")
+            
+            season = body.get("season", "summer")
+            if season in ["winter", "autumn"]:
+                risk_factors.append("Weather conditions may cause delays")
+        else:
+            # Use fallback assessment
+            delay_risk, confidence, proba_dict, risk_factors = _fallback_delay_risk_assessment(body)
+        
+        # Generate recommendation
+        recommendations = {
+            "HIGH": "Consider extending deadline, adding more workers, or simplifying scope",
+            "MEDIUM": "Monitor progress closely and have contingency plans ready", 
+            "LOW": "Project timeline appears realistic with current parameters"
+        }
+        
+        return jsonify({
+            "project_type": body.get("project_type", ""),
+            "size_sqm": body.get("size_sqm"),
+            "num_workers": body.get("num_workers"),
+            "budget_tnd": body.get("budget_tnd"),
+            "requested_duration": body.get("requested_duration"),
+            "artisan_experience": body.get("artisan_experience"),
+            "complexity": body.get("complexity"),
+            "delay_risk": delay_risk,
+            "confidence": confidence,
+            "probabilities": proba_dict,
+            "risk_factors": risk_factors,
+            "recommendation": recommendations.get(delay_risk, "Monitor project progress"),
+            "message": f"Delay risk assessment: {delay_risk} ({confidence*100:.1f}% confidence)"
+        })
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/predict-complete", methods=["POST"])
+def predict_complete():
+    """Complete project prediction: duration, cost, and delay risk."""
+    body = request.get_json(silent=True) or {}
+    
+    try:
+        # Validate common fields
+        project_type = body.get("project_type", "").lower()
+        size_sqm = body.get("size_sqm")
+        complexity = body.get("complexity")
+        materials = body.get("materials", "").lower()
+        location = body.get("location", "").lower()
+        
+        if not all([project_type, size_sqm, complexity, materials, location]):
+            return jsonify({"error": "Missing required fields: project_type, size_sqm, complexity, materials, location"}), 400
+        
+        results = {}
+        
+        # Duration prediction
+        duration_data = {
+            "project_type": project_type,
+            "size_sqm": size_sqm,
+            "num_workers": body.get("num_workers", 3),
+            "location": location,
+            "materials": materials,
+            "complexity": complexity
+        }
+        duration_features, err = _validate_duration_features(duration_data)
+        if not err:
+            duration_days = duration_pipeline.predict(duration_features)[0]
+            results["duration"] = {
+                "estimated_days": max(1, round(duration_days)),
+                "message": f"Estimated duration: {max(1, round(duration_days))} days"
+            }
+        
+        # Pricing prediction
+        pricing_data = {
+            "project_type": project_type,
+            "surface_area": size_sqm,
+            "materials": materials,
+            "location": location,
+            "complexity": complexity
+        }
+        pricing_features, err = _validate_pricing_features(pricing_data)
+        if not err:
+            estimated_cost = pricing_pipeline.predict(pricing_features)[0]
+            results["pricing"] = {
+                "estimated_cost_tnd": max(1000, round(estimated_cost * 3.3)),  # Convert EUR to TND
+                "estimated_cost_eur": max(1000, round(estimated_cost)),
+                "message": f"Estimated cost: {max(1000, round(estimated_cost * 3.3)):,} TND"
+            }
+        
+        # Delay risk prediction
+        delay_data = {
+            "project_type": project_type,
+            "size_sqm": size_sqm,
+            "num_workers": body.get("num_workers", 3),
+            "location": location,
+            "materials": materials,
+            "complexity": complexity,
+            "budget_tnd": body.get("budget_tnd", results.get("pricing", {}).get("estimated_cost_tnd", 50000)),
+            "requested_duration": body.get("requested_duration", results.get("duration", {}).get("estimated_days", 30)),
+            "artisan_experience": body.get("artisan_experience", 3),
+            "season": body.get("season", "summer")
+        }
+        delay_features, err = _validate_delay_features(delay_data)
+        if not err:
+            delay_risk = delay_pipeline.predict(delay_features)[0]
+            delay_proba = delay_pipeline.predict_proba(delay_features)[0]
+            confidence = float(round(delay_proba.max(), 3))
+            
+            results["delay_risk"] = {
+                "risk_level": delay_risk,
+                "confidence": confidence,
+                "message": f"Delay risk: {delay_risk} ({confidence*100:.1f}% confidence)"
+            }
+        
+        return jsonify({
+            "project_summary": {
+                "project_type": project_type,
+                "size_sqm": size_sqm,
+                "complexity": complexity,
+                "materials": materials,
+                "location": location
+            },
+            "predictions": results,
+            "message": "Complete project analysis completed successfully"
+        })
+        
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500

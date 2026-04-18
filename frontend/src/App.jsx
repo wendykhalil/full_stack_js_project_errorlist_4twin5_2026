@@ -17,6 +17,7 @@ import { Roles } from "./auth/role";
 
 import AdminLayout from "./layouts/AdminLayout";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminArtisanDashboard from "./pages/AdminArtisanDashboard";
 import AdminUsers from "./pages/AdminUsers";
 import AdminActivityLogs from "./pages/AdminActivityLogs";
 import AdminPromoCodes from "./pages/AdminPromoCodes";
@@ -128,6 +129,7 @@ export default function App() {
                 <Route element={<ProtectedRoute allowedRoles={[Roles.ADMIN]} />}>
                     <Route path="/admin" element={<AdminLayout />}>
                         <Route index element={<AdminDashboard />} />
+                        <Route path="artisans" element={<AdminArtisanDashboard />} />
                         <Route path="profile" element={<Profile />} />
                         <Route path="accessibility" element={<AccessibilitySettings />} />
                         <Route path="users" element={<AdminUsers />} />

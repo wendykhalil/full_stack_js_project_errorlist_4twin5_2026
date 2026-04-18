@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, DollarSign, Calculator, AlertCircle, FolderOpen, Plus } from 'lucide-react';
+import { Clock, DollarSign, Calculator, AlertCircle, FolderOpen, Plus, AlertTriangle, TrendingUp } from 'lucide-react';
 
 const MLPredictions = () => {
   const [activeTab, setActiveTab] = useState('duration');
@@ -29,6 +29,20 @@ const MLPredictions = () => {
     complexity: '3'
   });
 
+  // Delay risk prediction form state
+  const [delayForm, setDelayForm] = useState({
+    project_type: 'house',
+    size_sqm: '',
+    num_workers: '',
+    location: 'suburban',
+    materials: 'standard',
+    complexity: '3',
+    budget_tnd: '',
+    requested_duration: '',
+    artisan_experience: '3',
+    season: 'summer'
+  });
+
   const projectTypes = [
     { value: 'house', label: 'Maison' },
     { value: 'renovation', label: 'Rénovation' },
@@ -54,6 +68,23 @@ const MLPredictions = () => {
     { value: '3', label: '3 - Moyen' },
     { value: '4', label: '4 - Complexe' },
     { value: '5', label: '5 - Très complexe' }
+  ];
+
+  const seasons = [
+    { value: 'spring', label: 'Printemps' },
+    { value: 'summer', label: 'Été' },
+    { value: 'autumn', label: 'Automne' },
+    { value: 'winter', label: 'Hiver' }
+  ];
+
+  const experienceLevels = [
+    { value: '0.5', label: '6 mois' },
+    { value: '1', label: '1 an' },
+    { value: '2', label: '2 ans' },
+    { value: '3', label: '3 ans' },
+    { value: '5', label: '5 ans' },
+    { value: '8', label: '8 ans' },
+    { value: '10', label: '10+ ans' }
   ];
 
   // Load existing projects on component mount
@@ -254,6 +285,20 @@ const MLPredictions = () => {
         complexity: complexity
       };
 
+      const delayData = {
+        project_type: projectTypeMap[projectCategory] || 'house',
+        size_sqm: project.surfaceM2 || '',
+        num_workers: estimatedWorkers,
+        location: locationCategory,
+        materials: materialsQuality,
+        complexity: complexity,
+        budget_tnd: budget,
+        requested_duration: project.endDate && project.startDate ? 
+          Math.ceil((new Date(project.endDate) - new Date(project.startDate)) / (1000 * 60 * 60 * 24)) : '',
+        artisan_experience: '3', // default
+        season: 'summer' // default
+      };
+
       console.log('🎯 Smart mapping results:');
       console.log('- Project:', project.title);
       console.log('- Category:', projectCategory, '→', projectTypeMap[projectCategory] || 'house');
@@ -263,9 +308,11 @@ const MLPredictions = () => {
       console.log('- Final complexity:', complexity);
       console.log('- Duration form:', formData);
       console.log('- Pricing form:', pricingData);
+      console.log('- Delay form:', delayData);
 
       setDurationForm(formData);
       setPricingForm(pricingData);
+      setDelayForm(delayData);
       setSelectedProject(projectId);
     }
   };
@@ -335,12 +382,50 @@ const MLPredictions = () => {
     }
   };
 
+  const predictDelayRisk = async () => {
+    setLoading(true);
+    setError(null);
+    setResult(null);
+
+    try {
+      const response = await fetch('http://localhost:5001/predict-delay-risk', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...delayForm,
+          size_sqm: parseFloat(delayForm.size_sqm),
+          num_workers: parseInt(delayForm.num_workers),
+          complexity: parseInt(delayForm.complexity),
+          budget_tnd: parseFloat(delayForm.budget_tnd),
+          requested_duration: parseInt(delayForm.requested_duration),
+          artisan_experience: parseFloat(delayForm.artisan_experience)
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        setResult(data);
+      } else {
+        setError(data.error || 'Erreur lors de la prédiction');
+      }
+    } catch (err) {
+      setError('Erreur de connexion au service ML');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (activeTab === 'duration') {
       predictDuration();
-    } else {
+    } else if (activeTab === 'pricing') {
       predictPricing();
+    } else if (activeTab === 'delay') {
+      predictDelayRisk();
     }
   };
 
@@ -452,6 +537,21 @@ const MLPredictions = () => {
           <DollarSign size={20} />
           Prédiction Prix
         </button>
+        <button
+          className={`px-6 py-3 font-medium flex items-center gap-2 ${
+            activeTab === 'delay'
+              ? 'border-b-2 border-blue-500 text-blue-600'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+          onClick={() => {
+            setActiveTab('delay');
+            setResult(null);
+            setError(null);
+          }}
+        >
+          <AlertTriangle size={20} />
+          Risque de Retard
+        </button>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -553,7 +653,7 @@ const MLPredictions = () => {
               </select>
             </div>
           </div>
-        ) : (
+        ) : activeTab === 'pricing' ? (
           // Pricing Form
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -635,6 +735,166 @@ const MLPredictions = () => {
               </select>
             </div>
           </div>
+        ) : (
+          // Delay Risk Form
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Type de projet
+              </label>
+              <select
+                value={delayForm.project_type}
+                onChange={(e) => setDelayForm({...delayForm, project_type: e.target.value})}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              >
+                {projectTypes.map(type => (
+                  <option key={type.value} value={type.value}>{type.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Taille (m²)
+              </label>
+              <input
+                type="number"
+                value={delayForm.size_sqm}
+                onChange={(e) => setDelayForm({...delayForm, size_sqm: e.target.value})}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="150"
+                min="1"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nombre d'ouvriers
+              </label>
+              <input
+                type="number"
+                value={delayForm.num_workers}
+                onChange={(e) => setDelayForm({...delayForm, num_workers: e.target.value})}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="4"
+                min="1"
+                max="20"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Budget (TND)
+              </label>
+              <input
+                type="number"
+                value={delayForm.budget_tnd}
+                onChange={(e) => setDelayForm({...delayForm, budget_tnd: e.target.value})}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="50000"
+                min="1000"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Durée demandée (jours)
+              </label>
+              <input
+                type="number"
+                value={delayForm.requested_duration}
+                onChange={(e) => setDelayForm({...delayForm, requested_duration: e.target.value})}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="30"
+                min="1"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Expérience artisan
+              </label>
+              <select
+                value={delayForm.artisan_experience}
+                onChange={(e) => setDelayForm({...delayForm, artisan_experience: e.target.value})}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              >
+                {experienceLevels.map(level => (
+                  <option key={level.value} value={level.value}>{level.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Localisation
+              </label>
+              <select
+                value={delayForm.location}
+                onChange={(e) => setDelayForm({...delayForm, location: e.target.value})}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              >
+                {locations.map(location => (
+                  <option key={location.value} value={location.value}>{location.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Saison
+              </label>
+              <select
+                value={delayForm.season}
+                onChange={(e) => setDelayForm({...delayForm, season: e.target.value})}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              >
+                {seasons.map(season => (
+                  <option key={season.value} value={season.value}>{season.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Matériaux
+              </label>
+              <select
+                value={delayForm.materials}
+                onChange={(e) => setDelayForm({...delayForm, materials: e.target.value})}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              >
+                {materials.map(material => (
+                  <option key={material.value} value={material.value}>{material.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Complexité
+              </label>
+              <select
+                value={delayForm.complexity}
+                onChange={(e) => setDelayForm({...delayForm, complexity: e.target.value})}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              >
+                {complexityLevels.map(level => (
+                  <option key={level.value} value={level.value}>{level.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
         )}
 
         <button
@@ -643,7 +903,7 @@ const MLPredictions = () => {
           className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           <Calculator size={20} />
-          {loading ? 'Calcul en cours...' : `Prédire ${activeTab === 'duration' ? 'la durée' : 'le prix'}`}
+          {loading ? 'Calcul en cours...' : `Prédire ${activeTab === 'duration' ? 'la durée' : activeTab === 'pricing' ? 'le prix' : 'le risque de retard'}`}
         </button>
       </form>
 
@@ -665,7 +925,7 @@ const MLPredictions = () => {
                 </p>
               </div>
             </div>
-          ) : (
+          ) : activeTab === 'pricing' ? (
             <div className="flex items-center gap-3">
               <DollarSign className="text-green-600" size={24} />
               <div>
@@ -676,6 +936,65 @@ const MLPredictions = () => {
                   Coût estimé pour ce projet (Dinar Tunisien)
                 </p>
               </div>
+            </div>
+          ) : (
+            // Delay Risk Results
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <AlertTriangle className={`${
+                  result.delay_risk === 'HIGH' ? 'text-red-600' : 
+                  result.delay_risk === 'MEDIUM' ? 'text-yellow-600' : 'text-green-600'
+                }`} size={24} />
+                <div>
+                  <p className={`text-2xl font-bold ${
+                    result.delay_risk === 'HIGH' ? 'text-red-800' : 
+                    result.delay_risk === 'MEDIUM' ? 'text-yellow-800' : 'text-green-800'
+                  }`}>
+                    Risque {result.delay_risk === 'HIGH' ? 'ÉLEVÉ' : result.delay_risk === 'MEDIUM' ? 'MOYEN' : 'FAIBLE'}
+                  </p>
+                  <p className="text-gray-600">
+                    Confiance: {(result.confidence * 100).toFixed(1)}%
+                  </p>
+                </div>
+              </div>
+              
+              {result.risk_factors && result.risk_factors.length > 0 && (
+                <div className="mt-4">
+                  <h4 className="font-medium text-gray-800 mb-2">Facteurs de risque identifiés:</h4>
+                  <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
+                    {result.risk_factors.map((factor, index) => (
+                      <li key={index}>{factor}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {result.recommendation && (
+                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <h4 className="font-medium text-blue-800 mb-1">Recommandation:</h4>
+                  <p className="text-sm text-blue-700">{result.recommendation}</p>
+                </div>
+              )}
+              
+              {result.probabilities && (
+                <div className="mt-4">
+                  <h4 className="font-medium text-gray-800 mb-2">Probabilités détaillées:</h4>
+                  <div className="grid grid-cols-3 gap-2 text-sm">
+                    <div className="text-center p-2 bg-green-100 rounded">
+                      <div className="font-medium text-green-800">FAIBLE</div>
+                      <div className="text-green-600">{(result.probabilities.LOW * 100).toFixed(1)}%</div>
+                    </div>
+                    <div className="text-center p-2 bg-yellow-100 rounded">
+                      <div className="font-medium text-yellow-800">MOYEN</div>
+                      <div className="text-yellow-600">{(result.probabilities.MEDIUM * 100).toFixed(1)}%</div>
+                    </div>
+                    <div className="text-center p-2 bg-red-100 rounded">
+                      <div className="font-medium text-red-800">ÉLEVÉ</div>
+                      <div className="text-red-600">{(result.probabilities.HIGH * 100).toFixed(1)}%</div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
