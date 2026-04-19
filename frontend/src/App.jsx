@@ -57,6 +57,7 @@ import ArtisanWeather from './pages/ArtisanWeather';
 import ArtisanAvailability from './pages/ArtisanAvailability';
 import ArtisanServiceRequests from './pages/ArtisanServiceRequests';
 import PrescripteurServiceRequests from './pages/PrescripteurServiceRequests';
+import Meetings from './pages/Meetings';
 
 // PRESCRIPTEUR
 import PrescripteurLayout from "./layouts/PrescripteurLayout";
@@ -175,6 +176,7 @@ export default function App() {
                         <Route path="weather" element={<ArtisanWeather />} />
                         <Route path="availability" element={<ArtisanAvailability />} />
                         <Route path="service-requests" element={<ArtisanServiceRequests />} />
+                        <Route path="meetings" element={<Meetings />} />
                         <Route path="ml-predictions" element={<MLPredictionsPage />} />
                         <Route path="messages" element={<RequireSubscription><Messages /></RequireSubscription>} />
                         <Route path="messages/:userId" element={<RequireSubscription><Conversation /></RequireSubscription>} />
@@ -195,6 +197,7 @@ export default function App() {
                         <Route path="product/:id" element={<PrescripteurProductDetails />} />
                         <Route path="projects" element={<PrescripteurProjects />} />
                         <Route path="service-requests" element={<PrescripteurServiceRequests />} />
+                        <Route path="meetings" element={<Meetings />} />
                         <Route path="ml-predictions" element={<MLPredictionsPage />} />
                         <Route path="messages" element={<Messages />} />
                         <Route path="messages/:userId" element={<Conversation />} />

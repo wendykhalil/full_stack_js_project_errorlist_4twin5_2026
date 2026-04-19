@@ -1,7 +1,9 @@
+
 const authService = require('./auth.service');
 const AuthLog = require('../../models/AuthLog');
 const ActivityLog = require('../../models/ActivityLog');
 const { notify } = require('../../utils/notify');
+const { notifyAdmins } = require('../../socket');
 const { lookupIpGeo, isPrivateOrLocal } = require('../../utils/ipGeo');
 const { uploadBufferToCloudinary } = require('../../config/cloudinary');
 
@@ -45,15 +47,11 @@ async function notifyAdminAboutActivity({ req, userId, action, details, sendEmai
   try {
     const { ip, userAgent, country: clientCountry, countryCode: clientCountryCode } = getRequestMeta(req);
     const geo = await lookupIpGeo(ip, { country: clientCountry, countryCode: clientCountryCode });
-    await notify({
-      toAdmins: true,
-      payload: {
-        type: 'activity',
-        title: `Activity: ${action}`,
-        message: `User performed: ${action}`,
-        meta: { action, details, ip, country: geo.country || clientCountry || '', countryCode: geo.countryCode || clientCountryCode || '', userAgent },
-      },
-      sendEmail,
+    notifyAdmins({
+      type: 'activity',
+      title: `Activity: ${action}`,
+      message: `User performed: ${action}`,
+      meta: { action, details, ip, country: geo.country || clientCountry || '', countryCode: geo.countryCode || clientCountryCode || '', userAgent },
     });
   } catch (_) {}
 }

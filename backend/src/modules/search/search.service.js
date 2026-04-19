@@ -1,11 +1,54 @@
 const ArtisanProfile = require('../../models/ArtisanProfile');
 const User = require('../../models/User');
+const Review = require('../../models/Review');
 
 function safeRegex(value) {
   return new RegExp(String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
 }
 
-function formatArtisan(profile, user) {
+// Helper to fetch average ratings for multiple artisans
+async function getAverageRatings(userIds) {
+  try {
+    if (!userIds || userIds.length === 0) return new Map();
+    
+    const mongoose = require('mongoose');
+    // Convert all userIds to ObjectIds for proper comparison
+    const objectIds = userIds.map(id => new mongoose.Types.ObjectId(id));
+    
+    const ratings = await Review.aggregate([
+      {
+        $match: {
+          targetId: { $in: objectIds },
+          targetType: 'ARTISAN',
+          status: 'APPROVED'
+        }
+      },
+      {
+        $group: {
+          _id: '$targetId',
+          avgRating: { $avg: '$rating' },
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const ratingMap = new Map();
+    ratings.forEach(r => {
+      // Store with string key for easy lookup
+      const ratingValue = Number(r.avgRating.toFixed(1));
+      ratingMap.set(r._id.toString(), ratingValue);
+      console.log(`[Search] Found review for user ${r._id}: avgRating=${ratingValue}, count=${r.count}`);
+    });
+    
+    console.log(`[Search] Total ratings found: ${ratingMap.size} out of ${userIds.length} users`);
+    return ratingMap;
+  } catch (error) {
+    console.error('Error getting average ratings:', error);
+    return new Map();
+  }
+}
+
+function formatArtisan(profile, user, avgRating = 0) {
   const firstName = user?.firstName || 'Artisan';
   const lastName = user?.lastName || '';
   const fullName = `${firstName} ${lastName}`.trim();
@@ -23,6 +66,7 @@ function formatArtisan(profile, user) {
     location: profile?.location || null,
     totalProjects: profile?.totalProjects || profile?.portfolio?.length || 0,
     hasCompletedProfile: Boolean(profile),
+    avgRating: avgRating || 0,
     distance: profile?.dist
       ? {
           calculated: profile.dist.calculated,
@@ -98,10 +142,17 @@ async function searchArtisans(filters) {
         },
       });
 
+      const filteredProfiles = profiles.filter((profile) => profile.userId && profile.userId.role === 'ARTISAN' && profile.userId.status !== 'BLOCKED');
+      
+      // Get average ratings for all artisans
+      const locationUserIds = filteredProfiles.map(p => p.userId._id);
+      console.log(`[Search-Location] Fetching ratings for ${locationUserIds.length} artisans:`, locationUserIds.map(id => id.toString()));
+      const ratingMap = await getAverageRatings(locationUserIds);
+
       return {
-        artisans: profiles
-          .filter((profile) => profile.userId && profile.userId.role === 'ARTISAN' && profile.userId.status !== 'BLOCKED')
-          .map((profile) => formatArtisan(profile, profile.userId)),
+        artisans: filteredProfiles.map((profile) => 
+          formatArtisan(profile, profile.userId, ratingMap.get(profile.userId._id.toString()) || 0)
+        ),
         pagination: {
           page: parsedPage,
           limit: parsedLimit,
@@ -162,8 +213,15 @@ async function searchArtisans(filters) {
     total = merged.length;
     const paginated = merged.slice((parsedPage - 1) * parsedLimit, parsedPage * parsedLimit);
 
+    // Get average ratings for paginated artisans
+    const pageUserIds = paginated.map(item => item.user._id);
+    console.log(`[Search-Regular] Fetching ratings for ${pageUserIds.length} artisans:`, pageUserIds.map(id => id.toString()));
+    const ratingMap = await getAverageRatings(pageUserIds);
+
     return {
-      artisans: paginated.map(({ profile, user }) => formatArtisan(profile, user)),
+      artisans: paginated.map(({ profile, user }) => 
+        formatArtisan(profile, user, ratingMap.get(user._id.toString()) || 0)
+      ),
       pagination: {
         page: parsedPage,
         limit: parsedLimit,

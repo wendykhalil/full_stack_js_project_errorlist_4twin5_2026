@@ -23,23 +23,49 @@ const reviewSchema = new mongoose.Schema(
       min: 1,
       max: 5,
     },
-    comment: {
+    title: {
       type: String,
       trim: true,
-      maxlength: 500,
+      maxlength: 100,
       default: "",
+    },
+    comment: {
+      type: String,
+      required: true,
+      trim: true,
+      minlength: 10,
+      maxlength: 1000,
+    },
+    categories: {
+      professionalism: { type: Number, min: 1, max: 5, default: null },
+      punctuality: { type: Number, min: 1, max: 5, default: null },
+      quality: { type: Number, min: 1, max: 5, default: null },
+      cleanliness: { type: Number, min: 1, max: 5, default: null },
     },
     sourceId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "ServiceRequest",
+      ref: "Meeting",
       default: null,
     },
+    isVerified: {
+      type: Boolean,
+      default: false,
+      description: "True if the review is from a completed meeting",
+    },
+    status: {
+      type: String,
+      enum: ["PENDING", "APPROVED", "REJECTED"],
+      default: "APPROVED",
+    },
   },
-  { timestamps: true }
+  { 
+    timestamps: true,
+    autoIndex: false,
+    autoCreate: true
+  }
 );
 
-// One review per author per service request
-reviewSchema.index({ authorId: 1, sourceId: 1 }, { unique: true, sparse: true });
-reviewSchema.index({ targetId: 1, targetType: 1 });
+// Do NOT create any unique indexes - duplicate checking is handled in the controller
+// This allows unlimited free reviews (sourceId: null) for the same artisan
 
-module.exports = mongoose.model("Review", reviewSchema);
+module.exports = mongoose.model("Review", reviewSchema, "avis");

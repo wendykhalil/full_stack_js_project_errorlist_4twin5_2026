@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Filter, MapPin, Star, Phone, Mail } from 'lucide-react';
 import { useSimpleMode } from '../context/SimpleModeContext';
 import TextToSpeech from '../components/TextToSpeech';
@@ -10,6 +10,7 @@ export default function EnhancedSearch() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [sortBy, setSortBy] = useState('');
   const [filters, setFilters] = useState({
     category: '',
     location: '',
@@ -65,29 +66,73 @@ export default function EnhancedSearch() {
     
     // Simulate API call
     setTimeout(() => {
+      let results = mockResults;
+      
       if (query.trim()) {
-        const filtered = mockResults.filter(result => 
+        results = mockResults.filter(result => 
           result.name.toLowerCase().includes(query.toLowerCase()) ||
           result.category.toLowerCase().includes(query.toLowerCase()) ||
           result.location.toLowerCase().includes(query.toLowerCase()) ||
           result.services.some(service => service.toLowerCase().includes(query.toLowerCase()))
         );
-        setSearchResults(filtered);
-      } else {
-        setSearchResults(mockResults);
       }
-      setLoading(false);
+      
+      applyFiltersAndSort(results);
     }, 800);
   };
+
+  const applyFiltersAndSort = useCallback((results) => {
+    let filtered = results;
+    
+    // Apply filters
+    if (filters.category) {
+      filtered = filtered.filter(r => r.category.toLowerCase().includes(filters.category.toLowerCase()));
+    }
+    if (filters.location) {
+      filtered = filtered.filter(r => r.location.toLowerCase() === filters.location.toLowerCase());
+    }
+    if (filters.rating > 0) {
+      filtered = filtered.filter(r => r.rating >= filters.rating);
+    }
+    
+    // Apply sort
+    if (sortBy === 'rating-high') {
+      filtered = [...filtered].sort((a, b) => b.rating - a.rating);
+    } else if (sortBy === 'rating-low') {
+      filtered = [...filtered].sort((a, b) => a.rating - b.rating);
+    } else if (sortBy === 'reviews') {
+      filtered = [...filtered].sort((a, b) => b.reviews - a.reviews);
+    }
+    
+    setSearchResults(filtered);
+    setLoading(false);
+  }, [filters, sortBy]);
 
   const handleVoiceInput = (text) => {
     handleSearch(text);
   };
 
   useEffect(() => {
-    // Load initial results
+    // Initialize with all results
     setSearchResults(mockResults);
   }, []);
+
+  useEffect(() => {
+    // Re-apply filters and sorting when they change
+    if (searchQuery) {
+      // If there's a search query, search first
+      const filtered = mockResults.filter(result => 
+        result.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        result.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        result.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        result.services.some(service => service.toLowerCase().includes(searchQuery.toLowerCase()))
+      );
+      applyFiltersAndSort(filtered);
+    } else {
+      // Otherwise apply filters to all results
+      applyFiltersAndSort(mockResults);
+    }
+  }, [filters, sortBy, applyFiltersAndSort, searchQuery]);
 
   const pageDescription = "Recherchez des artisans, fournisseurs et services près de chez vous. Utilisez la recherche vocale ou tapez votre demande.";
 
@@ -198,7 +243,7 @@ export default function EnhancedSearch() {
                 <Filter className="h-5 w-5 text-gray-600" />
                 <span className="font-medium text-gray-900">Filtres avancés</span>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <select 
                   value={filters.category}
                   onChange={(e) => setFilters({...filters, category: e.target.value})}
@@ -231,6 +276,17 @@ export default function EnhancedSearch() {
                   <option value={0}>Toutes notes</option>
                   <option value={4}>4+ étoiles</option>
                   <option value={4.5}>4.5+ étoiles</option>
+                </select>
+
+                <select 
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Trier par...</option>
+                  <option value="rating-high">⭐ Meilleure note (desc)</option>
+                  <option value="rating-low">⭐ Pire note (asc)</option>
+                  <option value="reviews">📊 Plus d'avis</option>
                 </select>
               </div>
             </div>

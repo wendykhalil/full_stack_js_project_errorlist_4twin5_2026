@@ -7,8 +7,10 @@ import {
 } from 'lucide-react';
 import SimpleFooter from '../components/Footer';
 import ReviewsList from '../components/ReviewsList';
+import ReviewForm from '../components/ReviewForm';
 import { getReviewsForUser } from '../auth/api';
 import ArtisanAvailabilityView from '../components/ArtisanAvailabilityView';
+import ScheduleMeetingModal from '../components/ScheduleMeetingModal';
 import { useFormValidation, rules } from '../hooks/useFormValidation';
 import { useServerErrors } from '../hooks/useServerErrors';
 import FieldError from '../components/FieldError';
@@ -39,8 +41,10 @@ export default function ArtisanPublicProfile() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showContactForm, setShowContactForm] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
+  const [reviewsRefreshKey, setReviewsRefreshKey] = useState(0);
 
   const { errors: msgFormErrors, validate: validateMsg } = useFormValidation({
     message: [rules.required('Message requis'), rules.maxLength(500)],
@@ -235,20 +239,29 @@ export default function ArtisanPublicProfile() {
               )}
 
               {/* Actions */}
-              <div className="mt-6 flex gap-3">
-                <a
-                  href={`tel:${artisan.phone}`}
-                  className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-xl hover:bg-indigo-700 transition-colors"
-                >
-                  <Phone className="h-4 w-4" />
-                  Appeler
-                </a>
+              <div className="mt-6 flex flex-col gap-3">
+                <div className="flex gap-3">
+                  <a
+                    href={`tel:${artisan.phone}`}
+                    className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-xl hover:bg-indigo-700 transition-colors"
+                  >
+                    <Phone className="h-4 w-4" />
+                    Appeler
+                  </a>
+                  <button
+                    onClick={() => setShowContactForm(true)}
+                    className="flex-1 flex items-center justify-center gap-2 border border-indigo-200 bg-indigo-50 text-indigo-700 px-6 py-3 rounded-xl hover:bg-indigo-100 transition-colors"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    Envoyer un message
+                  </button>
+                </div>
                 <button
-                  onClick={() => setShowContactForm(true)}
-                  className="flex-1 flex items-center justify-center gap-2 border border-indigo-200 bg-indigo-50 text-indigo-700 px-6 py-3 rounded-xl hover:bg-indigo-100 transition-colors"
+                  onClick={() => setShowScheduleModal(true)}
+                  className="w-full flex items-center justify-center gap-2 border border-slate-200 bg-slate-50 text-slate-700 px-6 py-3 rounded-xl hover:bg-slate-100 transition-colors"
                 >
-                  <MessageCircle className="h-4 w-4" />
-                  Envoyer un message
+                  <Calendar className="h-4 w-4" />
+                  Planifier une réunion
                 </button>
               </div>
             </div>
@@ -368,8 +381,33 @@ export default function ArtisanPublicProfile() {
         </div>
       )}
 
+      {/* Schedule Meeting Modal */}
+      {showScheduleModal && (
+        <ScheduleMeetingModal
+          artisanId={artisan?.userId || artisan?._id}
+          artisanName={artisan?.name}
+          onClose={() => setShowScheduleModal(false)}
+          onSuccess={() => {
+            // Optionally show a success message or refresh the page
+            setShowScheduleModal(false);
+          }}
+        />
+      )}
+
       {/* Reviews */}
-      <ReviewsList userId={artisan?.userId ? String(artisan.userId) : null} />
+      <ReviewsList userId={artisan?.userId ? String(artisan.userId) : null} refreshTrigger={reviewsRefreshKey} />
+
+      {/* Review Form */}
+      {artisan && artisan.userId && (
+        <ReviewForm 
+          artisanId={artisan.userId} 
+          artisanName={artisan?.name}
+          onSuccess={() => {
+            // Refresh reviews without reloading page
+            setReviewsRefreshKey(prev => prev + 1);
+          }}
+        />
+      )}
 
       {/* Availability */}
       <ArtisanAvailabilityView artisanId={artisan?.userId ? String(artisan.userId) : null} />

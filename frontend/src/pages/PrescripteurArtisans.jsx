@@ -17,15 +17,18 @@ import {
   Phone,
   ChevronDown,
   Wifi,
-  WifiOff
+  WifiOff,
+  MessageCircle
 } from 'lucide-react';
 import SimpleFooter from '../components/Footer';
 import Pagination from '../components/Pagination';
+import ArtisanReviewsList from '../components/ArtisanReviewsList';
 
 const ArtisanCard = ({ artisan, onViewProfile }) => {
   const { t } = useTranslation();
   const [imageError, setImageError] = useState(false);
   const [plan, setPlan] = useState(null);
+  const [showReviews, setShowReviews] = useState(false);
 
   useEffect(() => {
     if (!artisan._id) return;
@@ -92,7 +95,21 @@ const ArtisanCard = ({ artisan, onViewProfile }) => {
           </div>
         </div>
 
+        {/* Reviews Section */}
+        {showReviews && (
+          <div className="mt-4 pt-4 border-t border-slate-200">
+            <ArtisanReviewsList artisanId={artisan.userId || artisan._id} maxReviews={2} />
+          </div>
+        )}
+
         <div className="mt-5 flex gap-2">
+          <button
+            onClick={() => setShowReviews(!showReviews)}
+            className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-medium text-slate-700 transition-all hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
+          >
+            <MessageCircle className="h-4 w-4" />
+            {showReviews ? 'Masquer' : 'Avis'}
+          </button>
           {artisan.phone ? (
             <a href={`tel:${artisan.phone}`}
               className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-medium text-slate-700 transition-all hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600">
@@ -137,6 +154,7 @@ export default function PrescripteurArtisans() {
     latitude: null,
     longitude: null
   });
+  const [sortBy, setSortBy] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
   const [locationStatus, setLocationStatus] = useState('');
@@ -342,6 +360,20 @@ export default function PrescripteurArtisans() {
             )}
             {filters.useLocation ? 'Position activée' : 'Près de moi'}
           </button>
+
+          <div className="relative w-full md:w-56">
+            <ChevronDown className="absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="w-full appearance-none rounded-xl border border-slate-200 bg-white py-2.5 px-4 pr-10 text-sm text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
+            >
+              <option value="">Trier par...</option>
+              <option value="rating-high">⭐ Meilleure note</option>
+              <option value="rating-low">⭐ Pire note</option>
+              <option value="reviews">📊 Plus d'avis</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -391,13 +423,25 @@ export default function PrescripteurArtisans() {
       {!loading && !error && artisans.length > 0 && (
         <>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {artisans.map((artisan) => (
-              <ArtisanCard
-                key={artisan._id}
-                artisan={artisan}
-                onViewProfile={handleViewProfile}
-              />
-            ))}
+            {(() => {
+              let sortedArtisans = [...artisans];
+              
+              if (sortBy === 'rating-high') {
+                sortedArtisans.sort((a, b) => (b.avgRating || b.rating || 0) - (a.avgRating || a.rating || 0));
+              } else if (sortBy === 'rating-low') {
+                sortedArtisans.sort((a, b) => (a.avgRating || a.rating || 0) - (b.avgRating || b.rating || 0));
+              } else if (sortBy === 'reviews') {
+                sortedArtisans.sort((a, b) => (b.totalReviews || 0) - (a.totalReviews || 0));
+              }
+              
+              return sortedArtisans.map((artisan) => (
+                <ArtisanCard
+                  key={artisan._id}
+                  artisan={artisan}
+                  onViewProfile={handleViewProfile}
+                />
+              ));
+            })()}
           </div>
 
           {/* Pagination */}

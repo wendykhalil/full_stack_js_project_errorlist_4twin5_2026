@@ -9,7 +9,7 @@ function uid(req) {
 async function create(req, res, next) {
   try {
     const authorId = uid(req);
-    const { targetId, targetType, rating, comment, sourceId } = req.body || {};
+    const { targetId, targetType, rating, title, comment, sourceId } = req.body || {};
 
     if (!targetId) return res.status(400).json({ message: "targetId est requis" });
     if (!targetType || !["ARTISAN", "PRESCRIPTEUR"].includes(targetType)) {
@@ -17,6 +17,9 @@ async function create(req, res, next) {
     }
     if (!rating || rating < 1 || rating > 5) {
       return res.status(400).json({ message: "La note doit être comprise entre 1 et 5" });
+    }
+    if (!comment || comment.trim().length < 10) {
+      return res.status(400).json({ message: "Le commentaire doit contenir au moins 10 caractères" });
     }
 
     // Verify the service request is completed and involves both users
@@ -41,11 +44,25 @@ async function create(req, res, next) {
       return res.status(400).json({ message: "Vous ne pouvez pas vous évaluer vous-même" });
     }
 
+    // Only check for duplicates if sourceId is provided (service request based reviews)
+    if (sourceId) {
+      const existingReview = await Review.findOne({
+        authorId,
+        targetId,
+        sourceId,
+      }).lean();
+      
+      if (existingReview) {
+        return res.status(409).json({ message: "Vous avez déjà évalué cette demande de service" });
+      }
+    }
+
     const review = await Review.create({
       authorId,
       targetId,
       targetType,
       rating: Number(rating),
+      title: title?.trim() || 'Avis',
       comment: comment?.trim() || "",
       sourceId: sourceId || null,
     });
@@ -56,9 +73,6 @@ async function create(req, res, next) {
 
     return res.status(201).json({ ok: true, review: populated });
   } catch (err) {
-    if (err.code === 11000) {
-      return res.status(409).json({ message: "Vous avez déjà évalué cette demande de service" });
-    }
     return next(err);
   }
 }

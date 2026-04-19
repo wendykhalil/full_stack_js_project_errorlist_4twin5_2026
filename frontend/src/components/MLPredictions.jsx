@@ -114,6 +114,8 @@ const MLPredictions = () => {
         }
       } catch (error) {
         console.error('Could not load existing projects:', error);
+        // Silently fail - don't break the component
+        setExistingProjects([]);
       }
     };
 
@@ -344,7 +346,8 @@ const MLPredictions = () => {
         setError(data.error || 'Erreur lors de la prédiction');
       }
     } catch (err) {
-      setError('Erreur de connexion au service ML');
+      setError('Service ML indisponible. Assurez-vous que le service Python ML est démarré sur le port 5001.');
+      console.error('ML Service error:', err);
     } finally {
       setLoading(false);
     }
@@ -376,7 +379,8 @@ const MLPredictions = () => {
         setError(data.error || 'Erreur lors de la prédiction');
       }
     } catch (err) {
-      setError('Erreur de connexion au service ML');
+      setError('Service ML indisponible. Assurez-vous que le service Python ML est démarré sur le port 5001.');
+      console.error('ML Service error:', err);
     } finally {
       setLoading(false);
     }
@@ -412,7 +416,8 @@ const MLPredictions = () => {
         setError(data.error || 'Erreur lors de la prédiction');
       }
     } catch (err) {
-      setError('Erreur de connexion au service ML');
+      setError('Service ML indisponible. Assurez-vous que le service Python ML est démarré sur le port 5001.');
+      console.error('ML Service error:', err);
     } finally {
       setLoading(false);
     }

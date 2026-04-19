@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { Stars } from "./StarRating";
 import { getReviewsForUser } from "../auth/api";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, Trash2 } from "lucide-react";
+import { useAuth } from "../auth/AuthContext";
+import reviewsService from "../services/reviewsService";
 
-export default function ReviewsList({ userId }) {
+export default function ReviewsList({ userId, refreshTrigger = 0 }) {
+  const { user } = useAuth();
   const [reviews, setReviews] = useState([]);
   const [avgRating, setAvgRating] = useState(0);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
     if (!userId) {
@@ -23,7 +27,30 @@ export default function ReviewsList({ userId }) {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [userId]);
+  }, [userId, refreshTrigger]);
+
+  const handleDeleteReview = async (reviewId) => {
+    if (!window.confirm("Êtes-vous sûr de vouloir supprimer cet avis?")) return;
+    
+    try {
+      setDeletingId(reviewId);
+      await reviewsService.deleteReview(reviewId);
+      setReviews(reviews.filter(r => r._id !== reviewId));
+      setTotal(prev => prev - 1);
+      // Recalculate avgRating
+      const remaining = reviews.filter(r => r._id !== reviewId);
+      if (remaining.length > 0) {
+        setAvgRating(Number((remaining.reduce((s, r) => s + r.rating, 0) / remaining.length).toFixed(1)));
+      } else {
+        setAvgRating(0);
+      }
+    } catch (err) {
+      console.error('Error deleting review:', err);
+      alert('Erreur lors de la suppression de l\'avis');
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   if (loading) return null;
 
@@ -57,7 +84,19 @@ export default function ReviewsList({ userId }) {
                     </p>
                   </div>
                 </div>
-                <Stars rating={r.rating} />
+                <div className="flex items-center gap-2">
+                  <Stars rating={r.rating} />
+                  {user?._id === r.authorId?._id && (
+                    <button
+                      onClick={() => handleDeleteReview(r._id)}
+                      disabled={deletingId === r._id}
+                      className="ml-2 p-1 text-slate-400 hover:text-red-500 transition-colors disabled:opacity-50"
+                      title="Supprimer cet avis"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
               </div>
               {r.comment && <p className="mt-3 text-sm text-slate-600 bg-slate-50 rounded-xl px-3 py-2">{r.comment}</p>}
             </div>
