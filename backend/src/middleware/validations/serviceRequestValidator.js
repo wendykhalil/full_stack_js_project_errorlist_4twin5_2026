@@ -41,7 +41,7 @@ const validateApply = validate([
   body('message').optional().trim()
     .isLength({ max: 500 }).withMessage('Le message ne peut pas dépasser 500 caractères')
     .escape(),
-  body('proposedPrice').optional()
+  body('proposedPrice').notEmpty().withMessage('Le prix proposé est obligatoire')
     .isFloat({ min: 0 }).withMessage('Le prix proposé doit être un nombre positif (ex: 2500)'),
 ]);
 

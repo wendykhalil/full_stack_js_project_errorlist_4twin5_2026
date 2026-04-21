@@ -1,6 +1,9 @@
 const ServiceRequest = require("../../models/ServiceRequest");
 const ArtisanProfile = require("../../models/ArtisanProfile");
+const Availability = require("../../models/Availability");
+const User = require("../../models/User");
 const { notify } = require("../../utils/notify");
+const { sendApplicationReceivedEmail, sendApplicationAcceptedEmail } = require("../../utils/serviceRequestEmail");
 
 function uid(req) {
   return req.user?._id || req.user?.id || req.user?.sub;
@@ -49,7 +52,27 @@ async function getOne(req, res, next) {
       .populate("applications.artisanId", "firstName lastName email profilePicture")
       .lean();
     if (!doc) return res.status(404).json({ message: "Not found" });
-    return res.json({ ok: true, serviceRequest: doc });
+
+    // Enrich each application with the artisan's profile image (stored in ArtisanProfile, not User)
+    const artisanIds = doc.applications.map(a => a.artisanId?._id).filter(Boolean);
+    const profiles = await ArtisanProfile.find({ userId: { $in: artisanIds } })
+      .select("userId profileImage")
+      .lean();
+    const profileMap = {};
+    profiles.forEach(p => { profileMap[String(p.userId)] = p.profileImage; });
+
+    const enrichedApplications = doc.applications.map(app => ({
+      ...app,
+      artisanId: app.artisanId
+        ? {
+            ...app.artisanId,
+            // prefer ArtisanProfile.profileImage, fall back to User.profilePicture
+            profilePicture: profileMap[String(app.artisanId._id)] || app.artisanId.profilePicture || "",
+          }
+        : app.artisanId,
+    }));
+
+    return res.json({ ok: true, serviceRequest: { ...doc, applications: enrichedApplications } });
   } catch (err) {
     return next(err);
   }
@@ -133,6 +156,10 @@ async function acceptApplication(req, res, next) {
       link: `/artisan/service-requests`,
     });
 
+    // Email (fire-and-forget)
+    const artisan = await User.findById(app.artisanId).select("firstName lastName email").lean();
+    if (artisan) sendApplicationAcceptedEmail(artisan, doc).catch(() => {});
+
     return res.json({ ok: true, serviceRequest: doc });
   } catch (err) {
     return next(err);
@@ -197,9 +224,11 @@ async function listOpen(req, res, next) {
     const artisanId = String(uid(req));
     const enriched = items.map((item) => ({
       ...item,
+      prescripteur: item.prescripteurId,   // remap so frontend reads item.prescripteur
+      prescripteurId: undefined,
       hasApplied: item.applications?.some((a) => String(a.artisanId) === artisanId) || false,
       applicationsCount: item.applications?.length || 0,
-      applications: undefined, // don't expose other applicants
+      applications: undefined,
     }));
     return res.json({ ok: true, items: enriched, total, page: Number(page) });
   } catch (err) {
@@ -256,7 +285,13 @@ async function apply(req, res, next) {
 
     await doc.save();
 
-    // Notify prescripteur
+    // ── #4 Email notification to prescripteur ────────────────────────────────
+    const [prescripteur, artisan] = await Promise.all([
+      User.findById(doc.prescripteurId).select("firstName lastName email").lean(),
+      User.findById(artisanId).select("firstName lastName").lean(),
+    ]);
+
+    // In-app notification
     await notify({
       userId: doc.prescripteurId,
       type: "APPLICATION_RECEIVED",
@@ -265,7 +300,53 @@ async function apply(req, res, next) {
       link: `/prescripteur/service-requests`,
     });
 
-    return res.status(201).json({ ok: true, message: "Application submitted" });
+    // Email (fire-and-forget)
+    if (prescripteur && artisan) {
+      sendApplicationReceivedEmail(prescripteur, artisan, doc).catch(() => {});
+    }
+
+    // ── #2 Availability warning ───────────────────────────────────────────────
+    let availabilityWarning = null;
+    if (doc.deadline) {
+      const deadlineDay = new Date(doc.deadline);
+      deadlineDay.setHours(0, 0, 0, 0);
+      const nextDay = new Date(deadlineDay);
+      nextDay.setDate(nextDay.getDate() + 1);
+
+      const avail = await Availability.findOne({
+        artisanId,
+        date: { $gte: deadlineDay, $lt: nextDay },
+      }).lean();
+
+      if (avail && avail.status !== "AVAILABLE") {
+        availabilityWarning = avail.status === "BOOKED"
+          ? "Attention : vous êtes marqué non disponible à la date limite de cette demande."
+          : "Attention : vous êtes marqué occupé à la date limite de cette demande.";
+      }
+    }
+
+    return res.status(201).json({ ok: true, message: "Application submitted", availabilityWarning });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function withdraw(req, res, next) {
+  try {
+    const artisanId = String(uid(req));
+    const doc = await ServiceRequest.findById(req.params.id);
+    if (!doc) return res.status(404).json({ message: "Not found" });
+    if (doc.status !== "OPEN") return res.status(400).json({ message: "Cannot withdraw from a non-open request" });
+
+    const appIndex = doc.applications.findIndex(a => String(a.artisanId) === artisanId);
+    if (appIndex === -1) return res.status(404).json({ message: "No application found" });
+    if (doc.applications[appIndex].status !== "PENDING") {
+      return res.status(400).json({ message: "Cannot withdraw an accepted or rejected application" });
+    }
+
+    doc.applications.splice(appIndex, 1);
+    await doc.save();
+    return res.json({ ok: true, message: "Application withdrawn" });
   } catch (err) {
     return next(err);
   }
@@ -297,7 +378,7 @@ async function myApplications(req, res, next) {
         budgetTND: doc.budgetTND,
         deadline: doc.deadline,
         status: doc.status,
-        prescripteur: doc.prescripteurId,
+        prescripteur: doc.prescripteurId,   // remap so frontend reads item.prescripteur
         application: myApp,
         alreadyReviewed: reviewedSourceIds.has(String(doc._id)),
         createdAt: doc.createdAt,
@@ -310,8 +391,28 @@ async function myApplications(req, res, next) {
   }
 }
 
+// ── #3 Re-open a cancelled request ───────────────────────────────────────────
+async function reopen(req, res, next) {
+  try {
+    const doc = await ServiceRequest.findOne({ _id: req.params.id, prescripteurId: uid(req) });
+    if (!doc) return res.status(404).json({ message: "Not found" });
+    if (doc.status !== "CANCELLED") {
+      return res.status(400).json({ message: "Only CANCELLED requests can be re-opened" });
+    }
+    // If the deadline has already passed, clear it so it doesn't get auto-cancelled again immediately
+    if (doc.deadline && doc.deadline < new Date()) {
+      doc.deadline = null;
+    }
+    doc.status = "OPEN";
+    await doc.save();
+    return res.json({ ok: true, serviceRequest: doc });
+  } catch (err) {
+    return next(err);
+  }
+}
+
 module.exports = {
-  create, listMine, getOne, update, remove, changeStatus,
+  create, listMine, getOne, update, remove, changeStatus, reopen,
   acceptApplication, rejectApplication,
-  listOpen, getOpenOne, apply, myApplications,
+  listOpen, getOpenOne, apply, withdraw, myApplications,
 };

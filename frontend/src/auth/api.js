@@ -363,6 +363,10 @@ export async function changeServiceRequestStatus({ token, id, status }) {
   return apiFetch(`/service-requests/my/${id}/status`, { token, method: "PATCH", body: { status } });
 }
 
+export async function reopenServiceRequest({ token, id }) {
+  return apiFetch(`/service-requests/my/${id}/reopen`, { token, method: "PATCH" });
+}
+
 export async function acceptApplication({ token, requestId, appId }) {
   return apiFetch(`/service-requests/my/${requestId}/applications/${appId}/accept`, { token, method: "PATCH" });
 }
@@ -377,7 +381,6 @@ export async function getOpenServiceRequests({ token, trade, city, page = 1, lim
   if (city) params.append("city", city);
   return apiFetch(`/service-requests/open?${params}`, { token });
 }
-
 export async function getOpenServiceRequest({ token, id }) {
   return apiFetch(`/service-requests/open/${id}`, { token });
 }
@@ -386,8 +389,18 @@ export async function applyToServiceRequest({ token, id, message, proposedPrice 
   return apiFetch(`/service-requests/${id}/apply`, { token, method: "POST", body: { message, proposedPrice } });
 }
 
+export async function withdrawApplication({ token, id }) {
+  return apiFetch(`/service-requests/${id}/apply`, { token, method: "DELETE" });
+}
+
 export async function getMyApplications({ token }) {
   return apiFetch("/service-requests/my-applications", { token });
+}
+
+export async function getArtisanAvailability({ artisanId, month } = {}) {
+  const params = new URLSearchParams();
+  if (month) params.append("month", month);
+  return apiFetch(`/availability/artisan/${artisanId}?${params}`);
 }
 
 // ========== REVIEWS API ==========

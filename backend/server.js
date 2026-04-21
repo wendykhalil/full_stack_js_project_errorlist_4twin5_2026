@@ -5,6 +5,7 @@ const http = require('http');
 const { createApp } = require('./src/app');
 const { connectDB } = require('./src/config/db');
 const { initSocket } = require('./src/socket');
+const { startExpireJob } = require('./src/jobs/expireServiceRequests');
 
 async function bootstrap() {
   await connectDB(process.env.MONGO_URI);
@@ -16,6 +17,9 @@ async function bootstrap() {
 
   // realtime (Socket.IO)
   initSocket(server, { corsOrigin: process.env.CLIENT_ORIGIN || 'http://localhost:5173' });
+
+  // background jobs
+  startExpireJob();
 
   const port = Number(process.env.PORT || 5000);
   server.listen(port, () => {

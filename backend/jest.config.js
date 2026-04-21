@@ -5,7 +5,10 @@ module.exports = {
   collectCoverageFrom: [
     'src/modules/auth/**/*.js',
     'src/modules/projects/**/*.js',
+    'src/modules/service-requests/**/*.js',
     'src/utils/notify.js',
+    'src/utils/serviceRequestEmail.js',
+    'src/jobs/expireServiceRequests.js',
     '!**/node_modules/**'
   ],
   coverageDirectory: 'coverage',

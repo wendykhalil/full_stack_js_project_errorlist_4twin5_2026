@@ -6,8 +6,8 @@ import { useAuth } from "../auth/AuthContext";
 const SOCKET_BASE = (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "");
 
 // Global event so NotificationBell can refresh its count
-export function emitNotifRefresh() {
-  window.dispatchEvent(new CustomEvent('notif:refresh'));
+export function emitNotifRefresh(payload = {}) {
+  window.dispatchEvent(new CustomEvent('notif:refresh', { detail: payload }));
 }
 
 function Toast({ item, onClose }) {
@@ -40,7 +40,7 @@ export default function RealtimeNotifications() {
     s.on("notification", (payload) => {
       const item = { id: crypto.randomUUID(), ...payload };
       setToasts(prev => [item, ...prev].slice(0, 5));
-      emitNotifRefresh(); // tell the bell to refresh count
+      emitNotifRefresh(payload); // tell the bell to refresh count + pass payload
       setTimeout(() => setToasts(prev => prev.filter(x => x.id !== item.id)), 8000);
     });
 
