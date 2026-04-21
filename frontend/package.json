@@ -12,6 +12,7 @@
   "dependencies": {
     "@stripe/react-stripe-js": "^6.1.0",
     "@stripe/stripe-js": "^9.1.0",
+    "axios": "^1.15.2",
     "i18next": "^26.0.4",
     "jspdf": "^4.2.1",
     "lucide-react": "^0.564.0",

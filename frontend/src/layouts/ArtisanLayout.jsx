@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   FileText, FolderKanban, Heart, Image as ImageIcon, LayoutDashboard,
   MessageCircle, Package, Receipt, ShieldCheck, ShoppingCart,
-  UserCircle2, Cloud, ClipboardList, CalendarDays, Briefcase, Store, Brain,
+  UserCircle2, Cloud, ClipboardList, CalendarDays, Briefcase, Store, Brain, AlertTriangle,
 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { getMySubscription } from "../auth/api";
@@ -82,6 +82,7 @@ function ArtisanLayoutInner() {
     { to: "/artisan/weather",          label: "Météo",           icon: <Cloud className="h-5 w-5" /> },
     { to: "/artisan/availability",     label: "Disponibilités",  icon: <CalendarDays className="h-6 w-6" /> },
     { to: "/artisan/service-requests", label: "Missions",        icon: <ClipboardList className="h-5 w-5" /> },
+    { to: "/artisan/disputes",         label: "Litiges",         icon: <AlertTriangle className="h-5 w-5" /> },
     { to: "/artisan/meetings",         label: "Réunions",        icon: <Briefcase className="h-5 w-5" /> },
     { to: "/artisan/orders",           label: "Mes commandes",   icon: <Package className="h-5 w-5" /> },
     { to: "/artisan/messages",         label: "Messages",        icon: messageIcon },

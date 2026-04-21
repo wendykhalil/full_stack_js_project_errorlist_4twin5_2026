@@ -23,6 +23,7 @@ import AdminActivityLogs from "./pages/AdminActivityLogs";
 import AdminPromoCodes from "./pages/AdminPromoCodes";
 import AdminTransactions from "./pages/AdminTransactions";
 import AdminReports from "./pages/AdminReports";
+import AdminDisputes from "./pages/AdminDisputes";
 import AdminAiInsights from "./pages/AdminAiInsights";
 import AdminUserStatisticsPage from "./pages/AdminUserStatistics";
 import AdminFraudAnalytics from "./pages/AdminFraudAnalytics";
@@ -57,6 +58,7 @@ import ArtisanWeather from './pages/ArtisanWeather';
 import ArtisanAvailability from './pages/ArtisanAvailability';
 import ArtisanServiceRequests from './pages/ArtisanServiceRequests';
 import PrescripteurServiceRequests from './pages/PrescripteurServiceRequests';
+import MyDisputes from './pages/MyDisputes';
 import Meetings from './pages/Meetings';
 
 // PRESCRIPTEUR
@@ -141,6 +143,7 @@ export default function App() {
                         <Route path="transactions" element={<AdminTransactions />} />
                         <Route path="promo-codes" element={<AdminPromoCodes />} />
                         <Route path="reports" element={<AdminReports />} />
+                        <Route path="disputes" element={<AdminDisputes />} />
                         <Route path="ai-insights" element={<AdminAiInsights />} />
                         <Route path="fraud-analytics" element={<AdminFraudAnalytics />} />
                         <Route path="user-statistics" element={<AdminUserStatisticsPage />} />
@@ -176,6 +179,7 @@ export default function App() {
                         <Route path="weather" element={<ArtisanWeather />} />
                         <Route path="availability" element={<ArtisanAvailability />} />
                         <Route path="service-requests" element={<ArtisanServiceRequests />} />
+                        <Route path="disputes" element={<MyDisputes />} />
                         <Route path="meetings" element={<Meetings />} />
                         <Route path="ml-predictions" element={<MLPredictionsPage />} />
                         <Route path="messages" element={<RequireSubscription><Messages /></RequireSubscription>} />
@@ -197,6 +201,7 @@ export default function App() {
                         <Route path="product/:id" element={<PrescripteurProductDetails />} />
                         <Route path="projects" element={<PrescripteurProjects />} />
                         <Route path="service-requests" element={<PrescripteurServiceRequests />} />
+                        <Route path="disputes" element={<MyDisputes />} />
                         <Route path="meetings" element={<Meetings />} />
                         <Route path="ml-predictions" element={<MLPredictionsPage />} />
                         <Route path="messages" element={<Messages />} />

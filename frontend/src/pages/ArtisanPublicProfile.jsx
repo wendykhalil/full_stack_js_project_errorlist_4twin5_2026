@@ -13,6 +13,7 @@ import ArtisanAvailabilityView from '../components/ArtisanAvailabilityView';
 import ScheduleMeetingModal from '../components/ScheduleMeetingModal';
 import { useFormValidation, rules } from '../hooks/useFormValidation';
 import { useServerErrors } from '../hooks/useServerErrors';
+import ReportButton from '../components/ReportButton';
 import FieldError from '../components/FieldError';
 
 const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '');
@@ -255,6 +256,9 @@ export default function ArtisanPublicProfile() {
                     <MessageCircle className="h-4 w-4" />
                     Envoyer un message
                   </button>
+                </div>
+                <div className="flex justify-end">
+                  <ReportButton targetId={artisan.userId} targetType="USER" targetName={artisan.name} />
                 </div>
                 <button
                   onClick={() => setShowScheduleModal(true)}

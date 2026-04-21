@@ -470,3 +470,41 @@ export async function markAllNotificationsRead({ token }) {
 export async function deleteNotification({ token, id }) {
   return apiFetch(`/notifications/${id}`, { token, method: 'DELETE' });
 }
+
+// ========== REPORTS API ==========
+export async function submitReport({ token, data }) {
+  return apiFetch('/reports', { token, method: 'POST', body: data });
+}
+export async function getMyReports({ token }) {
+  return apiFetch('/reports/my', { token });
+}
+export async function getAdminReports({ token, status, page = 1 }) {
+  const params = new URLSearchParams({ page });
+  if (status && status !== 'ALL') params.append('status', status);
+  return apiFetch(`/reports/admin/reports?${params}`, { token });
+}
+export async function adminReportAction({ token, id, action, reason, note }) {
+  return apiFetch(`/reports/admin/reports/${id}/action`, { token, method: 'PATCH', body: { action, reason, note } });
+}
+
+// ========== DISPUTES API ==========
+export async function createDispute({ token, data }) {
+  return apiFetch('/disputes', { token, method: 'POST', body: data });
+}
+export async function getMyDisputes({ token }) {
+  return apiFetch('/disputes/my', { token });
+}
+export async function getDispute({ token, id }) {
+  return apiFetch(`/disputes/${id}`, { token });
+}
+export async function addDisputeMessage({ token, id, content }) {
+  return apiFetch(`/disputes/${id}/message`, { token, method: 'POST', body: { content } });
+}
+export async function getAdminDisputes({ token, status, page = 1 }) {
+  const params = new URLSearchParams({ page });
+  if (status && status !== 'ALL') params.append('status', status);
+  return apiFetch(`/disputes/admin/disputes?${params}`, { token });
+}
+export async function adminResolveDispute({ token, id, resolution, adminNote }) {
+  return apiFetch(`/disputes/admin/disputes/${id}/resolve`, { token, method: 'PATCH', body: { resolution, adminNote } });
+}

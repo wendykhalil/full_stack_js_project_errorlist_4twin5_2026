@@ -9,7 +9,6 @@ const ordersRoutes = require('../modules/orders/orders.routes');
 const messagesRoutes = require('../modules/messages/messages.routes');
 const documentsRoutes = require('../modules/documents/documents.routes');
 const aiRoutes = require('../modules/ai-assistant/ai.routes');
-const reportsRoutes = require('../../routes/reports');
 const messageActionsRoutes = require('../../routes/messageActions');
 
 // ✅ NOUVEAUX IMPORTS
@@ -23,6 +22,8 @@ const reviewsRoutes = require('../modules/reviews/reviews.routes');
 const promoRoutes = require('../modules/promo/promo.routes');
 const availabilityRoutes = require('../modules/availability/availability.routes');
 const notificationsRoutes = require('../modules/notifications/notifications.routes');
+const reportsRoutes = require('../modules/reports/reports.routes');
+const disputesRoutes = require('../modules/disputes/disputes.routes');
 const marketplaceRoutes   = require('../modules/marketplace/marketplace.routes');
 const meetingsRoutes = require('../modules/meetings/meetings.routes');
 
@@ -208,7 +209,6 @@ router.use('/messages', messagesRoutes);
 router.use('/messages', messageActionsRoutes);
 router.use('/documents', documentsRoutes);
 router.use('/ai', aiRoutes);
-router.use('/reports', reportsRoutes);
 
 
 // ✅ NOUVELLES ROUTES
@@ -222,6 +222,8 @@ router.use('/reviews', reviewsRoutes);
 router.use('/promo', promoRoutes);
 router.use('/availability', availabilityRoutes);
 router.use('/notifications', notificationsRoutes);
+router.use('/reports', reportsRoutes);
+router.use('/disputes', disputesRoutes);
 router.use('/marketplace',  marketplaceRoutes);
 router.use('/meetings', meetingsRoutes);
 router.use(productRoutes);

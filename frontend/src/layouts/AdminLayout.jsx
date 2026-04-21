@@ -17,6 +17,7 @@ export default function AdminLayout() {
     { to: "/admin/transactions", label: "Transactions", icon: <ArrowLeftRight className="h-5 w-5" /> },
     { to: "/admin/promo-codes", label: "Codes Promo", icon: <Tag className="h-5 w-5" /> },
     { to: "/admin/reports", label: "Signalements", icon: <Flag className="h-5 w-5" /> },
+    { to: "/admin/disputes", label: "Litiges", icon: <Shield className="h-5 w-5" /> },
     { to: "/admin/ai-insights", label: "AI Insights", icon: <Sparkles className="h-5 w-5" /> },
   ];
 
