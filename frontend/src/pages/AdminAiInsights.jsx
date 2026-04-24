@@ -20,7 +20,7 @@ function ScoreRing({ score }) {
   const color =
     score >= 80 ? "#10b981" : score >= 60 ? "#f59e0b" : score >= 40 ? "#f97316" : "#ef4444";
   const label =
-    score >= 80 ? "Healthy" : score >= 60 ? "Moderate" : score >= 40 ? "Needs Attention" : "Critical";
+    score >= 80 ? "Sain" : score >= 60 ? "Modéré" : score >= 40 ? "À surveiller" : "Critique";
 
   return (
     <div className="flex flex-col items-center gap-2">
@@ -140,7 +140,7 @@ export default function AdminAiInsights() {
         setLastFetched(new Date());
         cacheRef.current = { data: result, expiresAt: now + 8 * 60 * 1000 };
       } catch (err) {
-        setError(err.message || "Failed to load AI insights.");
+        setError(err.message || "Impossible de charger les analyses IA.");
       } finally {
         setLoading(false);
       }
@@ -162,23 +162,23 @@ export default function AdminAiInsights() {
           <div className="flex items-center gap-2">
             <Sparkles className="h-6 w-6 text-indigo-500" />
             <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
-              AI Insights
+              Analyses IA
             </h1>
           </div>
           <p className="mt-1 text-sm text-slate-500">
-            AI-powered analysis of platform health and actionable recommendations.
+            Analyse IA de la santé de la plateforme et recommandations actionnables.
           </p>
           {lastFetched && !loading && (
             <p className="mt-1 text-xs text-slate-400">
-              Last updated: {lastFetched.toLocaleTimeString()}
+              Dernière mise à jour : {lastFetched.toLocaleTimeString()}
               {data?.source === "heuristic" && (
                 <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-amber-700">
-                  heuristic mode (AI offline)
+                  mode heuristique (IA hors ligne)
                 </span>
               )}
               {data?.cached && (
                 <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-slate-500">
-                  cached
+                  en cache
                 </span>
               )}
             </p>
@@ -195,7 +195,7 @@ export default function AdminAiInsights() {
           ) : (
             <RefreshCw className="h-4 w-4" />
           )}
-          Refresh insights
+          Actualiser les analyses
         </button>
       </div>
 
@@ -203,7 +203,7 @@ export default function AdminAiInsights() {
       {loading && (
         <div className="flex flex-col items-center justify-center rounded-3xl border border-slate-200 bg-white py-20 shadow-sm">
           <Loader2 className="h-10 w-10 animate-spin text-indigo-500" />
-          <p className="mt-4 text-sm text-slate-500">Analyzing platform data…</p>
+          <p className="mt-4 text-sm text-slate-500">Analyse des données de la plateforme en cours…</p>
         </div>
       )}
 
@@ -224,21 +224,21 @@ export default function AdminAiInsights() {
             </div>
             <div className="lg:col-span-2 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
               <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">
-                Summary
+                Résumé
               </h2>
               <p className="text-base leading-relaxed text-slate-700">{data.summary}</p>
 
               {/* Key metrics strip */}
               {m && (
                 <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  <MetricPill label="Total Users" value={m.totalUsers?.toLocaleString()} />
+                  <MetricPill label="Utilisateurs" value={m.totalUsers?.toLocaleString()} />
                   <MetricPill
-                    label="User Growth"
+                    label="Croissance"
                     value={`${m.userGrowthPct >= 0 ? "+" : ""}${m.userGrowthPct}%`}
                   />
-                  <MetricPill label="Delivery Rate" value={`${m.deliveryRate}%`} />
+                  <MetricPill label="Taux de livraison" value={`${m.deliveryRate}%`} />
                   <MetricPill
-                    label="Revenue (TND)"
+                    label="Revenus (TND)"
                     value={m.deliveredRevenue?.toLocaleString("fr-TN")}
                   />
                 </div>
@@ -249,19 +249,19 @@ export default function AdminAiInsights() {
           {/* Positives / Risks / Recommendations */}
           <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
             <InsightCard
-              title="Positive Trends"
+              title="Tendances positives"
               icon={<TrendingUp />}
               items={data.positives ?? []}
               tone="green"
             />
             <InsightCard
-              title="Risks & Concerns"
+              title="Risques & Alertes"
               icon={<AlertTriangle />}
               items={data.risks ?? []}
               tone="red"
             />
             <InsightCard
-              title="Recommendations"
+              title="Recommandations"
               icon={<Lightbulb />}
               items={data.recommendations ?? []}
               tone="indigo"
@@ -271,7 +271,7 @@ export default function AdminAiInsights() {
           {/* Generated at */}
           {data.generatedAt && (
             <p className="text-center text-xs text-slate-400">
-              Report generated at {new Date(data.generatedAt).toLocaleString()}
+              Rapport généré le {new Date(data.generatedAt).toLocaleString("fr-TN")}
             </p>
           )}
         </>

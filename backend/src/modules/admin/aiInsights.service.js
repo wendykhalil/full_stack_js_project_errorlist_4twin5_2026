@@ -157,26 +157,26 @@ async function collectMetrics(days = 30) {
 
 // ── Build AI prompt ───────────────────────────────────────────────────────────
 function buildPrompt(metrics) {
-  return `You are a business intelligence analyst for a B2B construction platform in Tunisia called BMP.tn.
-Analyze the following aggregated platform metrics and produce a JSON report.
+  return `Tu es un analyste en intelligence d'affaires pour une plateforme B2B de construction en Tunisie appelée BMP.tn.
+Analyse les métriques agrégées de la plateforme ci-dessous et produis un rapport JSON.
 
-METRICS:
+MÉTRIQUES :
 ${JSON.stringify(metrics, null, 2)}
 
-Respond ONLY with a valid JSON object in this exact structure:
+Réponds UNIQUEMENT avec un objet JSON valide ayant exactement cette structure :
 {
-  "summary": "2-3 sentence overview of overall platform health",
-  "positives": ["list of 3-5 positive trends or strengths"],
-  "risks": ["list of 2-4 problems, risks, or concerns"],
-  "recommendations": ["list of 3-5 actionable recommendations for the admin"],
-  "score": <integer 0-100 representing overall platform health>
+  "summary": "Aperçu de 2 à 3 phrases sur la santé globale de la plateforme",
+  "positives": ["liste de 3 à 5 tendances positives ou points forts"],
+  "risks": ["liste de 2 à 4 problèmes, risques ou préoccupations"],
+  "recommendations": ["liste de 3 à 5 recommandations actionnables pour l'administrateur"],
+  "score": <entier de 0 à 100 représentant la santé globale de la plateforme>
 }
 
-Rules:
-- Be specific and reference actual numbers from the metrics
-- Score 80-100 = healthy, 60-79 = moderate, 40-59 = needs attention, below 40 = critical
-- Write in English
-- Return ONLY the JSON, no markdown, no explanation`;
+Règles :
+- Sois précis et cite les chiffres réels issus des métriques
+- Score 80-100 = sain, 60-79 = modéré, 40-59 = à surveiller, en dessous de 40 = critique
+- Écris en français
+- Retourne UNIQUEMENT le JSON, sans markdown ni explication`;
 }
 
 // ── Call Ollama ───────────────────────────────────────────────────────────────
@@ -218,29 +218,29 @@ function heuristicInsights(metrics) {
   const recommendations = [];
   let score = 50;
 
-  if (users.growthPct > 10) { positives.push(`User base growing at ${users.growthPct}% this period`); score += 8; }
-  if (users.growthPct > 0) { positives.push(`${users.newThisPeriod} new users registered this period`); score += 3; }
-  if (orders.deliveryRate > 70) { positives.push(`Strong delivery rate of ${orders.deliveryRate}%`); score += 7; }
-  if (invoices.paymentRate > 60) { positives.push(`Invoice payment rate at ${invoices.paymentRate}%`); score += 5; }
-  if (revenue.periodRevenue > 0) { positives.push(`${revenue.periodRevenue.toLocaleString()} TND revenue generated this period`); score += 5; }
+  if (users.growthPct > 10) { positives.push(`Base d'utilisateurs en croissance de ${users.growthPct}% sur la période`); score += 8; }
+  if (users.growthPct > 0) { positives.push(`${users.newThisPeriod} nouveaux utilisateurs inscrits sur la période`); score += 3; }
+  if (orders.deliveryRate > 70) { positives.push(`Taux de livraison solide à ${orders.deliveryRate}%`); score += 7; }
+  if (invoices.paymentRate > 60) { positives.push(`Taux de paiement des factures à ${invoices.paymentRate}%`); score += 5; }
+  if (revenue.periodRevenue > 0) { positives.push(`${revenue.periodRevenue.toLocaleString()} TND de revenus générés sur la période`); score += 5; }
 
-  if (users.blockRate > 5) { risks.push(`High block rate: ${users.blockRate}% of users are blocked`); score -= 8; }
-  if (orders.cancellationRate > 15) { risks.push(`Elevated cancellation rate at ${orders.cancellationRate}%`); score -= 10; }
-  if (users.growthPct < 0) { risks.push(`User growth is negative (${users.growthPct}%)`); score -= 10; }
-  if (invoices.paymentRate < 40) { risks.push(`Low invoice payment rate: ${invoices.paymentRate}%`); score -= 8; }
+  if (users.blockRate > 5) { risks.push(`Taux de blocage élevé : ${users.blockRate}% des utilisateurs sont bloqués`); score -= 8; }
+  if (orders.cancellationRate > 15) { risks.push(`Taux d'annulation élevé : ${orders.cancellationRate}%`); score -= 10; }
+  if (users.growthPct < 0) { risks.push(`Croissance des utilisateurs négative (${users.growthPct}%)`); score -= 10; }
+  if (invoices.paymentRate < 40) { risks.push(`Faible taux de paiement des factures : ${invoices.paymentRate}%`); score -= 8; }
 
-  if (users.blockRate > 3) recommendations.push('Investigate reasons for user blocks and improve onboarding');
-  if (orders.cancellationRate > 10) recommendations.push('Analyze order cancellations and improve supplier reliability');
-  recommendations.push('Monitor daily user growth to detect churn early');
-  recommendations.push('Encourage artisans to complete their profiles to improve platform trust');
-  if (invoices.paymentRate < 70) recommendations.push('Send payment reminders for unpaid invoices');
+  if (users.blockRate > 3) recommendations.push("Analyser les raisons des blocages et améliorer le processus d'intégration");
+  if (orders.cancellationRate > 10) recommendations.push('Étudier les annulations de commandes et améliorer la fiabilité des fournisseurs');
+  recommendations.push('Surveiller la croissance quotidienne des utilisateurs pour détecter le désengagement tôt');
+  recommendations.push('Encourager les artisans à compléter leur profil pour renforcer la confiance sur la plateforme');
+  if (invoices.paymentRate < 70) recommendations.push('Envoyer des rappels de paiement pour les factures impayées');
 
   const clampedScore = Math.min(100, Math.max(0, score));
 
   return {
-    summary: `Platform has ${users.total} total users with ${users.active} active. ${orders.total} orders processed with a ${orders.deliveryRate}% delivery rate and ${revenue.totalDelivered.toLocaleString()} TND in delivered revenue.`,
-    positives: positives.length ? positives : ['Platform is operational with active users'],
-    risks: risks.length ? risks : ['No critical risks detected at this time'],
+    summary: `La plateforme compte ${users.total} utilisateurs au total dont ${users.active} actifs. ${orders.total} commandes traitées avec un taux de livraison de ${orders.deliveryRate}% et ${revenue.totalDelivered.toLocaleString()} TND de revenus livrés.`,
+    positives: positives.length ? positives : ['La plateforme est opérationnelle avec des utilisateurs actifs'],
+    risks: risks.length ? risks : ['Aucun risque critique détecté pour le moment'],
     recommendations,
     score: clampedScore,
     source: 'heuristic',

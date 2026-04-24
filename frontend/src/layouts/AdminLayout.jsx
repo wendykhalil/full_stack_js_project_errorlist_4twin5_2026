@@ -12,13 +12,13 @@ export default function AdminLayout() {
     { to: "/admin", label: "Vue d'ensemble", icon: <LayoutDashboard className="h-5 w-5" />, end: true },
     { to: "/admin/artisans", label: "Dashboard Artisans", icon: <Briefcase className="h-5 w-5" /> },
     { to: "/admin/users", label: "Utilisateurs", icon: <Users className="h-5 w-5" /> },
-    { to: "/admin/fraud-analytics", label: "🚨📊 Fraud & Analytics", icon: <Shield className="h-5 w-5" /> },
+    { to: "/admin/fraud-analytics", label: "Fraud & Analytics", icon: <Shield className="h-5 w-5" /> },
     { to: "/admin/activity", label: "Activite", icon: <History className="h-5 w-5" /> },
     { to: "/admin/transactions", label: "Transactions", icon: <ArrowLeftRight className="h-5 w-5" /> },
     { to: "/admin/promo-codes", label: "Codes Promo", icon: <Tag className="h-5 w-5" /> },
     { to: "/admin/reports", label: "Signalements", icon: <Flag className="h-5 w-5" /> },
     { to: "/admin/disputes", label: "Litiges", icon: <Shield className="h-5 w-5" /> },
-    { to: "/admin/ai-insights", label: "AI Insights", icon: <Sparkles className="h-5 w-5" /> },
+    { to: "/admin/ai-insights", label: "Analyses IA", icon: <Sparkles className="h-5 w-5" /> },
   ];
 
   return (
