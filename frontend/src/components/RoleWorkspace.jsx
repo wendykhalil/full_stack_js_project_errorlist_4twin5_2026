@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from "react";
-import { Bot, MessageCircle, MapPin, Loader2 } from "lucide-react";
+import React, { useMemo, useRef, useState } from "react";
+import { Bot, MessageCircle, MapPin, Loader2, Mic, MicOff } from "lucide-react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   Bell,
@@ -63,6 +63,103 @@ export default function RoleWorkspace({
   const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
   const { notification, showNotification, hideNotification } = useNotification();
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
+
+  // ── Sidebar voice navigation ──────────────────────────────────────────────
+  const [isSidebarVoiceListening, setIsSidebarVoiceListening] = useState(false);
+  const [sidebarVoiceFeedback, setSidebarVoiceFeedback] = useState('');
+  const sidebarVoiceRef = useRef(null);
+  const sidebarVoiceTimerRef = useRef(null);
+
+  const showSidebarFeedback = (msg) => {
+    setSidebarVoiceFeedback(msg);
+    clearTimeout(sidebarVoiceTimerRef.current);
+    sidebarVoiceTimerRef.current = setTimeout(() => setSidebarVoiceFeedback(''), 3500);
+  };
+
+  // Normalize: lowercase, strip accents, strip punctuation
+  const normalizeVoice = (str) =>
+    String(str || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9\s]/g, '')
+      .trim();
+
+  const findNavItemByVoice = (text) => {
+    const q = normalizeVoice(text);
+    if (!q) return null;
+    const qWords = q.split(/\s+/).filter(Boolean);
+    const allItems = [
+      ...navItems,
+      ...collapsibleItems.flatMap((c) => c.items || []),
+    ];
+
+    let best = null;
+    let bestScore = 0;
+
+    for (const page of allItems) {
+      if (!page.to) continue;
+      const labelNorm = normalizeVoice(page.label || '');
+      const keywords = (page.keywords || []).map(normalizeVoice);
+      const routeNorm = normalizeVoice(page.to || '');
+
+      let score = 0;
+      if (labelNorm === q) { score = 100; }
+      else if (labelNorm.includes(q) || q.includes(labelNorm)) { score = 80; }
+      else if (qWords.every(w => labelNorm.includes(w))) { score = 70; }
+      else if (qWords.some(w => labelNorm.includes(w) && w.length > 2)) { score = 50; }
+      else if (keywords.some(kw => kw === q || q === kw)) { score = 75; }
+      else if (keywords.some(kw => kw.includes(q) || q.includes(kw))) { score = 60; }
+      else if (keywords.some(kw => qWords.some(w => kw.includes(w) && w.length > 2))) { score = 40; }
+      else if (routeNorm.includes(q) || qWords.some(w => routeNorm.includes(w) && w.length > 3)) { score = 30; }
+
+      if (score > bestScore) { bestScore = score; best = page; }
+    }
+
+    return bestScore >= 30 ? best : null;
+  };
+
+  const toggleSidebarVoice = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      showSidebarFeedback("Non supporté par ce navigateur");
+      return;
+    }
+
+    if (isSidebarVoiceListening) {
+      sidebarVoiceRef.current?.stop();
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'fr-FR';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.onstart = () => setIsSidebarVoiceListening(true);
+    recognition.onend = () => setIsSidebarVoiceListening(false);
+    recognition.onerror = () => {
+      setIsSidebarVoiceListening(false);
+      showSidebarFeedback("Erreur micro");
+    };
+    recognition.onresult = (event) => {
+      const transcript = event.results[0]?.[0]?.transcript || '';
+      if (!transcript) return;
+      const page = findNavItemByVoice(transcript);
+      if (page) {
+        showSidebarFeedback(`→ ${page.label}`);
+        setTimeout(() => {
+          navigate(page.to);
+          closeMobileMenu();
+        }, 500);
+      } else {
+        showSidebarFeedback(`"${transcript}" introuvable`);
+      }
+    };
+    sidebarVoiceRef.current = recognition;
+    recognition.start();
+  };
+  // ─────────────────────────────────────────────────────────────────────────
 
   const getRoleBasePath = (userRole) => {
     switch (userRole?.toLowerCase()) {
@@ -178,6 +275,44 @@ export default function RoleWorkspace({
 
       {/* Logout */}
       <div className="border-t border-blue-700/50 p-3">
+        {/* Voice Navigation Button */}
+        <div className="relative mb-1">
+          <button
+            type="button"
+            onClick={toggleSidebarVoice}
+            className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-200 w-full ${
+              isSidebarVoiceListening
+                ? 'bg-red-500/20 text-red-200 hover:bg-red-500/30'
+                : 'text-blue-200 hover:bg-white/10 hover:text-white'
+            } ${isSidebarCollapsed ? 'justify-center' : ''}`}
+            title={isSidebarVoiceListening ? "Arrêter la navigation vocale" : "Navigation vocale — dites le nom d'une page"}
+            aria-label={isSidebarVoiceListening ? "Arrêter la navigation vocale" : "Navigation vocale"}
+          >
+            {isSidebarVoiceListening ? (
+              <>
+                <span className="relative flex-shrink-0">
+                  <MicOff className="h-4 w-4" />
+                  <span className="absolute -right-1 -top-1 flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-400" />
+                  </span>
+                </span>
+                {!isSidebarCollapsed ? <span className="truncate">Écoute...</span> : null}
+              </>
+            ) : (
+              <>
+                <Mic className="h-4 w-4 flex-shrink-0" />
+                {!isSidebarCollapsed ? <span className="truncate">Navigation vocale</span> : null}
+              </>
+            )}
+          </button>
+          {sidebarVoiceFeedback && !isSidebarCollapsed && (
+            <div className="mx-3 mb-1 rounded-lg bg-white/10 px-2 py-1 text-[11px] text-blue-100">
+              {sidebarVoiceFeedback}
+            </div>
+          )}
+        </div>
+
         <button
           type="button"
           onClick={onLogout}
@@ -268,6 +403,7 @@ export default function RoleWorkspace({
             unreadCount={unreadCount}
             onLogout={onLogout}
             headerExtra={headerExtra}
+            navItems={navItems}
           />
         </div>
 

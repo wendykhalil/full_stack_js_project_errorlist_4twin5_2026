@@ -47,8 +47,13 @@ export default function AdminReports() {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return reports;
     return reports.filter((report) => {
-      const fullName = `${report.reportedUser?.id?.firstName || ''} ${report.reportedUser?.id?.lastName || ''}`.toLowerCase();
-      return fullName.includes(q) || String(report.reason || '').toLowerCase().includes(q);
+      const reportedUserName = report.reportedUser?.name || '';
+      const reportedByName = report.reportedBy?.name || '';
+      return (
+        reportedUserName.toLowerCase().includes(q) ||
+        reportedByName.toLowerCase().includes(q) ||
+        String(report.reason || '').toLowerCase().includes(q)
+      );
     });
   }, [reports, searchQuery]);
 
@@ -122,10 +127,10 @@ export default function AdminReports() {
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <div className="text-sm text-slate-500">
-                      Signalé par {report.reportedBy?.id?.firstName || report.reportedBy?.name || 'Utilisateur'}
+                      Signalé par {report.reportedBy?.name || 'Utilisateur'}
                     </div>
                     <div className="mt-1 font-semibold text-slate-900">
-                      {report.reportedUser?.id?.firstName || report.reportedUser?.name || 'Utilisateur'} - {report.reason}
+                      {report.reportedUser?.name || 'Utilisateur'} — {report.reason}
                     </div>
                     <div className="mt-1 text-sm text-slate-600">{report.description}</div>
                   </div>

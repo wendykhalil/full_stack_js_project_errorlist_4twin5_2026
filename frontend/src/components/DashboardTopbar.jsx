@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { Search, ChevronDown, User, Settings, LogOut, Accessibility, MessageCircle, MapPin, Loader2 } from "lucide-react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Search, ChevronDown, User, Settings, LogOut, Accessibility, MessageCircle, MapPin, Loader2, Mic, MicOff } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { apiFetch } from "../auth/api";
 import { useAuth } from "../auth/AuthContext";
@@ -89,7 +89,7 @@ function initialsFromUser(user) {
   return initials || "BM";
 }
 
-export default function DashboardTopbar({ role = "ARTISAN", unreadCount = 0, onLogout, headerExtra = null }) {
+export default function DashboardTopbar({ role = "ARTISAN", unreadCount = 0, onLogout, headerExtra = null, navItems: propNavItems = [] }) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { user, token } = useAuth();
@@ -101,6 +101,131 @@ export default function DashboardTopbar({ role = "ARTISAN", unreadCount = 0, onL
   const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
   const { notification, showNotification, hideNotification } = useNotification();
   const config = ROLE_CONFIG[role] ?? ROLE_CONFIG.ARTISAN;
+
+  // ── Voice navigation ──────────────────────────────────────────────────────
+  const [isVoiceListening, setIsVoiceListening] = useState(false);
+  const [voiceFeedback, setVoiceFeedback] = useState('');
+  const voiceRecognitionRef = useRef(null);
+  const voiceFeedbackTimerRef = useRef(null);
+
+  // All navigable pages: merge sidebar navItems (from layout) + ROLE_CONFIG fallback
+  const allVoicePages = useMemo(() => {
+    const configPages = config.pages || [];
+    if (propNavItems.length > 0) {
+      // Build a merged list: sidebar navItems + any extra from ROLE_CONFIG not already covered
+      const sidebarRoutes = new Set(propNavItems.map(p => p.to));
+      const extras = configPages.filter(p => !sidebarRoutes.has(p.to));
+      return [...propNavItems, ...extras];
+    }
+    return configPages;
+  }, [propNavItems, config.pages]);
+
+  const showVoiceFeedback = (msg) => {
+    setVoiceFeedback(msg);
+    clearTimeout(voiceFeedbackTimerRef.current);
+    voiceFeedbackTimerRef.current = setTimeout(() => setVoiceFeedback(''), 3500);
+  };
+
+  // Normalize: lowercase, remove accents, remove punctuation
+  const normalize = (str) =>
+    String(str || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9\s]/g, '')
+      .trim();
+
+  const findPageByVoice = (text) => {
+    const q = normalize(text);
+    if (!q) return null;
+    const qWords = q.split(/\s+/).filter(Boolean);
+
+    let best = null;
+    let bestScore = 0;
+
+    for (const page of allVoicePages) {
+      if (!page.to) continue;
+      const labelNorm = normalize(page.label || '');
+      const keywords = (page.keywords || []).map(normalize);
+      const routeNorm = normalize(page.to || '');
+
+      let score = 0;
+
+      // Exact label match
+      if (labelNorm === q) { score = 100; }
+      // Label contains query or query contains label
+      else if (labelNorm.includes(q) || q.includes(labelNorm)) { score = 80; }
+      // All query words appear in label
+      else if (qWords.every(w => labelNorm.includes(w))) { score = 70; }
+      // Any query word matches label word
+      else if (qWords.some(w => labelNorm.includes(w) && w.length > 2)) { score = 50; }
+      // Keyword exact match
+      else if (keywords.some(kw => kw === q || q === kw)) { score = 75; }
+      // Keyword contains query or vice versa
+      else if (keywords.some(kw => kw.includes(q) || q.includes(kw))) { score = 60; }
+      // Any query word in any keyword
+      else if (keywords.some(kw => qWords.some(w => kw.includes(w) && w.length > 2))) { score = 40; }
+      // Route segment match
+      else if (routeNorm.includes(q) || qWords.some(w => routeNorm.includes(w) && w.length > 3)) { score = 30; }
+
+      if (score > bestScore) {
+        bestScore = score;
+        best = page;
+      }
+    }
+
+    return bestScore >= 30 ? best : null;
+  };
+
+  const handleVoiceResult = (transcript) => {
+    const page = findPageByVoice(transcript);
+    if (page) {
+      showVoiceFeedback(`→ ${page.label}`);
+      setTimeout(() => navigate(page.to), 600);
+    } else {
+      showVoiceFeedback(`"${transcript}" — page introuvable`);
+    }
+  };
+
+  const toggleVoiceListening = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      showVoiceFeedback("Reconnaissance vocale non supportée");
+      return;
+    }
+
+    if (isVoiceListening) {
+      voiceRecognitionRef.current?.stop();
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'fr-FR';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.onstart = () => setIsVoiceListening(true);
+    recognition.onend = () => setIsVoiceListening(false);
+    recognition.onerror = () => {
+      setIsVoiceListening(false);
+      showVoiceFeedback("Erreur micro — réessayez");
+    };
+    recognition.onresult = (event) => {
+      const transcript = event.results[0]?.[0]?.transcript || '';
+      if (transcript) handleVoiceResult(transcript);
+    };
+
+    voiceRecognitionRef.current = recognition;
+    recognition.start();
+  };
+
+  useEffect(() => {
+    return () => {
+      voiceRecognitionRef.current?.stop();
+      clearTimeout(voiceFeedbackTimerRef.current);
+    };
+  }, []);
+  // ─────────────────────────────────────────────────────────────────────────
 
   useEffect(() => {
     setQuery("");
@@ -264,6 +389,37 @@ export default function DashboardTopbar({ role = "ARTISAN", unreadCount = 0, onL
       </div>
 
       <div className="flex items-center gap-3">
+        {/* Voice Navigation Button */}
+        <div className="relative">
+          <button
+            onClick={toggleVoiceListening}
+            className={`relative rounded-lg p-2 transition-colors ${
+              isVoiceListening
+                ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
+                : 'hover:bg-slate-50 text-slate-600 dark:hover:bg-slate-800 dark:text-slate-300'
+            }`}
+            title={isVoiceListening ? "Arrêter la navigation vocale" : "Navigation vocale — dites le nom d'une page"}
+            aria-label={isVoiceListening ? "Arrêter la navigation vocale" : "Démarrer la navigation vocale"}
+          >
+            {isVoiceListening ? (
+              <>
+                <MicOff className="h-5 w-5" />
+                <span className="absolute -right-1 -top-1 flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
+                </span>
+              </>
+            ) : (
+              <Mic className="h-5 w-5" />
+            )}
+          </button>
+          {voiceFeedback && (
+            <div className="absolute right-0 top-[calc(100%+8px)] z-50 w-64 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 shadow-lg dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+              {voiceFeedback}
+            </div>
+          )}
+        </div>
+
         {/* Show the supplier-specific bell when headerExtra is provided, otherwise show the global bell */}
         {headerExtra ? headerExtra : <NotificationBell />}
         

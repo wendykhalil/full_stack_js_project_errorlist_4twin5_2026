@@ -43,23 +43,73 @@ async function adminList(req, res, next) {
     const filter = {};
     if (status && status !== 'ALL') filter.status = status;
 
-    const [data, total] = await Promise.all([
+    // Fetch raw docs first without populate to avoid ObjectId cast errors on legacy data
+    const [rawData, total] = await Promise.all([
       Report.find(filter)
         .sort({ createdAt: -1 })
         .skip((Number(page) - 1) * Number(limit))
         .limit(Number(limit))
-        .populate('reportedBy', 'firstName lastName email role')
-        .populate('targetId', 'firstName lastName email role')
         .lean(),
       Report.countDocuments(filter),
     ]);
 
-    // Normalize for frontend compatibility
-    const normalized = data.map(r => ({
-      ...r,
-      reportedBy: { id: r.reportedBy, name: r.reportedBy ? `${r.reportedBy.firstName} ${r.reportedBy.lastName}` : '—' },
-      reportedUser: { id: r.targetId, name: r.targetId ? `${r.targetId.firstName} ${r.targetId.lastName}` : '—' },
-    }));
+    const mongoose = require('mongoose');
+
+    // Separate docs with valid ObjectId refs from legacy/corrupt ones
+    const validIds = rawData.filter(
+      r => mongoose.isValidObjectId(r.reportedBy) && mongoose.isValidObjectId(r.targetId)
+    );
+    const invalidIds = rawData.filter(
+      r => !mongoose.isValidObjectId(r.reportedBy) || !mongoose.isValidObjectId(r.targetId)
+    );
+
+    // Populate only the valid ones
+    const populated = await Report.populate(validIds, [
+      { path: 'reportedBy', select: 'firstName lastName email role' },
+      { path: 'targetId',   select: 'firstName lastName email role' },
+    ]);
+
+    // Merge back in original order
+    const populatedMap = new Map(populated.map(r => [String(r._id), r]));
+    const data = rawData.map(r => populatedMap.get(String(r._id)) || r);
+
+    // Normalize for frontend compatibility — handle both new (ObjectId ref) and legacy (embedded object) formats
+    const normalized = data.map(r => {
+      // reportedBy: could be a populated User object, an ObjectId, or a legacy embedded object
+      const reportedByObj = r.reportedBy;
+      let reportedByName = '—';
+      if (reportedByObj && typeof reportedByObj === 'object' && reportedByObj.firstName) {
+        reportedByName = `${reportedByObj.firstName || ''} ${reportedByObj.lastName || ''}`.trim() || '—';
+      } else if (reportedByObj && typeof reportedByObj === 'object' && reportedByObj.name) {
+        reportedByName = reportedByObj.name;
+      }
+
+      // targetId: same logic
+      const targetObj = r.targetId;
+      let reportedUserName = '—';
+      if (targetObj && typeof targetObj === 'object' && targetObj.firstName) {
+        reportedUserName = `${targetObj.firstName || ''} ${targetObj.lastName || ''}`.trim() || '—';
+      } else if (targetObj && typeof targetObj === 'object' && targetObj.name) {
+        reportedUserName = targetObj.name;
+      }
+
+      // Also handle legacy format where reportedUser was stored as embedded object
+      if (reportedUserName === '—' && r.reportedUser) {
+        const lu = r.reportedUser;
+        reportedUserName = lu.name || (lu.id && typeof lu.id === 'object' && lu.id.firstName
+          ? `${lu.id.firstName} ${lu.id.lastName || ''}`.trim()
+          : '—');
+      }
+      if (reportedByName === '—' && r.reportedBy && typeof r.reportedBy === 'object' && r.reportedBy.email) {
+        reportedByName = r.reportedBy.email;
+      }
+
+      return {
+        ...r,
+        reportedBy: { id: reportedByObj, name: reportedByName },
+        reportedUser: { id: targetObj, name: reportedUserName },
+      };
+    });
 
     return res.json({ ok: true, data: normalized, total });
   } catch (err) { return next(err); }
