@@ -51,7 +51,7 @@ function BlockModal({ user, onClose, onConfirm, loading }) {
         <div className="flex items-start justify-between mb-4">
           <div>
             <h2 className="font-semibold text-slate-800 text-lg dark:text-white">{t('adminUsers.blockModal.title')}</h2>
-            <p className="text-sm text-slate-500 mt-0.5 dark:text-slate-400">{user.firstName} {user.lastName}</p>
+            <p className="text-sm text-slate-500 mt-0.5 dark:text-slate-400" data-no-translate>{user.firstName} {user.lastName}</p>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300">
             <X className="h-5 w-5" />
@@ -280,7 +280,7 @@ export default function AdminUsers() {
                       <div key={u._id} className="p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                         <div className="flex items-start justify-between mb-3">
                           <div>
-                            <div className="font-medium text-slate-800 dark:text-white">
+                            <div className="font-medium text-slate-800 dark:text-white" data-no-translate>
                               {u.firstName} {u.lastName}
                             </div>
                             <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">{u.email}</div>

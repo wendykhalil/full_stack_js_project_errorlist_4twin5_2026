@@ -91,22 +91,67 @@ async function translateStrings(strings, lang) {
 
 // ── DOM helpers ───────────────────────────────────────────────────────────────
 
+// CSS classes / element roles that contain user-entered names/data
+const SKIP_CLASSES = [
+  'user-name', 'username', 'user-email', 'user-phone',
+  'artisan-name', 'company-name', 'contact-name',
+];
+
+// Data attributes that mark user content
+const SKIP_DATA_ATTRS = ['data-no-translate', 'data-user-name', 'data-user-content'];
+
 function shouldSkip(node) {
   let el = node.parentElement;
   while (el) {
     if (SKIP_TAGS.has(el.tagName)) return true;
-    if (el.hasAttribute('data-no-translate')) return true;
+    if (SKIP_DATA_ATTRS.some(a => el.hasAttribute(a))) return true;
+    // Skip elements whose class list contains user-data markers
+    if (SKIP_CLASSES.some(c => el.classList?.contains(c))) return true;
     el = el.parentElement;
   }
   return false;
 }
 
+// Detect if a string looks like a proper name (person / company)
+// Rules: 2-4 words, each starting with uppercase, no common French words
+const FRENCH_COMMON = new Set([
+  'Le','La','Les','De','Du','Des','Un','Une','Et','En','Au','Aux',
+  'Par','Sur','Sous','Dans','Pour','Avec','Sans','Vers','Chez',
+  'Mon','Ton','Son','Mes','Tes','Ses','Notre','Votre','Leur',
+  'Tableau','Bord','Gestion','Analyse','Rapport','Projet','Facture',
+  'Devis','Commande','Produit','Utilisateur','Profil','Abonnement',
+  'Activite','Transaction','Signalement','Litige','Fraude',
+]);
+
+function looksLikeProperName(text) {
+  const t = text.trim();
+  // Must be 2-5 words
+  const words = t.split(/\s+/);
+  if (words.length < 2 || words.length > 5) return false;
+  // Every word must start with uppercase
+  if (!words.every(w => /^[A-ZÀÂÄÉÈÊËÎÏÔÙÛÜÇ]/.test(w))) return false;
+  // None of the words should be common French UI words
+  if (words.some(w => FRENCH_COMMON.has(w))) return false;
+  // Words should be short (names are typically < 20 chars each)
+  if (words.some(w => w.length > 20)) return false;
+  return true;
+}
+
 function isTranslatable(text) {
   const t = text.trim();
   if (!t || t.length < 2) return false;
+  // Pure numbers/symbols
   if (/^[\d\s.,;:!?%€$£+\-*/=<>()[\]{}|@#^~`'"\\/_]+$/.test(t)) return false;
+  // URLs
   if (/^https?:\/\//.test(t)) return false;
-  if (/^[A-Z_]{2,12}$/.test(t)) return false; // status codes
+  // Status codes like PENDING, BAN, RESOLVED
+  if (/^[A-Z_]{2,20}$/.test(t)) return false;
+  // Email addresses
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t)) return false;
+  // Phone numbers
+  if (/^\+?[\d\s\-().]{7,}$/.test(t)) return false;
+  // Looks like a person/company name → skip
+  if (looksLikeProperName(t)) return false;
   return true;
 }
 

@@ -477,7 +477,7 @@ export default function DashboardTopbar({ role = "ARTISAN", unreadCount = 0, onL
                 </div>
               )}
               {user?.firstName || user?.lastName ? (
-                <span className="font-bold text-blue-900 dark:text-blue-200 text-base">
+                <span data-no-translate className="font-bold text-blue-900 dark:text-blue-200 text-base">
                   {user?.firstName} {user?.lastName}
                 </span>
               ) : null}
@@ -493,7 +493,7 @@ export default function DashboardTopbar({ role = "ARTISAN", unreadCount = 0, onL
               />
               <div className="absolute right-0 mt-2 w-64 rounded-xl border border-slate-200 bg-white shadow-xl z-20 overflow-hidden dark:border-slate-700 dark:bg-slate-800">
                 <div className="px-4 py-4 border-b border-slate-100 dark:border-slate-700">
-                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
+                  <p data-no-translate className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
                     {user?.firstName} {user?.lastName}
                   </p>
                   <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-1">
