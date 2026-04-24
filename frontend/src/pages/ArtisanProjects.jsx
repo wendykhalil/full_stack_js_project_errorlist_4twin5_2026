@@ -29,6 +29,7 @@ import SubscriptionAlert from "../components/SubscriptionAlert";
 import AIAssistantModal from "../components/ai-assistant/AIAssistantModal";
 import PageShell from '../components/PageShell';
 import MapPickerModal from '../components/MapPickerModal';
+import { Hint } from '../components/MouseTooltip';
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 const ASSET_BASE = API_URL.replace(/\/api\/?$/, "");
@@ -964,12 +965,16 @@ const onCreate = async (e) => {
             <p className="mt-1 text-slate-600">{t('artisanProjects.subtitle')}</p>
           </div>
           <div className="flex flex-wrap gap-3">
+            <Hint text="Créer un nouveau projet de construction ou rénovation.">
             <button onClick={() => guardSubscription(() => setIsCreateOpen(true))} className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50" disabled={checkingSubscription}>
               <Plus className="h-4 w-4" /> {t('artisanProjects.newProjectButton')}
             </button>
+            </Hint>
+            <Hint text="Laisser l'IA remplir automatiquement les champs du projet selon vos informations.">
             <button onClick={() => guardSubscription(() => setIsAIOpen(true))} className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50" disabled={checkingSubscription}>
               <Bot className="h-4 w-4" /> Assistant IA
             </button>
+            </Hint>
           </div>
         </div>
 
@@ -1055,6 +1060,7 @@ const onCreate = async (e) => {
 
               {openMenuId === p._id ? (
                 <div className="absolute right-0 top-full z-[999] mt-2 w-64 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+                  <Hint text="Voir tous les détails, photos et matériaux de ce projet.">
                   <button
                     type="button"
                     onClick={() => {
@@ -1067,7 +1073,9 @@ const onCreate = async (e) => {
                     <Eye className="h-4 w-4" />
                     Voir le projet
                   </button>
+                  </Hint>
 
+                  <Hint text="Modifier les informations, le budget, les dates ou les matériaux de ce projet.">
                   <button
                     type="button"
                     onClick={() =>
@@ -1081,6 +1089,7 @@ const onCreate = async (e) => {
                     <Pencil className="h-4 w-4" />
                     Modifier le projet
                   </button>
+                  </Hint>
 
                   <button
                     type="button"

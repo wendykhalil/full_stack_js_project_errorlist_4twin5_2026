@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, Ban, CheckCircle, Clock, Eye, Flag, Search, ShieldCheck, X } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { apiFetch } from '../auth/api';
+import { Hint } from '../components/MouseTooltip';
 
 const STATUS = {
   PENDING: { label: 'En attente', color: 'bg-amber-100 text-amber-700' },
@@ -95,6 +96,7 @@ export default function AdminReports() {
       {error ? <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
 
       <div className="grid gap-3 sm:grid-cols-2">
+        <Hint text="Rechercher un signalement par nom ou raison">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
@@ -104,6 +106,8 @@ export default function AdminReports() {
             className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm"
           />
         </div>
+        </Hint>
+        <Hint text="Filtrer les signalements par statut de traitement">
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
@@ -115,6 +119,7 @@ export default function AdminReports() {
           <option value="RESOLVED">RESOLVED</option>
           <option value="REJECTED">REJECTED</option>
         </select>
+        </Hint>
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
@@ -138,12 +143,14 @@ export default function AdminReports() {
                     <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${STATUS[report.status]?.color || 'bg-slate-100 text-slate-700'}`}>
                       {STATUS[report.status]?.label || report.status}
                     </span>
+                    <Hint text="Voir les détails complets et prendre une action sur ce signalement">
                     <button
                       onClick={() => setSelectedReport(report)}
                       className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700"
                     >
                       <Eye className="h-3.5 w-3.5" /> Détails
                     </button>
+                    </Hint>
                   </div>
                 </div>
               </div>
@@ -208,18 +215,26 @@ export default function AdminReports() {
                 <button onClick={applyAction} disabled={!actionType || actionLoading} className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">
                   {actionLoading ? 'Traitement...' : 'Confirmer action'}
                 </button>
+                <Hint text="Passer ce signalement en cours d'examen">
                 <button onClick={() => { setActionType('REVIEW'); }} className="inline-flex items-center gap-1 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-medium text-blue-700">
                   <Clock className="h-3.5 w-3.5" /> UNDER_REVIEW
                 </button>
+                </Hint>
+                <Hint text="Envoyer un avertissement à l'utilisateur signalé">
                 <button onClick={() => { setActionType('WARN'); }} className="inline-flex items-center gap-1 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700">
                   <AlertTriangle className="h-3.5 w-3.5" /> WARN
                 </button>
+                </Hint>
+                <Hint text="Bannir l'utilisateur signalé de la plateforme">
                 <button onClick={() => { setActionType('BAN'); }} className="inline-flex items-center gap-1 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700">
                   <Ban className="h-3.5 w-3.5" /> BAN
                 </button>
+                </Hint>
+                <Hint text="Rejeter ce signalement comme non fondé">
                 <button onClick={() => { setActionType('REJECT'); }} className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-xs font-medium text-slate-700">
                   <X className="h-3.5 w-3.5" /> REJECT
                 </button>
+                </Hint>
               </div>
             </div>
           </div>

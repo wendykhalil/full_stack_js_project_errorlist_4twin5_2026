@@ -1,6 +1,7 @@
 import React from 'react';
 import MLPredictions from '../components/MLPredictions';
 import { Brain, TrendingUp, Clock, DollarSign, AlertTriangle } from 'lucide-react';
+import { Hint } from '../components/MouseTooltip';
 
 const MLPredictionsPage = () => {
   return (
@@ -24,6 +25,7 @@ const MLPredictionsPage = () => {
 
         {/* Features */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Hint text="Estimez le temps nécessaire pour compléter votre projet selon son type, sa taille et sa complexité.">
           <div className="bg-white p-6 rounded-lg shadow-sm border">
             <div className="flex items-center gap-3 mb-3">
               <Clock className="text-blue-600" size={24} />
@@ -34,7 +36,9 @@ const MLPredictionsPage = () => {
               du type, de la taille et de la complexité.
             </p>
           </div>
+          </Hint>
 
+          <Hint text="Obtenez une estimation du coût total en Dinar Tunisien basée sur les matériaux, la localisation et les spécifications.">
           <div className="bg-white p-6 rounded-lg shadow-sm border">
             <div className="flex items-center gap-3 mb-3">
               <DollarSign className="text-green-600" size={24} />
@@ -45,7 +49,9 @@ const MLPredictionsPage = () => {
               la localisation et les spécifications du projet.
             </p>
           </div>
+          </Hint>
 
+          <Hint text="Évaluez la probabilité de retard de votre projet en analysant la complexité, le budget et les délais.">
           <div className="bg-white p-6 rounded-lg shadow-sm border">
             <div className="flex items-center gap-3 mb-3">
               <AlertTriangle className="text-red-600" size={24} />
@@ -56,6 +62,7 @@ const MLPredictionsPage = () => {
               de complexité, budget, délais et conditions météorologiques.
             </p>
           </div>
+          </Hint>
         </div>
 
         {/* Main Component */}

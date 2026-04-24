@@ -3,21 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { useTranslation } from '../i18n';
 import {
-  Package,
-  Search,
-  Eye,
-  MessageCircle,
-  Calendar,
-  MapPin,
-  Building,
-  Loader2,
-  AlertCircle,
-  CheckCircle
+  Package, Search, Eye, MessageCircle, Calendar,
+  MapPin, Building, Loader2, AlertCircle, CheckCircle
 } from 'lucide-react';
 import { getMyOrders } from '../auth/api';
 import OrderStatusBadge from '../components/OrderStatusBadge';
 import OrderTabs from '../components/OrderTabs';
 import SimpleFooter from '../components/Footer';
+import { Hint } from '../components/MouseTooltip';
 
 export default function ArtisanOrders() {
   const { t } = useTranslation();
@@ -259,6 +252,7 @@ export default function ArtisanOrders() {
 
               {/* Boutons communs */}
               <div className="mt-4 flex gap-3 border-t border-slate-100 pt-4">
+                <Hint text="Voir tous les détails de cette commande : produit, fournisseur, adresse et historique.">
                 <button
                   onClick={() => navigate(`/artisan/orders/${order._id}`)}
                   className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-indigo-600 hover:bg-indigo-50"
@@ -266,6 +260,8 @@ export default function ArtisanOrders() {
                   <Eye className="h-4 w-4" />
                   {t('orders.viewDetails', 'Voir détails')}
                 </button>
+                </Hint>
+                <Hint text="Envoyer un message au fournisseur concernant cette commande.">
                 <button
                   onClick={() => navigate(`/artisan/orders/${order._id}?tab=messages`)}
                   className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
@@ -273,6 +269,7 @@ export default function ArtisanOrders() {
                   <MessageCircle className="h-4 w-4" />
                   {t('orders.messages', 'Messages')}
                 </button>
+                </Hint>
               </div>
             </div>
           ))}

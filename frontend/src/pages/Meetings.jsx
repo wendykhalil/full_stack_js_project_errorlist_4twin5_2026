@@ -1,20 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../auth/AuthContext';
-import {
-  Calendar,
-  Clock,
-  User,
-  CheckCircle,
-  XCircle,
-  Clock as ClockIcon,
-  Loader2,
-  AlertCircle,
-  ChevronDown,
-  MapPin,
-  MessageSquare,
-  Trash2,
-} from 'lucide-react';
+import { Calendar, Clock, User, CheckCircle, XCircle, Clock as ClockIcon, Loader2, AlertCircle, ChevronDown, MapPin, MessageSquare, Trash2 } from 'lucide-react';
 import meetingsService from '../services/meetingsService';
+import { Hint } from '../components/MouseTooltip';
 
 const STATUS_COLORS = {
   PENDING: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', badge: 'bg-amber-100' },
@@ -107,6 +95,7 @@ function MeetingCard({ meeting, isArtisan, onAccept, onReject, onCancel, onDelet
 
           {meeting.googleMeetLink && (
             <div className="flex items-center gap-3">
+              <Hint text="Rejoindre la réunion en visioconférence via Google Meet.">
               <a
                 href={meeting.googleMeetLink}
                 target="_blank"
@@ -115,6 +104,7 @@ function MeetingCard({ meeting, isArtisan, onAccept, onReject, onCancel, onDelet
               >
                 <span>🎥 Rejoindre la réunion</span>
               </a>
+              </Hint>
             </div>
           )}
         </div>
@@ -160,6 +150,7 @@ function MeetingCard({ meeting, isArtisan, onAccept, onReject, onCancel, onDelet
         {/* Actions */}
         {canActon && (
           <div className="flex gap-3">
+            <Hint text="Confirmer votre participation à cette réunion et notifier le prescripteur.">
             <button
               onClick={() => onAccept(meeting._id)}
               disabled={loading}
@@ -168,6 +159,8 @@ function MeetingCard({ meeting, isArtisan, onAccept, onReject, onCancel, onDelet
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
               Accepter
             </button>
+            </Hint>
+            <Hint text="Décliner cette invitation de réunion et notifier le prescripteur.">
             <button
               onClick={() => onReject(meeting._id)}
               disabled={loading}
@@ -176,6 +169,7 @@ function MeetingCard({ meeting, isArtisan, onAccept, onReject, onCancel, onDelet
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
               Refuser
             </button>
+            </Hint>
           </div>
         )}
 

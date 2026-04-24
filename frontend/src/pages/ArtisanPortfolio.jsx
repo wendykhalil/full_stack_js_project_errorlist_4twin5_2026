@@ -1,26 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react'; // Ajout de useCallback
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { getMySubscription } from '../auth/api';
-
-import {
-  Package,
-  Plus,
-  Eye,
-  Trash2,
-  Edit,
-  Calendar,
-  MapPin,
-  Image as ImageIcon,
-  Loader2,
-  AlertCircle,
-  X,
-  ChevronLeft,
-  ChevronRight,
-  Tag
-} from 'lucide-react';
+import { Plus, Eye, Trash2, Edit, Calendar, MapPin, Image as ImageIcon, Loader2, AlertCircle, X, ChevronLeft, ChevronRight, Tag, Package } from 'lucide-react';
 import SimpleFooter from '../components/Footer';
 import SubscriptionAlert from '../components/SubscriptionAlert';
+import { Hint } from '../components/MouseTooltip';
 
 export default function ArtisanPortfolio() {
   
@@ -138,6 +123,7 @@ export default function ArtisanPortfolio() {
           </p>
         </div>
 
+        <Hint text="Ajouter une nouvelle réalisation à votre portfolio pour la montrer aux clients.">
         <button
           onClick={() => navigate('/artisan/portfolio/add')}
           disabled={checkingSubscription}
@@ -146,6 +132,7 @@ export default function ArtisanPortfolio() {
           <Plus className="h-4 w-4" />
           Ajouter un projet
         </button>
+        </Hint>
       </div>
 
       {/* Projects List */}
@@ -227,6 +214,7 @@ export default function ArtisanPortfolio() {
 
                 {/* Actions */}
                 <div className="flex gap-2 border-t border-slate-100 pt-3">
+                  <Hint text="Voir les photos et détails complets de cette réalisation.">
                   <button
                     onClick={() => { setViewingProject(project); setImageIndex(0); }}
                     className="flex-1 flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium text-indigo-600 hover:bg-indigo-50 rounded-lg"
@@ -234,6 +222,8 @@ export default function ArtisanPortfolio() {
                     <Eye className="h-3 w-3" />
                     Voir
                   </button>
+                  </Hint>
+                  <Hint text="Modifier le titre, la description, les photos ou les tags de cette réalisation.">
                   <button
                     onClick={() => navigate(`/artisan/portfolio/edit/${project._id}`)}
                     className="flex-1 flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium rounded-lg text-slate-600 hover:bg-slate-50"
@@ -241,6 +231,8 @@ export default function ArtisanPortfolio() {
                     <Edit className="h-3 w-3" />
                     Modifier
                   </button>
+                  </Hint>
+                  <Hint text="Supprimer définitivement cette réalisation de votre portfolio.">
                   <button
                     onClick={() => handleDelete(project._id)}
                     disabled={deleting === project._id}
@@ -253,6 +245,7 @@ export default function ArtisanPortfolio() {
                     )}
                     Supprimer
                   </button>
+                  </Hint>
                 </div>
               </div>
             </div>

@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import Footer from '../components/Footer';
+import { Hint } from '../components/MouseTooltip';
 
 /* ─── Small reusable primitives ─────────────────────────────────────────── */
 
@@ -171,9 +172,15 @@ const AdminFraudAnalytics = () => {
             {/* Tab bar */}
             <div className="mt-6 border-b border-gray-200">
               <nav className="-mb-px flex gap-6">
-                {TABS.map(({ id, label, icon: Icon }) => (
+                {TABS.map(({ id, label, icon: Icon }) => {
+                  const tabTooltips = {
+                    overview: "Vue d'ensemble des statistiques de la plateforme",
+                    fraud: "Analyse des comportements suspects et scores de risque",
+                    analytics: "Analyses avancées par intelligence artificielle",
+                  };
+                  return (
+                  <Hint key={id} text={tabTooltips[id] || label}>
                   <button
-                    key={id}
                     onClick={() => setSelectedTab(id)}
                     className={`flex items-center gap-2 border-b-2 pb-3 text-sm font-medium transition-colors ${
                       selectedTab === id
@@ -184,7 +191,9 @@ const AdminFraudAnalytics = () => {
                     <Icon className="h-4 w-4" />
                     {label}
                   </button>
-                ))}
+                  </Hint>
+                  );
+                })}
               </nav>
             </div>
           </div>

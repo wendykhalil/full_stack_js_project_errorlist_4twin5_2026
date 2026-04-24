@@ -1,5 +1,5 @@
-import React, { useMemo, useRef, useState } from "react";
-import { Bot, MessageCircle, MapPin, Loader2, Mic, MicOff } from "lucide-react";
+import React, { useMemo, useState } from "react";
+import { Bot, MessageCircle, MapPin, Loader2 } from "lucide-react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   Bell,
@@ -17,24 +17,117 @@ import { useNotification } from "../hooks/useNotification";
 import { getCurrentPositionWithAddress, updateLocationOnServer } from "../utils/geolocation";
 import { storeLocationUpdate } from "../services/profileService";
 import Notification from "./Notification";
-function SidebarLink({ item, collapsed, onClick }) {
+
+// ── Page descriptions shown on hover ─────────────────────────────────────────
+const PAGE_DESCRIPTIONS = {
+  // Admin
+  "/admin":                   "Vue globale de la plateforme : stats, alertes et activité récente",
+  "/admin/artisans":          "Tableau de bord dédié aux artisans inscrits",
+  "/admin/users":             "Gérer tous les comptes utilisateurs, bloquer ou débloquer",
+  "/admin/fraud-analytics":   "Détection de fraude et analyses de sécurité",
+  "/admin/activity":          "Journal complet des actions effectuées sur la plateforme",
+  "/admin/transactions":      "Historique et suivi de toutes les transactions financières",
+  "/admin/promo-codes":       "Créer et gérer les codes promotionnels",
+  "/admin/reports":           "Traiter les signalements soumis par les utilisateurs",
+  "/admin/disputes":          "Gérer les litiges entre acheteurs et vendeurs",
+  "/admin/ai-insights":       "Analyses et recommandations générées par l'IA",
+  // Artisan
+  "/artisan":                 "Résumé de votre activité : projets, devis et commandes",
+  "/artisan/subscription":    "Gérer votre abonnement et accéder aux fonctionnalités Pro",
+  "/artisan/portfolio":       "Présenter vos réalisations et photos de chantier",
+  "/artisan/weather":         "Météo locale pour planifier vos chantiers",
+  "/artisan/availability":    "Définir vos créneaux de disponibilité",
+  "/artisan/service-requests":"Consulter et postuler aux missions disponibles",
+  "/artisan/disputes":        "Suivre et résoudre vos litiges en cours",
+  "/artisan/meetings":        "Planifier et gérer vos réunions clients",
+  "/artisan/orders":          "Historique de vos commandes de matériaux",
+  "/artisan/messages":        "Messagerie avec vos clients et fournisseurs",
+  "/artisan/marketplace":     "Parcourir et commander des produits de construction",
+  "/artisan/favorites":       "Vos produits favoris sauvegardés",
+  "/artisan/cart":            "Votre panier d'achat en cours",
+  "/artisan/projects":        "Gérer tous vos projets et chantiers",
+  "/artisan/devis/create":    "Créer un nouveau devis pour un client",
+  "/artisan/factures":        "Émettre et suivre vos factures",
+  "/artisan/ml-predictions":  "Prédictions IA sur vos projets et revenus",
+  "/artisan/profile":         "Modifier votre profil et informations personnelles",
+  // Prescripteur
+  "/prescripteur":            "Catalogue de produits disponibles",
+  "/prescripteur/artisans":   "Trouver et contacter des artisans qualifiés",
+  "/prescripteur/projects":   "Suivre l'avancement de vos projets",
+  "/prescripteur/service-requests": "Publier et gérer vos demandes de service",
+  "/prescripteur/disputes":   "Suivre et résoudre vos litiges",
+  "/prescripteur/meetings":   "Planifier des réunions avec vos artisans",
+  "/prescripteur/ml-predictions": "Estimations et prédictions IA pour vos projets",
+  "/prescripteur/search":     "Rechercher artisans, produits et services",
+  "/prescripteur/messages":   "Messagerie avec vos artisans et fournisseurs",
+  "/prescripteur/profile":    "Modifier votre profil et informations personnelles",
+  // Fournisseur
+  "/fournisseur":             "Vue d'ensemble de votre activité fournisseur",
+  "/fournisseur/orders":      "Gérer les commandes reçues de vos clients",
+  "/fournisseur/marketplace": "Voir comment vos produits apparaissent sur la place de marché",
+  "/fournisseur/produits":    "Gérer votre catalogue de produits",
+  "/fournisseur/produits/new":"Ajouter un nouveau produit à votre catalogue",
+  "/fournisseur/messages":    "Messagerie avec vos clients artisans",
+  "/fournisseur/profile":     "Modifier votre profil et informations de l'entreprise",
+  // Shared
+  "/chat":                    "Discuter avec l'assistant IA pour obtenir de l'aide",
+};
+
+// ── Tooltip component ─────────────────────────────────────────────────────────
+function SidebarTooltip({ label, description, side = "right" }) {
   return (
-    <NavLink
-      to={item.to}
-      end={item.end}
-      onClick={onClick}
-      title={collapsed ? item.label : undefined}
-      className={({ isActive }) =>
-        `flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-200 ${
-          isActive
-            ? "bg-white/20 text-white shadow-lg"
-            : "text-blue-100 hover:bg-white/10 hover:text-white"
-        } ${collapsed ? "justify-center px-2" : ""}`
-      }
+    <div
+      className={`pointer-events-none absolute z-50 ${
+        side === "right" ? "left-full ml-3" : "left-full ml-3"
+      } top-1/2 -translate-y-1/2 w-56`}
     >
-      <span className="flex-shrink-0">{item.icon}</span>
-      {!collapsed ? <span className="truncate">{item.label}</span> : null}
-    </NavLink>
+      {/* Arrow */}
+      <div className="absolute -left-1.5 top-1/2 -translate-y-1/2 h-3 w-3 rotate-45 rounded-sm bg-slate-900" />
+      <div className="relative rounded-xl bg-slate-900 px-3 py-2.5 shadow-2xl ring-1 ring-white/10">
+        <p className="text-[12px] font-semibold text-white leading-tight">{label}</p>
+        {description && (
+          <p className="mt-1 text-[11px] leading-snug text-slate-300">{description}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Sidebar nav link with hover tooltip ──────────────────────────────────────
+function SidebarLink({ item, collapsed, onClick }) {
+  const [hovered, setHovered] = useState(false);
+  const description = PAGE_DESCRIPTIONS[item.to] || null;
+
+  return (
+    <div
+      className="relative"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <NavLink
+        to={item.to}
+        end={item.end}
+        onClick={onClick}
+        className={({ isActive }) =>
+          `flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-200 ${
+            isActive
+              ? "bg-white/20 text-white shadow-lg"
+              : "text-blue-100 hover:bg-white/10 hover:text-white"
+          } ${collapsed ? "justify-center px-2" : ""}`
+        }
+      >
+        <span className="flex-shrink-0">{item.icon}</span>
+        {!collapsed ? <span className="truncate">{item.label}</span> : null}
+      </NavLink>
+
+      {/* Tooltip: always show on hover when collapsed (replaces title), show description when expanded */}
+      {hovered && (collapsed || description) && (
+        <SidebarTooltip
+          label={item.label}
+          description={collapsed ? description : description}
+        />
+      )}
+    </div>
   );
 }
 
@@ -64,115 +157,13 @@ export default function RoleWorkspace({
   const { notification, showNotification, hideNotification } = useNotification();
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
-  // ── Sidebar voice navigation ──────────────────────────────────────────────
-  const [isSidebarVoiceListening, setIsSidebarVoiceListening] = useState(false);
-  const [sidebarVoiceFeedback, setSidebarVoiceFeedback] = useState('');
-  const sidebarVoiceRef = useRef(null);
-  const sidebarVoiceTimerRef = useRef(null);
-
-  const showSidebarFeedback = (msg) => {
-    setSidebarVoiceFeedback(msg);
-    clearTimeout(sidebarVoiceTimerRef.current);
-    sidebarVoiceTimerRef.current = setTimeout(() => setSidebarVoiceFeedback(''), 3500);
-  };
-
-  // Normalize: lowercase, strip accents, strip punctuation
-  const normalizeVoice = (str) =>
-    String(str || '')
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9\s]/g, '')
-      .trim();
-
-  const findNavItemByVoice = (text) => {
-    const q = normalizeVoice(text);
-    if (!q) return null;
-    const qWords = q.split(/\s+/).filter(Boolean);
-    const allItems = [
-      ...navItems,
-      ...collapsibleItems.flatMap((c) => c.items || []),
-    ];
-
-    let best = null;
-    let bestScore = 0;
-
-    for (const page of allItems) {
-      if (!page.to) continue;
-      const labelNorm = normalizeVoice(page.label || '');
-      const keywords = (page.keywords || []).map(normalizeVoice);
-      const routeNorm = normalizeVoice(page.to || '');
-
-      let score = 0;
-      if (labelNorm === q) { score = 100; }
-      else if (labelNorm.includes(q) || q.includes(labelNorm)) { score = 80; }
-      else if (qWords.every(w => labelNorm.includes(w))) { score = 70; }
-      else if (qWords.some(w => labelNorm.includes(w) && w.length > 2)) { score = 50; }
-      else if (keywords.some(kw => kw === q || q === kw)) { score = 75; }
-      else if (keywords.some(kw => kw.includes(q) || q.includes(kw))) { score = 60; }
-      else if (keywords.some(kw => qWords.some(w => kw.includes(w) && w.length > 2))) { score = 40; }
-      else if (routeNorm.includes(q) || qWords.some(w => routeNorm.includes(w) && w.length > 3)) { score = 30; }
-
-      if (score > bestScore) { bestScore = score; best = page; }
-    }
-
-    return bestScore >= 30 ? best : null;
-  };
-
-  const toggleSidebarVoice = () => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      showSidebarFeedback("Non supporté par ce navigateur");
-      return;
-    }
-
-    if (isSidebarVoiceListening) {
-      sidebarVoiceRef.current?.stop();
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'fr-FR';
-    recognition.continuous = false;
-    recognition.interimResults = false;
-
-    recognition.onstart = () => setIsSidebarVoiceListening(true);
-    recognition.onend = () => setIsSidebarVoiceListening(false);
-    recognition.onerror = () => {
-      setIsSidebarVoiceListening(false);
-      showSidebarFeedback("Erreur micro");
-    };
-    recognition.onresult = (event) => {
-      const transcript = event.results[0]?.[0]?.transcript || '';
-      if (!transcript) return;
-      const page = findNavItemByVoice(transcript);
-      if (page) {
-        showSidebarFeedback(`→ ${page.label}`);
-        setTimeout(() => {
-          navigate(page.to);
-          closeMobileMenu();
-        }, 500);
-      } else {
-        showSidebarFeedback(`"${transcript}" introuvable`);
-      }
-    };
-    sidebarVoiceRef.current = recognition;
-    recognition.start();
-  };
-  // ─────────────────────────────────────────────────────────────────────────
-
   const getRoleBasePath = (userRole) => {
     switch (userRole?.toLowerCase()) {
-      case 'admin':
-        return '/admin';
-      case 'artisan':
-        return '/artisan';
-      case 'prescripteur':
-        return '/prescripteur';
-      case 'supplier':
-        return '/fournisseur';
-      default:
-        return '/';
+      case 'admin':       return '/admin';
+      case 'artisan':     return '/artisan';
+      case 'prescripteur':return '/prescripteur';
+      case 'supplier':    return '/fournisseur';
+      default:            return '/';
     }
   };
 
@@ -181,15 +172,11 @@ export default function RoleWorkspace({
     try {
       const locationData = await getCurrentPositionWithAddress();
       await updateLocationOnServer(locationData.latitude, locationData.longitude, token, role);
-      
-      // Store location data for profile pages to use
       storeLocationUpdate(locationData);
-      
       showNotification('Votre position a été mise à jour avec succès !', 'success');
     } catch (error) {
       console.error('Error updating location:', error);
       showNotification(error.message || 'Erreur lors de la mise à jour de la position', 'error');
-      // Still navigate to profile on error so user can manually update
       setTimeout(() => navigate(`${getRoleBasePath(role)}/profile`), 1500);
     } finally {
       setIsUpdatingLocation(false);
@@ -198,6 +185,9 @@ export default function RoleWorkspace({
 
   const mainItems = useMemo(() => navItems.slice(0, 6), [navItems]);
   const extraItems = useMemo(() => navItems.slice(6), [navItems]);
+
+  // AI chat tooltip state
+  const [chatHovered, setChatHovered] = useState(false);
 
   const sidebarContent = (
     <>
@@ -254,11 +244,14 @@ export default function RoleWorkspace({
         ) : null}
 
         {/* AI CHAT BUTTON */}
-        <div className="mt-4">
+        <div
+          className="relative mt-4"
+          onMouseEnter={() => setChatHovered(true)}
+          onMouseLeave={() => setChatHovered(false)}
+        >
           <NavLink
-            to={"/chat"}
+            to="/chat"
             onClick={closeMobileMenu}
-            title={isSidebarCollapsed ? "Assistant IA" : undefined}
             className={({ isActive }) =>
               `flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-200 ${
                 isActive
@@ -270,49 +263,17 @@ export default function RoleWorkspace({
             <Bot className="h-4 w-4 flex-shrink-0" />
             {!isSidebarCollapsed ? <span className="truncate">Assistant IA</span> : null}
           </NavLink>
+          {chatHovered && (isSidebarCollapsed || PAGE_DESCRIPTIONS["/chat"]) && (
+            <SidebarTooltip
+              label="Assistant IA"
+              description={PAGE_DESCRIPTIONS["/chat"]}
+            />
+          )}
         </div>
       </div>
 
       {/* Logout */}
       <div className="border-t border-blue-700/50 p-3">
-        {/* Voice Navigation Button */}
-        <div className="relative mb-1">
-          <button
-            type="button"
-            onClick={toggleSidebarVoice}
-            className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-200 w-full ${
-              isSidebarVoiceListening
-                ? 'bg-red-500/20 text-red-200 hover:bg-red-500/30'
-                : 'text-blue-200 hover:bg-white/10 hover:text-white'
-            } ${isSidebarCollapsed ? 'justify-center' : ''}`}
-            title={isSidebarVoiceListening ? "Arrêter la navigation vocale" : "Navigation vocale — dites le nom d'une page"}
-            aria-label={isSidebarVoiceListening ? "Arrêter la navigation vocale" : "Navigation vocale"}
-          >
-            {isSidebarVoiceListening ? (
-              <>
-                <span className="relative flex-shrink-0">
-                  <MicOff className="h-4 w-4" />
-                  <span className="absolute -right-1 -top-1 flex h-2.5 w-2.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-400" />
-                  </span>
-                </span>
-                {!isSidebarCollapsed ? <span className="truncate">Écoute...</span> : null}
-              </>
-            ) : (
-              <>
-                <Mic className="h-4 w-4 flex-shrink-0" />
-                {!isSidebarCollapsed ? <span className="truncate">Navigation vocale</span> : null}
-              </>
-            )}
-          </button>
-          {sidebarVoiceFeedback && !isSidebarCollapsed && (
-            <div className="mx-3 mb-1 rounded-lg bg-white/10 px-2 py-1 text-[11px] text-blue-100">
-              {sidebarVoiceFeedback}
-            </div>
-          )}
-        </div>
-
         <button
           type="button"
           onClick={onLogout}
@@ -328,6 +289,7 @@ export default function RoleWorkspace({
 
   return (
     <>
+      <Notification notification={notification} onClose={hideNotification} />
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
       {/* Sidebar */}
       <aside
@@ -359,7 +321,7 @@ export default function RoleWorkspace({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button 
+              <button
                 onClick={() => navigate(`${getRoleBasePath(role)}/messages`)}
                 className="relative rounded-full p-2 text-blue-200 hover:bg-white/10"
                 title="Messages"
@@ -371,7 +333,7 @@ export default function RoleWorkspace({
                   </span>
                 )}
               </button>
-              <button 
+              <button
                 onClick={handleAutoDetectLocation}
                 disabled={isUpdatingLocation}
                 className="relative rounded-full p-2 text-blue-200 hover:bg-white/10 disabled:opacity-50"
@@ -398,8 +360,8 @@ export default function RoleWorkspace({
 
         {/* Desktop top bar */}
         <div className="sticky top-0 z-20 hidden xl:block">
-          <DashboardTopbar 
-            role={role} 
+          <DashboardTopbar
+            role={role}
             unreadCount={unreadCount}
             onLogout={onLogout}
             headerExtra={headerExtra}

@@ -7,6 +7,7 @@ import { useAuth } from "../auth/AuthContext.jsx";
 import { createProduct, getSupplierStats } from "../auth/api.js";
 import { useServerErrors } from "../hooks/useServerErrors";
 import FieldError from "../components/FieldError";
+import { Hint } from "../components/MouseTooltip";
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -308,12 +309,16 @@ export default function FournisseurProduitNew() {
           )}
 
           <div className="mt-8 flex flex-col gap-4 md:flex-row">
+            <Hint text="Annuler et retourner à la liste de vos produits sans enregistrer.">
             <button type="button" onClick={() => navigate("/fournisseur/produits")} className="flex-1 rounded-2xl border border-slate-200 bg-white py-4 text-sm font-semibold text-slate-800 hover:bg-slate-50">
               {t('fournisseurProduitNew.cancelButton')}
             </button>
+            </Hint>
+            <Hint text="Publier ce produit sur la place de marché pour que les artisans puissent le commander.">
             <button type="submit" disabled={submitting || loadingCategories} className="flex-1 rounded-2xl bg-indigo-700 py-4 text-sm font-semibold text-white hover:bg-indigo-800 disabled:opacity-50">
               {submitting ? 'Creating...' : t('fournisseurProduitNew.submitButton')}
             </button>
+            </Hint>
           </div>
         </form>
       </section>

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { getAdminAiInsights } from "../auth/api";
+import { Hint } from "../components/MouseTooltip";
 
 // ── Score ring ────────────────────────────────────────────────────────────────
 function ScoreRing({ score }) {
@@ -184,6 +185,7 @@ export default function AdminAiInsights() {
             </p>
           )}
         </div>
+        <Hint text="Forcer une nouvelle analyse IA avec les données les plus récentes (ignore le cache).">
         <button
           type="button"
           onClick={() => load(true)}
@@ -197,6 +199,7 @@ export default function AdminAiInsights() {
           )}
           Actualiser les analyses
         </button>
+        </Hint>
       </div>
 
       {/* Loading */}
@@ -248,24 +251,30 @@ export default function AdminAiInsights() {
 
           {/* Positives / Risks / Recommendations */}
           <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+            <Hint text="Points forts détectés par l'IA : croissance, engagement, performance des ventes, etc.">
             <InsightCard
               title="Tendances positives"
               icon={<TrendingUp />}
               items={data.positives ?? []}
               tone="green"
             />
+            </Hint>
+            <Hint text="Risques et anomalies identifiés par l'IA nécessitant votre attention.">
             <InsightCard
               title="Risques & Alertes"
               icon={<AlertTriangle />}
               items={data.risks ?? []}
               tone="red"
             />
+            </Hint>
+            <Hint text="Actions concrètes suggérées par l'IA pour améliorer les performances de la plateforme.">
             <InsightCard
               title="Recommandations"
               icon={<Lightbulb />}
               items={data.recommendations ?? []}
               tone="indigo"
             />
+            </Hint>
           </div>
 
           {/* Generated at */}

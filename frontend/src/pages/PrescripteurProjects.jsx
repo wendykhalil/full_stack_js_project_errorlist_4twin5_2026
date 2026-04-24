@@ -1,25 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Search,
-  Calendar,
-  User2,
-  MapPin,
-  Wallet,
-  Image as ImageIcon,
-  Layers3,
-  Eye,
-  PhoneCall,
-  MessageCircle,
-  MoreVertical,
-  X,
-} from "lucide-react";
+import { Search, Calendar, User2, MapPin, Wallet, Image as ImageIcon, Layers3, Eye, PhoneCall, MessageCircle, MoreVertical, X } from "lucide-react";
 import SimpleFooter from "../components/Footer";
 import Pagination from "../components/Pagination";
 import { useTranslation } from "../i18n";
 import { apiFetch } from "../auth/api";
 import { useAuth } from "../auth/AuthContext";
 import PageShell from '../components/PageShell';
+import { Hint } from "../components/MouseTooltip";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 const ASSET_BASE = API_URL.replace(/\/api\/?$/, "");
@@ -330,6 +318,7 @@ function ProjectCard({ project, onView, onMessage, activeMenuId, setActiveMenuId
         </div>
 
         <div className="mt-5 flex items-center justify-end">
+          <Hint text="Voir les photos, le budget, les matériaux et tous les détails de ce projet.">
           <button
             type="button"
             onClick={() => onView(project)}
@@ -338,6 +327,7 @@ function ProjectCard({ project, onView, onMessage, activeMenuId, setActiveMenuId
             <Eye className="h-4 w-4" />
             Voir les détails
           </button>
+          </Hint>
         </div>
       </div>
     </div>

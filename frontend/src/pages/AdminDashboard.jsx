@@ -25,6 +25,7 @@ import { Link } from "react-router-dom";
 import Footer from "../components/Footer";
 import { useAuth } from "../auth/AuthContext";
 import { getAdminDashboardSummary, getAdminAiInsights, apiFetch } from "../auth/api";
+import { MouseTooltipProvider, Hint } from "../components/MouseTooltip";
 
 const SOCKET_BASE = (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "");
 const POLL_INTERVAL_MS = 30_000; // refresh summary every 30 s
@@ -276,39 +277,45 @@ export default function AdminDashboard() {
                 <p className="mt-0.5 text-xs text-slate-400">
                   Mis à jour : {lastUpdated.toLocaleTimeString("fr-TN")}
                   {summary && (
-                    <span className="ml-2 inline-flex h-2 w-2 rounded-full bg-emerald-400" title="Données en direct" />
+                    <Hint text="Les données se rafraîchissent automatiquement toutes les 30 secondes.">
+                      <span className="ml-2 inline-flex h-2 w-2 rounded-full bg-emerald-400 cursor-default" />
+                    </Hint>
                   )}
                 </p>
               )}
             </div>
             <div className="flex items-center gap-3">
               {/* Period selector */}
-              <div className="inline-flex rounded-xl border border-slate-200 bg-white p-1 text-sm shadow-sm">
-                {[7, 30, 90].map((v) => (
-                  <button
-                    key={v}
-                    type="button"
-                    onClick={() => setDays(v)}
-                    className={`rounded-lg px-3 py-1.5 font-medium transition-colors ${
-                      days === v ? "bg-indigo-600 text-white" : "text-slate-600 hover:bg-slate-100"
-                    }`}
-                  >
-                    {v}j
-                  </button>
-                ))}
-              </div>
+              <Hint text="Choisissez la fenêtre temporelle pour toutes les statistiques et graphiques.">
+                <div className="inline-flex rounded-xl border border-slate-200 bg-white p-1 text-sm shadow-sm">
+                  {[7, 30, 90].map((v) => (
+                    <button
+                      key={v}
+                      type="button"
+                      onClick={() => setDays(v)}
+                      className={`rounded-lg px-3 py-1.5 font-medium transition-colors ${
+                        days === v ? "bg-indigo-600 text-white" : "text-slate-600 hover:bg-slate-100"
+                      }`}
+                    >
+                      {v}j
+                    </button>
+                  ))}
+                </div>
+              </Hint>
               {/* Full refresh */}
-              <button
-                type="button"
-                onClick={handleRefreshAll}
-                disabled={loadingS || loadingAi}
-                className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm hover:bg-slate-50 disabled:opacity-50"
-              >
-                {(loadingS || loadingAi)
-                  ? <Loader2 className="h-4 w-4 animate-spin" />
-                  : <RefreshCw className="h-4 w-4" />}
-                Actualiser
-              </button>
+              <Hint text="Recharge toutes les données du tableau de bord et les analyses IA.">
+                <button
+                  type="button"
+                  onClick={handleRefreshAll}
+                  disabled={loadingS || loadingAi}
+                  className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm hover:bg-slate-50 disabled:opacity-50"
+                >
+                  {(loadingS || loadingAi)
+                    ? <Loader2 className="h-4 w-4 animate-spin" />
+                    : <RefreshCw className="h-4 w-4" />}
+                  Actualiser
+                </button>
+              </Hint>
             </div>
           </div>
 
@@ -318,7 +325,11 @@ export default function AdminDashboard() {
               <SectionTitle>Alertes critiques</SectionTitle>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {criticalAlerts.map((a) => (
-                  <AlertBanner key={a.id} title={a.title} subtitle={a.subtitle} tone="red" />
+                  <Hint key={a.id} text="Alerte critique nécessitant une action immédiate de votre part.">
+                    <div>
+                      <AlertBanner title={a.title} subtitle={a.subtitle} tone="red" />
+                    </div>
+                  </Hint>
                 ))}
               </div>
             </section>
@@ -328,58 +339,80 @@ export default function AdminDashboard() {
           <section className="space-y-3">
             <SectionTitle>Indicateurs clés</SectionTitle>
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-              <KpiCard
-                icon={<Users />}
-                label="Utilisateurs actifs"
-                value={stats.activeUsers ?? 0}
-                helper={`${stats.totalUsers ?? 0} comptes au total`}
-                iconBg="bg-indigo-50" iconFg="text-indigo-600"
-              />
-              <KpiCard
-                icon={<ShoppingCart />}
-                label="Commandes"
-                value={stats.totalOrders ?? 0}
-                helper={`${stats.openOrders ?? 0} en cours`}
-                iconBg="bg-emerald-50" iconFg="text-emerald-600"
-              />
-              <KpiCard
-                icon={<ArrowLeftRight />}
-                label="Volume livré"
-                value={money.format(stats.deliveredRevenue || 0)}
-                helper="Commandes livrées cumulées"
-                iconBg="bg-orange-50" iconFg="text-orange-600"
-              />
-              <KpiCard
-                icon={<Package />}
-                label="Produits approuvés"
-                value={stats.approvedProducts ?? 0}
-                helper={`${stats.totalProducts ?? 0} enregistrés`}
-                iconBg="bg-slate-100" iconFg="text-slate-600"
-              />
+              <Hint text="Nombre de comptes avec le statut ACTIF. Les comptes bloqués ou inactifs ne sont pas comptés.">
+                <div>
+                  <KpiCard
+                    icon={<Users />}
+                    label="Utilisateurs actifs"
+                    value={stats.activeUsers ?? 0}
+                    helper={`${stats.totalUsers ?? 0} comptes au total`}
+                    iconBg="bg-indigo-50" iconFg="text-indigo-600"
+                  />
+                </div>
+              </Hint>
+              <Hint text="Total des commandes passées sur la plateforme. Le chiffre entre parenthèses indique celles encore en traitement.">
+                <div>
+                  <KpiCard
+                    icon={<ShoppingCart />}
+                    label="Commandes"
+                    value={stats.totalOrders ?? 0}
+                    helper={`${stats.openOrders ?? 0} en cours`}
+                    iconBg="bg-emerald-50" iconFg="text-emerald-600"
+                  />
+                </div>
+              </Hint>
+              <Hint text="Montant total cumulé des commandes ayant le statut LIVRÉ. Représente le chiffre d'affaires réel encaissé.">
+                <div>
+                  <KpiCard
+                    icon={<ArrowLeftRight />}
+                    label="Volume livré"
+                    value={money.format(stats.deliveredRevenue || 0)}
+                    helper="Commandes livrées cumulées"
+                    iconBg="bg-orange-50" iconFg="text-orange-600"
+                  />
+                </div>
+              </Hint>
+              <Hint text="Produits validés et visibles sur la place de marché. Les produits en attente de validation ne sont pas inclus.">
+                <div>
+                  <KpiCard
+                    icon={<Package />}
+                    label="Produits approuvés"
+                    value={stats.approvedProducts ?? 0}
+                    helper={`${stats.totalProducts ?? 0} enregistrés`}
+                    iconBg="bg-slate-100" iconFg="text-slate-600"
+                  />
+                </div>
+              </Hint>
             </div>
 
             {/* Secondary KPIs row */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <p className="text-xs text-slate-500">Croissance utilisateurs</p>
-                <p className="mt-1 text-xl font-bold text-slate-900">{changes.userGrowthPct}%</p>
-                <p className={`mt-1 flex items-center gap-1 text-xs font-medium ${changes.userGrowthPct >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
-                  <TrendingUp className="h-3.5 w-3.5" />
-                  {changes.userGrowthPct >= 0 ? "Hausse" : "Baisse"} vs période précédente
-                </p>
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <p className="text-xs text-slate-500">Rôle le plus actif</p>
-                <p className="mt-1 text-xl font-bold text-slate-900">{hl.mostActiveRole.role}</p>
-                <p className="mt-1 text-xs text-slate-400">{hl.mostActiveRole.count} utilisateurs</p>
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <p className="text-xs text-slate-500">Tendance revenus</p>
-                <p className={`mt-1 text-xl font-bold ${hl.revenueTrend >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
-                  {money.format(hl.revenueTrend || 0)}
-                </p>
-                <p className="mt-1 text-xs text-slate-400">Variation sur la fenêtre sélectionnée</p>
-              </div>
+              <Hint text="Variation du nombre de nouveaux inscrits par rapport à la période précédente de même durée. Positif = croissance.">
+                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <p className="text-xs text-slate-500">Croissance utilisateurs</p>
+                  <p className="mt-1 text-xl font-bold text-slate-900">{changes.userGrowthPct}%</p>
+                  <p className={`mt-1 flex items-center gap-1 text-xs font-medium ${changes.userGrowthPct >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                    <TrendingUp className="h-3.5 w-3.5" />
+                    {changes.userGrowthPct >= 0 ? "Hausse" : "Baisse"} vs période précédente
+                  </p>
+                </div>
+              </Hint>
+              <Hint text="Le rôle ayant le plus grand nombre d'utilisateurs inscrits sur la plateforme (Artisan, Fournisseur, Prescripteur ou Admin).">
+                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <p className="text-xs text-slate-500">Rôle le plus actif</p>
+                  <p className="mt-1 text-xl font-bold text-slate-900">{hl.mostActiveRole.role}</p>
+                  <p className="mt-1 text-xs text-slate-400">{hl.mostActiveRole.count} utilisateurs</p>
+                </div>
+              </Hint>
+              <Hint text="Différence de revenus entre le début et la fin de la période sélectionnée. Indique si les ventes progressent ou régressent.">
+                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <p className="text-xs text-slate-500">Tendance revenus</p>
+                  <p className={`mt-1 text-xl font-bold ${hl.revenueTrend >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                    {money.format(hl.revenueTrend || 0)}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-400">Variation sur la fenêtre sélectionnée</p>
+                </div>
+              </Hint>
             </div>
           </section>
 
@@ -388,9 +421,11 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <SectionTitle>Analyses IA</SectionTitle>
               {ai?.source === "heuristic" && (
-                <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700">
-                  Mode heuristique
-                </span>
+                <Hint text="L'IA utilise des règles heuristiques car les données sont insuffisantes pour un modèle prédictif complet.">
+                  <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700 cursor-default">
+                    Mode heuristique
+                  </span>
+                </Hint>
               )}
             </div>
 
@@ -403,6 +438,7 @@ export default function AdminDashboard() {
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
 
                 {/* Score + summary */}
+                <Hint text="Score de santé global de la plateforme calculé par l'IA. 80+ = excellent, 60–79 = bon, 40–59 = attention requise, moins de 40 = critique.">
                 <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                   <div className="flex items-center gap-2 mb-3">
                     <Sparkles className="h-4 w-4 text-indigo-500" />
@@ -422,8 +458,10 @@ export default function AdminDashboard() {
                     <p className="text-sm leading-relaxed text-slate-600 line-clamp-4">{ai.summary}</p>
                   </div>
                 </div>
+                </Hint>
 
                 {/* Positives + Risks */}
+                <Hint text="Points forts détectés par l'IA : croissance, engagement, performance des ventes, etc.">
                 <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-5 shadow-sm">
                   <div className="mb-3 flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-emerald-600" />
@@ -435,10 +473,12 @@ export default function AdminDashboard() {
                     ))}
                   </ul>
                 </div>
+                </Hint>
 
                 {/* Risks + Recommendations */}
                 <div className="space-y-4">
                   {(ai.risks ?? []).length > 0 && (
+                    <Hint text="Risques identifiés par l'IA : anomalies, baisses de performance ou comportements suspects à surveiller.">
                     <div className="rounded-2xl border border-red-100 bg-red-50 p-4 shadow-sm">
                       <div className="mb-2 flex items-center gap-2">
                         <ShieldAlert className="h-4 w-4 text-red-500" />
@@ -450,7 +490,9 @@ export default function AdminDashboard() {
                         ))}
                       </ul>
                     </div>
+                    </Hint>
                   )}
+                  <Hint text="Actions concrètes suggérées par l'IA pour améliorer les performances de la plateforme.">
                   <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4 shadow-sm">
                     <div className="mb-2 flex items-center gap-2">
                       <Lightbulb className="h-4 w-4 text-indigo-600" />
@@ -462,6 +504,7 @@ export default function AdminDashboard() {
                       ))}
                     </ul>
                   </div>
+                  </Hint>
                 </div>
               </div>
             ) : (
@@ -477,6 +520,7 @@ export default function AdminDashboard() {
             <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
 
               {/* User growth line chart */}
+              <Hint text="Évolution du nombre de nouveaux inscrits jour par jour sur la période sélectionnée.">
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <p className="mb-4 text-sm font-semibold text-slate-700">Croissance utilisateurs</p>
                 <div className="h-64">
@@ -491,8 +535,10 @@ export default function AdminDashboard() {
                   </ResponsiveContainer>
                 </div>
               </div>
+              </Hint>
 
               {/* Revenue bar chart */}
+              <Hint text="Revenus générés par les commandes livrées, agrégés par jour. Permet de visualiser les pics et creux d'activité commerciale.">
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <p className="mb-4 text-sm font-semibold text-slate-700">Revenus dans le temps</p>
                 <div className="h-64">
@@ -507,8 +553,10 @@ export default function AdminDashboard() {
                   </ResponsiveContainer>
                 </div>
               </div>
+              </Hint>
 
               {/* Order status pie */}
+              <Hint text="Répartition des commandes selon leur statut actuel : en attente, acceptée, en préparation, expédiée, livrée, annulée, etc.">
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <p className="mb-4 text-sm font-semibold text-slate-700">Statuts des commandes</p>
                 <div className="h-64">
@@ -525,15 +573,19 @@ export default function AdminDashboard() {
                   </ResponsiveContainer>
                 </div>
               </div>
+              </Hint>
 
               {/* Role distribution + progress bars */}
+              <Hint text="Proportion de chaque rôle parmi tous les utilisateurs inscrits. Les barres montrent le poids relatif de chaque catégorie.">
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="mb-4 flex items-center justify-between">
                   <p className="text-sm font-semibold text-slate-700">Répartition des utilisateurs</p>
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-1 text-xs font-medium text-red-600">
-                    <ShieldAlert className="h-3.5 w-3.5" />
-                    {stats.blockedUsers ?? 0} bloqués
-                  </span>
+                  <Hint text="Nombre de comptes actuellement bloqués par un administrateur.">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-1 text-xs font-medium text-red-600 cursor-default">
+                      <ShieldAlert className="h-3.5 w-3.5" />
+                      {stats.blockedUsers ?? 0} bloqués
+                    </span>
+                  </Hint>
                 </div>
                 <div className="space-y-4">
                   <ProgressRow label="Artisans"      value={dist.artisans ?? 0}      total={stats.totalUsers || 1} barClass="bg-indigo-600" />
@@ -542,6 +594,7 @@ export default function AdminDashboard() {
                   <ProgressRow label="Admins"        value={dist.admins ?? 0}        total={stats.totalUsers || 1} barClass="bg-slate-600" />
                 </div>
               </div>
+              </Hint>
             </div>
           </section>
 
@@ -551,6 +604,7 @@ export default function AdminDashboard() {
             <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.4fr_0.6fr]">
 
               {/* Other alerts */}
+              <Hint text="Dernières actions enregistrées sur la plateforme : nouvelles inscriptions, connexions, blocages, commandes, etc.">
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <p className="mb-4 text-sm font-semibold text-slate-700">Derniers événements plateforme</p>
                 <div className="space-y-2.5">
@@ -565,23 +619,28 @@ export default function AdminDashboard() {
                   )}
                 </div>
               </div>
+              </Hint>
 
               {/* Location analytics */}
+              <Hint text="Données de géolocalisation des utilisateurs ayant partagé leur position. Utile pour analyser la couverture géographique de la plateforme.">
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <p className="mb-4 text-sm font-semibold text-slate-700">Géolocalisation</p>
                 <div className="space-y-3">
                   {[
-                    { label: "Utilisateurs géolocalisés", value: locData.trackedUsers ?? 0 },
-                    { label: "Latitude moyenne",          value: locData.avgLat?.toFixed(4) ?? "N/A" },
-                    { label: "Longitude moyenne",         value: locData.avgLng?.toFixed(4) ?? "N/A" },
-                  ].map(({ label, value }) => (
-                    <div key={label} className="rounded-xl bg-slate-50 px-4 py-3">
-                      <p className="text-xs text-slate-500">{label}</p>
-                      <p className="mt-0.5 text-base font-semibold text-slate-900">{value}</p>
-                    </div>
+                    { label: "Utilisateurs géolocalisés", value: locData.trackedUsers ?? 0,            hint: "Nombre d'utilisateurs ayant activé le partage de position." },
+                    { label: "Latitude moyenne",          value: locData.avgLat?.toFixed(4) ?? "N/A", hint: "Latitude moyenne calculée sur tous les utilisateurs géolocalisés." },
+                    { label: "Longitude moyenne",         value: locData.avgLng?.toFixed(4) ?? "N/A", hint: "Longitude moyenne calculée sur tous les utilisateurs géolocalisés." },
+                  ].map(({ label, value, hint }) => (
+                    <Hint key={label} text={hint}>
+                      <div className="rounded-xl bg-slate-50 px-4 py-3 cursor-default">
+                        <p className="text-xs text-slate-500">{label}</p>
+                        <p className="mt-0.5 text-base font-semibold text-slate-900">{value}</p>
+                      </div>
+                    </Hint>
                   ))}
                 </div>
               </div>
+              </Hint>
             </div>
           </section>
 
@@ -591,6 +650,7 @@ export default function AdminDashboard() {
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {/* Scan artisans — real API call */}
+                <Hint text="Lance une analyse anti-fraude sur les 20 derniers profils artisans. Détecte les comportements suspects et les faux comptes.">
                 <button
                   type="button"
                   onClick={() => handleBatchScan("artisans")}
@@ -600,8 +660,10 @@ export default function AdminDashboard() {
                   {scanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Scan className="h-4 w-4" />}
                   Scanner artisans
                 </button>
+                </Hint>
 
                 {/* Scan projects — real API call */}
+                <Hint text="Lance une analyse anti-fraude sur les 20 derniers projets. Identifie les projets avec des données incohérentes ou suspectes.">
                 <button
                   type="button"
                   onClick={() => handleBatchScan("projects")}
@@ -611,8 +673,10 @@ export default function AdminDashboard() {
                   {scanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Scan className="h-4 w-4" />}
                   Scanner projets
                 </button>
+                </Hint>
 
                 {/* Navigation links */}
+                <Hint text="Accéder à la gestion complète des comptes utilisateurs : bloquer, débloquer, filtrer par rôle ou statut.">
                 <Link
                   to="/admin/users"
                   className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 transition-colors hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-700"
@@ -620,6 +684,9 @@ export default function AdminDashboard() {
                   <Users className="h-4 w-4" />
                   Utilisateurs
                 </Link>
+                </Hint>
+
+                <Hint text="Accéder au tableau de bord de détection de fraude avec scores de risque, alertes et analyses comportementales.">
                 <Link
                   to="/admin/fraud-analytics"
                   className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 transition-colors hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-700"
@@ -627,6 +694,7 @@ export default function AdminDashboard() {
                   <ShieldAlert className="h-4 w-4" />
                   Fraude & Analyses
                 </Link>
+                </Hint>
               </div>
 
               {/* Scan result feedback — live from API response */}

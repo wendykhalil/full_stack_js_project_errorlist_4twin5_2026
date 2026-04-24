@@ -2,27 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { useTranslation } from '../i18n';
-import {
-  Search,
-  Filter,
-  MapPin,
-  Briefcase,
-  Navigation,
-  SlidersHorizontal,
-  X,
-  Loader2,
-  AlertCircle,
-  User,
-  Star,
-  Phone,
-  ChevronDown,
-  Wifi,
-  WifiOff,
-  MessageCircle
-} from 'lucide-react';
+import { Search, Filter, MapPin, Briefcase, Navigation, SlidersHorizontal, X, Loader2, AlertCircle, User, Star, Phone, ChevronDown, Wifi, WifiOff, MessageCircle } from 'lucide-react';
 import SimpleFooter from '../components/Footer';
 import Pagination from '../components/Pagination';
 import ArtisanReviewsList from '../components/ArtisanReviewsList';
+import { Hint } from '../components/MouseTooltip';
 
 const ArtisanCard = ({ artisan, onViewProfile }) => {
   const { t } = useTranslation();
@@ -57,10 +41,14 @@ const ArtisanCard = ({ artisan, onViewProfile }) => {
               <div className="flex items-center gap-2">
                 <h3 className="text-base font-semibold text-slate-900">{artisan.name}</h3>
                 {plan === 'PRO' && (
+                  <Hint text="Artisan avec abonnement Pro — profil vérifié et accès à toutes les fonctionnalités avancées.">
                   <span className="rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 px-2 py-0.5 text-xs font-bold text-white">PRO</span>
+                  </Hint>
                 )}
                 {plan === 'BASIC' && (
+                  <Hint text="Artisan avec abonnement Basic — accès aux fonctionnalités essentielles.">
                   <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-bold text-indigo-700">BASIC</span>
+                  </Hint>
                 )}
               </div>
               <p className="text-xs text-slate-500">{artisan.trade || 'Profil en cours'}</p>
@@ -103,6 +91,7 @@ const ArtisanCard = ({ artisan, onViewProfile }) => {
         )}
 
         <div className="mt-5 flex gap-2">
+          <Hint text="Afficher ou masquer les avis clients laissés pour cet artisan.">
           <button
             onClick={() => setShowReviews(!showReviews)}
             className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-medium text-slate-700 transition-all hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
@@ -110,20 +99,25 @@ const ArtisanCard = ({ artisan, onViewProfile }) => {
             <MessageCircle className="h-4 w-4" />
             {showReviews ? 'Masquer' : 'Avis'}
           </button>
+          </Hint>
           {artisan.phone ? (
+            <Hint text="Appeler directement cet artisan par téléphone.">
             <a href={`tel:${artisan.phone}`}
               className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-medium text-slate-700 transition-all hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600">
               <Phone className="h-4 w-4" /> Contacter
             </a>
+            </Hint>
           ) : (
             <div className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl border border-dashed border-slate-200 bg-slate-50 py-2.5 text-sm font-medium text-slate-400">
               <Phone className="h-4 w-4" /> Non disponible
             </div>
           )}
+          <Hint text="Voir le profil complet, le portfolio et les réalisations de cet artisan.">
           <button onClick={() => onViewProfile(artisan._id)}
             className="flex-1 inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:from-indigo-700 hover:to-indigo-600 hover:shadow-md">
             Voir profil
           </button>
+          </Hint>
         </div>
       </div>
     </div>

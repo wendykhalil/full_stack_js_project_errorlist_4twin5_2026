@@ -100,10 +100,12 @@ import AccessibilitySettings from "./pages/AccessibilitySettings";
 import AccessibilityDemo from "./pages/AccessibilityDemo";
 import AppErrorBoundary from "./components/AppErrorBoundary";
 import AiChat from "./components/ai-chat"; // ton composant chat modernisé
+import { MouseTooltipProvider } from "./components/MouseTooltip";
 
 export default function App() {
     return (
         <AppErrorBoundary>
+        <MouseTooltipProvider>
         <BrowserRouter>
             <AppErrorBoundary></AppErrorBoundary>
             <AppErrorBoundary><RealtimeNotifications /></AppErrorBoundary>
@@ -251,6 +253,7 @@ export default function App() {
                 <Route path="*" element={<Navigate to="/login" replace />} />
             </Routes>
         </BrowserRouter>
+        </MouseTooltipProvider>
         </AppErrorBoundary>
     );
 }

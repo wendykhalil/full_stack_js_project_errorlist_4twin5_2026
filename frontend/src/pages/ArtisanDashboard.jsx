@@ -17,6 +17,7 @@ import {
 import SimpleFooter from "../components/Footer";
 import { useAuth } from "../auth/AuthContext";
 import { getArtisanDashboardSummary, getMySubscription } from "../auth/api";
+import { Hint } from "../components/MouseTooltip";
 
 const currency = new Intl.NumberFormat("fr-TN", {
   style: "currency",
@@ -173,18 +174,24 @@ export default function ArtisanDashboard() {
           </div>
 
           <div className="grid grid-cols-3 gap-4">
+            <Hint text="Taux de progression moyen calculé sur l'ensemble de vos projets actifs.">
             <div className="rounded-xl bg-white/10 p-4 backdrop-blur-sm">
               <p className="text-xs font-medium uppercase tracking-wide text-indigo-200">Progression</p>
               <p className="mt-2 text-2xl font-bold text-white">{stats.completionRate}%</p>
             </div>
+            </Hint>
+            <Hint text="Somme des budgets de tous vos projets actifs et en attente.">
             <div className="rounded-xl bg-white/10 p-4 backdrop-blur-sm">
               <p className="text-xs font-medium uppercase tracking-wide text-indigo-200">Budget total</p>
               <p className="mt-2 text-lg font-bold text-white">{currency.format(stats.totalBudget || 0)}</p>
             </div>
+            </Hint>
+            <Hint text="Montant total des factures envoyées mais pas encore réglées par vos clients.">
             <div className="rounded-xl bg-white/10 p-4 backdrop-blur-sm">
               <p className="text-xs font-medium uppercase tracking-wide text-indigo-200">Factures impayées</p>
               <p className="mt-2 text-lg font-bold text-white">{currency.format(stats.unpaidInvoicesAmount || 0)}</p>
             </div>
+            </Hint>
           </div>
         </div>
       </div>
@@ -213,6 +220,7 @@ export default function ArtisanDashboard() {
       {!loading && !error && (
         <>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <Hint text="Nombre total de projets créés, dont les terminés et ceux en attente.">
             <StatCard
               title="Projets"
               value={stats.totalProjects}
@@ -221,6 +229,8 @@ export default function ArtisanDashboard() {
               iconBg="bg-indigo-50"
               iconFg="text-indigo-600"
             />
+            </Hint>
+            <Hint text="Projets actuellement en cours de réalisation sur vos chantiers.">
             <StatCard
               title="Projets actifs"
               value={stats.activeProjects}
@@ -229,6 +239,8 @@ export default function ArtisanDashboard() {
               iconBg="bg-emerald-50"
               iconFg="text-emerald-600"
             />
+            </Hint>
+            <Hint text="Total des devis et factures émis depuis la création de votre compte.">
             <StatCard
               title="Documents émis"
               value={stats.documentsCount}
@@ -237,6 +249,8 @@ export default function ArtisanDashboard() {
               iconBg="bg-orange-50"
               iconFg="text-orange-600"
             />
+            </Hint>
+            <Hint text="Commandes de matériaux en cours de traitement par vos fournisseurs.">
             <StatCard
               title="Commandes en cours"
               value={stats.inProgressOrders}
@@ -245,6 +259,7 @@ export default function ArtisanDashboard() {
               iconBg="bg-blue-50"
               iconFg="text-blue-600"
             />
+            </Hint>
           </div>
 
           {/* Quick Actions */}
@@ -257,6 +272,7 @@ export default function ArtisanDashboard() {
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <Hint text="Créer un nouveau chantier ou projet de construction et suivre son avancement.">
               <ActionCard
                 to="/artisan/projects"
                 icon={<Plus />}
@@ -265,6 +281,8 @@ export default function ArtisanDashboard() {
                 iconBg="bg-indigo-50"
                 iconFg="text-indigo-600"
               />
+              </Hint>
+              <Hint text="Générer un devis professionnel pour un client à partir d'un projet existant.">
               <ActionCard
                 to="/artisan/devis/create"
                 icon={<ClipboardList />}
@@ -273,6 +291,8 @@ export default function ArtisanDashboard() {
                 iconBg="bg-emerald-50"
                 iconFg="text-emerald-600"
               />
+              </Hint>
+              <Hint text="Consulter, télécharger et gérer tous vos devis et factures émis.">
               <ActionCard
                 to="/artisan/factures"
                 icon={<Receipt />}
@@ -281,6 +301,8 @@ export default function ArtisanDashboard() {
                 iconBg="bg-orange-50"
                 iconFg="text-orange-600"
               />
+              </Hint>
+              <Hint text="Suivre l'état de vos commandes de matériaux auprès des fournisseurs.">
               <ActionCard
                 to="/artisan/orders"
                 icon={<ShoppingCart />}
@@ -289,6 +311,7 @@ export default function ArtisanDashboard() {
                 iconBg="bg-blue-50"
                 iconFg="text-blue-600"
               />
+              </Hint>
             </div>
           </div>
 

@@ -1,20 +1,15 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Briefcase, MapPin, Wallet, Calendar, X, ChevronRight,
-  Clock, ExternalLink, Undo2, CheckCircle2, XCircle,
-} from "lucide-react";
+import { Briefcase, MapPin, Wallet, Calendar, X, ChevronRight, Clock, ExternalLink, Undo2, CheckCircle2, XCircle } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import PageShell from "../components/PageShell";
 import ReviewModal from "../components/ReviewModal";
 import { Stars } from "../components/StarRating";
-import {
-  getOpenServiceRequests, getOpenServiceRequest,
-  applyToServiceRequest, withdrawApplication,
-  getMyApplications, getReviewsForUser,
-} from "../auth/api";import { useFormValidation, rules } from "../hooks/useFormValidation";
+import { getOpenServiceRequests, getOpenServiceRequest, applyToServiceRequest, withdrawApplication, getMyApplications, getReviewsForUser } from "../auth/api";
+import { useFormValidation, rules } from "../hooks/useFormValidation";
 import { useServerErrors } from "../hooks/useServerErrors";
 import FieldError from "../components/FieldError";
+import { Hint } from "../components/MouseTooltip";
 
 const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "");
 
@@ -297,8 +292,8 @@ export default function ArtisanServiceRequests() {
             { key: "browse", label: "Offres disponibles" },
             { key: "applications", label: "Mes candidatures", badge: pendingCount },
           ].map(t => (
+            <Hint key={t.key} text={t.key === 'browse' ? 'Parcourir les missions disponibles correspondant à votre métier.' : 'Voir l\'état de vos candidatures envoyées aux prescripteurs.'}>
             <button
-              key={t.key}
               onClick={() => setTab(t.key)}
               className={`relative rounded-xl px-4 py-2 text-sm font-medium transition-colors ${
                 tab === t.key ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
@@ -311,6 +306,7 @@ export default function ArtisanServiceRequests() {
                 </span>
               )}
             </button>
+            </Hint>
           ))}
         </div>
 
@@ -325,6 +321,7 @@ export default function ArtisanServiceRequests() {
         {tab === "browse" && (
           <>
             <div className="flex flex-wrap gap-3">
+              <Hint text="Filtrer les missions par corps de métier (plombier, électricien, maçon...).">
               <select
                 value={tradeFilter}
                 onChange={e => setTradeFilter(e.target.value)}
@@ -333,6 +330,8 @@ export default function ArtisanServiceRequests() {
                 <option value="">Tous les métiers</option>
                 {TRADES.map(t => <option key={t} value={t}>{t}</option>)}
               </select>
+              </Hint>
+              <Hint text="Filtrer les missions par ville ou région en Tunisie.">
               <input
                 value={cityFilter}
                 onChange={e => setCityFilter(e.target.value)}
@@ -340,14 +339,17 @@ export default function ArtisanServiceRequests() {
                 placeholder="Filtrer par ville…"
                 className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
               />
+              </Hint>
               <datalist id="cities-filter">{TUNISIA_CITIES.map(c => <option key={c} value={c} />)}</datalist>
               {(tradeFilter || cityFilter) && (
+                <Hint text="Effacer tous les filtres actifs et afficher toutes les missions.">
                 <button
                   onClick={() => { setTradeFilter(""); setCityFilter(""); }}
                   className="rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-500 hover:bg-slate-50"
                 >
                   Réinitialiser
                 </button>
+                </Hint>
               )}
             </div>
 

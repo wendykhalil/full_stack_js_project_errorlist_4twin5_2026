@@ -5,6 +5,7 @@ import {
   ShoppingCart, CreditCard, Receipt, TrendingUp,
   Search, ChevronDown, Download
 } from "lucide-react";
+import { Hint } from "../components/MouseTooltip";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -110,36 +111,49 @@ export default function AdminTransactions() {
           <h1 className="text-3xl font-bold text-slate-900">Transactions</h1>
           <p className="mt-1.5 text-base text-slate-500">Vue globale des flux financiers de la plateforme</p>
         </div>
+        <Hint text="Télécharger toutes les transactions au format CSV">
         <button onClick={exportCSV}
           className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">
           <Download className="h-4 w-4" /> Exporter CSV
         </button>
+        </Hint>
       </div>
 
       {/* Stats */}
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <Hint text="Nombre total de commandes passées sur la plateforme">
         <StatCard icon={<ShoppingCart className="h-5 w-5 text-indigo-600" />}
           label="Commandes" value={stats.totalOrders || 0}
           sub={`${stats.deliveredOrders || 0} livrées`} color="bg-indigo-50" />
+        </Hint>
+        <Hint text="Revenus cumulés des commandes livrées">
         <StatCard icon={<TrendingUp className="h-5 w-5 text-emerald-600" />}
           label="Revenu commandes" value={`${(stats.ordersRevenue || 0).toLocaleString()} TND`}
           sub="Commandes livrées" color="bg-emerald-50" />
+        </Hint>
+        <Hint text="Nombre d'abonnements actifs en ce moment">
         <StatCard icon={<CreditCard className="h-5 w-5 text-purple-600" />}
           label="Abonnements actifs" value={stats.activeSubscriptions || 0}
           sub={`${stats.totalSubscriptions || 0} au total`} color="bg-purple-50" />
+        </Hint>
+        <Hint text="Revenus cumulés des factures payées">
         <StatCard icon={<Receipt className="h-5 w-5 text-orange-600" />}
           label="Factures payées" value={`${(stats.invoicesRevenue || 0).toLocaleString()} TND`}
           sub={`${stats.paidInvoices || 0} factures`} color="bg-orange-50" />
+        </Hint>
       </div>
 
       {/* Filters */}
       <div className="flex flex-wrap gap-4">
+        <Hint text="Rechercher une transaction par référence ou utilisateur">
         <div className="relative flex-1 min-w-48">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <input value={q} onChange={e => { setQ(e.target.value); setPage(1); }}
             placeholder="Rechercher par référence, utilisateur…"
             className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-9 pr-4 text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
+        </Hint>
+        <Hint text="Filtrer par type : commande, abonnement ou facture">
         <div className="relative">
           <select value={typeFilter} onChange={e => { setTypeFilter(e.target.value); setPage(1); }}
             className="appearance-none rounded-xl border border-slate-200 bg-white px-4 py-3 pr-8 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
@@ -150,6 +164,8 @@ export default function AdminTransactions() {
           </select>
           <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
         </div>
+        </Hint>
+        <Hint text="Filtrer par statut de la transaction">
         <div className="relative">
           <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
             className="appearance-none rounded-xl border border-slate-200 bg-white px-4 py-3 pr-8 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
@@ -162,6 +178,7 @@ export default function AdminTransactions() {
           </select>
           <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
         </div>
+        </Hint>
       </div>
 
       {/* Table */}

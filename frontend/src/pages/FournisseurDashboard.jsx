@@ -7,6 +7,7 @@ import {
   Minus, ArrowUpRight, ArrowDownRight, Star, AlertTriangle,
 } from 'lucide-react';
 import AiInsightsPanel from '../components/supplier/AiInsightsPanel';
+import { Hint } from '../components/MouseTooltip';
 
 /* ─────────────────────────── helpers ─────────────────────────── */
 
@@ -429,10 +430,18 @@ export default function FournisseurDashboard() {
 
       {/* ── KPIs ── */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <Hint text="Chiffre d'affaires total généré par toutes vos commandes livrées.">
         <KpiCard icon={<DollarSign className="h-5 w-5" />}  label="Chiffre d'affaires total" value={fmt(totalRevenue)}           sub={`${orders.length} commandes livrées`}  trend={trend === 'flat' ? null : trend} color="green"  />
+        </Hint>
+        <Hint text="Commandes en cours nécessitant votre attention (en attente, acceptées, en préparation ou expédiées).">
         <KpiCard icon={<ShoppingBag className="h-5 w-5" />} label="Commandes actives"        value={stats?.activeOrders ?? '—'} sub="En cours de traitement"               color="blue"   />
+        </Hint>
+        <Hint text="Produits actuellement visibles et disponibles à la commande sur la place de marché.">
         <KpiCard icon={<Package className="h-5 w-5" />}     label="Produits actifs"          value={stats?.activeProducts ?? '—'} sub="Dans votre catalogue"               color="purple" />
+        </Hint>
+        <Hint text="Valeur moyenne de chaque commande reçue, calculée sur toutes les commandes livrées.">
         <KpiCard icon={<BarChart2 className="h-5 w-5" />}   label="Panier moyen"             value={fmt(avgOrderValue)}          sub="Par commande livrée"                  color="orange" />
+        </Hint>
       </div>
 
       {/* ── Stock alerts ── */}
@@ -467,9 +476,12 @@ export default function FournisseurDashboard() {
 
       {/* ── Charts row ── */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <Hint text="Évolution mensuelle du nombre de commandes livrées sur les 12 derniers mois.">
         <ChartCard title="Volume des ventes (12 mois)" subtitle="Commandes livrées par mois">
           <LineChart data={monthlyOrders} color="#2563eb" valueFormatter={v => `${v} commande${v !== 1 ? 's' : ''}`} />
         </ChartCard>
+        </Hint>
+        <Hint text="Revenus mensuels réalisés (barres pleines) et projection pour les 6 prochains mois (barres hachurées).">
         <ChartCard title="Revenus mensuels + prévisions" subtitle="Derniers 6 mois (plein) · 6 mois projetés (hachuré)">
           <BarChart data={combinedRevChart} color="#16a34a" valueFormatter={fmt} />
           <div className="mt-2 flex items-center gap-4 text-xs text-slate-500">
@@ -477,6 +489,7 @@ export default function FournisseurDashboard() {
             <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-4 rounded-sm border border-dashed border-green-600 bg-green-200" /> Prévision</span>
           </div>
         </ChartCard>
+        </Hint>
       </div>
 
       {/* ── Comparison ── */}

@@ -8,6 +8,7 @@ import PageShell from "../components/PageShell";
 import { useFormValidation, rules } from "../hooks/useFormValidation";
 import { useServerErrors } from "../hooks/useServerErrors";
 import FieldError from "../components/FieldError";
+import { Hint } from "../components/MouseTooltip";
 
 const emptyLine = { description: "", quantity: 1, unitPrice: 0 };
 const TAX_RATE = 0.19;

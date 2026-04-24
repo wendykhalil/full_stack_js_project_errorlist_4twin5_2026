@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { X, MessageSquare, CheckCircle, XCircle } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { getAdminDisputes, adminResolveDispute } from '../auth/api';
+import { Hint } from '../components/MouseTooltip';
 
 const STATUS_STYLE = {
   OPEN:                  'bg-orange-100 text-orange-700',
@@ -62,6 +63,7 @@ export default function AdminDisputes() {
       {err && <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">{err}</div>}
 
       <div className="flex gap-3">
+        <Hint text="Filtrer les litiges par statut">
         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
           className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none">
           <option value="ALL">Tous les statuts</option>
@@ -71,6 +73,7 @@ export default function AdminDisputes() {
           <option value="RESOLVED_FOR_OPPONENT">Résolu (autre)</option>
           <option value="CLOSED">Clôturé</option>
         </select>
+        </Hint>
       </div>
 
       {loading ? (
@@ -107,10 +110,12 @@ export default function AdminDisputes() {
                   </td>
                   <td className="px-4 py-3 text-xs text-slate-400">{new Date(d.createdAt).toLocaleDateString('fr-TN')}</td>
                   <td className="px-4 py-3">
+                    <Hint text="Ouvrir le détail du litige et prendre une décision">
                     <button onClick={() => setSelected(d)}
                       className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50">
                       Gérer
                     </button>
+                    </Hint>
                   </td>
                 </tr>
               ))}
@@ -166,6 +171,7 @@ export default function AdminDisputes() {
               {!['RESOLVED_FOR_OPENER','RESOLVED_FOR_OPPONENT','CLOSED'].includes(selected.status) && (
                 <div className="space-y-3 border-t border-slate-100 pt-4">
                   <p className="font-semibold text-slate-800">Résoudre le litige</p>
+                  <Hint text="Choisir en faveur de qui résoudre ce litige">
                   <select value={resolution} onChange={e => setResolution(e.target.value)}
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
                     <option value="">Choisir une résolution…</option>
@@ -173,14 +179,17 @@ export default function AdminDisputes() {
                     <option value="RESOLVED_FOR_OPPONENT">En faveur de l'autre partie</option>
                     <option value="CLOSED">Clôturer sans résolution</option>
                   </select>
+                  </Hint>
                   <textarea value={adminNote} onChange={e => setAdminNote(e.target.value)} rows={3}
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
                     placeholder="Note admin (optionnel)…" />
                   <div className="flex gap-2">
+                    <Hint text="Enregistrer la décision et clôturer ce litige">
                     <button onClick={handleResolve} disabled={!resolution || resolving}
                       className="flex-1 rounded-xl bg-indigo-600 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50">
                       {resolving ? 'Traitement…' : 'Confirmer la résolution'}
                     </button>
+                    </Hint>
                   </div>
                 </div>
               )}

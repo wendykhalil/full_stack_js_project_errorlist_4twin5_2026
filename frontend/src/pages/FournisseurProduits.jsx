@@ -1,30 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Plus,
-  Search,
-  Package,
-  ShoppingCart,
-  TrendingUp,
-  FileText,
-  Pencil,
-  Trash2,
-  Bot,
-  Sparkles,
-  Eye,
-  Tag,
-  AlertCircle,
-  CheckCircle,
-  Clock,
-  Image as ImageIcon,
-  ChevronLeft,
-  ChevronRight
-} from "lucide-react";
+import { Plus, Search, Package, ShoppingCart, TrendingUp, FileText, Pencil, Trash2, Bot, Sparkles, Eye, Tag, AlertCircle, CheckCircle, Clock, Image as ImageIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import SimpleFooter from "../components/Footer";
 import { useTranslation } from '../i18n';
 import { useAuth } from "../auth/AuthContext";
 import { getMyProducts, getSupplierStats, deleteProduct, createProduct, smartSearchAI } from "../auth/api.js";
 import AIProductAssistantModal from '../components/ai-assistant-product/AIProductAssistantModal';
+import { Hint } from "../components/MouseTooltip";
 
 const StatCard = ({ title, value, icon, iconBg, iconFg }) => (
   <div className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5">
@@ -190,6 +172,7 @@ export default function FournisseurProduits() {
         </div>
 
         <div className="flex gap-3">
+          <Hint text="Ajouter un nouveau produit à votre catalogue visible sur la place de marché.">
           <button
             onClick={() => navigate("/fournisseur/produits/new")}
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:from-indigo-700 hover:to-indigo-600 hover:shadow-md"
@@ -197,7 +180,9 @@ export default function FournisseurProduits() {
             <Plus className="h-4 w-4" />
             {t('fournisseurProduits.addButton', 'Ajouter un produit')}
           </button>
+          </Hint>
 
+          <Hint text="Utiliser l'IA pour créer ou optimiser automatiquement vos fiches produits.">
           <button
             onClick={() => setIsAIOpen(true)}
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:from-purple-700 hover:to-indigo-700 hover:shadow-md"
@@ -205,6 +190,7 @@ export default function FournisseurProduits() {
             <Bot className="h-4 w-4" />
             Assistant IA
           </button>
+          </Hint>
         </div>
       </div>
 
@@ -404,6 +390,7 @@ export default function FournisseurProduits() {
                     {/* Actions */}
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
+                        <Hint text="Modifier le nom, le prix, le stock ou les photos de ce produit.">
                         <button
                           onClick={() => handleEdit(product._id)}
                           className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition-all hover:bg-indigo-50 hover:text-indigo-600"
@@ -411,6 +398,8 @@ export default function FournisseurProduits() {
                         >
                           <Pencil className="h-4 w-4" />
                         </button>
+                        </Hint>
+                        <Hint text="Supprimer définitivement ce produit de votre catalogue.">
                         <button
                           onClick={() => handleDelete(product._id)}
                           className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition-all hover:bg-red-50 hover:text-red-600"
@@ -418,6 +407,7 @@ export default function FournisseurProduits() {
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
+                        </Hint>
                       </div>
                     </td>
                   </tr>

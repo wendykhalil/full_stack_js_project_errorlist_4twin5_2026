@@ -7,6 +7,7 @@ import { getCatalogProducts, getMySubscription, getFavorites, toggleFavorite } f
 import { useAuth } from "../auth/AuthContext";
 import { useCart } from "../context/CartContext";
 import SubscriptionAlert from '../components/SubscriptionAlert';
+import { Hint } from "../components/MouseTooltip";
 
 const ProductCard = ({
   product,
@@ -90,6 +91,7 @@ const ProductCard = ({
 
         {/* Action buttons */}
         <div className="mt-4 grid grid-cols-3 gap-1.5">
+          <Hint text="Voir la fiche complète du produit avec toutes ses caractéristiques et le fournisseur.">
           <button
             onClick={() => onDetailsClick(product)}
             className="flex items-center justify-center gap-1 rounded-xl border border-indigo-200 bg-indigo-50 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-100"
@@ -97,6 +99,8 @@ const ProductCard = ({
             <Eye className="h-3.5 w-3.5" />
             Détails
           </button>
+          </Hint>
+          <Hint text="Ajouter ce produit à votre panier pour commander plusieurs articles en une fois.">
           <button
             onClick={() => onAddToCart(product)}
             disabled={product.stock <= 0 || addingToCart}
@@ -105,6 +109,8 @@ const ProductCard = ({
             <ShoppingCart className="h-3.5 w-3.5" />
             Panier
           </button>
+          </Hint>
+          <Hint text="Commander ce produit directement auprès du fournisseur.">
           <button
             onClick={() => onOrderClick(product)}
             disabled={product.stock <= 0}
@@ -112,6 +118,7 @@ const ProductCard = ({
           >
             Commander
           </button>
+          </Hint>
         </div>
       </div>
     </div>
@@ -284,6 +291,7 @@ export default function ArtisanMarketplace() {
           </p>
         </div>
 
+        <Hint text="Voir votre panier et finaliser votre commande de matériaux.">
         <button 
           onClick={() => navigate('/artisan/cart')}
           className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium hover:bg-slate-50 flex items-center gap-2"
@@ -291,6 +299,7 @@ export default function ArtisanMarketplace() {
           <ShoppingCart className="h-4 w-4" />
           Panier {itemCount > 0 && <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-xs font-bold text-white">{itemCount}</span>}
         </button>
+        </Hint>
       </div>
 
       {/* Filters */}

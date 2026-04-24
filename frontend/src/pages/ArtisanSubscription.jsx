@@ -2,13 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
-import {
-  ShieldCheck, CreditCard, ArrowRight, AlertCircle, CheckCircle,
-  Tag, X, Crown, Clock, XCircle, History, Zap, Check
-} from 'lucide-react';
+import { ShieldCheck, CreditCard, ArrowRight, AlertCircle, CheckCircle, Tag, X, Crown, Clock, XCircle, History, Zap, Check } from 'lucide-react';
 import StripePaymentForm from '../components/StripePaymentForm';
 import { useAuth } from '../auth/AuthContext';
 import { validatePromoCode, getMySubscription, cancelSubscription, startTrial } from '../auth/api';
+import { Hint } from '../components/MouseTooltip';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
@@ -183,10 +181,12 @@ export default function ArtisanSubscription() {
                   </button>
                 )}
                 {isActive && sub.status !== 'CANCELED' && (
+                  <Hint text="Annuler votre abonnement. Vous gardez l'accès jusqu'à la fin de la période payée.">
                   <button onClick={handleCancel} disabled={canceling}
                     className="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-5 py-2.5 text-sm font-medium text-red-600 hover:bg-red-100 disabled:opacity-50">
                     <XCircle className="h-4 w-4" /> {canceling ? 'Annulation…' : 'Annuler'}
                   </button>
+                  </Hint>
                 )}
               </div>
             </div>
@@ -218,10 +218,12 @@ export default function ArtisanSubscription() {
                 <p className="text-sm text-slate-500">Aucune carte requise. Accès complet à toutes les fonctionnalités.</p>
               </div>
             </div>
+            <Hint text="Essayez toutes les fonctionnalités PRO gratuitement pendant 14 jours, sans carte bancaire.">
             <button onClick={handleTrial} disabled={trialLoading}
               className="rounded-xl bg-purple-600 px-6 py-3 text-sm font-semibold text-white hover:bg-purple-700 disabled:opacity-50">
               {trialLoading ? 'Activation…' : 'Démarrer l\'essai gratuit'}
             </button>
+            </Hint>
           </div>
         )}
 
@@ -263,7 +265,8 @@ export default function ArtisanSubscription() {
         {/* Plan selection */}
         <div className="grid gap-7 md:grid-cols-2">
           {Object.entries(plans).map(([key, plan]) => (
-            <div key={key} onClick={() => selectPlan(key)}
+            <Hint key={key} text={key === 'monthly' ? 'Plan Basic mensuel : accès aux fonctionnalités essentielles pour démarrer votre activité.' : 'Plan Pro annuel : accès illimité à toutes les fonctionnalités pour les professionnels actifs.'}>
+            <div onClick={() => selectPlan(key)}
               className={`cursor-pointer rounded-2xl border p-7 transition-all ${selectedPlan === key ? 'border-indigo-500 ring-2 ring-indigo-500 bg-indigo-50/30' : 'border-slate-200 bg-white hover:border-indigo-200'} relative`}>
               {key === 'yearly' && (
                 <div className="absolute -top-3 left-7 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 px-3 py-1 text-xs font-semibold text-white">
@@ -285,6 +288,7 @@ export default function ArtisanSubscription() {
                 ))}
               </ul>
             </div>
+            </Hint>
           ))}
         </div>
 

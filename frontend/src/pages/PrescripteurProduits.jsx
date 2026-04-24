@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
 import { useTranslation } from "../i18n";
 import { getCatalogProducts } from "../auth/api.js";
+import { Hint } from "../components/MouseTooltip";
 
 const Card = ({ cat, title, desc, supplier, price, unit, onDetails }) => {
   const { t } = useTranslation();
@@ -27,12 +28,14 @@ const Card = ({ cat, title, desc, supplier, price, unit, onDetails }) => {
           <div className="text-xs text-slate-500">{unit}</div>
         </div>
 
+        <Hint text="Voir la fiche complète du produit et contacter le fournisseur.">
         <button
           onClick={onDetails}
           className="rounded-xl bg-indigo-600 px-5 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors"
         >
           {t('prescripteurProduits.detailsButton')}
         </button>
+        </Hint>
       </div>
     </div>
   );
@@ -118,6 +121,7 @@ export default function PrescripteurProduits() {
       {/* Search / filter */}
       <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="flex flex-col gap-4 md:flex-row">
+          <Hint text="Rechercher un produit par nom, description ou fournisseur.">
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
@@ -127,7 +131,9 @@ export default function PrescripteurProduits() {
               className="w-full rounded-xl border border-slate-200 py-3 pl-10 pr-4 text-sm focus:border-indigo-500 focus:outline-none"
             />
           </div>
+          </Hint>
 
+          <Hint text="Filtrer les produits par catégorie de matériaux de construction.">
           <div className="relative w-full md:w-64">
             <select 
               value={category}
@@ -144,6 +150,7 @@ export default function PrescripteurProduits() {
             </select>
             <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           </div>
+          </Hint>
         </div>
       </div>
 

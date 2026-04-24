@@ -6,6 +6,7 @@ import FieldError from '../components/FieldError';
 import { useFormValidation, rules } from '../hooks/useFormValidation';
 import { useServerErrors } from '../hooks/useServerErrors';
 import { createDispute, getMyDisputes, getDispute, addDisputeMessage, apiFetch } from '../auth/api';
+import { Hint } from '../components/MouseTooltip';
 
 const STATUS_STYLE = {
   OPEN:                  'bg-orange-100 text-orange-700',
@@ -149,10 +150,12 @@ export default function MyDisputes() {
             <h1 className="text-2xl font-bold text-slate-900">Mes litiges</h1>
             <p className="mt-1 text-sm text-slate-500">Ouvrez un litige en cas de problème avec une commande ou une demande</p>
           </div>
+          <Hint text="Ouvrir un nouveau litige concernant une commande ou une demande de service.">
           <button onClick={() => setCreateOpen(true)}
             className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700">
             <Plus className="h-4 w-4" /> Nouveau litige
           </button>
+          </Hint>
         </div>
 
         {err && <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">{err}</div>}
@@ -181,10 +184,12 @@ export default function MyDisputes() {
                       {new Date(d.createdAt).toLocaleDateString('fr-TN')}
                     </p>
                   </div>
+                  <Hint text="Voir l'historique complet des messages et l'état de ce litige.">
                   <button onClick={() => openDetail(d._id)}
                     className="rounded-xl border border-slate-200 p-2 hover:bg-slate-50">
                     <ChevronRight className="h-4 w-4 text-slate-500" />
                   </button>
+                  </Hint>
                 </div>
               </div>
             ))}
@@ -313,9 +318,11 @@ export default function MyDisputes() {
 
             {!isClosed(detail) && (
               <form onSubmit={handleSendMsg} className="flex gap-2">
+                <Hint text="Envoyer un message dans le fil de discussion de ce litige.">
                 <input value={newMsg} onChange={e => setNewMsg(e.target.value)}
                   className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
                   placeholder="Votre message…" />
+                </Hint>
                 <button type="submit" disabled={sendingMsg || !newMsg.trim()}
                   className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50">
                   <MessageSquare className="h-4 w-4" />

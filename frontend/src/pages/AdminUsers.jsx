@@ -3,6 +3,7 @@ import { Search, ChevronDown, Loader2, ShieldOff, ShieldCheck, X } from "lucide-
 import { useAuth } from "../auth/AuthContext";
 import { setUserSubscription } from '../auth/api';
 import { useTranslation } from '../i18n';
+import { Hint } from "../components/MouseTooltip";
 
 // Les constantes de durée restent inchangées
 const DURATIONS = [
@@ -212,6 +213,7 @@ export default function AdminUsers() {
 
         {/* Filters */}
         <div className="mb-4 sm:mb-6 flex flex-col gap-3 sm:flex-row">
+          <Hint text="Rechercher par nom, email ou téléphone">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500" />
             <input
@@ -221,6 +223,8 @@ export default function AdminUsers() {
               className="w-full rounded-lg sm:rounded-xl border border-slate-200 bg-white py-2.5 sm:py-3 pl-9 sm:pl-10 pr-3 sm:pr-4 text-xs sm:text-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-500"
             />
           </div>
+          </Hint>
+          <Hint text="Filtrer les utilisateurs par rôle">
           <div className="relative w-full sm:w-56 md:w-64 lg:w-72">
             <select
               value={roleFilter}
@@ -235,6 +239,7 @@ export default function AdminUsers() {
             </select>
             <ChevronDown className="pointer-events-none absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500" />
           </div>
+          </Hint>
         </div>
 
         {/* Table Card - Full width with responsive table layout */}
@@ -330,6 +335,7 @@ export default function AdminUsers() {
                           ) : (
                             <>
                               {isBlocked ? (
+                                <Hint text="Rétablir l'accès de cet utilisateur">
                                 <button
                                   onClick={() => handleUnblock(u._id)}
                                   className="flex-1 inline-flex items-center justify-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700 hover:bg-emerald-100 transition-colors dark:border-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-400 dark:hover:bg-emerald-900/60"
@@ -337,7 +343,9 @@ export default function AdminUsers() {
                                   <ShieldCheck className="h-3.5 w-3.5" />
                                   {t('adminUsers.actions.unblock')}
                                 </button>
+                                </Hint>
                               ) : (
+                                <Hint text="Bloquer temporairement l'accès de cet utilisateur">
                                 <button
                                   onClick={() => setBlockTarget(u)}
                                   className="flex-1 inline-flex items-center justify-center gap-1 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-100 transition-colors dark:border-red-800 dark:bg-red-900/40 dark:text-red-400 dark:hover:bg-red-900/60"
@@ -345,7 +353,9 @@ export default function AdminUsers() {
                                   <ShieldOff className="h-3.5 w-3.5" />
                                   {t('adminUsers.actions.block')}
                                 </button>
+                                </Hint>
                               )}
+                              <Hint text="Activer ou modifier l'abonnement de cet utilisateur">
                               <button
                                 onClick={() => handleSubscriptionChange(u)}
                                 disabled={subLoading === u._id}
@@ -359,6 +369,7 @@ export default function AdminUsers() {
                                   'Activer abonnement'
                                 )}
                               </button>
+                              </Hint>
                             </>
                           )}
                         </div>
@@ -440,6 +451,7 @@ export default function AdminUsers() {
                             ) : (
                               <div className="flex flex-col gap-2">
                                 {isBlocked ? (
+                                  <Hint text="Rétablir l'accès de cet utilisateur">
                                   <button
                                     onClick={() => handleUnblock(u._id)}
                                     className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-100 transition-colors dark:border-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-400 dark:hover:bg-emerald-900/60"
@@ -447,7 +459,9 @@ export default function AdminUsers() {
                                     <ShieldCheck className="h-3.5 w-3.5" />
                                     {t('adminUsers.actions.unblock')}
                                   </button>
+                                  </Hint>
                                 ) : (
+                                  <Hint text="Bloquer temporairement l'accès de cet utilisateur">
                                   <button
                                     onClick={() => setBlockTarget(u)}
                                     className="inline-flex items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-2.5 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100 transition-colors dark:border-red-800 dark:bg-red-900/40 dark:text-red-400 dark:hover:bg-red-900/60"
@@ -455,8 +469,10 @@ export default function AdminUsers() {
                                     <ShieldOff className="h-3.5 w-3.5" />
                                     {t('adminUsers.actions.block')}
                                   </button>
+                                  </Hint>
                                 )}
 
+                                <Hint text="Activer ou modifier l'abonnement de cet utilisateur">
                                 <button
                                   onClick={() => handleSubscriptionChange(u)}
                                   disabled={subLoading === u._id}
@@ -470,6 +486,7 @@ export default function AdminUsers() {
                                     'Activer abonnement'
                                   )}
                                 </button>
+                                </Hint>
                               </div>
                             )}
                           </td>

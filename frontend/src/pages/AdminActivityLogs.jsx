@@ -4,6 +4,7 @@ import { useAuth } from "../auth/AuthContext";
 import { Activity, RefreshCw, Search, Filter, Info, X, MonitorSmartphone, Globe2, UserCircle2, ShieldCheck } from "lucide-react";
 import Footer from "../components/Footer";
 import PageShell from '../components/PageShell';
+import { Hint } from "../components/MouseTooltip";
 
 function fmt(dt) {
   try { return new Date(dt).toLocaleString(); } catch { return String(dt || ""); }
@@ -209,10 +210,12 @@ export default function AdminActivityLogs() {
             <p className="mt-1 text-sm text-slate-600 sm:text-base">Historique administratif des mises a jour de profil, connexions, changements de role et actions de compte.</p>
           </div>
 
+          <Hint text="Recharger les journaux d'activité depuis le serveur.">
           <button onClick={() => load(page)} className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto">
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             Actualiser
           </button>
+          </Hint>
         </div>
 
         {error && <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
@@ -222,11 +225,14 @@ export default function AdminActivityLogs() {
             <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center">
               <div className="relative w-full sm:max-w-sm">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <Hint text="Rechercher par nom d'utilisateur, email, action ou détails de l'événement.">
                 <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Rechercher un utilisateur, une action ou un detail..." className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-indigo-200" />
+                </Hint>
               </div>
 
               <div className="flex items-center gap-2">
                 <Filter className="h-4 w-4 text-slate-400" />
+                <Hint text="Filtrer les journaux par type d'action effectuée sur la plateforme.">
                 <select value={action} onChange={(e) => setAction(e.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
                   <option value="ALL">Toutes les actions</option>
                   <option value="PROFILE_UPDATE">Mises a jour du profil</option>
@@ -238,6 +244,7 @@ export default function AdminActivityLogs() {
                   <option value="INVOICE_CREATE">Creation de facture</option>
                   <option value="LOGOUT">Deconnexion</option>
                 </select>
+                </Hint>
               </div>
             </div>
 

@@ -7,6 +7,7 @@ import SimpleFooter from "../components/Footer";
 import { getMySubscription } from "../auth/api";
 import SubscriptionAlert from '../components/SubscriptionAlert';
 import PageShell from '../components/PageShell';
+import { Hint } from "../components/MouseTooltip";
 
 function getReference(item, type) {
   return item.reference || item.number || `${type === 'quote' ? 'QUOTE' : 'INVOICE'}-${new Date(item.createdAt || Date.now()).getFullYear()}`;
@@ -31,9 +32,9 @@ function DocRow({ type, item, onCreateInvoice }) {
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        {type === 'quote' && <button onClick={() => onCreateInvoice(item)} className="rounded-xl bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-700">Creer une facture</button>}
-        <button onClick={() => exportDocumentPdf(type, item)} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"><Download className="h-4 w-4" /> PDF</button>
-        <button onClick={() => exportDocumentExcel(type, item)} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"><FileSpreadsheet className="h-4 w-4" /> Excel</button>
+        {type === 'quote' && <Hint text="Convertir ce devis accepté en facture officielle"><button onClick={() => onCreateInvoice(item)} className="rounded-xl bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-700">Creer une facture</button></Hint>}
+        <Hint text="Télécharger ce document au format PDF"><button onClick={() => exportDocumentPdf(type, item)} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"><Download className="h-4 w-4" /> PDF</button></Hint>
+        <Hint text="Exporter ce document au format Excel"><button onClick={() => exportDocumentExcel(type, item)} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"><FileSpreadsheet className="h-4 w-4" /> Excel</button></Hint>
       </div>
     </div>
   );
@@ -126,8 +127,7 @@ export default function ArtisanFactures() {
         </div>
         <button onClick={() => navigate('/artisan/devis/create')} className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow hover:bg-indigo-700">
           <Plus className="h-4 w-4" /> Nouveau devis
-        </button>
-      </div>
+        </button>      </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="relative flex-1">

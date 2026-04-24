@@ -2,28 +2,13 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { useTranslation } from '../i18n';
-import {
-  Package,
-  Search,
-  Eye,
-  MessageCircle,
-  Calendar,
-  MapPin,
-  User,
-  CheckCircle,
-  XCircle,
-  Phone,
-  Mail,
-  Loader2,
-  AlertCircle,
-  Edit3,
-  Sparkles,
-} from 'lucide-react';
+import { Package, Search, Eye, MessageCircle, Calendar, MapPin, User, CheckCircle, XCircle, Phone, Mail, Loader2, AlertCircle, Edit3, Sparkles } from 'lucide-react';
 import { getSupplierOrders, updateOrderStatus, addSupplierNote } from '../auth/api';
 import OrderStatusBadge from '../components/OrderStatusBadge';
 import OrderTabs from '../components/OrderTabs';
 import SimpleFooter from '../components/Footer';
 import { useSupplierOrders } from '../context/SupplierOrderContext';
+import { Hint } from '../components/MouseTooltip';
 
 export default function FournisseurOrders() {
   const { t } = useTranslation();
@@ -371,58 +356,75 @@ export default function FournisseurOrders() {
                 <div className="mt-4 flex flex-wrap gap-2 border-t border-slate-100 pt-4">
                   {activeTab === 'active' && order.status === 'PENDING' && (
                     <>
+                      <Hint text="Accepter cette commande et confirmer la disponibilité du produit.">
                       <button onClick={() => handleStatusChange(order._id, 'ACCEPTED')} disabled={updating}
                         className="flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700">
                         <CheckCircle className="h-4 w-4" /> {t('orders.accept', 'Accepter')}
                       </button>
+                      </Hint>
+                      <Hint text="Refuser cette commande (le client sera notifié automatiquement).">
                       <button onClick={() => handleStatusChange(order._id, 'REFUSED')} disabled={updating}
                         className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">
                         <XCircle className="h-4 w-4" /> {t('orders.refuse', 'Refuser')}
                       </button>
+                      </Hint>
                     </>
                   )}
 
                   {activeTab === 'active' && order.status === 'ACCEPTED' && (
                     <>
+                      <Hint text="Passer cette commande en préparation pour l'expédition.">
                       <button onClick={() => handleStatusChange(order._id, 'PREPARING')} disabled={updating}
                         className="flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700">
                         <Package className="h-4 w-4" /> {t('orders.preparing', 'En préparation')}
                       </button>
+                      </Hint>
+                      <Hint text="Indiquer que vous avez contacté l'artisan pour coordonner la livraison.">
                       <button onClick={() => handleStatusChange(order._id, 'CONTACTED')} disabled={updating}
                         className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
                         <Phone className="h-4 w-4" /> {t('orders.contacted', 'Contact établi')}
                       </button>
+                      </Hint>
                     </>
                   )}
 
                   {activeTab === 'active' && order.status === 'PREPARING' && (
+                    <Hint text="Marquer cette commande comme expédiée vers l'artisan.">
                     <button onClick={() => handleStatusChange(order._id, 'SHIPPED')} disabled={updating}
                       className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
                       <Package className="h-4 w-4" /> {t('orders.ship', 'Expédier')}
                     </button>
+                    </Hint>
                   )}
 
                   {activeTab === 'active' && order.status === 'SHIPPED' && (
+                    <Hint text="Confirmer que la commande a bien été livrée à l'artisan.">
                     <button onClick={() => handleStatusChange(order._id, 'DELIVERED')} disabled={updating}
                       className="flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">
                       <CheckCircle className="h-4 w-4" /> {t('orders.markDelivered', 'Marquer comme livré')}
                     </button>
+                    </Hint>
                   )}
 
-                  {/* Boutons communs */}
+                  <Hint text="Ajouter ou modifier une note interne visible uniquement par vous.">
                   <button onClick={() => openNoteModal(order)}
                     className="flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">
                     <Edit3 className="h-4 w-4" />
                     {order.supplierNotes ? t('orders.modifyNote', 'Modifier note') : t('orders.addNote', 'Ajouter note')}
                   </button>
+                  </Hint>
+                  <Hint text="Voir tous les détails de cette commande.">
                   <button onClick={() => navigate(`/fournisseur/orders/${order._id}`)}
                     className="flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-indigo-600 hover:bg-indigo-50">
                     <Eye className="h-4 w-4" /> {t('orders.details', 'Détails')}
                   </button>
+                  </Hint>
+                  <Hint text="Envoyer un message à l'artisan concernant cette commande.">
                   <button onClick={() => navigate(`/fournisseur/orders/${order._id}?tab=messages`)}
                     className="flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">
                     <MessageCircle className="h-4 w-4" /> {t('orders.messages', 'Messages')}
                   </button>
+                  </Hint>
                 </div>
               </div>
             );
