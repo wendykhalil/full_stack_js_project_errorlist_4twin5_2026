@@ -202,3 +202,22 @@
   font-weight: bold !important;
   font-size: 18px !important;
 }
+
+/* ── Arabic / RTL font & layout ─────────────────────────────────────────── */
+[dir="rtl"] {
+  font-family: 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
+}
+
+[dir="rtl"] .text-left  { text-align: right; }
+[dir="rtl"] .text-right { text-align: left; }
+
+/* Sidebar flip for RTL */
+[dir="rtl"] aside.fixed { left: auto; right: 0; }
+[dir="rtl"] .xl\:ml-64  { margin-left: 0 !important; margin-right: 16rem; }
+[dir="rtl"] .xl\:ml-20  { margin-left: 0 !important; margin-right: 5rem; }
+
+/* Collapse button position */
+[dir="rtl"] .-right-3 { right: auto; left: -0.75rem; }
+
+/* Dropdown menus open to the left in RTL */
+[dir="rtl"] .absolute.right-0 { right: auto; left: 0; }
