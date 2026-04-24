@@ -1,5 +1,13 @@
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+
+// Public info pages — lazy loaded so they don't bloat the main bundle
+const About       = lazy(() => import("./pages/About"));
+const HowItWorks  = lazy(() => import("./pages/HowItWorks"));
+const Pricing     = lazy(() => import("./pages/Pricing"));
+const Contact     = lazy(() => import("./pages/Contact"));
+const Privacy     = lazy(() => import("./pages/Privacy"));
+const Terms       = lazy(() => import("./pages/Terms"));
 import RealtimeNotifications from "./components/RealtimeNotifications";
 import ArtisanLocationPromptModal from "./components/ArtisanLocationPromptModal";
 import ReadPageButton from "./components/ReadPageButton";
@@ -116,6 +124,14 @@ export default function App() {
                 <Route path="/accessibility-demo" element={<AccessibilityDemo />} />
                 <Route path="/faceid-demo" element={<FaceIdDemo />} />
                 {/* La route AiChat a été retirée d'ici : elle est maintenant dans chaque layout protégé */}
+
+                {/* Public info pages — SPA navigation, no reload */}
+                <Route path="/about"         element={<Suspense fallback={null}><About /></Suspense>} />
+                <Route path="/how-it-works"  element={<Suspense fallback={null}><HowItWorks /></Suspense>} />
+                <Route path="/pricing"       element={<Suspense fallback={null}><Pricing /></Suspense>} />
+                <Route path="/contact"       element={<Suspense fallback={null}><Contact /></Suspense>} />
+                <Route path="/privacy"       element={<Suspense fallback={null}><Privacy /></Suspense>} />
+                <Route path="/terms"         element={<Suspense fallback={null}><Terms /></Suspense>} />
 
                 {/* Register */}
                 <Route path="/register" element={<RegisterChooseRole />} />
