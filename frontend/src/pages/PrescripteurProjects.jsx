@@ -13,7 +13,6 @@ import {
   MessageCircle,
   MoreVertical,
   X,
-  ArrowRight,
 } from "lucide-react";
 import SimpleFooter from "../components/Footer";
 import Pagination from "../components/Pagination";
@@ -331,10 +330,14 @@ function ProjectCard({ project, onView, onMessage, activeMenuId, setActiveMenuId
         </div>
 
         <div className="mt-5 flex items-center justify-end">
-          <div className="inline-flex items-center gap-1 text-sm font-medium text-slate-500">
-            Ouvrir le menu
-            <ArrowRight className="h-4 w-4" />
-          </div>
+          <button
+            type="button"
+            onClick={() => onView(project)}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-700"
+          >
+            <Eye className="h-4 w-4" />
+            Voir les détails
+          </button>
         </div>
       </div>
     </div>

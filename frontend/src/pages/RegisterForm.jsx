@@ -156,10 +156,10 @@ function PhoneInput({ label, countryCode, setCountryCode, phoneNumber, setPhoneN
 }
 
 const roleDetails = {
-  artisan: { icon: UserPlus, title: "Artisan", text: "Créez un compte professionnel pour gérer vos projets, devis et factures." },
+  artisan:      { icon: UserPlus,    title: "Artisan",      text: "Créez un compte professionnel pour gérer vos projets, devis et factures." },
   prescripteur: { icon: ShieldCheck, title: "Prescripteur", text: "Inscrivez-vous pour découvrir des artisans et des produits dans un parcours structuré." },
-  fournisseur: { icon: Building2, title: "Fournisseur", text: "Ouvrez votre compte fournisseur et gérez vos produits ainsi que vos commandes." },
-  admin: { icon: ShieldCheck, title: "Administrateur", text: "Créez un compte interne pour administrer la plateforme en toute sécurité." },
+  fournisseur:  { icon: Building2,   title: "Fournisseur",  text: "Ouvrez votre compte fournisseur et gérez vos produits ainsi que vos commandes." },
+  // admin is intentionally excluded — admin accounts are created internally only
 };
 
 export default function RegisterForm() {

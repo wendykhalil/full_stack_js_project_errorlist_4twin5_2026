@@ -28,8 +28,7 @@ export function urlRoleToEnum(urlRole) {
       return Roles.PRESCRIPTEUR;
     case 'fournisseur':
       return Roles.SUPPLIER;
-    case 'admin':
-      return Roles.ADMIN;
+    // 'admin' is intentionally excluded — cannot be self-registered via the UI
     default:
       return null;
   }

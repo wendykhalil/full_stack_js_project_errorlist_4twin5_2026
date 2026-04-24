@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { HardHat, Package, Shield, User } from "lucide-react";
+import { HardHat, Package, User } from "lucide-react";
 import { useTranslation } from "../i18n";
 import PublicNavbar from "../components/PublicNavbar";
 import Footer from "../components/Footer";
@@ -69,12 +69,8 @@ export default function RegisterChooseRole() {
                 desc={t("registerChooseRole.supplier.desc")}
                 onClick={() => navigate("/register/fournisseur")}
               />
-              <RoleCard
-                icon={<Shield className="h-5 w-5" />}
-                title={t("registerChooseRole.admin.title")}
-                desc={t("registerChooseRole.admin.desc")}
-                onClick={() => navigate("/register/admin")}
-              />
+              {/* Admin role is intentionally hidden from public registration.
+                  Admin accounts are created internally only. */}
             </div>
           </div>
 

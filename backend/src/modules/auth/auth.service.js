@@ -78,6 +78,12 @@ async function register({ firstName, lastName, email, password, phone, role }) {
     const e = new Error('Rôle invalide'); e.statusCode = 400; throw e;
   }
 
+  // SECURITY: Admin accounts cannot be created via public registration.
+  // They must be assigned directly in the database by a system administrator.
+  if (role === 'ADMIN') {
+    const e = new Error('Rôle invalide'); e.statusCode = 400; throw e;
+  }
+
   const existing = await User.findOne({ email });
   if (existing) {
     const e = new Error('Email déjà utilisé'); e.statusCode = 409; throw e;
@@ -582,6 +588,11 @@ async function phoneVerify({ phone, code }) {
 
 async function setRole(userId, { role }) {
   if (!ROLE_ENUM.includes(role)) {
+    const e = new Error('Rôle invalide'); e.statusCode = 400; throw e;
+  }
+
+  // SECURITY: Admin role cannot be self-assigned through any public flow.
+  if (role === 'ADMIN') {
     const e = new Error('Rôle invalide'); e.statusCode = 400; throw e;
   }
   const user = await User.findById(userId);
