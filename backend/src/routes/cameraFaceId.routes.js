@@ -69,115 +69,96 @@ router.post("/register", authRequired, async (req, res) => {
 // Authenticate with camera Face ID
 router.post("/authenticate", async (req, res) => {
   console.log('🎯 Camera Face ID authenticate endpoint called');
-  console.log('📋 Request body:', req.body);
-  
+
   try {
     const { faceDescriptor, userId, userEmail } = req.body;
 
-    console.log('Camera Face ID authentication request:', {
-      faceDescriptor: faceDescriptor ? 'present' : 'missing',
-      faceDescriptorLength: faceDescriptor ? faceDescriptor.length : 0,
-      userId,
-      userEmail
-    });
-
-    if (!faceDescriptor || !Array.isArray(faceDescriptor)) {
-      console.log('❌ Invalid face descriptor data');
-      return res.status(400).json({ message: "Invalid face descriptor data" });
+    if (!faceDescriptor || !Array.isArray(faceDescriptor) || faceDescriptor.length === 0) {
+      return res.status(400).json({ message: "Données de reconnaissance faciale invalides." });
     }
 
-    // Find user by ID or email
+    // ── Locate the user ──────────────────────────────────────────────────────
     let user = null;
-    
+
     if (userId && userId !== 'undefined' && userId !== 'null') {
-      console.log('🔍 Looking for user by ID:', userId);
-      user = await User.findById(userId);
+      user = await User.findById(userId).catch(() => null);
     }
-    
-    if (!user && userEmail) {
-      console.log('🔍 Looking for user by email:', userEmail);
-      user = await User.findOne({ email: userEmail });
+    if (!user && userEmail && userEmail !== 'undefined') {
+      user = await User.findOne({ email: String(userEmail).toLowerCase().trim() });
     }
 
     if (!user) {
-      console.log('❌ No user found for camera Face ID authentication');
-      return res.status(404).json({ 
-        message: "User not found. Please register camera Face ID first." 
+      return res.status(404).json({
+        message: "Aucun compte trouvé. Veuillez saisir votre email pour vous identifier."
       });
     }
 
-    console.log('✅ User found:', user.email);
-
-    // Check if user has camera Face ID registered
-    if (!user.cameraFaceIdCredentials || !user.cameraFaceIdCredentials.faceDescriptor) {
-      console.log('❌ User found but no camera Face ID registered:', user.email);
-      return res.status(401).json({ 
-        message: "No camera Face ID registered for this account. Please set up camera Face ID in your profile settings." 
+    // ── Check registration ───────────────────────────────────────────────────
+    const stored = user.cameraFaceIdCredentials?.faceDescriptor;
+    if (!Array.isArray(stored) || stored.length !== 128) {
+      return res.status(401).json({
+        message: "Aucune reconnaissance faciale enregistrée pour ce compte. Veuillez l'activer dans votre profil."
       });
     }
 
-    console.log('✅ User has camera Face ID registered');
-    console.log('📊 Stored descriptor length:', user.cameraFaceIdCredentials.faceDescriptor.length);
-    console.log('📊 Current descriptor length:', faceDescriptor.length);
+    // ── Validate incoming descriptor ─────────────────────────────────────────
+    if (faceDescriptor.length !== 128) {
+      return res.status(400).json({
+        message: "Descripteur facial invalide. Assurez-vous que face-api.js est correctement chargé."
+      });
+    }
 
-    // Compare face descriptors
-    const storedDescriptor = user.cameraFaceIdCredentials.faceDescriptor;
-    
-    console.log('🔄 Calculating face similarity...');
-    const similarity = calculateFaceSimilarity(faceDescriptor, storedDescriptor);
-    
-    console.log('📊 Face similarity score:', similarity);
+    const similarity = calculateFaceSimilarity(faceDescriptor, stored);
+    console.log(`📊 Face similarity for ${user.email}: ${similarity.toFixed(4)}`);
 
-    // Threshold for face recognition (adjust as needed)
-    const SIMILARITY_THRESHOLD = 0.4; // 40% similarity required (lowered from 60%)
-    
+    // Threshold: 0.55 is reliable for real face-api.js descriptors.
+    // Lower values cause false positives; higher values cause false negatives.
+    const SIMILARITY_THRESHOLD = 0.55;
+
     if (similarity < SIMILARITY_THRESHOLD) {
-      console.log('❌ Face recognition failed - similarity too low:', similarity);
-      return res.status(401).json({ 
-        message: "Face recognition failed. Please ensure your face is clearly visible and try again." 
+      console.log(`❌ Face mismatch for ${user.email} — similarity ${similarity.toFixed(4)} < ${SIMILARITY_THRESHOLD}`);
+      return res.status(401).json({
+        message: similarity < 0.3
+          ? "Visage non reconnu. Assurez-vous d'être bien éclairé et regardez directement la caméra."
+          : "Correspondance insuffisante. Repositionnez votre visage et réessayez.",
+        similarity: parseFloat(similarity.toFixed(4))
       });
     }
 
-    console.log('✅ Camera Face ID authentication successful for user:', user.email);
-
-    // Generate JWT token
+    // ── Issue JWT using the same shape as auth.service.js signJwt ───────────
+    // CRITICAL: must use { sub } not { userId } so authMiddleware can verify it
     const token = jwt.sign(
-      { 
-        userId: user._id, 
-        email: user.email, 
-        role: user.role,
-        authMethod: 'cameraFaceId'
-      },
+      { sub: String(user._id), role: user.role, authMethod: 'cameraFaceId' },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" }
+      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     );
 
-    // Update last login
     user.lastLogin = new Date();
     user.lastLoginMethod = 'cameraFaceId';
     await user.save();
 
-    console.log('🎉 Sending successful authentication response');
+    console.log(`✅ Camera Face ID login successful for ${user.email}`);
 
-    res.json({
+    return res.json({
       success: true,
-      message: "Camera Face ID authentication successful",
-      similarity: similarity,
+      message: "Authentification réussie.",
+      similarity: parseFloat(similarity.toFixed(4)),
       token,
       user: {
-        id: user._id,
+        _id: user._id,
+        id: String(user._id),
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role,
+        profilePicture: user.profilePicture || '',
         authMethod: 'cameraFaceId'
       }
     });
 
   } catch (error) {
     console.error("❌ Camera Face ID authentication error:", error);
-    console.error("❌ Error stack:", error.stack);
-    res.status(500).json({ message: "Error authenticating with camera Face ID. Please try again." });
+    res.status(500).json({ message: "Erreur lors de l'authentification. Veuillez réessayer." });
   }
 });
 
@@ -185,9 +166,13 @@ router.post("/authenticate", async (req, res) => {
 router.get("/status", authRequired, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
-    
-    const isRegistered = !!(user.cameraFaceIdCredentials && user.cameraFaceIdCredentials.faceDescriptor);
-    
+    if (!user) {
+      return res.status(404).json({ message: "Utilisateur introuvable." });
+    }
+
+    const stored = user.cameraFaceIdCredentials?.faceDescriptor;
+    const isRegistered = Array.isArray(stored) && stored.length === 128;
+
     res.json({
       isRegistered,
       registeredAt: user.cameraFaceIdCredentials?.registeredAt || null,

@@ -12,6 +12,8 @@
   "dependencies": {
     "@stripe/react-stripe-js": "^6.1.0",
     "@stripe/stripe-js": "^9.1.0",
+    "@tensorflow/tfjs-backend-cpu": "^4.22.0",
+    "@vladmandic/face-api": "^1.7.15",
     "axios": "^1.15.2",
     "i18next": "^26.0.4",
     "jspdf": "^4.2.1",

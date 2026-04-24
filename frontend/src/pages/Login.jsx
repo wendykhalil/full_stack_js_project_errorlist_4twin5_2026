@@ -34,6 +34,8 @@ export default function Login() {
     { name: "Fournisseur", path: "/register/fournisseur", icon: "🏭" }
   ];
 
+  const googleInitializedRef = useRef(false);
+
   useEffect(() => {
     const updateWidth = () => {
       if (window.innerWidth < 420) setGoogleWidth(250);
@@ -48,25 +50,33 @@ export default function Login() {
   useEffect(() => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
     if (!clientId || !window.google?.accounts?.id) return;
-    window.google.accounts.id.initialize({
-      client_id: clientId,
-      callback: async (resp) => {
-        try {
-          setLoading(true);
-          clearErrors();
-          const res = await loginWithGoogle(resp.credential);
-          if (res?.needsRole) {
-            navigate("/register-role", { replace: true, state: { from: "google" } });
-            return;
+
+    // Guard: initialize only once per page load.
+    // The dependency array includes googleWidth so the button re-renders on
+    // resize, but we must NOT call initialize() again — only renderButton().
+    if (!googleInitializedRef.current) {
+      googleInitializedRef.current = true;
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: async (resp) => {
+          try {
+            setLoading(true);
+            clearErrors();
+            const res = await loginWithGoogle(resp.credential);
+            if (res?.needsRole) {
+              navigate("/register-role", { replace: true, state: { from: "google" } });
+              return;
+            }
+            navigate(roleToBasePath(res.user.role), { replace: true });
+          } catch (e) {
+            handleError(e);
+          } finally {
+            setLoading(false);
           }
-          navigate(roleToBasePath(res.user.role), { replace: true });
-        } catch (e) {
-          handleError(e);
-        } finally {
-          setLoading(false);
-        }
-      },
-    });
+        },
+      });
+    }
+
     if (googleBtnRef.current) {
       googleBtnRef.current.innerHTML = "";
       const containerWidth = googleBtnRef.current.parentElement?.offsetWidth || googleWidth;
@@ -416,6 +426,7 @@ export default function Login() {
                     onSuccess={handleFaceIdSuccess}
                     onError={handleFaceIdError}
                     disabled={loading}
+                    userEmail={emailOrPhone.trim()}
                   />
 
                   {/* Google Button */}

@@ -1,315 +1,291 @@
 /**
  * Camera-based Face ID Service
- * Provides face recognition using device camera and face-api.js
+ *
+ * Uses @vladmandic/face-api installed as a proper npm package.
+ * No window.faceapi, no CDN script tag, no Math.random fallback.
+ *
+ * Backend: CPU (via @tensorflow/tfjs-backend-cpu) — works on every device
+ * regardless of WebGL or WASM support. WebGL is faster but unavailable in
+ * many environments (VMs, some browsers, hardware acceleration disabled).
  */
 
-// Check if camera is available
+import * as faceapi from '@vladmandic/face-api';
+import '@tensorflow/tfjs-backend-cpu';
+
+// ── Model loading ─────────────────────────────────────────────────────────────
+
+let _modelsLoaded = false;
+let _loadPromise = null;
+
+const LOCAL_MODEL_URL = '/models';
+const CDN_MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.14/model';
+
+const isLocalModelAvailable = async () => {
+  try {
+    const res = await fetch(
+      `${LOCAL_MODEL_URL}/tiny_face_detector_model-weights_manifest.json`,
+      { method: 'HEAD' }
+    );
+    return res.ok;
+  } catch {
+    return false;
+  }
+};
+
+export const loadFaceApiModels = async () => {
+  if (_modelsLoaded) return true;
+  if (_loadPromise) return _loadPromise;
+
+  _loadPromise = (async () => {
+    // ── Step 1: initialise TensorFlow backend explicitly ──────────────────
+    // This MUST happen before any faceapi call.
+    // We try cpu first (universal), then wasm, then webgl.
+    // Without this, tf.js tries webgl → fails → tries wasm → fails due to
+    // wrong MIME type → throws "backend not initialised" and models never load.
+    try {
+      const tf = faceapi.tf;
+      if (tf) {
+        await tf.setBackend('cpu');
+        await tf.ready();
+        console.log('[FaceID] TF backend:', tf.getBackend());
+      }
+    } catch (backendErr) {
+      console.warn('[FaceID] Could not set CPU backend explicitly:', backendErr.message);
+      // Continue anyway — face-api may still work
+    }
+
+    // ── Step 2: probe local model files ───────────────────────────────────
+    const useLocal = await isLocalModelAvailable();
+    const modelUrl = useLocal ? LOCAL_MODEL_URL : CDN_MODEL_URL;
+    console.log(`[FaceID] Loading models from: ${modelUrl}`);
+
+    // ── Step 3: load with timeout ─────────────────────────────────────────
+    const withTimeout = (promise, ms, label) =>
+      Promise.race([
+        promise,
+        new Promise((_, reject) =>
+          setTimeout(
+            () => reject(new Error(`Délai dépassé (${label}). Rechargez la page.`)),
+            ms
+          )
+        ),
+      ]);
+
+    try {
+      await withTimeout(
+        Promise.all([
+          faceapi.nets.tinyFaceDetector.loadFromUri(modelUrl),
+          faceapi.nets.faceLandmark68Net.loadFromUri(modelUrl),
+          faceapi.nets.faceRecognitionNet.loadFromUri(modelUrl),
+        ]),
+        30_000,
+        useLocal ? 'local' : 'CDN'
+      );
+      _modelsLoaded = true;
+      console.log('[FaceID] Models loaded successfully.');
+      return true;
+    } catch (err) {
+      _loadPromise = null;
+
+      const msg = err.message.includes('Délai')
+        ? err.message
+        : err.message.includes('404') || err.message.includes('not found')
+          ? `Fichiers de modèles introuvables (${modelUrl}). Vérifiez que public/models contient les fichiers face-api.`
+          : err.message.includes('NetworkError') || err.message.includes('Failed to fetch')
+            ? 'Erreur réseau lors du chargement des modèles. Vérifiez votre connexion internet.'
+            : `Échec du chargement des modèles Face ID : ${err.message}`;
+
+      console.error('[FaceID] Model load failed:', err);
+      throw new Error(msg);
+    }
+  })();
+
+  return _loadPromise;
+};
+
+export const areModelsLoaded = () => _modelsLoaded;
+
+// ── Static info (used by FaceIdSettings for display purposes) ─────────────────
+
+export const getCameraFaceIdInfo = () => ({
+  isSupported: true,
+  type: 'Camera Face Recognition',
+  description: 'Uses your device camera to capture and recognize your face',
+  requirements: ['Device camera access', 'Good lighting conditions', 'Clear view of your face'],
+});
+
+// ── Camera availability ───────────────────────────────────────────────────────
+
 export const isCameraAvailable = async () => {
   try {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      return false;
-    }
-    
-    // Test camera access
+    if (!navigator.mediaDevices?.getUserMedia) return false;
     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-    stream.getTracks().forEach(track => track.stop()); // Clean up
+    stream.getTracks().forEach(t => t.stop());
     return true;
-  } catch (error) {
-    console.error('Camera not available:', error);
+  } catch {
     return false;
   }
 };
 
-// Get camera Face ID info
-export const getCameraFaceIdInfo = () => {
-  return {
-    isSupported: true, // Camera is supported on most devices
-    type: 'Camera Face Recognition',
-    description: 'Uses your device camera to capture and recognize your face',
-    requirements: [
-      'Device camera access',
-      'Good lighting conditions',
-      'Clear view of your face'
-    ]
-  };
-};
+// ── Face detection (real, used for the setup overlay) ────────────────────────
 
-// Check if face-api.js is available
-const isFaceApiAvailable = () => {
+/**
+ * Detect a face in the current video frame.
+ * Returns the detection object or null if no face found.
+ */
+export const detectFaceInFrame = async (videoElement) => {
+  if (!_modelsLoaded) return null;
   try {
-    // Try to check if face-api.js is available
-    return typeof window !== 'undefined' && window.faceapi;
-  } catch (error) {
-    return false;
+    return await faceapi
+      .detectSingleFace(videoElement, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.4 }))
+      .withFaceLandmarks();
+  } catch {
+    return null;
   }
 };
 
-// Load face-api.js models
-let modelsLoaded = false;
-export const loadFaceApiModels = async () => {
-  if (modelsLoaded) return true;
-  
-  try {
-    // Check if face-api.js is available
-    if (!isFaceApiAvailable()) {
-      console.log('Face-api.js not available, using fallback method');
-      return true; // Return true to allow fallback functionality
-    }
-    
-    // Import face-api.js dynamically
-    const faceapi = window.faceapi;
-    
-    // Load models from CDN
-    const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@latest/model';
-    
-    await Promise.all([
-      faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-      faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-      faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
-      faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL)
-    ]);
-    
-    modelsLoaded = true;
-    console.log('Face-api.js models loaded successfully');
-    return true;
-  } catch (error) {
-    console.error('Failed to load face-api.js models:', error);
-    console.log('Using fallback face detection method');
-    return true; // Return true to allow fallback functionality
-  }
-};
+// ── Face capture ──────────────────────────────────────────────────────────────
 
-// Fallback face capture (simple implementation)
-const captureFallbackFaceData = async (videoElement) => {
-  // Simple fallback - capture image data from video
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-  
-  canvas.width = videoElement.videoWidth;
-  canvas.height = videoElement.videoHeight;
-  
-  ctx.drawImage(videoElement, 0, 0);
-  
-  // Get image data as base64
-  const imageData = canvas.toDataURL('image/jpeg', 0.8);
-  
-  // Generate a simple "descriptor" based on image characteristics
-  const descriptor = [];
-  for (let i = 0; i < 128; i++) {
-    descriptor.push(Math.random()); // Placeholder - in real implementation, use actual face features
-  }
-  
-  return {
-    descriptor: descriptor,
-    imageData: imageData,
-    landmarks: [], // Placeholder
-    detection: {
-      box: { x: 50, y: 50, width: 200, height: 200 },
-      score: 0.9
-    }
-  };
-};
-
-// Capture face data for registration
+/**
+ * Capture a face descriptor from the video element.
+ * Throws with a precise message on every failure mode.
+ */
 export const captureFaceData = async (videoElement) => {
-  try {
-    if (isFaceApiAvailable() && modelsLoaded) {
-      // Use face-api.js if available
-      const faceapi = window.faceapi;
-      
-      const detection = await faceapi
-        .detectSingleFace(videoElement, new faceapi.TinyFaceDetectorOptions())
-        .withFaceLandmarks()
-        .withFaceDescriptor();
-      
-      if (!detection) {
-        throw new Error('No face detected. Please ensure your face is clearly visible in the camera.');
-      }
-      
-      return {
-        descriptor: Array.from(detection.descriptor),
-        landmarks: detection.landmarks.positions.map(p => ({ x: p.x, y: p.y })),
-        detection: {
-          box: detection.detection.box,
-          score: detection.detection.score
-        }
-      };
-    } else {
-      // Use fallback method
-      console.log('Using fallback face capture method');
-      return await captureFallbackFaceData(videoElement);
-    }
-  } catch (error) {
-    console.error('Face capture error:', error);
-    throw error;
+  if (!_modelsLoaded) {
+    throw new Error('Modèles non chargés. Attendez le chargement complet avant de capturer.');
   }
+  if (!videoElement || videoElement.readyState < 2) {
+    throw new Error('Caméra non initialisée. Démarrez la caméra et réessayez.');
+  }
+
+  const detection = await faceapi
+    .detectSingleFace(
+      videoElement,
+      new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.5 })
+    )
+    .withFaceLandmarks()
+    .withFaceDescriptor();
+
+  if (!detection) {
+    throw new Error('Aucun visage détecté. Assurez-vous que votre visage est bien visible et bien éclairé.');
+  }
+
+  if (detection.detection.score < 0.5) {
+    throw new Error(`Confiance de détection trop faible (${(detection.detection.score * 100).toFixed(0)}%). Améliorez l'éclairage.`);
+  }
+
+  return {
+    // Float32Array → plain JS array so it serialises cleanly to JSON
+    descriptor: Array.from(detection.descriptor),
+    landmarks: detection.landmarks.positions.map(p => ({ x: p.x, y: p.y })),
+    score: detection.detection.score,
+  };
 };
 
-// Register camera Face ID
+// ── Registration ──────────────────────────────────────────────────────────────
+
 export const registerCameraFaceId = async (userId, userEmail, faceData) => {
-  try {
-    // Get the correct token from localStorage
-    const token = localStorage.getItem('bmptn_token') || localStorage.getItem('token');
-    
-    if (!token) {
-      throw new Error('No authentication token found. Please login again.');
-    }
+  const token = localStorage.getItem('bmptn_token');
+  if (!token) throw new Error('Session expirée. Veuillez vous reconnecter.');
 
-    console.log('Registering camera Face ID for user:', userId, userEmail);
-    
-    const response = await fetch('/api/camera-faceid/register', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({
-        userId,
-        userEmail,
-        faceDescriptor: faceData.descriptor,
-        landmarks: faceData.landmarks,
-        registeredAt: new Date().toISOString()
-      })
+  const res = await fetch('/api/camera-faceid/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({
+      faceDescriptor: faceData.descriptor,
+      landmarks: faceData.landmarks || [],
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ message: 'Erreur serveur' }));
+    throw new Error(err.message || "Échec de l'enregistrement du Face ID.");
+  }
+
+  // Store only the email — never userId — so lookup works after logout
+  localStorage.setItem('cameraFaceId_registered', 'true');
+  localStorage.setItem('cameraFaceId_userEmail', userEmail || '');
+
+  return { success: true };
+};
+
+// ── Authentication ────────────────────────────────────────────────────────────
+
+/**
+ * @param {HTMLVideoElement} videoElement
+ * @param {string} userEmail  — the email the user typed on the login form
+ */
+export const authenticateCameraFaceId = async (videoElement, userEmail) => {
+  if (!userEmail?.trim()) {
+    throw new Error("Saisissez votre adresse email avant d'utiliser la reconnaissance faciale.");
+  }
+
+  // captureFaceData already throws precise errors
+  const faceData = await captureFaceData(videoElement);
+
+  const res = await fetch('/api/camera-faceid/authenticate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      faceDescriptor: faceData.descriptor,
+      userEmail: userEmail.trim().toLowerCase(),
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ message: 'Erreur serveur' }));
+    throw new Error(err.message || "Échec de l'authentification par reconnaissance faciale.");
+  }
+
+  return res.json();
+};
+
+// ── Registration status ───────────────────────────────────────────────────────
+
+/** Server-authoritative check — use for setup page */
+export const checkCameraFaceIdStatus = async () => {
+  const token = localStorage.getItem('bmptn_token');
+  if (!token) return false;
+  try {
+    const res = await fetch('/api/camera-faceid/status', {
+      headers: { Authorization: `Bearer ${token}` },
     });
-    
-    console.log('Camera Face ID registration response status:', response.status);
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: 'Server error' }));
-      console.error('Camera Face ID registration failed:', errorData);
-      throw new Error(errorData.message || 'Failed to register camera Face ID');
-    }
-    
-    const result = await response.json();
-    console.log('Camera Face ID registration successful:', result);
-    
-    // Store registration locally
-    localStorage.setItem('cameraFaceId_registered', 'true');
-    localStorage.setItem('cameraFaceId_userId', userId);
-    localStorage.setItem('cameraFaceId_userEmail', userEmail);
-    
-    return {
-      success: true,
-      message: 'Camera Face ID registered successfully',
-      registrationId: result.registrationId
-    };
-  } catch (error) {
-    console.error('Camera Face ID registration error:', error);
-    throw error;
+    if (!res.ok) return false;
+    const data = await res.json();
+    return Boolean(data.isRegistered);
+  } catch {
+    return false;
   }
 };
 
-// Authenticate with camera Face ID
-export const authenticateCameraFaceId = async (videoElement) => {
-  try {
-    console.log('🎯 Starting authenticateCameraFaceId service...');
-    
-    // Capture current face
-    console.log('📸 Capturing face data...');
-    const currentFace = await captureFaceData(videoElement);
-    
-    console.log('✅ Face data captured:', {
-      descriptorLength: currentFace.descriptor?.length,
-      hasLandmarks: !!currentFace.landmarks,
-      hasImageData: !!currentFace.imageData
-    });
-    
-    // Get stored user info
-    const userId = localStorage.getItem('cameraFaceId_userId');
-    const userEmail = localStorage.getItem('cameraFaceId_userEmail');
-    
-    console.log('📋 Sending authentication request with:', {
-      userId,
-      userEmail,
-      descriptorLength: currentFace.descriptor?.length
-    });
-    
-    // Send to server for comparison
-    const response = await fetch('/api/camera-faceid/authenticate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        faceDescriptor: currentFace.descriptor,
-        userId: userId,
-        userEmail: userEmail
-      })
-    });
-    
-    console.log('🌐 Server response status:', response.status);
-    console.log('🌐 Server response headers:', Object.fromEntries(response.headers.entries()));
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('❌ Server response text:', errorText);
-      
-      let errorData;
-      try {
-        errorData = JSON.parse(errorText);
-      } catch (parseError) {
-        errorData = { message: errorText || 'Server error' };
-      }
-      
-      console.error('❌ Server authentication failed:', errorData);
-      throw new Error(errorData.message || 'Camera Face ID authentication failed');
-    }
-    
-    const result = await response.json();
-    console.log('✅ Server authentication successful:', result);
-    
-    return result;
-  } catch (error) {
-    console.error('❌ Camera Face ID authentication error:', error);
-    throw error;
-  }
-};
+/** Fast local hint — use only for UI, not for auth decisions */
+export const isCameraFaceIdRegistered = () =>
+  localStorage.getItem('cameraFaceId_registered') === 'true';
 
-// Check if camera Face ID is registered
-export const isCameraFaceIdRegistered = () => {
-  return localStorage.getItem('cameraFaceId_registered') === 'true';
-};
+// ── Removal ───────────────────────────────────────────────────────────────────
 
-// Remove camera Face ID registration
 export const removeCameraFaceIdRegistration = async () => {
+  const token = localStorage.getItem('bmptn_token');
   try {
-    // Get the correct token from localStorage
-    const token = localStorage.getItem('bmptn_token') || localStorage.getItem('token');
-    
-    const response = await fetch('/api/camera-faceid/remove', {
+    const res = await fetch('/api/camera-faceid/remove', {
       method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      headers: { Authorization: `Bearer ${token}` },
     });
-    
-    if (response.ok) {
+    if (res.ok) {
       localStorage.removeItem('cameraFaceId_registered');
-      localStorage.removeItem('cameraFaceId_userId');
       localStorage.removeItem('cameraFaceId_userEmail');
     }
-    
-    return response.ok;
-  } catch (error) {
-    console.error('Error removing camera Face ID:', error);
+    return res.ok;
+  } catch {
     return false;
   }
 };
 
-// Calculate face similarity (0-1, higher is more similar)
-export const calculateFaceSimilarity = (descriptor1, descriptor2) => {
-  if (!descriptor1 || !descriptor2 || descriptor1.length !== descriptor2.length) {
-    return 0;
-  }
-  
-  // Calculate Euclidean distance
+// ── Similarity (UI display only) ──────────────────────────────────────────────
+
+export const calculateFaceSimilarity = (d1, d2) => {
+  if (!d1 || !d2 || d1.length !== d2.length) return 0;
   let sum = 0;
-  for (let i = 0; i < descriptor1.length; i++) {
-    sum += Math.pow(descriptor1[i] - descriptor2[i], 2);
-  }
-  const distance = Math.sqrt(sum);
-  
-  // Convert distance to similarity (lower distance = higher similarity)
-  const similarity = Math.max(0, 1 - (distance / 2)); // Normalize to 0-1 range
-  return similarity;
+  for (let i = 0; i < d1.length; i++) sum += (d1[i] - d2[i]) ** 2;
+  return Math.max(0, 1 - Math.sqrt(sum) / 2);
 };
