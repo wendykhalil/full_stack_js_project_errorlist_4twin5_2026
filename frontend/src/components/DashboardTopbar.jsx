@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Search, ChevronDown, User, Settings, LogOut, Accessibility, MessageCircle, MapPin, Loader2, Mic, MicOff } from "lucide-react";
 import LanguageSwitcher from "./LanguageSwitcher";
+import { getCurrentLang } from "../i18n";
 import { useLocation, useNavigate } from "react-router-dom";
 import { apiFetch } from "../auth/api";
 import { useAuth } from "../auth/AuthContext";
@@ -184,14 +185,33 @@ export default function DashboardTopbar({ role = "ARTISAN", unreadCount = 0, onL
       showVoiceFeedback(`→ ${page.label}`);
       setTimeout(() => navigate(page.to), 600);
     } else {
-      showVoiceFeedback(`"${transcript}" — page introuvable`);
+      const lang = getCurrentLang();
+      const notFound = lang === 'ar'
+        ? `"${transcript}" — الصفحة غير موجودة`
+        : lang === 'en'
+        ? `"${transcript}" — page not found`
+        : `"${transcript}" — page introuvable`;
+      showVoiceFeedback(notFound);
     }
+  };
+
+  // Map app language → BCP-47 speech recognition locale
+  const getSpeechLang = () => {
+    const lang = getCurrentLang();
+    if (lang === 'ar') return 'ar-SA';
+    if (lang === 'en') return 'en-US';
+    return 'fr-FR';
   };
 
   const toggleVoiceListening = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      showVoiceFeedback("Reconnaissance vocale non supportée");
+      const lang = getCurrentLang();
+      showVoiceFeedback(
+        lang === 'ar' ? 'التعرف على الصوت غير مدعوم'
+        : lang === 'en' ? 'Voice recognition not supported'
+        : 'Reconnaissance vocale non supportée'
+      );
       return;
     }
 
@@ -201,7 +221,7 @@ export default function DashboardTopbar({ role = "ARTISAN", unreadCount = 0, onL
     }
 
     const recognition = new SpeechRecognition();
-    recognition.lang = 'fr-FR';
+    recognition.lang = getSpeechLang();
     recognition.continuous = false;
     recognition.interimResults = false;
 
@@ -209,7 +229,12 @@ export default function DashboardTopbar({ role = "ARTISAN", unreadCount = 0, onL
     recognition.onend = () => setIsVoiceListening(false);
     recognition.onerror = () => {
       setIsVoiceListening(false);
-      showVoiceFeedback("Erreur micro — réessayez");
+      const lang = getCurrentLang();
+      showVoiceFeedback(
+        lang === 'ar' ? 'خطأ في الميكروفون — حاول مجدداً'
+        : lang === 'en' ? 'Mic error — try again'
+        : 'Erreur micro — réessayez'
+      );
     };
     recognition.onresult = (event) => {
       const transcript = event.results[0]?.[0]?.transcript || '';
@@ -402,8 +427,12 @@ export default function DashboardTopbar({ role = "ARTISAN", unreadCount = 0, onL
                 ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
                 : 'hover:bg-slate-50 text-slate-600 dark:hover:bg-slate-800 dark:text-slate-300'
             }`}
-            title={isVoiceListening ? "Arrêter la navigation vocale" : "Navigation vocale — dites le nom d'une page"}
-            aria-label={isVoiceListening ? "Arrêter la navigation vocale" : "Démarrer la navigation vocale"}
+            title={
+              isVoiceListening
+                ? (getCurrentLang() === 'ar' ? 'إيقاف التنقل الصوتي' : getCurrentLang() === 'en' ? 'Stop voice navigation' : 'Arrêter la navigation vocale')
+                : (getCurrentLang() === 'ar' ? 'التنقل الصوتي — قل اسم الصفحة' : getCurrentLang() === 'en' ? 'Voice navigation — say a page name' : "Navigation vocale — dites le nom d'une page")
+            }
+            aria-label="Voice navigation"
           >
             {isVoiceListening ? (
               <>

@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff, Square } from 'lucide-react';
+import { getCurrentLang } from '../i18n';
+
+const SPEECH_LANG_MAP = { fr: 'fr-FR', en: 'en-US', ar: 'ar-SA' };
 
 const VoiceInput = ({ onResult, placeholder = "Cliquez sur le micro et parlez...", className = "" }) => {
   const [isSupported, setIsSupported] = useState(false);
@@ -15,7 +18,7 @@ const VoiceInput = ({ onResult, placeholder = "Cliquez sur le micro et parlez...
       const recognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = true;
-      recognition.lang = 'fr-FR';
+      recognition.lang = SPEECH_LANG_MAP[getCurrentLang()] || 'fr-FR';
 
       recognition.onstart = () => {
         setIsListening(true);
