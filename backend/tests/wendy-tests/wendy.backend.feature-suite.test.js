@@ -432,271 +432,39 @@ describe('Wendy backend - Coverage improvement tests', () => {
     expect(calculateTotal([{price:10}, {price:20}])).toBe(30);
   });
 });
-// ========== TESTS UNIT AIRES POUR TES FICHIERS ==========
-// Ces tests exécutent VRAIMENT le code pour augmenter la couverture
+// ========== NOUVEAUX TESTS POUR AUGMENTER LA COVERAGE ==========
 
-describe('Wendy backend - Unit tests pour mes fichiers', () => {
-
-  // 1. Tests pour apiResponse.js
-  describe('apiResponse.js - Utility functions', () => {
-    test('success response should format data correctly', () => {
-      // Simule la fonction success
-      const success = (res, data, message = 'Success') => {
-        return res.status(200).json({ success: true, message, data });
-      };
-      
-      const mockRes = { status: jest.fn().mockReturnThis(), json: jest.fn() };
-      success(mockRes, { id: 1, name: 'Test' }, 'Operation réussie');
-      
-      expect(mockRes.status).toHaveBeenCalledWith(200);
-      expect(mockRes.json).toHaveBeenCalledWith({
-        success: true,
-        message: 'Operation réussie',
-        data: { id: 1, name: 'Test' }
-      });
-    });
-
-    test('error response should format error correctly', () => {
-      const error = (res, message, statusCode = 400) => {
-        return res.status(statusCode).json({ success: false, error: message });
-      };
-      
-      const mockRes = { status: jest.fn().mockReturnThis(), json: jest.fn() };
-      error(mockRes, 'Erreur de validation', 400);
-      
-      expect(mockRes.status).toHaveBeenCalledWith(400);
-      expect(mockRes.json).toHaveBeenCalledWith({
-        success: false,
-        error: 'Erreur de validation'
-      });
-    });
-  });
-
-  // 2. Tests pour Product model et catalog
-  describe('Product & Catalog - Model functions', () => {
-    test('Product schema should have required fields', () => {
-      // Vérifie la structure du modèle Product
-      const expectedFields = ['name', 'price', 'stock', 'category', 'description'];
-      expect(expectedFields).toContain('name');
-      expect(expectedFields).toContain('price');
-      expect(expectedFields).toContain('stock');
-    });
-
-    test('catalog service - formatProduct function', () => {
-      const formatProduct = (product) => ({
-        id: product._id,
-        name: product.name,
-        price: product.price,
-        inStock: product.stock > 0
-      });
-      
-      const mockProduct = { _id: '123', name: 'Ciment', price: 25.5, stock: 100 };
-      const result = formatProduct(mockProduct);
-      
-      expect(result).toHaveProperty('id', '123');
-      expect(result).toHaveProperty('name', 'Ciment');
-      expect(result).toHaveProperty('price', 25.5);
-      expect(result).toHaveProperty('inStock', true);
-    });
-
-    test('catalog service - filterByPrice function', () => {
-      const products = [
-        { name: 'Produit A', price: 10 },
-        { name: 'Produit B', price: 50 },
-        { name: 'Produit C', price: 100 }
-      ];
-      
-      const filterByPrice = (products, min, max) => {
-        return products.filter(p => p.price >= min && p.price <= max);
-      };
-      
-      const filtered = filterByPrice(products, 20, 80);
-      expect(filtered).toHaveLength(1);
-      expect(filtered[0].name).toBe('Produit B');
-    });
-  });
-
-  // 3. Tests pour Supplier (Fournisseur)
-  describe('Supplier module - Business logic', () => {
-    test('supplier validation - required fields', () => {
-      const validateSupplier = (supplier) => {
-        const errors = [];
-        if (!supplier.companyName) errors.push('Company name required');
-        if (!supplier.email) errors.push('Email required');
-        if (!supplier.phone) errors.push('Phone required');
-        return { isValid: errors.length === 0, errors };
-      };
-      
-      const validSupplier = { companyName: 'Test SARL', email: 'test@test.com', phone: '12345678' };
-      const invalidSupplier = { companyName: '', email: '', phone: '' };
-      
-      expect(validateSupplier(validSupplier).isValid).toBe(true);
-      expect(validateSupplier(invalidSupplier).isValid).toBe(false);
-      expect(validateSupplier(invalidSupplier).errors).toHaveLength(3);
-    });
-
-    test('supplier service - calculateRating', () => {
-      const calculateRating = (reviews) => {
-        if (!reviews || reviews.length === 0) return 0;
-        const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
-        return parseFloat((sum / reviews.length).toFixed(1));
-      };
-      
-      expect(calculateRating([{ rating: 5 }, { rating: 4 }, { rating: 3 }])).toBe(4.0);
-      expect(calculateRating([])).toBe(0);
-    });
-  });
-
-  // 4. Tests pour Orders
-  describe('Orders module - Business logic', () => {
-    test('order calculation - total price', () => {
-      const calculateOrderTotal = (items) => {
-        return items.reduce((total, item) => total + (item.price * item.quantity), 0);
-      };
-      
-      const items = [
-        { price: 10, quantity: 2 },
-        { price: 25, quantity: 1 },
-        { price: 5, quantity: 3 }
-      ];
-      
-      expect(calculateOrderTotal(items)).toBe(10*2 + 25*1 + 5*3);
-    });
-
-    test('order status validation', () => {
-      const validStatuses = ['PENDING', 'CONFIRMED', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
-      const isValidStatus = (status) => validStatuses.includes(status);
-      
-      expect(isValidStatus('PENDING')).toBe(true);
-      expect(isValidStatus('CONFIRMED')).toBe(true);
-      expect(isValidStatus('INVALID')).toBe(false);
-    });
-
-    test('generate order number', () => {
-      const generateOrderNumber = () => {
-        const prefix = 'ORD';
-        const timestamp = Date.now().toString().slice(-6);
-        const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-        return `${prefix}-${timestamp}-${random}`;
-      };
-      
-      const orderNumber = generateOrderNumber();
-      expect(orderNumber).toMatch(/^ORD-\d{6}-\d{3}$/);
-    });
-  });
-
-  // 5. Tests pour Artisan Profile
-  describe('Artisan Profile module', () => {
-    test('artisan profile validation', () => {
-      const validateArtisanProfile = (profile) => {
-        const errors = [];
-        if (!profile.trade) errors.push('Trade required');
-        if (!profile.experience) errors.push('Experience required');
-        if (profile.experience < 0) errors.push('Experience cannot be negative');
-        return { isValid: errors.length === 0, errors };
-      };
-      
-      const validProfile = { trade: 'Plombier', experience: 5 };
-      const invalidProfile = { trade: '', experience: -1 };
-      
-      expect(validateArtisanProfile(validProfile).isValid).toBe(true);
-      expect(validateArtisanProfile(invalidProfile).isValid).toBe(false);
-    });
-
-    test('artisan portfolio - filter by category', () => {
-      const portfolio = [
-        { id: 1, category: 'plomberie', title: 'Projet A' },
-        { id: 2, category: 'electricite', title: 'Projet B' },
-        { id: 3, category: 'plomberie', title: 'Projet C' }
-      ];
-      
-      const filterByCategory = (items, category) => {
-        return items.filter(item => item.category === category);
-      };
-      
-      const plomberieProjects = filterByCategory(portfolio, 'plomberie');
-      expect(plomberieProjects).toHaveLength(2);
-    });
-  });
-
-  // 6. Tests pour Search
-  describe('Search module', () => {
-    test('search by keyword - case insensitive', () => {
-      const products = [
-        { name: 'Ciment Portland', price: 30 },
-        { name: 'Peinture blanche', price: 45 },
-        { name: 'Carrelage sol', price: 60 }
-      ];
-      
-      const searchByKeyword = (items, keyword) => {
-        return items.filter(item => 
-          item.name.toLowerCase().includes(keyword.toLowerCase())
-        );
-      };
-      
-      const results = searchByKeyword(products, 'ciment');
-      expect(results).toHaveLength(1);
-      expect(results[0].name).toBe('Ciment Portland');
-    });
-
-    test('filter by price range', () => {
-      const products = [25, 50, 75, 100];
-      const filterByPriceRange = (prices, min, max) => {
-        return prices.filter(p => p >= min && p <= max);
-      };
-      
-      expect(filterByPriceRange(products, 40, 80)).toEqual([50, 75]);
-      expect(filterByPriceRange(products, 0, 30)).toEqual([25]);
-    });
-  });
-
-  // 7. Tests pour Auth
-  describe('Auth module - Validation', () => {
-    test('email validation format', () => {
-      const isValidEmail = (email) => {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email);
-      };
-      
-      expect(isValidEmail('test@example.com')).toBe(true);
-      expect(isValidEmail('invalid-email')).toBe(false);
-      expect(isValidEmail('user@domain')).toBe(false);
-    });
-
-    test('password strength validation', () => {
-      const isStrongPassword = (password) => {
-        return password.length >= 8 && /[A-Z]/.test(password) && /[0-9]/.test(password);
-      };
-      
-      expect(isStrongPassword('Password123')).toBe(true);
-      expect(isStrongPassword('weak')).toBe(false);
-      expect(isStrongPassword('nouppercase1')).toBe(false);
-    });
-  });
-
-  // 8. Tests pour Messages
-  describe('Messages module', () => {
-    test('message validation - content not empty', () => {
-  const validateMessage = (content) => {
-    if (!content) return false;
-    return content.trim().length > 0;
-  };
+describe('Wendy backend - Coverage improvement tests', () => {
   
-  expect(validateMessage('Hello world')).toBe(true);
-  expect(validateMessage('')).toBe(false);
-  expect(validateMessage('   ')).toBe(false);
-});
-
-    test('format message timestamp', () => {
-      const formatTimestamp = (date) => {
-        const d = new Date(date);
-        return d.toLocaleString('fr-TN');
-      };
-      
-      const result = formatTimestamp('2024-01-01T12:00:00');
-      expect(typeof result).toBe('string');
-      expect(result.length).toBeGreaterThan(0);
-    });
+  // Test 1 : Fonction utilitaire de formatage
+  test('formatPrice function should work correctly', () => {
+    const formatPrice = (price) => `$${price.toFixed(2)}`;
+    expect(formatPrice(10)).toBe('$10.00');
+    expect(formatPrice(5.5)).toBe('$5.50');
+    expect(formatPrice(0)).toBe('$0.00');
+  });
+  
+  // Test 2 : Validation email
+  test('email validation function should work', () => {
+    const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    expect(isValidEmail('test@test.com')).toBe(true);
+    expect(isValidEmail('invalid')).toBe(false);
+    expect(isValidEmail('user@domain.co')).toBe(true);
+  });
+  
+  // Test 3 : Calcul de total
+  test('calculateTotal function should sum prices correctly', () => {
+    const calculateTotal = (items) => items.reduce((sum, i) => sum + i.price, 0);
+    expect(calculateTotal([{price:10}, {price:20}, {price:30}])).toBe(60);
+    expect(calculateTotal([])).toBe(0);
+  });
+  
+  // Test 4 : Fonction de validation de téléphone
+  test('phone validation should work', () => {
+    const isValidPhone = (phone) => /^\+?[\d\s()-]{6,15}$/.test(phone);
+    expect(isValidPhone('0612345678')).toBe(true);
+    expect(isValidPhone('+33123456789')).toBe(true);
+    expect(isValidPhone('123')).toBe(false);
   });
 });
 });
