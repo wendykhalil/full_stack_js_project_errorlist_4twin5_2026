@@ -203,6 +203,7 @@ async function verifyEmail(req, res, next) {
     const result = await authService.verifyEmail({ token });
     res.json(result);
   } catch (e) {
+    res.status(e.statusCode || 500);
     next(e);
   }
 }
@@ -213,6 +214,7 @@ async function resendVerification(req, res, next) {
     const result = await authService.resendVerification({ email });
     res.json(result);
   } catch (e) {
+    res.status(e.statusCode || 500);
     next(e);
   }
 }

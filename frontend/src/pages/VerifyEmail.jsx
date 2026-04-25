@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { HardHat, CheckCircle2, XCircle, ArrowRight } from "lucide-react";
 import { apiFetch } from "../auth/api";
@@ -17,39 +17,30 @@ export default function VerifyEmail() {
 
   const [status, setStatus] = useState("loading"); // loading | ok | error
   const [message, setMessage] = useState("");
+  const hasVerified = useRef(false);
 
   useEffect(() => {
-    let mounted = true;
-    
-    async function run() {
-      try {
-        const data = await apiFetch(`/auth/verify-email?token=${encodeURIComponent(token)}`, { method: "GET" });
-        if (!mounted) return;
+    if (!token) {
+      setStatus("error");
+      setMessage(t('verifyEmail.missingToken'));
+      return;
+    }
+
+    // Already called (React Strict Mode double-invoke guard)
+    if (hasVerified.current) return;
+    hasVerified.current = true;
+
+    apiFetch(`/auth/verify-email?token=${encodeURIComponent(token)}`, { method: "GET" })
+      .then((data) => {
         setStatus("ok");
         setMessage(data.message || t('verifyEmail.successDefaultMessage'));
-      } catch (e) {
-        if (!mounted) return;
+      })
+      .catch((e) => {
         setStatus("error");
         setMessage(e.message || t('verifyEmail.errorDefaultMessage'));
-      }
-    }
-    
-    // ✅ CORRIGÉ: Déplacer la logique synchrone dans une fonction séparée
-    const handleVerification = () => {
-      if (!token) {
-        setStatus("error");
-        setMessage(t('verifyEmail.missingToken'));
-        return;
-      }
-      run();
-    };
-    
-    handleVerification();
-    
-    return () => {
-      mounted = false;
-    };
-  }, [token, t]);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="relative flex h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-slate-50 via-indigo-50/60 to-slate-100 px-4">

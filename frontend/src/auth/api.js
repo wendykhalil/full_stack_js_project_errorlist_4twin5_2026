@@ -3,9 +3,15 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 let clientMetaPromise = null;
 
 async function tryFetchJson(url) {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Lookup failed: ${res.status}`);
-  return res.json();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 3000);
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    if (!res.ok) throw new Error(`Lookup failed: ${res.status}`);
+    return res.json();
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 async function resolveClientMeta() {
