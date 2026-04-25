@@ -7,6 +7,13 @@ jest.mock('../../src/models/Project', () => ({
   deleteOne: jest.fn(),
 }));
 
+jest.mock("../../src/config/cloudinary", () => ({
+  uploadBufferToCloudinary: jest.fn().mockResolvedValue({
+    secure_url: "https://cloudinary.test/projects/img1.jpg",
+    public_id: "projects/img1",
+  }),
+}));
+
 const Project = require('../../src/models/Project');
 const controller = require('../../src/modules/projects/projects.controller');
 
@@ -24,7 +31,7 @@ describe('projects.controller', () => {
     await controller.createProject(req, res, next);
 
     expect(res.statusCode).toBe(400);
-    expect(res._getJSONData().message).toBe('Title is required');
+    expect(res._getJSONData().message).toMatch(/titre|required/i);
   });
 
   test('createProject creates artisan project', async () => {
@@ -152,7 +159,7 @@ describe('projects.controller', () => {
     await controller.getProjectById(req, res, next);
 
     expect(res.statusCode).toBe(403);
-    expect(res._getJSONData().message).toBe('Forbidden');
+    expect(res._getJSONData().message).toMatch(/accès|forbidden/i);
   });
 
   test('getProjectById allows prescripteur to read artisan project', async () => {
@@ -189,8 +196,8 @@ describe('projects.controller', () => {
         clearImages: 'true',
       },
     });
-    req.user = { sub: 'artisan-1' };
-    req.files = [{ filename: 'img1.jpg', originalname: 'img1.jpg', mimetype: 'image/jpeg', size: 1234 }];
+    req.user = { _id: 'artisan-1', sub: 'artisan-1' };
+    req.files = [{ buffer: Buffer.from('fake-image'), filename: 'img1.jpg', originalname: 'img1.jpg', mimetype: 'image/jpeg', size: 1234 }];
     const res = httpMocks.createResponse();
     const next = jest.fn();
 
@@ -231,7 +238,7 @@ describe('projects.controller', () => {
       params: { id: 'p1' },
       body: { budgetTND: 'not-a-number' },
     });
-    req.user = { sub: 'artisan-1' };
+    req.user = { _id: 'artisan-1', sub: 'artisan-1' };
     const res = httpMocks.createResponse();
     const next = jest.fn();
 

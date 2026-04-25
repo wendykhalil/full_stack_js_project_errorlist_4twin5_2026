@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node ../scripts/frontend-smoke-test.mjs&& jest",
+    "test:coverage": "node ../scripts/frontend-smoke-test.mjs"
   },
   "dependencies": {
     "@stripe/react-stripe-js": "^6.1.0",

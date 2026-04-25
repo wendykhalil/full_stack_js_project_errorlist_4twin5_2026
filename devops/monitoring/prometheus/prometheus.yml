@@ -1,0 +1,26 @@
+global:
+  scrape_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']
+
+rule_files:
+  - /etc/prometheus/alert-rules.yml
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ['prometheus:9090']
+  - job_name: backend
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['backend:5000']
+  - job_name: frontend
+    metrics_path: /
+    static_configs:
+      - targets: ['frontend:80']
+  - job_name: sonarqube
+    static_configs:
+      - targets: ['sonarqube:9000']

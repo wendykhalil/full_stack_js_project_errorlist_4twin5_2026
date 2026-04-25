@@ -3,7 +3,7 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for utils/notify.js</title>
+    <title>Code coverage report for jobs/expireServiceRequests.js</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../prettify.css" />
     <link rel="stylesheet" href="../base.css" />
@@ -19,34 +19,34 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../index.html">All files</a> / <a href="index.html">utils</a> notify.js</h1>
+        <h1><a href="../index.html">All files</a> / <a href="index.html">jobs</a> expireServiceRequests.js</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">66.66% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>8/8</span>
+                <span class='fraction'>8/12</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">50% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>3/3</span>
+                <span class='fraction'>2/4</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">50% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>1/1</span>
+                <span class='fraction'>1/2</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">66.66% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>8/8</span>
+                <span class='fraction'>8/12</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line high'></div>
+    <div class='status-line medium'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -94,13 +94,20 @@
 <a name='L29'></a><a href='#L29'>29</a>
 <a name='L30'></a><a href='#L30'>30</a>
 <a name='L31'></a><a href='#L31'>31</a>
-<a name='L32'></a><a href='#L32'>32</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L32'></a><a href='#L32'>32</a>
+<a name='L33'></a><a href='#L33'>33</a>
+<a name='L34'></a><a href='#L34'>34</a>
+<a name='L35'></a><a href='#L35'>35</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -108,54 +115,56 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">const Notification = require('../models/Notification');
-const { notifyUser } = require('../socket');
-&nbsp;
-/**
- * Save a notification to DB and emit via Socket.io
- * @param {Object} opts
- * @param {string} opts.userId
- * @param {string} opts.type
- * @param {string} opts.title
- * @param {string} [opts.message]
- * @param {string} [opts.link]
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
+ * Job: auto-cancel OPEN service requests whose deadline has passed.
+ * Runs on an interval set by EXPIRE_SR_INTERVAL_MS (default: every hour).
+ * Safe to call multiple times — uses $lt: now so already-cancelled docs are skipped.
  */
-async function notify({ userId, type = 'GENERAL', title, message = '', link = '' }) {
+const ServiceRequest = require('../models/ServiceRequest');
+&nbsp;
+async function expireServiceRequests() {
   try {
-    const doc = await Notification.create({ userId, type, title, message, link });
-    notifyUser(String(userId), {
-      _id: doc._id,
-      type: doc.type,
-      title: doc.title,
-      message: doc.message,
-      link: doc.link,
-      read: false,
-      createdAt: doc.createdAt,
-    });
-    return doc;
+    const now = new Date();
+    const result = await ServiceRequest.updateMany(
+      {
+        status: 'OPEN',
+        deadline: { $lt: now, $ne: null },
+      },
+      { $set: { status: 'CANCELLED' } }
+    );
+    if (result.modifiedCount &gt; 0) {
+      console.log(`[expireServiceRequests] Auto-cancelled ${result.modifiedCount} expired request(s)`);
+    }
   } catch (err) {
-    console.error('notify() error:', err.message);
+    console.error('[expireServiceRequests] Error:', err.message);
   }
 }
 &nbsp;
-module.exports = { notify };
+function <span class="fstat-no" title="function not covered" >startExpireJob(</span>) {
+  const intervalMs = <span class="cstat-no" title="statement not covered" >Number(process.env.EXPIRE_SR_INTERVAL_MS) || 60 * 60 * 1000;</span> // default 1h
+  // Run once immediately on startup, then on interval
+<span class="cstat-no" title="statement not covered" >  expireServiceRequests();</span>
+<span class="cstat-no" title="statement not covered" >  setInterval(expireServiceRequests, intervalMs);</span>
+<span class="cstat-no" title="statement not covered" >  console.log(`[expireServiceRequests] Job started — interval: ${intervalMs / 1000}s`);</span>
+}
+&nbsp;
+module.exports = { startExpireJob, expireServiceRequests };
 &nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->

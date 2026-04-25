@@ -1,6 +1,5 @@
-jest.mock('../../src/utils/email', () => ({
-  sendMail: jest.fn(),
-  isEmailConfigured: jest.fn(),
+jest.mock('../../src/models/Notification', () => ({
+  create: jest.fn(),
 }));
 
 jest.mock('../../src/socket', () => ({
@@ -8,67 +7,57 @@ jest.mock('../../src/socket', () => ({
   notifyAdmins: jest.fn(),
 }));
 
-const { sendMail, isEmailConfigured } = require('../../src/utils/email');
+const Notification = require('../../src/models/Notification');
 const socket = require('../../src/socket');
 const { notify } = require('../../src/utils/notify');
 
 describe('notify util', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    process.env.NOTIFY_EMAILS = 'admin1@test.com,admin2@test.com';
   });
 
-  test('emits realtime notification to admins', async () => {
-    isEmailConfigured.mockReturnValue(false);
+  test('persists and emits realtime notification to a user', async () => {
+    Notification.create.mockResolvedValue({
+      _id: 'n1',
+      userId: '507f1f77bcf86cd799439011',
+      type: 'GENERAL',
+      title: 'Activity',
+      message: 'Profile updated',
+      link: '/admin/activity',
+      createdAt: new Date('2026-01-01'),
+    });
 
     const result = await notify({
-      toAdmins: true,
-      payload: { type: 'activity', title: 'Activity', message: 'Profile updated' },
-      sendEmail: false,
+      userId: '507f1f77bcf86cd799439011',
+      type: 'GENERAL',
+      title: 'Activity',
+      message: 'Profile updated',
+      link: '/admin/activity',
     });
 
-    expect(result.ok).toBe(true);
-    expect(socket.notifyAdmins).toHaveBeenCalled();
+    expect(Notification.create).toHaveBeenCalledWith(expect.objectContaining({
+      userId: '507f1f77bcf86cd799439011',
+      type: 'GENERAL',
+      title: 'Activity',
+      message: 'Profile updated',
+      link: '/admin/activity',
+    }));
+    expect(socket.notifyUser).toHaveBeenCalledWith('507f1f77bcf86cd799439011', expect.objectContaining({
+      _id: 'n1',
+      title: 'Activity',
+      read: false,
+    }));
+    expect(result._id).toBe('n1');
   });
 
-  test('sends email notification when smtp is configured', async () => {
-    isEmailConfigured.mockReturnValue(true);
-    sendMail.mockResolvedValue(true);
+  test('returns undefined and does not throw when notification persistence fails', async () => {
+    Notification.create.mockRejectedValue(new Error('DB error'));
 
-    await notify({
-      userId: 'u1',
-      payload: {
-        type: 'activity',
-        title: 'Reset password',
-        message: 'User reset password',
-        meta: { action: 'RESET', details: '<unsafe>' },
-      },
-      sendEmail: true,
-    });
+    await expect(notify({
+      userId: '507f1f77bcf86cd799439011',
+      title: 'Broken notification',
+    })).resolves.toBeUndefined();
 
-    expect(socket.notifyUser).toHaveBeenCalledWith('u1', expect.any(Object));
-    expect(sendMail).toHaveBeenCalled();
-
-    const mailArgs = sendMail.mock.calls[0][0];
-    expect(mailArgs.to).toBe('admin1@test.com,admin2@test.com');
-    expect(mailArgs.subject).toContain('Reset password');
-    expect(mailArgs.text).toContain('Meta:');
-    expect(mailArgs.html).toContain('Details');
-    expect(mailArgs.html).toContain('&lt;unsafe&gt;');
-  });
-
-  test('uses explicit emailTo list and skips email when disabled', async () => {
-    isEmailConfigured.mockReturnValue(true);
-
-    const result = await notify({
-      userId: 'u2',
-      payload: { type: 'project', title: 'Project updated', message: 'Budget changed' },
-      emailTo: ['owner@test.com'],
-      sendEmail: false,
-    });
-
-    expect(result.ok).toBe(true);
-    expect(socket.notifyUser).toHaveBeenCalledWith('u2', expect.any(Object));
-    expect(sendMail).not.toHaveBeenCalled();
+    expect(socket.notifyUser).not.toHaveBeenCalled();
   });
 });

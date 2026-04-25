@@ -1,0 +1,37 @@
+name: CD Frontend
+
+on:
+  workflow_run:
+    workflows: ["CI Frontend"]
+    types: [completed]
+
+jobs:
+  build-and-deploy:
+    name: Build frontend image and deploy
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build frontend Docker image
+        run: docker build -t pilastversion-frontend:${{ github.sha }} ./frontend
+
+      - name: Save frontend Docker image artifact
+        run: docker save pilastversion-frontend:${{ github.sha }} -o frontend-image.tar
+
+      - name: Upload frontend image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-image
+          path: frontend-image.tar
+
+      - name: Deploy frontend to kubeadm cluster
+        if: ${{ secrets.KUBE_CONFIG != '' }}
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+        run: |
+          mkdir -p ~/.kube
+          echo "$KUBE_CONFIG" | base64 -d > ~/.kube/config
+          kubectl apply -f devops/k8s/namespace.yml
+          kubectl apply -f devops/k8s/frontend-deployment.yml

@@ -1,0 +1,27 @@
+groups:
+  - name: pilastversion-alerts
+    rules:
+      - alert: BackendDown
+        expr: up{job="backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: Backend application is down
+          description: Backend API is not reachable by Prometheus.
+      - alert: FrontendDown
+        expr: up{job="frontend"} == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Frontend application is down
+          description: Frontend app is not reachable by Prometheus.
+      - alert: SonarQubeDown
+        expr: up{job="sonarqube"} == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: SonarQube is down
+          description: DevOps quality tool SonarQube is unreachable.
