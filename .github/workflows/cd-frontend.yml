@@ -27,7 +27,7 @@ jobs:
           path: frontend-image.tar
 
       - name: Deploy frontend to kubeadm cluster
-        if: ${{ secrets.KUBE_CONFIG != '' }}
+        if: ${{ vars.SONAR_TOKEN != '' || secrets.SONAR_TOKEN != '' }}
         env:
           KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
         run: |
