@@ -32,8 +32,8 @@ async function getMyOrders(req, res) {
   try {
     const { page, limit, status } = req.query;
     const orders = await ordersService.getOrdersByArtisan(req.user._id, {
-      page: parseInt(page) || 1,
-      limit: parseInt(limit) || 10,
+      page: Number.parseInt(page) || 1,
+      limit: Number.parseInt(limit) || 10,
       status: status ? status.split(',') : []
     });
     return apiResponse(res, 'Commandes récupérées', orders);
@@ -50,8 +50,8 @@ async function getArtisanActiveOrders(req, res) {
   try {
     const { page, limit } = req.query;
     const orders = await ordersService.getArtisanActiveOrders(req.user._id, {
-      page: parseInt(page) || 1,
-      limit: parseInt(limit) || 10
+      page: Number.parseInt(page) || 1,
+      limit: Number.parseInt(limit) || 10
     });
     return apiResponse(res, 'Commandes en cours récupérées', orders);
   } catch (error) {
@@ -67,8 +67,8 @@ async function getArtisanOrderHistory(req, res) {
   try {
     const { page, limit } = req.query;
     const orders = await ordersService.getArtisanOrderHistory(req.user._id, {
-      page: parseInt(page) || 1,
-      limit: parseInt(limit) || 10
+      page: Number.parseInt(page) || 1,
+      limit: Number.parseInt(limit) || 10
     });
     return apiResponse(res, 'Historique des commandes récupéré', orders);
   } catch (error) {
@@ -84,8 +84,8 @@ async function getSupplierOrders(req, res) {
   try {
     const { page, limit, status } = req.query;
     const orders = await ordersService.getOrdersBySupplier(req.user._id, {
-      page: parseInt(page) || 1,
-      limit: parseInt(limit) || 10,
+      page: Number.parseInt(page) || 1,
+      limit: Number.parseInt(limit) || 10,
       status: status ? status.split(',') : []
     });
     return apiResponse(res, 'Commandes fournisseur récupérées', orders);
@@ -102,8 +102,8 @@ async function getSupplierActiveOrders(req, res) {
   try {
     const { page, limit } = req.query;
     const orders = await ordersService.getSupplierActiveOrders(req.user._id, {
-      page: parseInt(page) || 1,
-      limit: parseInt(limit) || 10
+      page: Number.parseInt(page) || 1,
+      limit: Number.parseInt(limit) || 10
     });
     return apiResponse(res, 'Commandes en cours récupérées', orders);
   } catch (error) {
@@ -119,8 +119,8 @@ async function getSupplierOrderHistory(req, res) {
   try {
     const { page, limit } = req.query;
     const orders = await ordersService.getSupplierOrderHistory(req.user._id, {
-      page: parseInt(page) || 1,
-      limit: parseInt(limit) || 10
+      page: Number.parseInt(page) || 1,
+      limit: Number.parseInt(limit) || 10
     });
     return apiResponse(res, 'Historique des commandes récupéré', orders);
   } catch (error) {

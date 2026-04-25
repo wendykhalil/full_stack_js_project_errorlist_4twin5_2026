@@ -1,4 +1,4 @@
-const crypto = require('crypto');
+const crypto = require('node:crypto')
 const { sendMail, isEmailConfigured } = require('../../utils/email');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');

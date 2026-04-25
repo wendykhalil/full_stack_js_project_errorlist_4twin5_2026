@@ -17,8 +17,8 @@ const getProducts = async ({ page = 1, limit = 12, search = '', category = '', a
   if (search)    query.name       = { $regex: search, $options: 'i' };
   if (category)  query.categoryId = category;
 
-  const safePage  = Number.isFinite(Number(page))  ? Math.max(1, parseInt(page, 10))  : 1;
-  const safeLimit = Number.isFinite(Number(limit)) ? Math.max(1, parseInt(limit, 10)) : 12;
+  const safePage  = Number.isFinite(Number(page))  ? Math.max(1, Number.parseInt(page, 10))  : 1;
+  const safeLimit = Number.isFinite(Number(limit)) ? Math.max(1, Number.parseInt(limit, 10)) : 12;
   const skip = (safePage - 1) * safeLimit;
 
   const [products, total] = await Promise.all([

@@ -153,7 +153,7 @@ async function fetchContext(userId, role, intents, message) {
         'Jardinier':     ['jardinier','jardiniers','jardin'],
       };
 
-      const msgNorm = msg.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+      const msgNorm = msg.normalize('NFD').replaceAll(/[\u0300-\u036f]/g, '').toLowerCase();
       const trade = Object.entries(TRADE_ALIASES).find(([, aliases]) =>
         aliases.some(alias => msgNorm.includes(alias))
       )?.[0];

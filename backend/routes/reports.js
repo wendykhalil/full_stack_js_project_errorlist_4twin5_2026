@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const path = require('path');
+const path = require('node:path');
+
 const Report = require('../src/models/Report');
 const ActivityLog = require('../src/models/ActivityLog');
 const { notifyAdmins } = require('../src/socket');

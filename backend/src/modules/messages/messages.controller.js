@@ -88,7 +88,7 @@ async function getConversation(req, res) {
     const { userId } = req.params;
     const { page, limit } = req.query;
 
-    const messages = await messagesService.getConversation(getUserId(req), userId, parseInt(page, 10) || 1, parseInt(limit, 10) || 50);
+    const messages = await messagesService.getConversation(getUserId(req), userId, Number.parseInt(page, 10) || 1, Number.parseInt(limit, 10) || 50);
 
     return apiResponse(res, 'Conversation récupérée', messages);
   } catch (error) {

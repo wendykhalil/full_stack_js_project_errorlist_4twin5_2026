@@ -22,8 +22,8 @@ const getProducts = async (req, res) => {
   try {
     const { page, limit, search, category, approved } = req.query;
     const products = await catalogService.getProducts({
-      page:     parseInt(page)  || 1,
-      limit:    parseInt(limit) || 8,
+      page:     Number.parseInt(page)  || 1,
+      limit:    Number.parseInt(limit) || 8,
       search:   search   || '',
       category: category || '',
       approved,
