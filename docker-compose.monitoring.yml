@@ -15,3 +15,10 @@ services:
       - "9093:9093"
     volumes:
       - ./devops/monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+
+  blackbox:
+    image: prom/blackbox-exporter:latest
+    ports:
+      - "9115:9115"
+    volumes:
+      - ./devops/monitoring/blackbox/blackbox.yml:/etc/blackbox_exporter/config.yml:ro

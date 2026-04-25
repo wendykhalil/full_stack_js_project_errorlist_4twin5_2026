@@ -13,14 +13,48 @@ scrape_configs:
   - job_name: prometheus
     static_configs:
       - targets: ['prometheus:9090']
-  - job_name: backend
-    metrics_path: /metrics
+
+  - job_name: blackbox-backend
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
     static_configs:
-      - targets: ['backend:5000']
-  - job_name: frontend
-    metrics_path: /
+      - targets:
+          - http://host.docker.internal:30007
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox:9115
+
+  - job_name: blackbox-frontend
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
     static_configs:
-      - targets: ['frontend:80']
-  - job_name: sonarqube
+      - targets:
+          - http://host.docker.internal:30008
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox:9115
+
+  - job_name: blackbox-sonarqube
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
     static_configs:
-      - targets: ['sonarqube:9000']
+      - targets:
+          - http://host.docker.internal:9000
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox:9115
