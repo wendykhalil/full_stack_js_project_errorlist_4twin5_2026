@@ -1,333 +1,441 @@
-const Product = require('../../models/Product');
+const Order = require('../../models/Order');
 const Project = require('../../models/Project');
-const Category = require('../../models/Category');
+const Facture = require('../../models/Facture');
+const Devis = require('../../models/Devis');
+const Product = require('../../models/Product');
 const ArtisanProfile = require('../../models/ArtisanProfile');
-const User = require('../../models/User');
+const Availability = require('../../models/Availability');
+const Subscription = require('../../models/Subscription');
+const ServiceRequest = require('../../models/ServiceRequest');
+const Review = require('../../models/Review');
+const PromoCode = require('../../models/PromoCode');
+const { getPlanFeatures } = require('../../config/subscriptionPlans');
 
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434';
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3.2';
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'mistral';
 
-function clampNumber(value, min, max, fallback) {
-  const num = Number(value);
-  if (Number.isNaN(num)) return fallback;
-  return Math.min(max, Math.max(min, num));
+// ── Intent detection ──────────────────────────────────────────────────────────
+function detectIntents(message) {
+  const msg = message.toLowerCase();
+  const intents = new Set();
+
+  if (/commande|order|livr|expédi|colis|cmd-/.test(msg))           intents.add('orders');
+  if (/facture|invoice|impayé|paiement|total|montant/.test(msg))   intents.add('invoices');
+  if (/devis|quote|estimation/.test(msg))                          intents.add('quotes');
+  if (/projet|chantier|project|chantiers/.test(msg))               intents.add('projects');
+  if (/produit|product|matériau|ciment|peinture|carrelage|stock|prix|catalogue|marketplace|acheter|commander|fournisseur|disponible/.test(msg)) intents.add('products');
+  if (/abonnement|subscription|plan|basic|pro|expire/.test(msg))   intents.add('subscription');
+  if (/artisan|plombier|électricien|maçon|peintre|menuisier|carreleur|disponib/.test(msg)) intents.add('artisans');
+  if (/disponib|calendrier|libre|occupé|réservé/.test(msg))        intents.add('availability');
+  if (/demande.*service|service.*request|mission|candidature|demandes|demande/.test(msg)) intents.add('serviceRequests');
+  if (/avis|note|évaluation|rating|review/.test(msg))              intents.add('reviews');
+  if (/promo|code.*promo|réduction|discount/.test(msg))            intents.add('promo');
+  if (/prescripteur|prescripteurs|architecte|architectes|utilisateur|utilisateurs|membres|membre/.test(msg)) intents.add('users');
+
+  return intents.size ? [...intents] : ['general'];
 }
 
-function uniqStrings(items = [], max = 8) {
-  return [...new Set((Array.isArray(items) ? items : []).map((item) => String(item || '').trim()).filter(Boolean))].slice(0, max);
+// ── Product keyword extraction ──────────────────────────────────────────────
+const STOP_WORDS = new Set(['les','des','du','de','la','le','un','une','pour','avec','dans','sur','quels','quel','quelle','sont','disponibles','disponible','produits','produit','matériaux','matériau','cherche','trouve','montre','voir','prix','stock']);
+
+function extractProductKeywords(message) {
+  const msg = message.toLowerCase();
+  return msg.replace(/[^\w\sàâäéèêëîïôùûüç]/gi, '').split(/\s+/)
+    .filter(w => w.length > 2 && !STOP_WORDS.has(w)).slice(0, 4);
 }
 
-function safeJsonParse(text) {
-  try {
-    return JSON.parse(text);
-  } catch {
-    const match = String(text || '').match(/\{[\s\S]*\}|\[[\s\S]*\]/);
-    if (!match) return null;
-    try {
-      return JSON.parse(match[0]);
-    } catch {
-      return null;
-    }
+function buildProductFilter(keywords) {
+  const filter = { isApproved: true };
+  if (keywords.length) {
+    filter.$or = keywords.flatMap(k => [
+      { name: new RegExp(k, 'i') },
+      { description: new RegExp(k, 'i') },
+    ]);
+  }
+  return filter;
+}
+
+// ── Trade aliases configuration ─────────────────────────────────────────────
+const TRADE_ALIASES = {
+  'Plombier':      ['plombier','plombiers','plombi'],
+  'Électricien':   ['electricien','électricien','electri'],
+  'Maçon':         ['macon','maçon','maconier','maconnier','maçonnier','maçonnerie','maconnerie'],
+  'Peintre':       ['peintre','peintres','peintur'],
+  'Menuisier':     ['menuisier','menuisiers','menuiser'],
+  'Carreleur':     ['carreleur','carreleurs','carrele'],
+  'Chauffagiste':  ['chauffagiste','chauffage'],
+  'Climatisation': ['climatisation','climatiseur','clim'],
+  'Jardinier':     ['jardinier','jardiniers','jardin'],
+};
+
+const CITIES = ['tunis','ariana','sfax','sousse','monastir','bizerte','nabeul','kairouan','gabès'];
+
+function extractArtisanFilters(message) {
+  const msg = message.toLowerCase();
+  const msgNorm = msg.normalize('NFD').replaceAll(/[\u0300-\u036f]/g, '').toLowerCase();
+  const trade = Object.entries(TRADE_ALIASES).find(([, aliases]) =>
+    aliases.some(alias => msgNorm.includes(alias))
+  )?.[0];
+  const city = CITIES.find(c => msg.includes(c));
+  return { trade, city };
+}
+
+// ── Service request filter helpers ──────────────────────────────────────────
+function getServiceRequestStatusFilter(msg, wantsOpen, wantsDone, wantsCancelled) {
+  if (wantsDone) return ['COMPLETED'];
+  if (wantsCancelled) return ['CANCELLED'];
+  if (wantsOpen) return ['OPEN', 'ASSIGNED'];
+  return undefined;
+}
+
+function detectServiceRequestFilters(message) {
+  const msg = message.toLowerCase();
+  const wantsOpen = /pas.*(terminé|fini|complété|fermé)|non.*(terminé|fini)|en cours|ouvert|open|actif|active|encore|progress/.test(msg);
+  const wantsDone = /\bterminé|\bcomplété|\bcompleted|\bfermé|\bclosed|\bfini/.test(msg) && !wantsOpen;
+  const wantsCancelled = /annulé|cancelled/.test(msg);
+  return { wantsOpen, wantsDone, wantsCancelled };
+}
+
+// ── User filter helpers ─────────────────────────────────────────────────────
+function detectUserRoleFilter(message) {
+  const msg = message.toLowerCase();
+  if (/prescripteur|prescripteurs|architecte/.test(msg)) return 'PRESCRIPTEUR';
+  if (/fournisseur|fournisseurs|supplier/.test(msg)) return 'SUPPLIER';
+  if (/artisan|artisans/.test(msg)) return 'ARTISAN';
+  return null;
+}
+
+// ── Data fetcher ──────────────────────────────────────────────────────────────
+async function fetchOrders(ctx, userId, role) {
+  const orders = await Order.find(
+    role === 'SUPPLIER' ? { supplierId: userId } : { artisanId: userId }
+  ).sort({ createdAt: -1 }).limit(5)
+    .populate('productId', 'name price').lean();
+  ctx.orders = orders.map(o => ({
+    ref: o.orderNumber,
+    product: o.productId?.name,
+    quantity: o.quantity,
+    total: o.lineTotal,
+    status: o.status,
+    date: o.createdAt?.toISOString().slice(0, 10),
+  }));
+}
+
+async function fetchProjects(ctx, userId, role, intents) {
+  if (intents.includes('projects') && role === 'ARTISAN') {
+    const projects = await Project.find({ artisanId: userId })
+      .sort({ updatedAt: -1 }).limit(5).lean();
+    ctx.projects = projects.map(p => ({
+      title: p.title,
+      status: p.status,
+      city: p.location?.city,
+      budget: p.budgetTND,
+      category: p.category,
+      startDate: p.startDate?.toISOString().slice(0, 10),
+      endDate: p.endDate?.toISOString().slice(0, 10),
+    }));
   }
 }
 
-async function callOllamaJson({ system, prompt }) {
-  const response = await fetch(`${OLLAMA_BASE_URL}/api/generate`, {
+async function fetchInvoices(ctx, userId, role, intents) {
+  if (intents.includes('invoices') && role === 'ARTISAN') {
+    const invoices = await Facture.find({ artisanId: userId })
+      .sort({ createdAt: -1 }).limit(5)
+      .populate('projectId', 'title').lean();
+    ctx.invoices = invoices.map(f => ({
+      project: f.projectId?.title,
+      total: f.total,
+      status: f.status,
+      dueDate: f.dueDate?.toISOString().slice(0, 10),
+    }));
+    ctx.unpaidTotal = invoices
+      .filter(f => f.status !== 'PAID')
+      .reduce((s, f) => s + (f.total || 0), 0);
+  }
+}
+
+async function fetchQuotes(ctx, userId, role, intents) {
+  if (intents.includes('quotes') && role === 'ARTISAN') {
+    const quotes = await Devis.find({ artisanId: userId })
+      .sort({ createdAt: -1 }).limit(5)
+      .populate('projectId', 'title').lean();
+    ctx.quotes = quotes.map(q => ({
+      project: q.projectId?.title,
+      total: q.total,
+      status: q.status,
+    }));
+  }
+}
+
+async function fetchSubscription(ctx, userId, intents) {
+  if (intents.includes('subscription')) {
+    const sub = await Subscription.findOne({ userId }).lean();
+    ctx.subscription = sub ? {
+      plan: sub.plan,
+      status: sub.status,
+      endDate: sub.endDate?.toISOString().slice(0, 10),
+      isOnTrial: sub.isOnTrial,
+      features: getPlanFeatures(sub.plan),
+    } : { plan: 'FREE', status: 'ACTIVE' };
+  }
+}
+
+async function fetchProducts(ctx, message) {
+  const keywords = extractProductKeywords(message);
+  const filter = buildProductFilter(keywords);
+  let products = await Product.find(filter).limit(8).populate('categoryId', 'name').lean();
+  if (!products.length) {
+    products = await Product.find({ isApproved: true }).limit(8).populate('categoryId', 'name').lean();
+  }
+  ctx.products = products.map(p => ({
+    name: p.name,
+    price: `${p.price} TND`,
+    unit: p.unit,
+    stock: p.stock,
+    category: p.categoryId?.name || p.category,
+    description: p.description?.slice(0, 100),
+  }));
+}
+
+async function fetchArtisans(ctx, message) {
+  const { trade, city } = extractArtisanFilters(message);
+  const filter = {};
+  if (trade) filter.trade = trade;
+  if (city) filter.region = new RegExp(city, 'i');
+
+  const [artisans, totalArtisans] = await Promise.all([
+    ArtisanProfile.find(filter).limit(10).populate('userId', 'firstName lastName').lean(),
+    ArtisanProfile.countDocuments(filter),
+  ]);
+  ctx.artisans = artisans.map(a => ({
+    name: `${a.userId?.firstName} ${a.userId?.lastName}`,
+    trade: a.trade,
+    region: a.region,
+    phone: a.phone,
+  }));
+  ctx.artisansTotalCount = totalArtisans;
+  ctx.artisansNote = `LISTE COMPLÈTE: ${totalArtisans} artisan(s) au total dans la base. Aucun autre n'existe.`;
+}
+
+async function fetchAvailability(ctx, userId, role, intents, message) {
+  if (!intents.includes('availability')) return;
+  
+  const from = new Date();
+  const to = new Date(); to.setDate(to.getDate() + 14);
+
+  if (intents.includes('artisans')) {
+    const artisanIds = await ArtisanProfile.find({}).limit(5).distinct('userId');
+    const avail = await Availability.find({
+      artisanId: { $in: artisanIds },
+      date: { $gte: from, $lte: to },
+      status: 'AVAILABLE',
+    }).populate('artisanId', 'firstName lastName').lean();
+    ctx.availability = avail.map(a => ({
+      artisan: `${a.artisanId?.firstName} ${a.artisanId?.lastName}`,
+      date: a.date?.toISOString().slice(0, 10),
+      status: a.status,
+    }));
+  } else if (role === 'ARTISAN') {
+    const avail = await Availability.find({
+      artisanId: userId,
+      date: { $gte: from, $lte: to },
+    }).lean();
+    ctx.myAvailability = avail.map(a => ({
+      date: a.date?.toISOString().slice(0, 10),
+      status: a.status,
+      note: a.note,
+    }));
+  }
+}
+
+async function fetchServiceRequests(ctx, userId, role, message) {
+  const msg = message.toLowerCase();
+  const { wantsOpen, wantsDone, wantsCancelled } = detectServiceRequestFilters(message);
+  const statusFilter = getServiceRequestStatusFilter(msg, wantsOpen, wantsDone, wantsCancelled);
+
+  if (role === 'PRESCRIPTEUR') {
+    const query = { prescripteurId: userId };
+    if (statusFilter) query.status = { $in: statusFilter };
+    const requests = await ServiceRequest.find(query)
+      .sort({ createdAt: -1 }).limit(10)
+      .populate('assignedArtisanId', 'firstName lastName').lean();
+    ctx.serviceRequests = requests.map(r => ({
+      title: r.title, trade: r.trade, city: r.city, status: r.status,
+      applicants: r.applications?.length || 0,
+      assignedTo: r.assignedArtisanId ? `${r.assignedArtisanId.firstName} ${r.assignedArtisanId.lastName}` : null,
+      deadline: r.deadline?.toISOString().slice(0, 10), budget: r.budgetTND,
+    }));
+  } else if (role === 'ARTISAN') {
+    const applied = await ServiceRequest.find({ 'applications.artisanId': userId })
+      .sort({ createdAt: -1 }).limit(10)
+      .populate('prescripteurId', 'firstName lastName').lean();
+    ctx.myApplications = applied
+      .filter(r => {
+        if (wantsOpen) return ['OPEN', 'ASSIGNED'].includes(r.status);
+        if (wantsDone) return r.status === 'COMPLETED';
+        return true;
+      })
+      .map(r => {
+        const myApp = r.applications.find(a => String(a.artisanId) === String(userId));
+        return {
+          title: r.title, trade: r.trade, requestStatus: r.status,
+          applicationStatus: myApp?.status,
+          prescripteur: `${r.prescripteurId?.firstName} ${r.prescripteurId?.lastName}`,
+          city: r.city,
+        };
+      });
+  }
+}
+
+async function fetchReviews(ctx, userId) {
+  const reviews = await Review.find({ targetId: userId })
+    .sort({ createdAt: -1 }).limit(5)
+    .populate('authorId', 'firstName lastName').lean();
+  const avg = reviews.length
+    ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
+    : 0;
+  ctx.reviews = { average: avg, count: reviews.length, latest: reviews.slice(0, 3).map(r => ({ author: `${r.authorId?.firstName} ${r.authorId?.lastName}`, rating: r.rating, comment: r.comment })) };
+}
+
+async function fetchPromo(ctx, message) {
+  const promoMatch = message.match(/[A-Z0-9_-]{3,30}/);
+  if (promoMatch) {
+    const promo = await PromoCode.findOne({ code: promoMatch[0], isActive: true }).lean();
+    ctx.promoCode = promo ? {
+      code: promo.code,
+      discount: promo.discountPercent,
+      valid: !promo.expiresAt || new Date() < new Date(promo.expiresAt),
+      usesLeft: promo.maxUses ? promo.maxUses - promo.usedCount : 'illimité',
+    } : { found: false };
+  }
+}
+
+async function fetchUsers(ctx, message) {
+  const User = require('../../models/User');
+  const roleFilter = detectUserRoleFilter(message);
+  const query = { status: { $ne: 'BLOCKED' } };
+  if (roleFilter) query.role = roleFilter;
+  else query.role = { $in: ['ARTISAN', 'PRESCRIPTEUR', 'SUPPLIER'] };
+
+  const [users, total] = await Promise.all([
+    User.find(query).select('firstName lastName role email phone').limit(15).lean(),
+    User.countDocuments(query),
+  ]);
+  ctx.platformUsers = users.map(u => ({
+    name: `${u.firstName} ${u.lastName}`,
+    role: u.role,
+    phone: u.phone || '—',
+  }));
+  ctx.platformUsersTotal = total;
+  ctx.platformUsersNote = `LISTE COMPLÈTE: ${total} utilisateur(s) avec ce filtre. Aucun autre n'existe.`;
+}
+
+// ── Main fetchContext function (simplified) ─────────────────────────────────
+async function fetchContext(userId, role, intents, message) {
+  const ctx = {};
+
+  try {
+    await fetchOrders(ctx, userId, role);
+    await fetchProjects(ctx, userId, role, intents);
+    await fetchInvoices(ctx, userId, role, intents);
+    await fetchQuotes(ctx, userId, role, intents);
+    await fetchSubscription(ctx, userId, intents);
+
+    if (intents.includes('products')) await fetchProducts(ctx, message);
+    if (intents.includes('artisans')) await fetchArtisans(ctx, message);
+    await fetchAvailability(ctx, userId, role, intents, message);
+    if (intents.includes('serviceRequests')) await fetchServiceRequests(ctx, userId, role, message);
+    if (intents.includes('reviews')) await fetchReviews(ctx, userId);
+    if (intents.includes('promo')) await fetchPromo(ctx, message);
+    if (intents.includes('users')) await fetchUsers(ctx, message);
+
+  } catch (err) {
+    console.error('fetchContext error:', err.message);
+  }
+
+  return ctx;
+}
+
+// ── Prompt builder ────────────────────────────────────────────────────────────
+function buildMessages(user, context, message, history) {
+  const hasContext = Object.keys(context).length > 0;
+
+  const systemPrompt = `Tu es l'assistant IA de BMP.tn, une plateforme de construction en Tunisie.
+Tu aides les artisans, prescripteurs et fournisseurs avec leurs questions.
+
+Utilisateur: ${user.firstName} ${user.lastName}
+Rôle: ${user.role}
+Date: ${new Date().toLocaleDateString('fr-TN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+
+${hasContext ? `DONNÉES ACTUELLES DE L'UTILISATEUR:
+${JSON.stringify(context, null, 2)}` : ''}
+
+RÈGLES IMPORTANTES:
+- Réponds TOUJOURS en français
+- Sois concis, clair et utile
+- Les données ci-dessus sont DÉJÀ FILTRÉES selon la demande — liste-les telles quelles sans re-filtrer
+- Si les données sont vides ou tableau vide, réponds "Aucun résultat trouvé pour ce filtre"
+- Le champ "artisansTotalCount" = nombre EXACT et COMPLET dans la base de données
+- Ne fabrique JAMAIS de données (prix, noms, dates, statuts)
+- Formate les listes avec des tirets (-)`;
+
+  return [
+    { role: 'system', content: systemPrompt },
+    ...history.slice(-8).map(h => ({ role: h.role === 'bot' ? 'assistant' : 'user', content: h.text })),
+    { role: 'user', content: message },
+  ];
+}
+
+// ── Stream Mistral response ───────────────────────────────────────────────────
+async function streamChat(messages, res) {
+  const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: OLLAMA_MODEL,
-      system,
-      prompt,
-      format: 'json',
-      stream: false,
-      options: {
-        temperature: 0.3,
-      },
+      messages,
+      stream: true,
+      options: { temperature: 0.3, num_predict: 600 },
     }),
+    signal: AbortSignal.timeout(120000),
   });
 
   if (!response.ok) {
-    throw new Error(`Ollama request failed (${response.status})`);
+    throw new Error(`Ollama error: ${response.status}`);
   }
 
-  const data = await response.json();
-  const parsed = safeJsonParse(data?.response);
-  if (!parsed) throw new Error('Invalid Ollama JSON response');
-  return parsed;
-}
+  const { Readable } = require('stream');
+  const nodeStream = Readable.fromWeb ? Readable.fromWeb(response.body) : response.body;
 
-function heuristicProjectSuggestion(payload = {}) {
-  const brief = [payload.title, payload.category, payload.description, payload.brief].filter(Boolean).join(' ').toLowerCase();
-  const categories = [
-    { test: /(cuisine|kitchen)/, label: 'Cuisine' },
-    { test: /(salle de bain|bathroom|douche)/, label: 'Salle de bain' },
-    { test: /(peinture|paint)/, label: 'Peinture' },
-    { test: /(électricité|electric|eclairage|lighting)/, label: 'Électricité' },
-    { test: /(plomberie|plumb)/, label: 'Plomberie' },
-    { test: /(carrelage|tile)/, label: 'Revêtement / carrelage' },
-    { test: /(façade|facade|extérieur|exterieur)/, label: 'Façade extérieure' },
-  ];
-  const category = payload.category || categories.find((entry) => entry.test.test(brief))?.label || 'Rénovation générale';
-  const materials = uniqStrings([
-    /(cuisine|kitchen)/.test(brief) ? 'meubles de cuisine' : '',
-    /(cuisine|kitchen)/.test(brief) ? 'plan de travail' : '',
-    /(salle de bain|bathroom|douche)/.test(brief) ? 'carrelage antidérapant' : '',
-    /(salle de bain|bathroom|douche)/.test(brief) ? 'robinetterie' : '',
-    /(peinture|paint)/.test(brief) ? 'peinture lessivable' : '',
-    /(électricité|electric|lighting)/.test(brief) ? 'câblage' : '',
-    /(électricité|electric|lighting)/.test(brief) ? 'luminaires LED' : '',
-    /(plomberie|plumb)/.test(brief) ? 'tuyauterie' : '',
-    /(carrelage|tile)/.test(brief) ? 'carrelage grès cérame' : '',
-    'main d’œuvre spécialisée',
-  ]);
+  let buffer = '';
 
-  const budgetTND = payload.budgetTND || (
-    /(cuisine|kitchen)/.test(brief) ? 12000 :
-    /(salle de bain|bathroom|douche)/.test(brief) ? 8500 :
-    /(façade|facade)/.test(brief) ? 15000 :
-    9500
-  );
+  await new Promise((resolve, reject) => {
+    nodeStream.on('data', (chunk) => {
+      buffer += chunk.toString();
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
 
-  const surfaceM2 = payload.surfaceM2 || (
-    /(cuisine|kitchen)/.test(brief) ? 18 :
-    /(salle de bain|bathroom|douche)/.test(brief) ? 10 :
-    35
-  );
-
-  return {
-    title: payload.title || `Projet ${category.toLowerCase()}`,
-    category,
-    description: payload.description || `Projet de ${category.toLowerCase()} avec préparation du chantier, fourniture des matériaux principaux, exécution soignée et finitions propres. Une attention particulière sera portée à la qualité, au respect des délais et à la coordination des intervenants.`,
-    materials,
-    budgetTND,
-    surfaceM2,
-    city: payload.city || '',
-    keywords: uniqStrings([category, ...materials]),
-  };
-}
-
-async function suggestProject(payload = {}) {
-  const fallback = heuristicProjectSuggestion(payload);
-  try {
-    const result = await callOllamaJson({
-      system: 'You generate concise JSON only for a Tunisian construction marketplace. Return only valid JSON. No markdown.',
-      prompt: `Suggest a construction project draft in Tunisia based on this input: ${JSON.stringify(payload)}\nReturn JSON with keys: title, category, description, materials (array of max 8 strings), budgetTND (number), surfaceM2 (number), city (string), keywords (array of max 6 strings). Use French.`,
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          const data = JSON.parse(line);
+          if (data.message?.content) {
+            res.write(`data: ${JSON.stringify({ text: data.message.content })}\n\n`);
+          }
+          if (data.done) {
+            res.write('data: [DONE]\n\n');
+          }
+        } catch {}
+      }
     });
-    return {
-      ...fallback,
-      ...result,
-      materials: uniqStrings(result.materials || fallback.materials),
-      keywords: uniqStrings(result.keywords || fallback.keywords, 6),
-      budgetTND: clampNumber(result.budgetTND, 0, 10000000, fallback.budgetTND),
-      surfaceM2: clampNumber(result.surfaceM2, 0, 100000, fallback.surfaceM2),
-    };
-  } catch {
-    return fallback;
-  }
-}
 
-function heuristicProductSuggestion(payload = {}) {
-  const text = [payload.name, payload.categoryName, payload.description].filter(Boolean).join(' ').toLowerCase();
-  const categoryName = payload.categoryName || (
-    /(ciment|cement|mortier)/.test(text) ? 'Ciment et mortier' :
-    /(lampe|led|lumière|luminaire)/.test(text) ? 'Éclairage' :
-    /(peinture|paint)/.test(text) ? 'Peinture' :
-    /(carrelage|tile)/.test(text) ? 'Carrelage' :
-    'Matériaux divers'
-  );
-
-  const priceSuggestion =
-    /(ciment|cement)/.test(text) ? 18.5 :
-    /(lampe|led)/.test(text) ? 24.9 :
-    /(peinture|paint)/.test(text) ? 65 :
-    /(carrelage|tile)/.test(text) ? 42 : 29;
-
-  const stockSuggestion =
-    /(ciment|cement|carrelage|tile)/.test(text) ? 120 :
-    /(lampe|led)/.test(text) ? 60 : 40;
-
-  return {
-    categoryName,
-    description: payload.description || `${payload.name || 'Ce produit'} est adapté aux besoins des chantiers professionnels et particuliers. Il offre une bonne durabilité, une mise en œuvre simple et un excellent rapport qualité/prix pour le marché tunisien.`,
-    priceSuggestion,
-    stockSuggestion,
-    sellingPoints: uniqStrings(['bonne durabilité', 'adapté au chantier', 'livraison rapide', 'rapport qualité/prix']),
-  };
-}
-
-async function suggestProduct(payload = {}) {
-  const fallback = heuristicProductSuggestion(payload);
-  try {
-    const result = await callOllamaJson({
-      system: 'You generate concise JSON only for a Tunisian B2B/B2C construction marketplace. Return valid JSON only.',
-      prompt: `Product input: ${JSON.stringify(payload)}\nReturn JSON with keys: categoryName, description, priceSuggestion, stockSuggestion, sellingPoints (array of max 5 strings). Use French.`,
+    nodeStream.on('end', () => {
+      res.write('data: [DONE]\n\n');
+      resolve();
     });
-    return {
-      ...fallback,
-      ...result,
-      priceSuggestion: clampNumber(result.priceSuggestion, 0, 1000000, fallback.priceSuggestion),
-      stockSuggestion: clampNumber(result.stockSuggestion, 0, 1000000, fallback.stockSuggestion),
-      sellingPoints: uniqStrings(result.sellingPoints || fallback.sellingPoints, 5),
-    };
-  } catch {
-    return fallback;
-  }
+
+    nodeStream.on('error', reject);
+  });
 }
 
-function heuristicQuoteSuggestion(project) {
-  const materials = uniqStrings(project?.materials || []);
-  const category = String(project?.category || '').toLowerCase();
-  const baseLines = [
-    { description: 'Étude technique et préparation du chantier', quantity: 1, unitPrice: 450 },
-    { description: 'Main d’œuvre spécialisée', quantity: Math.max(1, Math.round(Number(project?.surfaceM2 || 20) / 10)), unitPrice: 780 },
-  ];
-
-  if (materials.length) {
-    baseLines.push({ description: `Fourniture matériaux: ${materials.slice(0, 3).join(', ')}`, quantity: 1, unitPrice: Math.max(350, Number(project?.budgetTND || 3000) * 0.35) });
-  }
-
-  if (/cuisine/.test(category)) baseLines.push({ description: 'Pose éléments de cuisine et finitions', quantity: 1, unitPrice: 1800 });
-  if (/salle de bain/.test(category)) baseLines.push({ description: 'Étanchéité et pose sanitaires', quantity: 1, unitPrice: 1600 });
-  if (/peinture/.test(category)) baseLines.push({ description: 'Préparation supports et peinture', quantity: Math.max(1, Math.round(Number(project?.surfaceM2 || 20) / 12)), unitPrice: 320 });
-  if (/plomberie/.test(category)) baseLines.push({ description: 'Réseau plomberie et raccordements', quantity: 1, unitPrice: 1200 });
-  if (/électricité/.test(category)) baseLines.push({ description: 'Câblage, appareillage et tests', quantity: 1, unitPrice: 1350 });
-
-  const lines = baseLines.map((line) => ({
-    ...line,
-    lineTotal: Number((Number(line.quantity) * Number(line.unitPrice)).toFixed(3)),
-  }));
-
-  return {
-    lines,
-    taxRate: 0.19,
-    discount: 0,
-    summary: `Devis suggéré pour ${project?.title || 'le projet'} avec postes principaux, matériaux et main d’œuvre.`
-  };
-}
-
-async function suggestQuoteFromProject(project) {
-  const fallback = heuristicQuoteSuggestion(project);
-  try {
-    const result = await callOllamaJson({
-      system: 'You create quote draft JSON only for construction projects in Tunisia. Return valid JSON only.',
-      prompt: `Project: ${JSON.stringify(project)}\nReturn JSON with keys: summary, taxRate, discount, lines. lines must be an array of 3 to 6 items, each item with description, quantity, unitPrice. Use French and realistic Tunisian dinar pricing.`,
-    });
-    const lines = (Array.isArray(result.lines) ? result.lines : fallback.lines).map((line) => {
-      const quantity = clampNumber(line.quantity, 1, 100000, 1);
-      const unitPrice = clampNumber(line.unitPrice, 0, 10000000, 0);
-      return {
-        description: String(line.description || '').trim() || 'Ligne de prestation',
-        quantity,
-        unitPrice,
-        lineTotal: Number((quantity * unitPrice).toFixed(3)),
-      };
-    }).slice(0, 8);
-
-    return {
-      summary: result.summary || fallback.summary,
-      taxRate: clampNumber(result.taxRate, 0, 1, 0.19),
-      discount: clampNumber(result.discount, 0, 10000000, 0),
-      lines: lines.length ? lines : fallback.lines,
-    };
-  } catch {
-    return fallback;
-  }
-}
-
-function tokenizeQuery(q) {
-  return uniqStrings(String(q || '').toLowerCase().split(/[^\p{L}\p{N}]+/u).filter((token) => token.length > 1), 10);
-}
-
-function scoreTextMatch(query, haystacks = []) {
-  const tokens = tokenizeQuery(query);
-  const combined = haystacks.filter(Boolean).join(' ').toLowerCase();
-  let score = 0;
-  for (const token of tokens) {
-    if (combined.includes(token)) score += token.length > 4 ? 4 : 2;
-  }
-  if (combined.includes(String(query || '').toLowerCase().trim())) score += 6;
-  return score;
-}
-
-async function smartSearch({ scope = 'all', q = '', limit = 8 }) {
-  const query = String(q || '').trim();
-  if (!query) {
-    return { products: [], projects: [], artisans: [], suggestions: [] };
-  }
-
-  const mongoRegex = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
-  const searchLimit = Math.min(30, Math.max(4, Number(limit) || 8));
-
-  const shouldSearchProducts = scope === 'all' || scope === 'products' || scope === 'marketplace';
-  const shouldSearchProjects = scope === 'all' || scope === 'projects';
-  const shouldSearchArtisans = scope === 'all' || scope === 'artisans';
-
-  const [products, projects, artisanProfiles] = await Promise.all([
-    shouldSearchProducts
-      ? Product.find({ $or: [{ name: mongoRegex }, { description: mongoRegex }] }).populate('categoryId', 'name').sort({ createdAt: -1 }).limit(searchLimit).lean()
-      : [],
-    shouldSearchProjects
-      ? Project.find({ $or: [{ title: mongoRegex }, { description: mongoRegex }, { category: mongoRegex }, { materials: mongoRegex }, { 'location.city': mongoRegex }] }).sort({ createdAt: -1 }).limit(searchLimit).lean()
-      : [],
-    shouldSearchArtisans
-      ? ArtisanProfile.find({ $or: [{ trade: mongoRegex }, { region: mongoRegex }, { description: mongoRegex }, { 'address.city': mongoRegex }] }).populate('userId', 'firstName lastName').limit(searchLimit).lean()
-      : [],
-  ]);
-
-  const scoredProducts = products
-    .map((item) => ({
-      _id: item._id,
-      name: item.name,
-      description: item.description,
-      category: item.categoryId?.name || '',
-      price: item.price,
-      imageUrl: item.imageUrls?.[0] || '',
-      score: scoreTextMatch(query, [item.name, item.description, item.categoryId?.name]),
-    }))
-    .sort((a, b) => b.score - a.score)
-    .slice(0, limit);
-
-  const scoredProjects = projects
-    .map((item) => ({
-      _id: item._id,
-      title: item.title,
-      description: item.description,
-      category: item.category,
-      city: item.location?.city || '',
-      budgetTND: item.budgetTND,
-      imageUrl: item.images?.[0]?.url || item.images?.[0] || '',
-      score: scoreTextMatch(query, [item.title, item.description, item.category, item.location?.city, ...(item.materials || [])]),
-    }))
-    .sort((a, b) => b.score - a.score)
-    .slice(0, limit);
-
-  const scoredArtisans = artisanProfiles
-    .map((item) => ({
-      _id: item._id,
-      userId: item.userId?._id,
-      name: `${item.userId?.firstName || ''} ${item.userId?.lastName || ''}`.trim(),
-      trade: item.trade,
-      region: item.region,
-      profileImage: item.profileImage,
-      score: scoreTextMatch(query, [item.trade, item.region, item.description, item.address?.city, item.userId?.firstName, item.userId?.lastName]),
-    }))
-    .sort((a, b) => b.score - a.score)
-    .slice(0, limit);
-
-  const suggestions = uniqStrings([
-    ...scoredProducts.slice(0, 3).map((item) => item.category),
-    ...scoredProjects.slice(0, 3).map((item) => item.category),
-    ...scoredArtisans.slice(0, 2).map((item) => item.trade),
-    ...tokenizeQuery(query),
-  ], 6);
-
-  return { products: scoredProducts, projects: scoredProjects, artisans: scoredArtisans, suggestions };
-}
-
-module.exports = {
-  suggestProject,
-  suggestProduct,
-  suggestQuoteFromProject,
-  smartSearch,
-};
+module.exports = { detectIntents, fetchContext, buildMessages, streamChat };

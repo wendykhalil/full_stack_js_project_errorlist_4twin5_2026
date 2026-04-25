@@ -23,16 +23,19 @@ describe('projects.controller', () => {
   });
 
   test('createProject rejects missing title', async () => {
-    const req = httpMocks.createRequest({ method: 'POST', body: {} });
-    req.user = { sub: 'artisan-1' };
-    const res = httpMocks.createResponse();
-    const next = jest.fn();
+  const req = { body: {}, user: { id: 'user123' } };
+  const res = { 
+    statusCode: null, 
+    status: function(code) { this.statusCode = code; return this; }, 
+    json: function(data) { this.data = data; return this; }
+  };
+  const next = jest.fn();
 
-    await controller.createProject(req, res, next);
+  await controller.createProject(req, res, next);
 
-    expect(res.statusCode).toBe(400);
-    expect(res._getJSONData().message).toMatch(/titre|required/i);
-  });
+  expect(res.statusCode).toBe(400);
+  expect(res.data.message).toMatch(/titre|required/i);
+});
 
   test('createProject creates artisan project', async () => {
     const req = httpMocks.createRequest({

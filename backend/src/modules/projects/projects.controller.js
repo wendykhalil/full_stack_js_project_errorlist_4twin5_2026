@@ -1,6 +1,7 @@
 const Project = require('../../models/Project');
 const { uploadBufferToCloudinary } = require('../../config/cloudinary');
 
+// ── Helper functions ──────────────────────────────────────────────────────────
 function getUserId(req) {
   return req.user?._id || req.user?.id || req.user?.sub || req.user?.userId;
 }
@@ -42,72 +43,182 @@ async function mapFilesToImages(req) {
   return results;
 }
 
+// ── Validation helpers ────────────────────────────────────────────────────────
+function validateTitle(title) {
+  if (!title || typeof title !== 'string' || !title.trim()) {
+    throw new Error('Le titre est requis');
+  }
+  return title.trim();
+}
+
+function buildLocationObject(city, address, latitude, longitude) {
+  return {
+    city: city ? String(city).trim() : '',
+    address: address ? String(address).trim() : '',
+    latitude: toNumber(latitude) !== undefined ? toNumber(latitude) : null,
+    longitude: toNumber(longitude) !== undefined ? toNumber(longitude) : null,
+  };
+}
+
+function buildProjectData(req, body, images, userId) {
+  const {
+    title, status, description, category, city, address,
+    budgetTND, surfaceM2, latitude, longitude, startDate, endDate,
+    phoneNumber, contactPhone, materials,
+  } = body;
+
+  const validatedTitle = validateTitle(title);
+  const contact = (contactPhone ?? phoneNumber ?? '').toString().trim();
+
+  return {
+    artisanId: userId,
+    title: validatedTitle,
+    ...(status ? { status } : {}),
+    ...(description !== undefined ? { description: String(description).trim() } : {}),
+    ...(category !== undefined ? { category: String(category).trim() } : {}),
+    location: buildLocationObject(city, address, latitude, longitude),
+    ...(toNumber(budgetTND) !== undefined ? { budgetTND: toNumber(budgetTND) } : {}),
+    ...(toNumber(surfaceM2) !== undefined ? { surfaceM2: toNumber(surfaceM2) } : {}),
+    ...(toDate(startDate) ? { startDate: toDate(startDate) } : {}),
+    ...(toDate(endDate) ? { endDate: toDate(endDate) } : {}),
+    contactPhone: contact,
+    client: { name: '', phone: contact },
+    ...(materials ? { materials: toStringArray(materials) } : {}),
+    ...(images.length ? { images } : {}),
+  };
+}
+
+function buildTrialResponse(response, req) {
+  if (req.isTrialAttempt) {
+    response.trialInfo = {
+      isTrialAttempt: true,
+      message: "Ceci est votre essai gratuit pour créer des projets. Vous devez vous abonner pour créer d'autres projets.",
+    };
+  }
+  return response;
+}
+
+// ── Update helpers ───────────────────────────────────────────────────────────
+async function validateProjectOwnership(projectId, userId) {
+  const project = await Project.findById(projectId);
+  if (!project) {
+    const error = new Error('Projet introuvable');
+    error.statusCode = 404;
+    throw error;
+  }
+  if (String(project.artisanId) !== String(userId)) {
+    const error = new Error('Accès interdit');
+    error.statusCode = 403;
+    throw error;
+  }
+  return project;
+}
+
+function updateBasicFields(project, body) {
+  const { title, status, description, category } = body;
+  if (title !== undefined) {
+    if (typeof title !== 'string' || !title.trim()) {
+      const error = new Error('Le titre doit être une chaîne non vide');
+      error.statusCode = 400;
+      throw error;
+    }
+    project.title = title.trim();
+  }
+  if (status !== undefined) project.status = status;
+  if (description !== undefined) project.description = String(description).trim();
+  if (category !== undefined) project.category = String(category).trim();
+}
+
+function updateLocation(project, body) {
+  const { city, address, latitude, longitude } = body;
+  if (city !== undefined || address !== undefined || latitude !== undefined || longitude !== undefined) {
+    project.location = {
+      city: city !== undefined ? String(city).trim() : (project.location?.city || ''),
+      address: address !== undefined ? String(address).trim() : (project.location?.address || ''),
+      latitude: latitude !== undefined ? (toNumber(latitude) !== undefined ? toNumber(latitude) : null) : (project.location?.latitude ?? null),
+      longitude: longitude !== undefined ? (toNumber(longitude) !== undefined ? toNumber(longitude) : null) : (project.location?.longitude ?? null),
+    };
+  }
+}
+
+function updateNumericFields(project, body) {
+  const { budgetTND, surfaceM2 } = body;
+  const b = toNumber(budgetTND);
+  if (budgetTND !== undefined && b === undefined) {
+    const error = new Error('budgetTND doit être un nombre');
+    error.statusCode = 400;
+    throw error;
+  }
+  if (b !== undefined) project.budgetTND = b;
+
+  const s = toNumber(surfaceM2);
+  if (surfaceM2 !== undefined && s === undefined) {
+    const error = new Error('surfaceM2 doit être un nombre');
+    error.statusCode = 400;
+    throw error;
+  }
+  if (s !== undefined) project.surfaceM2 = s;
+}
+
+function updateDateFields(project, body) {
+  const { startDate, endDate } = body;
+  const sd = toDate(startDate);
+  if (startDate !== undefined && !sd) {
+    const error = new Error('startDate doit être une date valide');
+    error.statusCode = 400;
+    throw error;
+  }
+  if (sd) project.startDate = sd;
+
+  const ed = toDate(endDate);
+  if (endDate !== undefined && !ed) {
+    const error = new Error('endDate doit être une date valide');
+    error.statusCode = 400;
+    throw error;
+  }
+  if (ed) project.endDate = ed;
+}
+
+function updateContactAndMaterials(project, body) {
+  const { phoneNumber, contactPhone, materials } = body;
+  if (contactPhone !== undefined || phoneNumber !== undefined) {
+    const ph = (contactPhone ?? phoneNumber ?? '').toString().trim();
+    project.contactPhone = ph;
+    if (project.client) project.client.phone = ph;
+  }
+  if (materials !== undefined) project.materials = toStringArray(materials);
+}
+
+// ⚠️ CORRECTION ICI : ajout du mot-clé "async"
+async function updateImages(project, body, req) {
+  const { clearImages } = body;
+  if (String(clearImages).toLowerCase() === 'true') {
+    project.images = [];
+  }
+  const newImages = await mapFilesToImages(req);
+  if (newImages.length) {
+    project.images = [...(project.images || []), ...newImages].slice(0, 12);
+  }
+}
+
+// ── Controller functions ──────────────────────────────────────────────────────
 async function createProject(req, res, next) {
   try {
-    const {
-      title,
-      status,
-      description,
-      category,
-      city,
-      address,
-      budgetTND,
-      surfaceM2,
-      latitude,
-      longitude,
-      startDate,
-      endDate,
-      phoneNumber,
-      contactPhone,
-      materials,
-    } = req.body || {};
-
-    if (!title || typeof title !== 'string' || !title.trim()) {
-      return res.status(400).json({ message: 'Le titre est requis' });
-    }
-
+    const userId = getUserId(req);
+    const body = req.body || {};
     const images = await mapFilesToImages(req);
-
-    const doc = await Project.create({
-      artisanId: getUserId(req),
-      title: title.trim(),
-      ...(status ? { status } : {}),
-      ...(description !== undefined ? { description: String(description).trim() } : {}),
-      ...(category !== undefined ? { category: String(category).trim() } : {}),
-      location: {
-        city: city ? String(city).trim() : '',
-        address: address ? String(address).trim() : '',
-        latitude: toNumber(latitude) !== undefined ? toNumber(latitude) : null,
-        longitude: toNumber(longitude) !== undefined ? toNumber(longitude) : null,
-      },
-      ...(toNumber(budgetTND) !== undefined ? { budgetTND: toNumber(budgetTND) } : {}),
-      ...(toNumber(surfaceM2) !== undefined ? { surfaceM2: toNumber(surfaceM2) } : {}),
-      ...(toDate(startDate) ? { startDate: toDate(startDate) } : {}),
-      ...(toDate(endDate) ? { endDate: toDate(endDate) } : {}),
-      contactPhone: (contactPhone ?? phoneNumber ?? '').toString().trim(),
-      client: {
-        name: '',
-        phone: (contactPhone ?? phoneNumber ?? '').toString().trim(),
-      },
-      ...(materials ? { materials: toStringArray(materials) } : {}),
-      ...(images.length ? { images } : {}),
-    });
-
+    const projectData = buildProjectData(req, body, images, userId);
+    const doc = await Project.create(projectData);
     const created = await Project.findById(doc._id)
       .populate('artisanId', 'firstName lastName email role')
       .lean();
-
-    const response = { ok: true, project: created };
-    
-    if (req.isTrialAttempt) {
-      response.trialInfo = {
-        isTrialAttempt: true,
-        message: 'Ceci est votre essai gratuit pour créer des projets. Vous devez vous abonner pour créer d\'autres projets.',
-      };
-    }
-
+    let response = { ok: true, project: created };
+    response = buildTrialResponse(response, req);
     return res.status(201).json(response);
   } catch (err) {
+    if (err.message === 'Le titre est requis') {
+      return res.status(400).json({ message: err.message });
+    }
     return next(err);
   }
 }
@@ -140,15 +251,11 @@ async function getProjectById(req, res, next) {
     const project = await Project.findById(req.params.id)
       .populate('artisanId', 'firstName lastName email role')
       .lean();
-
     if (!project) return res.status(404).json({ message: 'Projet introuvable' });
-
     const role = req.user?.role;
-
     if (role === 'ARTISAN' && String(project.artisanId?._id || project.artisanId) !== String(getUserId(req))) {
       return res.status(403).json({ message: 'Accès interdit' });
     }
-
     return res.json({ ok: true, project });
   } catch (err) {
     return next(err);
@@ -157,110 +264,37 @@ async function getProjectById(req, res, next) {
 
 async function updateProject(req, res, next) {
   try {
-    const {
-      title,
-      status,
-      description,
-      category,
-      city,
-      address,
-      budgetTND,
-      surfaceM2,
-      latitude,
-      longitude,
-      startDate,
-      endDate,
-      phoneNumber,
-      contactPhone,
-      materials,
-      clearImages,
-    } = req.body || {};
-
-    const project = await Project.findById(req.params.id);
-    if (!project) return res.status(404).json({ message: 'Projet introuvable' });
-
-    if (String(project.artisanId) !== String(getUserId(req))) {
-      return res.status(403).json({ message: 'Accès interdit' });
-    }
-
-    if (title !== undefined) {
-      if (typeof title !== 'string' || !title.trim()) {
-        return res.status(400).json({ message: 'Le titre doit être une chaîne non vide' });
-      }
-      project.title = title.trim();
-    }
-    if (status !== undefined) {
-      project.status = status;
-    }
-
-    if (description !== undefined) project.description = String(description).trim();
-    if (category !== undefined) project.category = String(category).trim();
-
-    if (city !== undefined || address !== undefined || latitude !== undefined || longitude !== undefined) {
-      project.location = {
-        city: city !== undefined ? String(city).trim() : (project.location?.city || ''),
-        address: address !== undefined ? String(address).trim() : (project.location?.address || ''),
-        latitude: latitude !== undefined ? (toNumber(latitude) !== undefined ? toNumber(latitude) : null) : (project.location?.latitude ?? null),
-        longitude: longitude !== undefined ? (toNumber(longitude) !== undefined ? toNumber(longitude) : null) : (project.location?.longitude ?? null),
-      };
-    }
-
-    const b = toNumber(budgetTND);
-    if (budgetTND !== undefined && b === undefined) return res.status(400).json({ message: 'budgetTND doit être un nombre' });
-    if (b !== undefined) project.budgetTND = b;
-
-    const s = toNumber(surfaceM2);
-    if (surfaceM2 !== undefined && s === undefined) return res.status(400).json({ message: 'surfaceM2 doit être un nombre' });
-    if (s !== undefined) project.surfaceM2 = s;
-
-    const sd = toDate(startDate);
-    if (startDate !== undefined && !sd) return res.status(400).json({ message: 'startDate doit être une date valide' });
-    if (sd) project.startDate = sd;
-
-    const ed = toDate(endDate);
-    if (endDate !== undefined && !ed) return res.status(400).json({ message: 'endDate doit être une date valide' });
-    if (ed) project.endDate = ed;
-
-    if (contactPhone !== undefined || phoneNumber !== undefined) {
-      const ph = (contactPhone ?? phoneNumber ?? '').toString().trim();
-      project.contactPhone = ph;
-      if (project.client) project.client.phone = ph;
-    }
-
-    if (materials !== undefined) project.materials = toStringArray(materials);
-
-    if (String(clearImages).toLowerCase() === 'true') {
-      project.images = [];
-    }
-    const newImages = await mapFilesToImages(req);
-    if (newImages.length) {
-      project.images = [...(project.images || []), ...newImages].slice(0, 12);
-    }
-
+    const userId = getUserId(req);
+    const body = req.body || {};
+    const project = await validateProjectOwnership(req.params.id, userId);
+    updateBasicFields(project, body);
+    updateLocation(project, body);
+    updateNumericFields(project, body);
+    updateDateFields(project, body);
+    updateContactAndMaterials(project, body);
+    await updateImages(project, body, req);
     await project.save();
-
     const saved = await Project.findById(project._id)
       .populate('artisanId', 'firstName lastName email role')
       .lean();
-
     return res.json({ ok: true, project: saved });
   } catch (err) {
+    if (err.statusCode === 400) return res.status(400).json({ message: err.message });
+    if (err.statusCode === 403) return res.status(403).json({ message: err.message });
+    if (err.statusCode === 404) return res.status(404).json({ message: err.message });
     return next(err);
   }
 }
 
 async function deleteProject(req, res, next) {
   try {
-    const project = await Project.findById(req.params.id);
-    if (!project) return res.status(404).json({ message: 'Projet introuvable' });
-
-    if (String(project.artisanId) !== String(getUserId(req))) {
-      return res.status(403).json({ message: 'Accès interdit' });
-    }
-
+    const userId = getUserId(req);
+    const project = await validateProjectOwnership(req.params.id, userId);
     await Project.deleteOne({ _id: project._id });
     return res.json({ ok: true });
   } catch (err) {
+    if (err.statusCode === 403) return res.status(403).json({ message: err.message });
+    if (err.statusCode === 404) return res.status(404).json({ message: err.message });
     return next(err);
   }
 }
