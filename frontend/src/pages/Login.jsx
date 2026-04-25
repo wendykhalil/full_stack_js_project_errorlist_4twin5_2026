@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { 
-  Phone, UserPlus, Mail, Lock, Building2,
+  Phone, Mail, Lock, Building2,
   Eye, EyeOff, Menu, X, ChevronDown
 } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
@@ -27,14 +27,13 @@ export default function Login() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
   const googleBtnRef = useRef(null);
+  const googleInitializedRef = useRef(false);
 
   const roles = [
     { name: "Artisan", path: "/register/artisan", icon: "🔨" },
     { name: "Prescripteur", path: "/register/prescripteur", icon: "📐" },
     { name: "Fournisseur", path: "/register/fournisseur", icon: "🏭" }
   ];
-
-  const googleInitializedRef = useRef(false);
 
   useEffect(() => {
     const updateWidth = () => {
@@ -51,9 +50,6 @@ export default function Login() {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
     if (!clientId || !window.google?.accounts?.id) return;
 
-    // Guard: initialize only once per page load.
-    // The dependency array includes googleWidth so the button re-renders on
-    // resize, but we must NOT call initialize() again — only renderButton().
     if (!googleInitializedRef.current) {
       googleInitializedRef.current = true;
       window.google.accounts.id.initialize({
@@ -114,371 +110,280 @@ export default function Login() {
       await apiFetch("/auth/resend-verification", { method: "POST", body: { email: emailOrPhone.trim() } });
       setResendState({ loading: false, message: "Email de vérification envoyé." });
     } catch (e) {
-      setResendState({ loading: false, message: e.message || "Impossible de renvoyer l’email de vérification" });
+      setResendState({ loading: false, message: e.message || "Impossible de renvoyer l'email de vérification" });
     }
   }
 
   const showResend = globalError?.toLowerCase().includes("verif") || globalError?.toLowerCase().includes("email not");
 
-  // Handle Face ID authentication success
   const handleFaceIdSuccess = async (result) => {
     try {
       setLoading(true);
       clearErrors();
-      
-      console.log('Face ID authentication result:', result);
-      
-      // The result now contains user and token from server
       if (result.success && result.user && result.token) {
-        // Use AuthContext's setSession to properly set authentication state
         setSession(result.token, result.user);
-        
-        // Navigate to appropriate dashboard
-        console.log('Navigating to:', roleToBasePath(result.user.role));
         navigate(roleToBasePath(result.user.role), { replace: true });
       } else {
         throw new Error('Invalid Face ID authentication response');
       }
     } catch (error) {
-      console.error('Face ID login error:', error);
       handleError(error);
     } finally {
       setLoading(false);
     }
   };
 
-  // Handle Face ID authentication error
   const handleFaceIdError = (error) => {
     handleError(new Error(error));
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
-      {/* Professional Navbar with Role Dropdown */}
+
+      {/* ── Navbar ── */}
       <nav className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between lg:h-20">
-            {/* Logo */}
             <Link to="/" className="flex items-center gap-2 group shrink-0">
               <div className="relative">
-                <img 
-                  src={logo} 
-                  alt="BMP.tn" 
-                  className="h-8 w-8 lg:h-10 lg:w-10 rounded-xl shadow-sm transition-transform group-hover:scale-105" 
-                />
+                <img src={logo} alt="BMP.tn" className="h-8 w-8 lg:h-10 lg:w-10 rounded-xl shadow-sm transition-transform group-hover:scale-105" />
                 <div className="absolute -inset-1 rounded-xl bg-blue-500/20 blur-lg opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent lg:text-2xl">
-                BMP.tn
-              </span>
+              <span className="text-xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent lg:text-2xl">BMP.tn</span>
             </Link>
 
-            {/* Desktop Navigation */}
             <div className="hidden md:flex md:items-center md:gap-4 lg:gap-6">
-              {/* Role Dropdown */}
               <div className="relative">
-                <button
-                  onClick={() => setRoleDropdownOpen(!roleDropdownOpen)}
-                  className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 transition-all hover:bg-slate-100 hover:text-blue-600 lg:text-base"
-                >
+                <button onClick={() => setRoleDropdownOpen(!roleDropdownOpen)}
+                  className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 transition-all hover:bg-slate-100 hover:text-blue-600 lg:text-base">
                   <span>Join as</span>
                   <ChevronDown className={`h-4 w-4 transition-transform ${roleDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
-                
                 {roleDropdownOpen && (
                   <>
-                    <div 
-                      className="fixed inset-0 z-10" 
-                      onClick={() => setRoleDropdownOpen(false)}
-                    />
+                    <div className="fixed inset-0 z-10" onClick={() => setRoleDropdownOpen(false)} />
                     <div className="absolute left-0 mt-2 w-48 rounded-xl border border-slate-200 bg-white shadow-lg z-20 overflow-hidden">
                       {roles.map((role) => (
-                        <Link
-                          key={role.name}
-                          to={role.path}
+                        <Link key={role.name} to={role.path}
                           className="flex items-center gap-2 px-4 py-3 text-sm text-slate-700 transition-colors hover:bg-blue-50 hover:text-blue-600"
-                          onClick={() => setRoleDropdownOpen(false)}
-                        >
-                          <span>{role.icon}</span>
-                          <span>{role.name}</span>
+                          onClick={() => setRoleDropdownOpen(false)}>
+                          <span>{role.icon}</span><span>{role.name}</span>
                         </Link>
                       ))}
                     </div>
                   </>
                 )}
               </div>
-
-              <Link to="/about" className="text-sm font-medium text-slate-600 transition-colors hover:text-blue-600 lg:text-base">
-                About
-              </Link>
-              <Link to="/contact" className="text-sm font-medium text-slate-600 transition-colors hover:text-blue-600 lg:text-base">
-                Contact
-              </Link>
-              <Link 
-                to="/register" 
-                className="rounded-full bg-gradient-to-r from-blue-600 to-blue-500 px-5 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:from-blue-700 hover:to-blue-600 hover:shadow-md lg:px-6 lg:py-2.5 lg:text-base"
-              >
+              <Link to="/about" className="text-sm font-medium text-slate-600 transition-colors hover:text-blue-600 lg:text-base">About</Link>
+              <Link to="/contact" className="text-sm font-medium text-slate-600 transition-colors hover:text-blue-600 lg:text-base">Contact</Link>
+              <Link to="/register" className="rounded-full bg-gradient-to-r from-blue-600 to-blue-500 px-5 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:from-blue-700 hover:to-blue-600 hover:shadow-md lg:px-6 lg:py-2.5 lg:text-base">
                 Get Started
               </Link>
             </div>
 
-
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="rounded-lg p-2 text-slate-600 transition-colors hover:bg-slate-100 md:hidden"
-            >
+            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="rounded-lg p-2 text-slate-600 transition-colors hover:bg-slate-100 md:hidden">
               {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
         </div>
 
-        {/* Mobile Navigation */}
         {mobileMenuOpen && (
           <div className="border-t border-slate-200 bg-white md:hidden">
             <div className="space-y-1 px-4 py-3">
               <div className="border-b border-slate-100 pb-2">
                 <p className="px-3 py-2 text-xs font-semibold uppercase text-slate-500">Join as</p>
                 {roles.map((role) => (
-                  <Link
-                    key={role.name}
-                    to={role.path}
+                  <Link key={role.name} to={role.path}
                     className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-700 transition-colors hover:bg-blue-50 hover:text-blue-600"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <span>{role.icon}</span>
-                    <span>{role.name}</span>
+                    onClick={() => setMobileMenuOpen(false)}>
+                    <span>{role.icon}</span><span>{role.name}</span>
                   </Link>
                 ))}
               </div>
-              <Link 
-                to="/about" 
-                className="block rounded-lg px-3 py-2 text-sm text-slate-600 transition-colors hover:bg-blue-50 hover:text-blue-600"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                About
-              </Link>
-              <Link 
-                to="/contact" 
-                className="block rounded-lg px-3 py-2 text-sm text-slate-600 transition-colors hover:bg-blue-50 hover:text-blue-600"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Contact
-              </Link>
-              <Link 
-                to="/register" 
-                className="block rounded-lg bg-blue-600 px-3 py-2 text-center text-sm font-semibold text-white transition-colors hover:bg-blue-700"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Get Started
-              </Link>
+              <Link to="/about" className="block rounded-lg px-3 py-2 text-sm text-slate-600 transition-colors hover:bg-blue-50 hover:text-blue-600" onClick={() => setMobileMenuOpen(false)}>About</Link>
+              <Link to="/contact" className="block rounded-lg px-3 py-2 text-sm text-slate-600 transition-colors hover:bg-blue-50 hover:text-blue-600" onClick={() => setMobileMenuOpen(false)}>Contact</Link>
+              <Link to="/register" className="block rounded-lg bg-blue-600 px-3 py-2 text-center text-sm font-semibold text-white transition-colors hover:bg-blue-700" onClick={() => setMobileMenuOpen(false)}>Get Started</Link>
             </div>
           </div>
         )}
       </nav>
 
-      {/* Main Content */}
+      {/* ── Main Content ── */}
       <div className="relative flex min-h-[calc(100vh-5rem)] items-center justify-center py-8">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/20 via-transparent to-orange-50/20" />
-        
-        <div className="relative w-full max-w-lg px-4 sm:px-6">
-          {/* Login Card */}
-          <div className="rounded-2xl bg-white/90 backdrop-blur-sm border border-slate-200/80 shadow-xl">
-            <div className="p-6 sm:p-8">
-                {/* Header */}
-                <div className="mb-6 text-center">
-                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-blue-500 shadow-lg">
-                    <Building2 className="h-7 w-7 text-white" />
+        {/* Background decorations */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/40 via-white to-indigo-50/40" />
+        <div className="pointer-events-none absolute top-10 left-10 h-64 w-64 rounded-full bg-blue-200/30 blur-3xl" />
+        <div className="pointer-events-none absolute bottom-10 right-10 h-72 w-72 rounded-full bg-indigo-200/30 blur-3xl" />
+        <div className="pointer-events-none absolute top-1/2 left-1/2 h-48 w-48 -translate-x-1/2 -translate-y-1/2 rounded-full bg-sky-100/40 blur-2xl" />
+
+        <div className="relative w-full max-w-4xl px-4 sm:px-6">
+          {/* Two-column card */}
+          <div className="rounded-3xl bg-white border border-slate-200/80 shadow-2xl shadow-slate-200/60 overflow-hidden">
+            <div className="grid grid-cols-1 lg:grid-cols-2">
+
+              {/* ── LEFT: credentials ── */}
+              <div className="p-8 lg:p-10">
+                {/* Logo + title */}
+                <div className="mb-7 text-center">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 shadow-lg shadow-blue-200">
+                    <Building2 className="h-8 w-8 text-white" />
                   </div>
-                  <h2 className="text-2xl font-bold text-slate-900">Bon retour</h2>
-                  <p className="mt-2 text-sm text-slate-600">
-                    Connectez-vous à votre compte BMP.tn
-                  </p>
+                  <h2 className="text-2xl font-bold text-slate-900">Bon retour 👋</h2>
+                  <p className="mt-1.5 text-sm text-slate-500">Connectez-vous à votre compte BMP.tn</p>
                 </div>
 
-                {/* Info Message */}
                 {info && (
                   <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
                     <p className="text-sm text-emerald-700">{info}</p>
                   </div>
                 )}
 
-                {/* Login Form */}
-                <form onSubmit={onSubmit} className="space-y-5">
-                  {/* Email/Phone Field */}
+                <form onSubmit={onSubmit} className="space-y-4">
                   <div>
-                    <label className="mb-1.5 block text-sm font-semibold text-slate-700">
-                      Email ou numéro de téléphone
-                    </label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                    <label className="mb-1.5 block text-sm font-semibold text-slate-700">Email ou numéro de téléphone</label>
+                    <div className="relative group">
+                      <Mail className="absolute left-3.5 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-slate-400 transition-colors group-focus-within:text-blue-500" />
                       <input
                         value={emailOrPhone}
                         onChange={(e) => { setEmailOrPhone(e.target.value); clearErrors(); }}
-                        type="text"
-                        autoComplete="username"
-                        placeholder="Saisissez votre email ou votre téléphone"
-                        className={`w-full rounded-xl border bg-white pl-10 pr-4 py-3 text-base text-slate-900 outline-none transition-all focus:ring-2 focus:ring-blue-500/20 ${fieldErrors.emailOrPhone ? 'border-red-400 focus:border-red-400' : 'border-slate-300 focus:border-blue-500'}`}
+                        type="text" autoComplete="username"
+                        placeholder="votre@email.com ou +216..."
+                        className={`w-full rounded-xl border bg-slate-50/50 pl-10 pr-4 py-3 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-blue-500/20 ${fieldErrors.emailOrPhone ? 'border-red-400' : 'border-slate-200 focus:border-blue-500'}`}
                       />
                     </div>
                     <FieldError error={fieldErrors.emailOrPhone} />
                   </div>
 
-                  {/* Password Field with Show/Hide */}
                   <div>
-                    <label className="mb-1.5 block text-sm font-semibold text-slate-700">
-                      Mot de passe
-                    </label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                    <label className="mb-1.5 block text-sm font-semibold text-slate-700">Mot de passe</label>
+                    <div className="relative group">
+                      <Lock className="absolute left-3.5 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-slate-400 transition-colors group-focus-within:text-blue-500" />
                       <input
                         value={password}
                         onChange={(e) => { setPassword(e.target.value); clearErrors(); }}
-                        type={showPassword ? "text" : "password"}
-                        autoComplete="current-password"
-                        placeholder="Saisissez votre mot de passe"
-                        className={`w-full rounded-xl border bg-white pl-10 pr-12 py-3 text-base text-slate-900 outline-none transition-all focus:ring-2 focus:ring-blue-500/20 ${fieldErrors.password ? 'border-red-400 focus:border-red-400' : 'border-slate-300 focus:border-blue-500'}`}
+                        type={showPassword ? "text" : "password"} autoComplete="current-password"
+                        placeholder="••••••••"
+                        className={`w-full rounded-xl border bg-slate-50/50 pl-10 pr-12 py-3 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-blue-500/20 ${fieldErrors.password ? 'border-red-400' : 'border-slate-200 focus:border-blue-500'}`}
                       />
                       <button type="button" onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-blue-600">
-                        {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-blue-600">
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
                     <FieldError error={fieldErrors.password} />
                   </div>
 
-                  {/* Forgot Password Link */}
-                  <div className="text-right">
-                    <button
-                      type="button"
-                      onClick={() => navigate("/forgot-password")}
-                      className="text-sm font-medium text-blue-600 transition-colors hover:text-blue-700 hover:underline"
-                    >
+                  <div className="flex items-center justify-end">
+                    <button type="button" onClick={() => navigate("/forgot-password")}
+                      className="text-xs font-medium text-blue-600 transition-colors hover:text-blue-700 hover:underline">
                       Mot de passe oublié ?
                     </button>
                   </div>
 
-                  {/* Error Message */}
                   {globalError && (
-                    <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3">
+                    <div className="flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3">
+                      <span className="mt-0.5 text-rose-500">⚠️</span>
                       <p className="text-sm text-rose-700">{globalError}</p>
                     </div>
                   )}
 
-                  {/* Resend Verification */}
                   {showResend && (
                     <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <span className="text-sm text-blue-800">
-                          Besoin de vérifier votre email ?
-                        </span>
-                        <button
-                          type="button"
-                          onClick={resendVerification}
-                          disabled={resendState.loading}
-                          className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-blue-700 shadow-sm transition-all hover:bg-blue-100 disabled:opacity-60"
-                        >
-                          {resendState.loading ? "Envoi..." : "Renvoyer la vérification"}
+                        <span className="text-sm text-blue-800">Besoin de vérifier votre email ?</span>
+                        <button type="button" onClick={resendVerification} disabled={resendState.loading}
+                          className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-blue-700 shadow-sm transition-all hover:bg-blue-100 disabled:opacity-60">
+                          {resendState.loading ? "Envoi..." : "Renvoyer"}
                         </button>
                       </div>
-                      {resendState.message && (
-                        <p className="mt-2 text-sm text-blue-700">{resendState.message}</p>
-                      )}
+                      {resendState.message && <p className="mt-2 text-sm text-blue-700">{resendState.message}</p>}
                     </div>
                   )}
 
-                  {/* Submit Button */}
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-4 py-3.5 text-base font-semibold text-white shadow-lg transition-all hover:from-blue-700 hover:to-blue-600 hover:shadow-xl disabled:opacity-60"
-                  >
+                  <button type="submit" disabled={loading}
+                    className="inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-200 transition-all hover:from-blue-700 hover:to-indigo-700 hover:shadow-xl hover:shadow-blue-300 hover:-translate-y-0.5 disabled:opacity-60 disabled:translate-y-0">
                     {loading ? (
                       <div className="flex items-center gap-2">
                         <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                         Connexion...
                       </div>
-                    ) : (
-                      "Se connecter"
-                    )}
+                    ) : "Se connecter →"}
                   </button>
                 </form>
 
-                {/* Divider */}
-                <div className="my-6 flex items-center gap-4">
-                  <div className="h-px flex-1 bg-slate-200" />
-                  <span className="text-xs font-medium uppercase text-slate-400">Ou continuer avec</span>
-                  <div className="h-px flex-1 bg-slate-200" />
-                </div>
-
-                {/* Alternative Login Methods */}
-                <div className="space-y-3">
-                  {/* Face ID Button */}
-                  <FaceIdLogin 
-                    onSuccess={handleFaceIdSuccess}
-                    onError={handleFaceIdError}
-                    disabled={loading}
-                  />
-
-                  {/* Camera Face ID Button */}
-                  <CameraFaceIdLogin 
-                    onSuccess={handleFaceIdSuccess}
-                    onError={handleFaceIdError}
-                    disabled={loading}
-                    userEmail={emailOrPhone.trim()}
-                  />
-
-                  {/* Google Button */}
-                  <div className="flex min-h-[54px] items-center justify-center rounded-xl border border-slate-200 bg-white p-2 transition-all hover:border-blue-300 hover:shadow-md">
-                    <div ref={googleBtnRef} className="flex justify-center" />
-                  </div>
-
-                  {/* Phone Login Button */}
-                  <button
-                    type="button"
-                    onClick={() => navigate("/login-phone")}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition-all hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
-                  >
-                    <Phone className="h-4 w-4" />
-                    Se connecter avec un numéro de téléphone
-                  </button>
-                </div>
-
-                {/* Sign Up Section */}
-                <div className="mt-6 rounded-xl bg-slate-50 p-4">
-                  <p className="text-center text-sm text-slate-600">
-                    Vous n’avez pas de compte ?{' '}
-                    <Link
-                      to="/register"
-                      className="font-semibold text-blue-600 transition-colors hover:text-blue-700"
-                    >
-                      Créez-en un maintenant
-                    </Link>
+                <div className="mt-6 text-center">
+                  <p className="text-sm text-slate-500">
+                    Pas encore de compte ?{' '}
+                    <Link to="/register" className="font-semibold text-blue-600 transition-colors hover:text-blue-700">Créez-en un</Link>
                   </p>
                 </div>
 
-                {/* Terms */}
-                <p className="mt-4 text-center text-xs text-slate-500">
-                  En vous connectant, vous acceptez les{' '}
-                  <Link to="/terms" className="text-blue-600 hover:underline">
-                    Conditions d’utilisation
-                  </Link>{' '}
-                  et la{' '}
-                  <Link to="/privacy" className="text-blue-600 hover:underline">
-                    Politique de confidentialité
-                  </Link>
+                <p className="mt-3 text-center text-xs text-slate-400">
+                  <Link to="/terms" className="hover:text-blue-600 hover:underline">CGU</Link>
+                  {' · '}
+                  <Link to="/privacy" className="hover:text-blue-600 hover:underline">Confidentialité</Link>
                 </p>
               </div>
+
+              {/* ── RIGHT: alternative login options ── */}
+              <div className="relative flex flex-col justify-center gap-3 overflow-hidden p-8 lg:p-10">
+                {/* Gradient background for right panel */}
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-indigo-700" />
+                <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
+                <div className="pointer-events-none absolute -bottom-10 -left-10 h-48 w-48 rounded-full bg-indigo-400/20 blur-2xl" />
+
+                {/* Content over gradient */}
+                <div className="relative z-10 flex flex-col gap-3">
+                  <div className="mb-1 text-center">
+                    <p className="text-xs font-semibold uppercase tracking-widest text-blue-200">Autres méthodes</p>
+                    <h3 className="mt-1 text-lg font-bold text-white">Connexion rapide</h3>
+                  </div>
+
+                  {/* Face ID buttons — wrapped to show on white bg for contrast */}
+                  <div className="rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 p-1">
+                    <FaceIdLogin
+                      onSuccess={handleFaceIdSuccess}
+                      onError={handleFaceIdError}
+                      disabled={loading}
+                    />
+                  </div>
+
+                  <div className="rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 p-1">
+                    <CameraFaceIdLogin
+                      onSuccess={handleFaceIdSuccess}
+                      onError={handleFaceIdError}
+                      disabled={loading}
+                      userEmail={emailOrPhone.trim()}
+                    />
+                  </div>
+
+                  {/* Google */}
+                  <div className="flex min-h-[52px] items-center justify-center rounded-2xl bg-white p-2 shadow-md transition-all hover:shadow-lg">
+                    <div ref={googleBtnRef} className="flex justify-center" />
+                  </div>
+
+                  {/* Phone */}
+                  <button type="button" onClick={() => navigate("/login-phone")}
+                    className="inline-flex w-full items-center justify-center gap-2.5 rounded-2xl border border-white/30 bg-white/10 backdrop-blur-sm px-4 py-3 text-sm font-medium text-white transition-all hover:bg-white/20">
+                    <Phone className="h-4 w-4" />
+                    Connexion par téléphone
+                  </button>
+
+                  {/* Security badge */}
+
+                </div>
+              </div>
+
             </div>
           </div>
         </div>
+      </div>
 
-      {/* Professional Footer */}
+      {/* ── Footer ── */}
       <footer className="border-t border-slate-200 bg-white">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
-            {/* Brand Column */}
             <div className="col-span-1 md:col-span-2">
               <div className="flex items-center gap-2">
                 <img src={logo} alt="BMP.tn" className="h-8 w-8 rounded-lg" />
@@ -487,56 +392,22 @@ export default function Login() {
               <p className="mt-4 text-sm text-slate-600 max-w-md">
                 La plateforme de référence en Tunisie pour connecter artisans, prescripteurs et fournisseurs.
               </p>
-              <p className="mt-4 text-xs text-slate-500">
-                © {new Date().getFullYear()} BMP.tn. Tous droits réservés.
-              </p>
+              <p className="mt-4 text-xs text-slate-500">© {new Date().getFullYear()} BMP.tn. Tous droits réservés.</p>
             </div>
-
-            {/* Quick Links */}
             <div>
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-900">
-                Plateforme
-              </h3>
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-900">Plateforme</h3>
               <ul className="mt-4 space-y-2">
-                <li>
-                  <Link to="/about" className="text-sm text-slate-600 transition-colors hover:text-blue-600">
-                    À propos
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/how-it-works" className="text-sm text-slate-600 transition-colors hover:text-blue-600">
-                    Comment ça marche
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/pricing" className="text-sm text-slate-600 transition-colors hover:text-blue-600">
-                    Tarifs
-                  </Link>
-                </li>
+                <li><Link to="/about" className="text-sm text-slate-600 transition-colors hover:text-blue-600">À propos</Link></li>
+                <li><Link to="/how-it-works" className="text-sm text-slate-600 transition-colors hover:text-blue-600">Comment ça marche</Link></li>
+                <li><Link to="/pricing" className="text-sm text-slate-600 transition-colors hover:text-blue-600">Tarifs</Link></li>
               </ul>
             </div>
-
-            {/* Support */}
             <div>
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-900">
-                Support
-              </h3>
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-900">Support</h3>
               <ul className="mt-4 space-y-2">
-                <li>
-                  <Link to="/contact" className="text-sm text-slate-600 transition-colors hover:text-blue-600">
-                    Contact
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/privacy" className="text-sm text-slate-600 transition-colors hover:text-blue-600">
-                    Politique de confidentialité
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/terms" className="text-sm text-slate-600 transition-colors hover:text-blue-600">
-                    Conditions d’utilisation
-                  </Link>
-                </li>
+                <li><Link to="/contact" className="text-sm text-slate-600 transition-colors hover:text-blue-600">Contact</Link></li>
+                <li><Link to="/privacy" className="text-sm text-slate-600 transition-colors hover:text-blue-600">Politique de confidentialité</Link></li>
+                <li><Link to="/terms" className="text-sm text-slate-600 transition-colors hover:text-blue-600">Conditions d'utilisation</Link></li>
               </ul>
             </div>
           </div>

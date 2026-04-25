@@ -1,12 +1,11 @@
 import React, { useState } from "react";
-import { LogIn, Menu, Phone, UserPlus, X } from "lucide-react";
+import { LogIn, Menu, UserPlus, X } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import logo from "../assets/bmp-logo.svg";
 
 const NAV_ITEMS = [
   { to: "/login", label: "Se connecter", icon: LogIn },
-  { to: "/login-phone", label: "Acces telephone", icon: Phone },
-  { to: "/register", label: "Creer un compte", icon: UserPlus },
+  { to: "/register", label: "Créer un compte", icon: UserPlus },
 ];
 
 export default function PublicNavbar() {
@@ -27,11 +26,10 @@ export default function PublicNavbar() {
           </div>
           <div>
             <div className="text-base font-semibold tracking-tight text-slate-950 sm:text-lg">BMP.tn</div>
-            <div className="text-xs text-slate-500">Marketplace de construction fiable</div>
           </div>
         </button>
 
-        <nav className="hidden items-center gap-2 md:flex">
+        <nav className="hidden items-center gap-2 md:flex ml-auto">
           {NAV_ITEMS.map(({ to, label, icon: Icon }) => {
             const active = location.pathname === to || (to === "/register" && location.pathname.startsWith("/register"));
             const isPrimary = to === "/register";
