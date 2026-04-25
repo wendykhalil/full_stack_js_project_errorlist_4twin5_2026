@@ -2,5 +2,5 @@ projectKey=backend-wendi
 serverUrl=http://localhost:9000
 serverVersion=26.4.0.121862
 dashboardUrl=http://localhost:9000/dashboard?id=backend-wendi
-ceTaskId=6f0f4d6d-36f0-47b9-95a4-ad0e7e9e83a7
-ceTaskUrl=http://localhost:9000/api/ce/task?id=6f0f4d6d-36f0-47b9-95a4-ad0e7e9e83a7
+ceTaskId=ec42db8f-e4ee-4df7-a2b2-53f7517f88aa
+ceTaskUrl=http://localhost:9000/api/ce/task?id=ec42db8f-e4ee-4df7-a2b2-53f7517f88aa

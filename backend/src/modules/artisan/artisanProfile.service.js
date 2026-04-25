@@ -1,43 +1,86 @@
 const ArtisanProfile = require('../../models/ArtisanProfile');
 const User = require('../../models/User');
 
-// Créer ou mettre à jour le profil artisan
+// ============= VALIDATEURS =============
+function validateUserId(userId) {
+  if (!userId) {
+    const error = new Error('User ID required');
+    error.statusCode = 400;
+    throw error;
+  }
+}
+
+function validateCoordinates(coordinates) {
+  if (coordinates && (!Array.isArray(coordinates) || coordinates.length !== 2)) {
+    const error = new Error('Invalid coordinates format. Expected [longitude, latitude]');
+    error.statusCode = 400;
+    throw error;
+  }
+  return coordinates || [0, 0];
+}
+
+// ============= RECHERCHE DE BASE =============
+async function findProfile(userId, populateOptions = false) {
+  validateUserId(userId);
+  
+  let query = ArtisanProfile.findOne({ userId });
+  
+  if (populateOptions) {
+    query = query.populate('userId', 'firstName lastName email')
+                 .populate('portfolio');
+  }
+  
+  const profile = await query;
+  
+  if (!profile) {
+    const error = new Error('Profil artisan non trouvé');
+    error.statusCode = 404;
+    throw error;
+  }
+  
+  return profile;
+}
+
+// ============= MISE À JOUR PROFIL =============
+function updateProfileFields(profile, profileData) {
+  const fieldsToUpdate = ['trade', 'region', 'phone', 'description', 'profileImage'];
+  
+  fieldsToUpdate.forEach(field => {
+    if (profileData[field]) profile[field] = profileData[field];
+  });
+  
+  if (profileData.address) {
+    profile.address = { ...profile.address, ...profileData.address };
+  }
+  
+  if (profileData.coordinates && profileData.coordinates.length === 2) {
+    profile.location.coordinates = profileData.coordinates;
+    profile.locationLastUpdated = new Date();
+  }
+}
+
+function createNewProfile(userId, profileData) {
+  return new ArtisanProfile({
+    userId,
+    ...profileData,
+    location: {
+      type: 'Point',
+      coordinates: validateCoordinates(profileData.coordinates)
+    }
+  });
+}
+
 async function updateArtisanProfile(userId, profileData) {
   try {
     let profile = await ArtisanProfile.findOne({ userId });
-
-    if (!profile) {
-      profile = new ArtisanProfile({
-        userId,
-        ...profileData,
-        location: {
-          type: 'Point',
-          coordinates: profileData.coordinates || [0, 0]
-        }
-      });
-    } else {
-      // Mettre à jour les champs
-      if (profileData.trade) profile.trade = profileData.trade;
-      if (profileData.region) profile.region = profileData.region;
-      if (profileData.phone) profile.phone = profileData.phone;
-      if (profileData.description) profile.description = profileData.description;
-      if (profileData.profileImage) profile.profileImage = profileData.profileImage;
-      
-      // Mettre à jour l'adresse
-      if (profileData.address) {
-        profile.address = { ...profile.address, ...profileData.address };
-      }
-
-      // Mettre à jour la localisation si fournie
-      if (profileData.coordinates && profileData.coordinates.length === 2) {
-        profile.location.coordinates = profileData.coordinates;
-        profile.locationLastUpdated = new Date();
-      }
-    }
-
-    await profile.save();
     
-    // Peupler les infos utilisateur
+    if (!profile) {
+      profile = createNewProfile(userId, profileData);
+    } else {
+      updateProfileFields(profile, profileData);
+    }
+    
+    await profile.save();
     await profile.populate('userId', 'firstName lastName email');
     
     return profile;
@@ -47,40 +90,26 @@ async function updateArtisanProfile(userId, profileData) {
   }
 }
 
-// Récupérer le profil artisan
+// ============= RÉCUPÉRATION PROFIL =============
 async function getArtisanProfile(artisanId) {
   try {
-    const profile = await ArtisanProfile.findOne({ userId: artisanId })
-      .populate('userId', 'firstName lastName email')
-      .populate('portfolio');
-
-    if (!profile) {
-      const error = new Error('Profil artisan non trouvé');
-      error.statusCode = 404;
-      throw error;
-    }
-
-    return profile;
+    return await findProfile(artisanId, true);
   } catch (error) {
     console.error('Error in getArtisanProfile service:', error);
     throw error;
   }
 }
 
-// Mettre à jour la localisation (appelé quotidiennement)
+// ============= LOCALISATION =============
 async function updateArtisanLocation(userId, coordinates) {
   try {
-    const profile = await ArtisanProfile.findOne({ userId });
-    if (!profile) {
-      const error = new Error('Profil artisan non trouvé');
-      error.statusCode = 404;
-      throw error;
-    }
-
+    validateCoordinates(coordinates);
+    const profile = await findProfile(userId);
+    
     profile.location.coordinates = coordinates;
     profile.locationLastUpdated = new Date();
     await profile.save();
-
+    
     return profile;
   } catch (error) {
     console.error('Error in updateArtisanLocation service:', error);
@@ -88,100 +117,105 @@ async function updateArtisanLocation(userId, coordinates) {
   }
 }
 
-// Obtenir le profil public d'un artisan (pour prescripteur)
-// Obtenir le profil public d'un artisan (pour prescripteur)
-async function getPublicArtisanProfile(identifier) {
-  try {
-    console.log('Searching public artisan profile with identifier:', identifier);
-
-    let profile = await ArtisanProfile.findById(identifier)
+// ============= PROFIL PUBLIC =============
+async function findArtisanByIdentifier(identifier) {
+  let profile = await ArtisanProfile.findById(identifier)
+    .populate('userId', 'firstName lastName email phone role status')
+    .populate({
+      path: 'portfolio',
+      match: { isPublic: true },
+      options: { sort: { date: -1 } }
+    });
+  
+  if (!profile && identifier) {
+    profile = await ArtisanProfile.findOne({ userId: identifier })
       .populate('userId', 'firstName lastName email phone role status')
       .populate({
         path: 'portfolio',
         match: { isPublic: true },
         options: { sort: { date: -1 } }
       });
+  }
+  
+  return profile;
+}
 
-    if (!profile) {
-      profile = await ArtisanProfile.findOne({ userId: identifier })
-        .populate('userId', 'firstName lastName email phone role status')
-        .populate({
-          path: 'portfolio',
-          match: { isPublic: true },
-          options: { sort: { date: -1 } }
-        });
-    }
+function formatProfileResponse(profile) {
+  return {
+    _id: profile._id,
+    userId: profile.userId._id,
+    name: `${profile.userId.firstName} ${profile.userId.lastName}`,
+    trade: profile.trade,
+    region: profile.region,
+    phone: profile.phone || profile.userId.phone || '',
+    description: profile.description,
+    profileImage: profile.profileImage,
+    address: profile.address,
+    portfolio: profile.portfolio,
+    totalProjects: profile.portfolio?.length || 0,
+    hasCompletedProfile: true,
+  };
+}
 
+function formatIncompleteProfile(user) {
+  return {
+    _id: user._id,
+    userId: user._id,
+    name: `${user.firstName} ${user.lastName}`,
+    trade: 'Profil en cours de completion',
+    region: 'Region non renseignee',
+    phone: user.phone || '',
+    description: '',
+    profileImage: '',
+    address: null,
+    portfolio: [],
+    totalProjects: 0,
+    hasCompletedProfile: false,
+  };
+}
+
+async function getPublicArtisanProfile(identifier) {
+  try {
+    console.log('Searching public artisan profile with identifier:', identifier);
+    
+    const profile = await findArtisanByIdentifier(identifier);
+    
     if (profile && profile.userId) {
-      return {
-        _id: profile._id,
-        userId: profile.userId._id,
-        name: `${profile.userId.firstName} ${profile.userId.lastName}`,
-        trade: profile.trade,
-        region: profile.region,
-        phone: profile.phone || profile.userId.phone || '',
-        description: profile.description,
-        profileImage: profile.profileImage,
-        address: profile.address,
-        portfolio: profile.portfolio,
-        totalProjects: profile.portfolio?.length || 0,
-        hasCompletedProfile: true,
-      };
+      return formatProfileResponse(profile);
     }
-
+    
     const user = await User.findOne({
       _id: identifier,
       role: 'ARTISAN',
       status: { $ne: 'BLOCKED' },
     }).select('firstName lastName email phone role status');
-
+    
     if (!user) {
       const error = new Error('Artisan non trouvé');
       error.statusCode = 404;
       throw error;
     }
-
-    return {
-      _id: user._id,
-      userId: user._id,
-      name: `${user.firstName} ${user.lastName}`,
-      trade: 'Profil en cours de completion',
-      region: 'Region non renseignee',
-      phone: user.phone || '',
-      description: '',
-      profileImage: '',
-      address: null,
-      portfolio: [],
-      totalProjects: 0,
-      hasCompletedProfile: false,
-    };
+    
+    return formatIncompleteProfile(user);
   } catch (error) {
     console.error('Error in getPublicArtisanProfile service:', error);
     throw error;
   }
 }
 
-// DEBUG/TEST: Reset trial features
+// ============= FONCTIONS UTILITAIRES =============
 async function resetArtisanTrialFeatures(userId) {
   try {
-    let profile = await ArtisanProfile.findOne({ userId });
+    const profile = await findProfile(userId);
     
-    if (!profile) {
-      const error = new Error('Profil artisan non trouvé');
-      error.statusCode = 404;
-      throw error;
-    }
-
-    // Reset all trial features
     profile.trialFeatures = {
       projectCreated: false,
       portfolioCreated: false,
       quoteCreated: false,
       invoiceCreated: false
     };
-
-    await profile.save();
     
+    await profile.save();
     return profile;
   } catch (error) {
     console.error('Error in resetArtisanTrialFeatures service:', error);
