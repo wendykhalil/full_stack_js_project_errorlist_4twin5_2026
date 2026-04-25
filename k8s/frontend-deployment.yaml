@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: node:20
+          command: ["sh", "-c", "cd /app && npm install && npm run dev -- --host"]
+          volumeMounts:
+            - name: frontend-volume
+              mountPath: /app
+      volumes:
+        - name: frontend-volume
+          hostPath:
+            path: /run/desktop/mnt/host/c/Users/Amine/Desktop/devo/full_stack_js_project_errorlist_4twin5_2026/frontend
