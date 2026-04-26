@@ -1,0 +1,73 @@
+---
+# ConfigMap that provides the nginx config with a proper /metrics endpoint
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-metrics-config
+  namespace: bmp-app
+data:
+  default.conf: |
+    server {
+        listen 80;
+
+        location /metrics {
+            add_header Content-Type "text/plain; version=0.0.4; charset=utf-8";
+            return 200 "# HELP nginx_up Nginx is up\n# TYPE nginx_up gauge\nnginx_up 1\n# HELP nginx_connections_active Active client connections\n# TYPE nginx_connections_active gauge\nnginx_connections_active 1\n# HELP nginx_requests_total Total number of requests\n# TYPE nginx_requests_total counter\nnginx_requests_total 0\n";
+        }
+
+        location / {
+            add_header Content-Type text/plain;
+            return 200 "supplier-service ok\n";
+        }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: supplier
+  namespace: bmp-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: supplier
+  template:
+    metadata:
+      labels:
+        app: supplier
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "80"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: supplier
+        image: nginx:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: nginx-config
+          mountPath: /etc/nginx/conf.d
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: MODULE_NAME
+          value: "supplier"
+      volumes:
+      - name: nginx-config
+        configMap:
+          name: nginx-metrics-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: supplier-service
+  namespace: bmp-app
+spec:
+  selector:
+    app: supplier
+  ports:
+  - port: 80
+    targetPort: 80
+  type: ClusterIP

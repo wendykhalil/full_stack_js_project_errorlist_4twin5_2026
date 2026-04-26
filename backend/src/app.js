@@ -13,6 +13,24 @@ const faceIdRoutes = require("./routes/faceId.routes");
 const cameraFaceIdRoutes = require("./routes/cameraFaceId.routes");
 const paymentRoutes = require('./routes/payment.routes');
 
+// Prometheus metrics
+const client = require('prom-client');
+const collectDefaultMetrics = client.collectDefaultMetrics;
+collectDefaultMetrics({ prefix: 'bmp_backend_' });
+
+const httpRequestsTotal = new client.Counter({
+  name: 'bmp_http_requests_total',
+  help: 'Total number of HTTP requests',
+  labelNames: ['method', 'route', 'status_code'],
+});
+
+const httpRequestDurationSeconds = new client.Histogram({
+  name: 'bmp_http_request_duration_seconds',
+  help: 'HTTP request duration in seconds',
+  labelNames: ['method', 'route', 'status_code'],
+  buckets: [0.01, 0.05, 0.1, 0.3, 0.5, 1, 2, 5],
+});
+
 function createApp() {
   const app = express();
 
@@ -21,6 +39,27 @@ function createApp() {
   app.use(express.urlencoded({ extended: true }));
   // Serve uploaded assets
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
+  // Prometheus metrics middleware — track every request
+  app.use((req, res, next) => {
+    const end = httpRequestDurationSeconds.startTimer();
+    res.on('finish', () => {
+      const route = req.route ? req.route.path : req.path;
+      httpRequestsTotal.inc({ method: req.method, route, status_code: res.statusCode });
+      end({ method: req.method, route, status_code: res.statusCode });
+    });
+    next();
+  });
+
+  // Prometheus scrape endpoint — must be before notFound middleware
+  app.get('/metrics', async (req, res) => {
+    try {
+      res.set('Content-Type', client.register.contentType);
+      res.end(await client.register.metrics());
+    } catch (err) {
+      res.status(500).end(err.message);
+    }
+  });
 
 app.use("/api/ai", aiRoutes);
 app.use("/api/admin", adminRoutes);

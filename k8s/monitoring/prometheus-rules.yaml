@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-rules
+  namespace: monitoring
+data:
+  rules.yml: |
+    groups:
+    - name: bmp-backend-alerts
+      interval: 30s
+      rules:
+      - alert: BackendPodDown
+        expr: up{job="bmp-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Le backend BMP est down"
+          description: "Le pod backend n'est pas accessible depuis plus d'une minute"
+
+      - alert: HighBackendCPU
+        expr: sum(rate(container_cpu_usage_seconds_total{namespace="bmp-app"}[5m])) by (pod) > 0.5
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CPU élevé sur le backend"
+          description: "L'utilisation CPU dépasse 50% depuis 2 minutes"
+
+      - alert: BackendHighMemory
+        expr: sum(container_memory_usage_bytes{namespace="bmp-app"}) by (pod) > 500000000
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Mémoire élevée sur le backend"
+          description: "L'utilisation mémoire dépasse 500MB"
