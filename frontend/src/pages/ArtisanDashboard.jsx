@@ -81,39 +81,41 @@ export default function ArtisanDashboard() {
   const { token } = useAuth();
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [subWarning, setSubWarning] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
+
+  async function load(silent = false) {
+    if (!silent) setLoading(true);
+    else setRefreshing(true);
+    try {
+      const data = await getArtisanDashboardSummary({ token });
+      setSummary(data);
+      setError("");
+      setLastUpdated(new Date());
+    } catch (err) {
+      setError(err.message || "Impossible de charger le tableau de bord.");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }
 
   useEffect(() => {
-    let active = true;
+    if (!token) return;
 
-    async function load() {
-      try {
-        setLoading(true);
-        const data = await getArtisanDashboardSummary({ token });
-        if (active) {
-          setSummary(data);
-          setError("");
-        }
-      } catch (err) {
-        if (active) setError(err.message || "Impossible de charger le tableau de bord.");
-      } finally {
-        if (active) setLoading(false);
+    load();
+    getMySubscription({ token }).then(res => {
+      const d = res?.data;
+      if (d && d.daysUntilExpiry !== null && d.daysUntilExpiry <= 7 && d.status === 'ACTIVE' && d.plan !== 'FREE') {
+        setSubWarning({ days: d.daysUntilExpiry, isOnTrial: d.isOnTrial });
       }
-    }
+    }).catch(() => {});
 
-    if (token) {
-      load();
-      getMySubscription({ token }).then(res => {
-        const d = res?.data;
-        if (d && d.daysUntilExpiry !== null && d.daysUntilExpiry <= 7 && d.status === 'ACTIVE' && d.plan !== 'FREE') {
-          setSubWarning({ days: d.daysUntilExpiry, isOnTrial: d.isOnTrial });
-        }
-      }).catch(() => {});
-    }
-    return () => {
-      active = false;
-    };
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(() => load(true), 30000);
+    return () => clearInterval(interval);
   }, [token]);
 
   const stats = summary?.stats || {

@@ -79,15 +79,33 @@ export async function apiFetch(path, { token, method = 'GET', body } = {}) {
   const text = await res.text();
   const data = text ? JSON.parse(text) : null;
 
+  function unescapeHTML(str) {
+    if (typeof str !== "string") return str;
+    const doc = new DOMParser().parseFromString(str, "text/html");
+    return doc.documentElement.textContent;
+  }
+
+  function unescapeData(obj) {
+    if (Array.isArray(obj)) return obj.map(unescapeData);
+    if (obj && typeof obj === "object") {
+      const result = {};
+      for (const key in obj) result[key] = unescapeData(obj[key]);
+      return result;
+    }
+    return unescapeHTML(obj);
+  }
+
+  const unescapedData = unescapeData(data);
+
   if (!res.ok) {
-    const message = data?.message || `Request failed (${res.status})`;
+    const message = unescapedData?.message || `Request failed (${res.status})`;
     const err = new Error(message);
     err.status = res.status;
-    err.data = data;
+    err.data = unescapedData;
     throw err;
   }
 
-  return data;
+  return unescapedData;
 }
 
 // Product API helpers for supplier & catalog

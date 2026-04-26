@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Dispute = require('../../models/Dispute');
 const { notify } = require('../../utils/notify');
 
@@ -8,6 +9,14 @@ async function create(req, res, next) {
   try {
     const { againstId, sourceType, sourceId, reason, description } = req.body || {};
     if (!againstId) return res.status(400).json({ message: 'againstId est requis' });
+
+    // Validate that againstId is a valid MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(againstId)) {
+      return res.status(400).json({ message: 'againstId invalide — doit être un identifiant MongoDB valide' });
+    }
+    if (!mongoose.Types.ObjectId.isValid(sourceId)) {
+      return res.status(400).json({ message: 'sourceId invalide — doit être un identifiant MongoDB valide' });
+    }
     if (!sourceType || !['ORDER', 'SERVICE_REQUEST'].includes(sourceType)) {
       return res.status(400).json({ message: 'sourceType doit être ORDER ou SERVICE_REQUEST' });
     }

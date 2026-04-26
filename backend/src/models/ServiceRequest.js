@@ -50,6 +50,11 @@ const serviceRequestSchema = new mongoose.Schema(
       ref: "User",
       default: null,
     },
+    maxApplicants: {
+      type: Number,
+      min: 1,
+      default: null, // null = unlimited
+    },
     applications: { type: [applicationSchema], default: [] },
   },
   { timestamps: true }

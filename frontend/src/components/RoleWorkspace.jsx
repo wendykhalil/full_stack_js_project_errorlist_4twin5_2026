@@ -198,7 +198,7 @@ export default function RoleWorkspace({
           {!isSidebarCollapsed ? (
             <div>
               <div className="text-base font-bold text-white">BMP.tn</div>
-              <div className="text-[10px] font-medium text-blue-100">{roleLabel}</div>
+              <div className="text-xs font-semibold text-blue-200 tracking-wide">{roleLabel}</div>
             </div>
           ) : null}
         </div>
@@ -250,7 +250,7 @@ export default function RoleWorkspace({
           onMouseLeave={() => setChatHovered(false)}
         >
           <NavLink
-            to="/chat"
+            to={`/${role?.toLowerCase() === 'supplier' ? 'fournisseur' : role?.toLowerCase() === 'prescripteur' ? 'prescripteur' : role?.toLowerCase() === 'admin' ? 'admin' : 'artisan'}/AiChat`}
             onClick={closeMobileMenu}
             className={({ isActive }) =>
               `flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-200 ${
@@ -263,12 +263,6 @@ export default function RoleWorkspace({
             <Bot className="h-4 w-4 flex-shrink-0" />
             {!isSidebarCollapsed ? <span className="truncate">Assistant IA</span> : null}
           </NavLink>
-          {chatHovered && (isSidebarCollapsed || PAGE_DESCRIPTIONS["/chat"]) && (
-            <SidebarTooltip
-              label="Assistant IA"
-              description={PAGE_DESCRIPTIONS["/chat"]}
-            />
-          )}
         </div>
       </div>
 

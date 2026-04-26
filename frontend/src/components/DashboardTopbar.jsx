@@ -20,7 +20,7 @@ const ROLE_CONFIG = {
     pages: [
       { to: "/admin", label: "Tableau de bord", keywords: ["home", "overview", "tableau de bord"] },
       { to: "/admin/profile", label: "Profil", keywords: ["settings", "account", "password", "profil"] },
-      {  to: "/chat",label: "Assistant IA",icon: "🤖",},
+      { to: "/admin/AiChat", label: "Assistant IA", icon: "🤖", keywords: ["ai", "assistant", "chat"] },
       { to: "/admin/users", label: "Utilisateurs", keywords: ["team", "members", "utilisateurs"] },
       { to: "/admin/activity", label: "Activite", keywords: ["logs", "journal", "history", "activite"] },
       { to: "/admin/transactions", label: "Transactions", keywords: ["payments", "billing", "paiements"] },
@@ -31,8 +31,7 @@ const ROLE_CONFIG = {
     roleLabel: "Artisan",
     pages: [
       { to: "/artisan", label: "Tableau de bord", keywords: ["home", "overview", "tableau de bord"] },
-      {  to: "/chat",label: "Assistant IA",icon: "🤖",},
-
+      { to: "/artisan/AiChat", label: "Assistant IA", icon: "🤖", keywords: ["ai", "assistant", "chat"] },
       { to: "/artisan/profile", label: "Profil", keywords: ["account", "settings", "reset password", "profil"] },
       { to: "/artisan/projects", label: "Projets", keywords: ["chantier", "project list", "projets"] },
       { to: "/artisan/portfolio", label: "Portfolio", keywords: ["gallery", "images", "travaux"] },
@@ -49,8 +48,7 @@ const ROLE_CONFIG = {
     roleLabel: "Prescripteur",
     pages: [
       { to: "/prescripteur", label: "Produits", keywords: ["catalog", "produits"] },
-            {  to: "/chat",label: "Assistant IA",icon: "🤖",},
-
+      { to: "/prescripteur/AiChat", label: "Assistant IA", icon: "🤖", keywords: ["ai", "assistant", "chat"] },
       { to: "/prescripteur/profile", label: "Profil", keywords: ["account", "settings", "password", "profil"] },
       { to: "/prescripteur/artisans", label: "Artisans", keywords: ["workers", "providers"] },
       { to: "/prescripteur/projects", label: "Projets", keywords: ["projets", "sites"] },
@@ -63,8 +61,7 @@ const ROLE_CONFIG = {
     roleLabel: "Fournisseur",
     pages: [
       { to: "/fournisseur/profile", label: "Profil", keywords: ["account", "settings", "password", "profil"] },
-            {  to: "/chat",label: "Assistant IA",icon: "🤖",},
-
+      { to: "/fournisseur/AiChat", label: "Assistant IA", icon: "🤖", keywords: ["ai", "assistant", "chat"] },
       { to: "/fournisseur/orders", label: "Commandes", keywords: ["commandes", "sales"] },
       { to: "/fournisseur/marketplace", label: "Place de marche", keywords: ["catalog", "products", "marketplace"] },
       { to: "/fournisseur/produits", label: "Produits", keywords: ["items", "inventory"] },

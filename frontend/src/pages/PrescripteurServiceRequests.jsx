@@ -68,7 +68,7 @@ const APP_STATUS_LABEL = {
   REJECTED: "Non retenue",
 };
 
-const emptyForm = { title: "", description: "", trade: "", city: "", budgetTND: "", deadline: "" };
+const emptyForm = { title: "", description: "", trade: "", city: "", budgetTND: "", deadline: "", maxApplicants: "" };
 
 // ── Inline artisan rating ─────────────────────────────────────────────────────
 function ArtisanRating({ userId }) {
@@ -205,6 +205,21 @@ function RequestForm({ form, setForm, onSubmit, loading, submitLabel }) {
             placeholder="Ex: 3000"
           />
           <FieldError error={errors.budgetTND} />
+        </div>
+        <div>
+          <label className="text-sm font-medium text-slate-700">Nombre max de candidats</label>
+          <input
+            value={form.maxApplicants}
+            onChange={e => setForm(s => ({ ...s, maxApplicants: e.target.value }))}
+            className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+            placeholder="Illimité si vide"
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium text-slate-700">Nombre max de candidats</label>
+          <input value={form.maxApplicants} onChange={e => setForm(s => ({ ...s, maxApplicants: e.target.value }))}
+            className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+            placeholder="Illimité si vide (ex: 5)" />
         </div>
         <div>
           <label className="text-sm font-medium text-slate-700">Date limite</label>
@@ -470,9 +485,14 @@ export default function PrescripteurServiceRequests() {
                       {item.city && <span>📍 {item.city}</span>}
                       {item.budgetTND > 0 && <span>💰 {item.budgetTND.toLocaleString()} TND</span>}
                       {item.deadline && <span>📅 {new Date(item.deadline).toLocaleDateString()}</span>}
-                      <span className={`font-medium ${(item.applications?.length || 0) > 0 ? "text-indigo-600" : ""}`}>
+                        <span className={`font-medium ${(item.applications?.length || 0) > 0 ? "text-indigo-600" : ""}`}>
                         {item.applications?.length || 0} candidature(s)
                       </span>
+                      {item.maxApplicants && (
+                        <span className="text-xs text-slate-400">
+                          (max {item.maxApplicants})
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
@@ -494,6 +514,7 @@ export default function PrescripteurServiceRequests() {
                             city: item.city || "",
                             budgetTND: item.budgetTND || "",
                             deadline: item.deadline ? item.deadline.slice(0, 10) : "",
+                            maxApplicants: item.maxApplicants || "",
                           });
                         }}
                         className="rounded-xl border border-slate-200 p-2 hover:bg-slate-50"
@@ -573,6 +594,7 @@ export default function PrescripteurServiceRequests() {
                 <span>{detailItem.trade}</span>
                 {detailItem.city && <span>📍 {detailItem.city}</span>}
                 {detailItem.budgetTND > 0 && <span>💰 {detailItem.budgetTND.toLocaleString()} TND</span>}
+                {detailItem.maxApplicants && <span className="inline-flex items-center gap-1"><span>📊</span>Max {detailItem.maxApplicants} candidat(s)</span>}
               </div>
             </div>
 

@@ -216,14 +216,19 @@ export default function MyDisputes() {
               {form.sourceType === 'ORDER' ? 'Commande concernée *' : 'Demande de service concernée *'}
             </label>
             <select value={form.sourceId} onChange={e => {
-              const selected = form.sourceType === 'ORDER'
-                ? orders.find(o => o._id === e.target.value)
-                : serviceRequests.find(s => s._id === e.target.value);
-              // Auto-fill againstId from the selected source
-              const againstId = form.sourceType === 'ORDER'
-                ? selected?.supplierId?._id || selected?.supplierId || ''
-                : selected?.prescripteur?._id || selected?.prescripteur || '';
-              setForm(s => ({ ...s, sourceId: e.target.value, againstId: String(againstId) }));
+              const selectedId = e.target.value;
+              let againstId = '';
+              if (form.sourceType === 'ORDER') {
+                const order = orders.find(o => o._id === selectedId);
+                // supplierId can be an object (populated) or a string
+                const sup = order?.supplierId;
+                againstId = sup?._id ? String(sup._id) : (typeof sup === 'string' ? sup : '');
+              } else {
+                const sr = serviceRequests.find(s => s._id === selectedId);
+                const pre = sr?.prescripteur;
+                againstId = pre?._id ? String(pre._id) : (typeof pre === 'string' ? pre : '');
+              }
+              setForm(s => ({ ...s, sourceId: selectedId, againstId }));
             }}
               className={`mt-1 w-full rounded-xl border px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-red-500 ${formErrors.sourceId ? 'border-red-400' : 'border-slate-200'}`}
               disabled={sourcesLoading}>

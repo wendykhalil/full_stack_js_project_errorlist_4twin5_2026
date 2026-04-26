@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+﻿import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Briefcase, MapPin, Wallet, Calendar, X, ChevronRight, Clock, ExternalLink, Undo2, CheckCircle2, XCircle } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
@@ -100,7 +100,7 @@ function RequestCard({ item, onView }) {
               {item.deadline && <span className="inline-flex items-center gap-1"><Calendar className="h-3.5 w-3.5" />{new Date(item.deadline).toLocaleDateString()}</span>}
             </div>
             {item.description && <p className="mt-2 text-sm text-slate-600 line-clamp-2">{item.description}</p>}
-            <p className="mt-2 text-xs text-slate-400">{item.applicationsCount} candidature(s)</p>
+            <p className="mt-2 text-xs text-slate-400">{item.applicationsCount} candidat(s){item.maxApplicants ? <span className="ml-1 font-medium text-indigo-600">/ {item.maxApplicants} max{item.applicationsCount >= item.maxApplicants ? " · Complet" : ""}</span> : ""}</p>
           </div>
         </div>
         <button
@@ -126,7 +126,7 @@ export default function ArtisanServiceRequests() {
   const [tradeFilter, setTradeFilter] = useState("");
   const [cityFilter, setCityFilter] = useState("");
 
-  // ── #5 Pagination ─────────────────────────────────────────────────────────
+  // ── #5 Pagination ──────────────────────────────────────────────────────────
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const LIMIT = 10;
@@ -155,7 +155,7 @@ export default function ArtisanServiceRequests() {
     clearErrors: clearApplyErrors,
   } = useServerErrors();
 
-  // ── Loaders ──────────────────────────────────────────────────────────────
+  // ── Loaders ────────────────────────────────────────────────────────────────
 
   const loadOpen = useCallback(async () => {
     try {
@@ -191,7 +191,7 @@ export default function ArtisanServiceRequests() {
   // Reset to page 1 when filters change
   useEffect(() => { setPage(1); }, [tradeFilter, cityFilter, tab]);
 
-  // ── #2 Real-time refresh: listen for notification events ─────────────────
+  // ── #2 Real-time refresh: listen for notification events ────────────────────────────────────────────────────────────────
   useEffect(() => {
     function handleNotif(e) {
       const type = e?.detail?.type || "";
@@ -205,7 +205,7 @@ export default function ArtisanServiceRequests() {
     return () => window.removeEventListener("notif:refresh", handleNotif);
   }, [tab, loadOpen, loadMyApps]);
 
-  // ── Detail modal ──────────────────────────────────────────────────────────
+  // ── Detail modal ────────────────────────────────────────────────────────────────
 
   async function openDetail(id) {
     try {
@@ -230,7 +230,7 @@ export default function ArtisanServiceRequests() {
     }
   }
 
-  // ── Apply ─────────────────────────────────────────────────────────────────
+  // ── Apply ────────────────────────────────────────────────────────────────
 
   async function handleApply(e) {
     e.preventDefault();
@@ -255,7 +255,7 @@ export default function ArtisanServiceRequests() {
     }
   }
 
-  // ── #1 Withdraw ───────────────────────────────────────────────────────────
+  // ── #1 Withdraw ────────────────────────────────────────────────────────────────
 
   async function handleWithdraw() {
     if (!window.confirm("Retirer votre candidature pour cette demande ?")) return;
@@ -292,7 +292,7 @@ export default function ArtisanServiceRequests() {
             { key: "browse", label: "Offres disponibles" },
             { key: "applications", label: "Mes candidatures", badge: pendingCount },
           ].map(t => (
-            <Hint key={t.key} text={t.key === 'browse' ? 'Parcourir les missions disponibles correspondant à votre métier.' : 'Voir l\'état de vos candidatures envoyées aux prescripteurs.'}>
+            <Hint key={t.key} text={t.key === 'browse' ? 'Parcourir les missions disponibles correspondant à votre métier.' : 'Voir l\'\u00e9tat de vos candidatures envoy\u00e9es aux prescripteurs.'}>
             <button
               onClick={() => setTab(t.key)}
               className={`relative rounded-xl px-4 py-2 text-sm font-medium transition-colors ${
@@ -321,7 +321,7 @@ export default function ArtisanServiceRequests() {
         {tab === "browse" && (
           <>
             <div className="flex flex-wrap gap-3">
-              <Hint text="Filtrer les missions par corps de métier (plombier, électricien, maçon...).">
+              <Hint text="Filtrer les missions par corps de métier (plombier, Électricien, maçon...).">
               <select
                 value={tradeFilter}
                 onChange={e => setTradeFilter(e.target.value)}
@@ -486,6 +486,7 @@ export default function ArtisanServiceRequests() {
                 {detail.city && <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{detail.city}</span>}
                 {detail.budgetTND > 0 && <span className="inline-flex items-center gap-1"><Wallet className="h-3.5 w-3.5" />{detail.budgetTND.toLocaleString()} TND</span>}
                 {detail.deadline && <span className="inline-flex items-center gap-1"><Calendar className="h-3.5 w-3.5" />{new Date(detail.deadline).toLocaleDateString()}</span>}
+                {detail.maxApplicants && <span className="ml-1 text-indigo-600">(max {detail.maxApplicants})</span>}
               </div>
             </div>
 
@@ -506,7 +507,7 @@ export default function ArtisanServiceRequests() {
               </div>
 
             ) : detail.hasApplied ? (
-              /* #1 — Already applied: show withdraw option */
+              /* #1 ── Already applied: show withdraw option */
               <div className="rounded-2xl border border-indigo-200 bg-indigo-50 px-4 py-4 space-y-3">
                 <div className="flex items-center gap-2 text-indigo-700">
                   <CheckCircle2 className="h-5 w-5" />
@@ -591,3 +592,7 @@ export default function ArtisanServiceRequests() {
     </PageShell>
   );
 }
+
+
+
+

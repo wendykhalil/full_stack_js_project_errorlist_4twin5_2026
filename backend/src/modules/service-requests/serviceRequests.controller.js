@@ -13,7 +13,7 @@ function uid(req) {
 
 async function create(req, res, next) {
   try {
-    const { title, description, trade, city, budgetTND, deadline } = req.body || {};
+    const { title, description, trade, city, budgetTND, deadline, maxApplicants } = req.body || {};
     if (!title?.trim()) return res.status(400).json({ message: "title is required" });
     if (!trade) return res.status(400).json({ message: "trade is required" });
 
@@ -25,6 +25,7 @@ async function create(req, res, next) {
       city: city?.trim() || "",
       budgetTND: Number(budgetTND) || 0,
       deadline: deadline ? new Date(deadline) : null,
+      maxApplicants: maxApplicants ? Number(maxApplicants) : null,
     });
 
     return res.status(201).json({ ok: true, serviceRequest: doc });
@@ -78,26 +79,27 @@ async function getOne(req, res, next) {
   }
 }
 
-async function update(req, res, next) {
-  try {
-    const doc = await ServiceRequest.findOne({ _id: req.params.id, prescripteurId: uid(req) });
-    if (!doc) return res.status(404).json({ message: "Not found" });
-    if (doc.status !== "OPEN") return res.status(400).json({ message: "Only OPEN requests can be edited" });
+  async function update(req, res, next) {
+    try {
+      const doc = await ServiceRequest.findOne({ _id: req.params.id, prescripteurId: uid(req) });
+      if (!doc) return res.status(404).json({ message: "Not found" });
+      if (doc.status !== "OPEN") return res.status(400).json({ message: "Only OPEN requests can be edited" });
 
-    const { title, description, trade, city, budgetTND, deadline } = req.body || {};
-    if (title !== undefined) doc.title = title.trim();
-    if (description !== undefined) doc.description = description.trim();
-    if (trade !== undefined) doc.trade = trade;
-    if (city !== undefined) doc.city = city.trim();
-    if (budgetTND !== undefined) doc.budgetTND = Number(budgetTND) || 0;
-    if (deadline !== undefined) doc.deadline = deadline ? new Date(deadline) : null;
+      const { title, description, trade, city, budgetTND, deadline, maxApplicants } = req.body || {};
+      if (title !== undefined) doc.title = title.trim();
+      if (description !== undefined) doc.description = description.trim();
+      if (trade !== undefined) doc.trade = trade;
+      if (city !== undefined) doc.city = city.trim();
+      if (budgetTND !== undefined) doc.budgetTND = Number(budgetTND) || 0;
+      if (deadline !== undefined) doc.deadline = deadline ? new Date(deadline) : null;
+      if (maxApplicants !== undefined) doc.maxApplicants = maxApplicants ? Number(maxApplicants) : null;
 
-    await doc.save();
-    return res.json({ ok: true, serviceRequest: doc });
-  } catch (err) {
-    return next(err);
+      await doc.save();
+      return res.json({ ok: true, serviceRequest: doc });
+    } catch (err) {
+      return next(err);
+    }
   }
-}
 
 async function remove(req, res, next) {
   try {
@@ -275,6 +277,11 @@ async function apply(req, res, next) {
 
     const alreadyApplied = doc.applications.some((a) => String(a.artisanId) === String(artisanId));
     if (alreadyApplied) return res.status(409).json({ message: "You already applied to this request" });
+
+    // Check max applicants limit
+    if (doc.maxApplicants !== null && doc.applications.length >= doc.maxApplicants) {
+      return res.status(400).json({ message: `Cette demande a atteint le nombre maximum de candidats (${doc.maxApplicants})` });
+    }
 
     const { message, proposedPrice } = req.body || {};
     doc.applications.push({
