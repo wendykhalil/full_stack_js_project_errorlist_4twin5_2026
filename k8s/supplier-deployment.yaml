@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: supplier
+  namespace: bmp-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: supplier
+  template:
+    metadata:
+      labels:
+        app: supplier
+    spec:
+      containers:
+      - name: supplier
+        image: nginx:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: MODULE_NAME
+          value: "supplier"
