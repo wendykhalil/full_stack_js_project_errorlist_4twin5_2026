@@ -24,29 +24,15 @@ const MLPredictionsPage = () => {
         </div>
 
         {/* Features */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Hint text="Estimez le temps nécessaire pour compléter votre projet selon son type, sa taille et sa complexité.">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <Hint text="Estimez simultanément la durée et le coût de votre projet selon son type, sa taille et sa complexité.">
           <div className="bg-white p-6 rounded-lg shadow-sm border">
             <div className="flex items-center gap-3 mb-3">
-              <Clock className="text-blue-600" size={24} />
-              <h3 className="font-semibold text-gray-900">Prédiction Durée</h3>
+              <TrendingUp className="text-blue-600" size={24} />
+              <h3 className="font-semibold text-gray-900">Durée &amp; Coût</h3>
             </div>
             <p className="text-gray-600 text-sm">
-              Estimez le temps nécessaire pour compléter votre projet en fonction 
-              du type, de la taille et de la complexité.
-            </p>
-          </div>
-          </Hint>
-
-          <Hint text="Obtenez une estimation du coût total en Dinar Tunisien basée sur les matériaux, la localisation et les spécifications.">
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <div className="flex items-center gap-3 mb-3">
-              <DollarSign className="text-green-600" size={24} />
-              <h3 className="font-semibold text-gray-900">Prédiction Prix</h3>
-            </div>
-            <p className="text-gray-600 text-sm">
-              Obtenez une estimation du coût total en Dinar Tunisien basée sur les matériaux, 
-              la localisation et les spécifications du projet.
+              Obtenez en une seule analyse la durée estimée en jours et le coût total en Dinar Tunisien pour votre projet.
             </p>
           </div>
           </Hint>

@@ -257,9 +257,13 @@ export default function ArtisanPublicProfile() {
                     Envoyer un message
                   </button>
                 </div>
-                <div className="flex justify-end">
-                  <ReportButton targetId={artisan.userId} targetType="USER" targetName={artisan.name} />
-                </div>
+                <button
+                  onClick={() => document.getElementById('availability-section')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="w-full flex items-center justify-center gap-2 border border-emerald-200 bg-emerald-50 text-emerald-700 px-6 py-3 rounded-xl hover:bg-emerald-100 transition-colors font-medium"
+                >
+                  <Calendar className="h-4 w-4" />
+                  Voir les disponibilités
+                </button>
                 <button
                   onClick={() => setShowScheduleModal(true)}
                   className="w-full flex items-center justify-center gap-2 border border-slate-200 bg-slate-50 text-slate-700 px-6 py-3 rounded-xl hover:bg-slate-100 transition-colors"
@@ -267,6 +271,9 @@ export default function ArtisanPublicProfile() {
                   <Calendar className="h-4 w-4" />
                   Planifier une réunion
                 </button>
+                <div className="flex justify-end">
+                  <ReportButton targetId={artisan.userId} targetType="USER" targetName={artisan.name} />
+                </div>
               </div>
             </div>
           </div>
@@ -414,7 +421,9 @@ export default function ArtisanPublicProfile() {
       )}
 
       {/* Availability */}
-      <ArtisanAvailabilityView artisanId={artisan?.userId ? String(artisan.userId) : null} />
+      <div id="availability-section">
+        <ArtisanAvailabilityView artisanId={artisan?.userId ? String(artisan.userId) : null} />
+      </div>
 
       <SimpleFooter />
     </div>

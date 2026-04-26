@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Clock, DollarSign, Calculator, AlertCircle, FolderOpen, Plus, AlertTriangle, TrendingUp } from 'lucide-react';
 
 const MLPredictions = () => {
-  const [activeTab, setActiveTab] = useState('duration');
+  const [activeTab, setActiveTab] = useState('combined'); // 'combined' or 'delay'
   const [predictionMode, setPredictionMode] = useState('new'); // 'new' or 'existing'
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
@@ -319,6 +319,51 @@ const MLPredictions = () => {
     }
   };
 
+  const predictCombined = async () => {
+    setLoading(true);
+    setError(null);
+    setResult(null);
+
+    try {
+      const [durationRes, pricingRes] = await Promise.all([
+        fetch('http://localhost:5001/predict-duration', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...durationForm,
+            size_sqm: parseFloat(durationForm.size_sqm),
+            num_workers: parseInt(durationForm.num_workers),
+            complexity: parseInt(durationForm.complexity)
+          }),
+        }),
+        fetch('http://localhost:5001/predict-pricing', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            project_type: durationForm.project_type,
+            surface_area: parseFloat(durationForm.size_sqm),
+            materials: durationForm.materials,
+            location: durationForm.location,
+            complexity: parseInt(durationForm.complexity)
+          }),
+        }),
+      ]);
+
+      const durationData = await durationRes.json();
+      const pricingData = await pricingRes.json();
+
+      if (durationRes.ok && pricingRes.ok) {
+        setResult({ ...durationData, ...pricingData, type: 'combined' });
+      } else {
+        setError((durationData.error || pricingData.error) || 'Erreur lors de la prédiction');
+      }
+    } catch (err) {
+      setError('Service ML indisponible. Assurez-vous que le service Python ML est démarré sur le port 5001.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const predictDuration = async () => {
     setLoading(true);
     setError(null);
@@ -425,7 +470,9 @@ const MLPredictions = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (activeTab === 'duration') {
+    if (activeTab === 'combined') {
+      predictCombined();
+    } else if (activeTab === 'duration') {
       predictDuration();
     } else if (activeTab === 'pricing') {
       predictPricing();
@@ -514,33 +561,14 @@ const MLPredictions = () => {
       <div className="flex mb-6 border-b">
         <button
           className={`px-6 py-3 font-medium flex items-center gap-2 ${
-            activeTab === 'duration'
+            activeTab === 'combined'
               ? 'border-b-2 border-blue-500 text-blue-600'
               : 'text-gray-500 hover:text-gray-700'
           }`}
-          onClick={() => {
-            setActiveTab('duration');
-            setResult(null);
-            setError(null);
-          }}
+          onClick={() => { setActiveTab('combined'); setResult(null); setError(null); }}
         >
-          <Clock size={20} />
-          Prédiction Durée
-        </button>
-        <button
-          className={`px-6 py-3 font-medium flex items-center gap-2 ${
-            activeTab === 'pricing'
-              ? 'border-b-2 border-blue-500 text-blue-600'
-              : 'text-gray-500 hover:text-gray-700'
-          }`}
-          onClick={() => {
-            setActiveTab('pricing');
-            setResult(null);
-            setError(null);
-          }}
-        >
-          <DollarSign size={20} />
-          Prédiction Prix
+          <TrendingUp size={20} />
+          Durée &amp; Coût
         </button>
         <button
           className={`px-6 py-3 font-medium flex items-center gap-2 ${
@@ -548,11 +576,7 @@ const MLPredictions = () => {
               ? 'border-b-2 border-blue-500 text-blue-600'
               : 'text-gray-500 hover:text-gray-700'
           }`}
-          onClick={() => {
-            setActiveTab('delay');
-            setResult(null);
-            setError(null);
-          }}
+          onClick={() => { setActiveTab('delay'); setResult(null); setError(null); }}
         >
           <AlertTriangle size={20} />
           Risque de Retard
@@ -560,8 +584,8 @@ const MLPredictions = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {activeTab === 'duration' ? (
-          // Duration Form
+        {activeTab === 'combined' || activeTab === 'duration' ? (
+          // Duration / Combined Form
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -908,7 +932,7 @@ const MLPredictions = () => {
           className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           <Calculator size={20} />
-          {loading ? 'Calcul en cours...' : `Prédire ${activeTab === 'duration' ? 'la durée' : activeTab === 'pricing' ? 'le prix' : 'le risque de retard'}`}
+          {loading ? 'Calcul en cours...' : `Prédire ${activeTab === 'combined' ? 'la durée et le coût' : activeTab === 'duration' ? 'la durée' : activeTab === 'pricing' ? 'le prix' : 'le risque de retard'}`}
         </button>
       </form>
 
@@ -918,16 +942,35 @@ const MLPredictions = () => {
           <h3 className="text-lg font-semibold text-green-800 mb-3">
             Résultat de la prédiction
           </h3>
-          {activeTab === 'duration' ? (
+          {activeTab === 'combined' ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="flex items-center gap-3 bg-white rounded-xl p-4 border border-green-200">
+                <Clock className="text-blue-600 shrink-0" size={28} />
+                <div>
+                  <p className="text-2xl font-bold text-blue-800">
+                    {result.estimated_duration_days} jours
+                  </p>
+                  <p className="text-sm text-blue-600">Durée estimée</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 bg-white rounded-xl p-4 border border-green-200">
+                <DollarSign className="text-emerald-600 shrink-0" size={28} />
+                <div>
+                  <p className="text-2xl font-bold text-emerald-800">
+                    {result.estimated_cost_euros?.toLocaleString()} DT
+                  </p>
+                  <p className="text-sm text-emerald-600">Coût estimé (TND)</p>
+                </div>
+              </div>
+            </div>
+          ) : activeTab === 'duration' ? (
             <div className="flex items-center gap-3">
               <Clock className="text-green-600" size={24} />
               <div>
                 <p className="text-2xl font-bold text-green-800">
                   {result.estimated_duration_days} jours
                 </p>
-                <p className="text-green-600">
-                  Durée estimée pour ce projet
-                </p>
+                <p className="text-green-600">Durée estimée pour ce projet</p>
               </div>
             </div>
           ) : activeTab === 'pricing' ? (
@@ -937,9 +980,7 @@ const MLPredictions = () => {
                 <p className="text-2xl font-bold text-green-800">
                   {result.estimated_cost_euros?.toLocaleString()} DT
                 </p>
-                <p className="text-green-600">
-                  Coût estimé pour ce projet (Dinar Tunisien)
-                </p>
+                <p className="text-green-600">Coût estimé pour ce projet (Dinar Tunisien)</p>
               </div>
             </div>
           ) : (
