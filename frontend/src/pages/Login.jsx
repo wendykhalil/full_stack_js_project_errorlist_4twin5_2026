@@ -156,7 +156,7 @@ export default function Login() {
               <div className="relative">
                 <button onClick={() => setRoleDropdownOpen(!roleDropdownOpen)}
                   className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 transition-all hover:bg-slate-100 hover:text-blue-600 lg:text-base">
-                  <span>Join as</span>
+                  <span>rejoindre en tant que</span>
                   <ChevronDown className={`h-4 w-4 transition-transform ${roleDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
                 {roleDropdownOpen && (
@@ -174,11 +174,10 @@ export default function Login() {
                   </>
                 )}
               </div>
-              <Link to="/about" className="text-sm font-medium text-slate-600 transition-colors hover:text-blue-600 lg:text-base">About</Link>
-              <Link to="/contact" className="text-sm font-medium text-slate-600 transition-colors hover:text-blue-600 lg:text-base">Contact</Link>
+              <Link to="/about" className="text-sm font-medium text-slate-600 transition-colors hover:text-blue-600 lg:text-base">À propos</Link>
+              <Link to="/contact" className="text-sm font-medium text-slate-600 transition-colors hover:text-blue-600 lg:text-base">Contactez-nous</Link>
               <Link to="/register" className="rounded-full bg-gradient-to-r from-blue-600 to-blue-500 px-5 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:from-blue-700 hover:to-blue-600 hover:shadow-md lg:px-6 lg:py-2.5 lg:text-base">
-                Get Started
-              </Link>
+Commencer              </Link>
             </div>
 
             <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -201,9 +200,9 @@ export default function Login() {
                   </Link>
                 ))}
               </div>
-              <Link to="/about" className="block rounded-lg px-3 py-2 text-sm text-slate-600 transition-colors hover:bg-blue-50 hover:text-blue-600" onClick={() => setMobileMenuOpen(false)}>About</Link>
-              <Link to="/contact" className="block rounded-lg px-3 py-2 text-sm text-slate-600 transition-colors hover:bg-blue-50 hover:text-blue-600" onClick={() => setMobileMenuOpen(false)}>Contact</Link>
-              <Link to="/register" className="block rounded-lg bg-blue-600 px-3 py-2 text-center text-sm font-semibold text-white transition-colors hover:bg-blue-700" onClick={() => setMobileMenuOpen(false)}>Get Started</Link>
+              <Link to="/about" className="block rounded-lg px-3 py-2 text-sm text-slate-600 transition-colors hover:bg-blue-50 hover:text-blue-600" onClick={() => setMobileMenuOpen(false)}>À propos</Link>
+              <Link to="/contact" className="block rounded-lg px-3 py-2 text-sm text-slate-600 transition-colors hover:bg-blue-50 hover:text-blue-600" onClick={() => setMobileMenuOpen(false)}>Contactez-nous</Link>
+              <Link to="/register" className="block rounded-lg bg-blue-600 px-3 py-2 text-center text-sm font-semibold text-white transition-colors hover:bg-blue-700" onClick={() => setMobileMenuOpen(false)}>Commencer</Link>
             </div>
           </div>
         )}
@@ -405,7 +404,7 @@ export default function Login() {
             <div>
               <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-900">Support</h3>
               <ul className="mt-4 space-y-2">
-                <li><Link to="/contact" className="text-sm text-slate-600 transition-colors hover:text-blue-600">Contact</Link></li>
+                <li><Link to="/contact" className="text-sm text-slate-600 transition-colors hover:text-blue-600">Contactez-nous</Link></li>
                 <li><Link to="/privacy" className="text-sm text-slate-600 transition-colors hover:text-blue-600">Politique de confidentialité</Link></li>
                 <li><Link to="/terms" className="text-sm text-slate-600 transition-colors hover:text-blue-600">Conditions d'utilisation</Link></li>
               </ul>
