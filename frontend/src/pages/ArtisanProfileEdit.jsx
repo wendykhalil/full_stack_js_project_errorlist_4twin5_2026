@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
+import ReadCardButton from '../components/ReadCardButton';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 
@@ -51,9 +52,9 @@ export default function ArtisanProfileEdit() {
   const [success, setSuccess] = useState('');
 
   const { errors: formErrors, validate } = useFormValidation({
-    trade: [rules.required('Métier requis')],
-    region: [rules.required('Région requise')],
-    phone: [rules.required('Téléphone requis'), rules.phone()],
+    trade: [rules.required('MÃ©tier requis')],
+    region: [rules.required('RÃ©gion requise')],
+    phone: [rules.required('TÃ©lÃ©phone requis'), rules.phone()],
     description: [rules.maxLength(500)],
   });
   const { fieldErrors: serverErrors, globalError, handleError, clearErrors } = useServerErrors();
@@ -81,8 +82,8 @@ export default function ArtisanProfileEdit() {
 
   const tradeOptions = [
     'Plombier',
-    'Électricien',
-    'Maçon',
+    'Ã‰lectricien',
+    'MaÃ§on',
     'Peintre',
     'Menuisier',
     'Carreleur',
@@ -186,7 +187,7 @@ export default function ArtisanProfileEdit() {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        setError('L\'image doit être inférieure à 5MB');
+        setError('L\'image doit Ãªtre infÃ©rieure Ã  5MB');
         return;
       }
       setImageFile(file);
@@ -217,7 +218,7 @@ export default function ArtisanProfileEdit() {
       formData.append('address[postalCode]', profile.address.postalCode);
       formData.append('address[country]', profile.address.country);
       
-      // Ajouter les coordonnées si disponibles
+      // Ajouter les coordonnÃ©es si disponibles
       if (profile.location.latitude && profile.location.longitude) {
         formData.append('coordinates', JSON.stringify([
           profile.location.longitude,
@@ -246,7 +247,7 @@ export default function ArtisanProfileEdit() {
       await refreshMe();
       setSuccess('Profile updated successfully!');
       
-      // Rediriger vers la page de profil après 2 secondes
+      // Rediriger vers la page de profil aprÃ¨s 2 secondes
       setTimeout(() => {
         navigate('/artisan/profile');
       }, 2000);
@@ -301,10 +302,7 @@ export default function ArtisanProfileEdit() {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Profile photo */}
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-            <Camera className="h-5 w-5" />
-            Profile photo
-          </h2>
+          <div className="flex items-center justify-between mb-4"><h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2"><Camera className="h-5 w-5" />Photo de profil</h2><ReadCardButton text="Photo de profil" /></div>
           
           <div className="flex items-center gap-6">
             <div className="relative">
@@ -345,10 +343,7 @@ export default function ArtisanProfileEdit() {
 
         {/* Basic information */}
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-            <User className="h-5 w-5" />
-            Personal information
-          </h2>
+          <div className="flex items-center justify-between mb-4"><h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2"><User className="h-5 w-5" />Informations personnelles</h2><ReadCardButton text="Informations personnelles" /></div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -390,7 +385,7 @@ export default function ArtisanProfileEdit() {
                 value={profile.description}
                 onChange={(e) => setProfile({...profile, description: e.target.value})}
                 rows="4"
-                placeholder="Décrivez votre expérience, vos compétences..."
+                placeholder="DÃ©crivez votre expÃ©rience, vos compÃ©tences..."
                 className={`w-full rounded-xl border ${formErrors.description || serverErrors.description ? 'border-red-400' : 'border-slate-200'} px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none`}
               />
               <FieldError error={formErrors.description || serverErrors.description} />
@@ -400,10 +395,7 @@ export default function ArtisanProfileEdit() {
 
         {/* Location */}
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-            <MapPin className="h-5 w-5" />
-            Location
-          </h2>
+          <div className="flex items-center justify-between mb-4"><h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2"><MapPin className="h-5 w-5" />Localisation</h2><ReadCardButton text="Localisation" /></div>
 
           <div className="mb-4">
             <button
@@ -416,7 +408,7 @@ export default function ArtisanProfileEdit() {
               {updatingLocation ? 'Saving location...' : 'Update my position'}
             </button>
             <p className="mt-2 text-xs text-slate-500">
-              Votre position sera mise à jour quotidiennement
+              Votre position sera mise Ã  jour quotidiennement
             </p>
           </div>
 
@@ -462,7 +454,7 @@ export default function ArtisanProfileEdit() {
                   ...profile,
                   address: {...profile.address, street: e.target.value}
                 })}
-                placeholder="Ex: Rue de la Liberté"
+                placeholder="Ex: Rue de la LibertÃ©"
                 className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
               />
             </div>
@@ -540,3 +532,7 @@ export default function ArtisanProfileEdit() {
     </PageShell>
   );
 }
+
+
+
+

@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { useTranslation } from '../i18n';
+import ReadCardButton from '../components/ReadCardButton';
 import {
   Package, Search, Eye, MessageCircle, Calendar,
   MapPin, Building, Loader2, AlertCircle, CheckCircle
@@ -194,6 +195,7 @@ export default function ArtisanOrders() {
                   <span className="text-sm text-slate-500">
                     {formatDate(order.createdAt)}
                   </span>
+                  <ReadCardButton text={`Commande #${order.orderNumber} - ${order.productId?.name || 'Produit'} - Statut: ${order.status} - Quantité: ${order.quantity} - ${formatDate(order.createdAt)}`} />
                 </div>
               </div>
 

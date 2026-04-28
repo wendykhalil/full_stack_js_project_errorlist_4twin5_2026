@@ -9,6 +9,7 @@ import OrderTabs from '../components/OrderTabs';
 import SimpleFooter from '../components/Footer';
 import { useSupplierOrders } from '../context/SupplierOrderContext';
 import { Hint } from '../components/MouseTooltip';
+import ReadCardButton from '../components/ReadCardButton';
 
 export default function FournisseurOrders() {
   const { t } = useTranslation();
@@ -295,6 +296,7 @@ export default function FournisseurOrders() {
                   <div className="flex items-center gap-3">
                     <OrderStatusBadge status={order.status} />
                     <span className="text-sm text-slate-500">{formatDate(order.createdAt)}</span>
+                    <ReadCardButton text={`Commande #${order.orderNumber} - ${order.productId?.name || 'Produit'} - Artisan: ${artisan} - Statut: ${order.status} - Quantité: ${order.quantity} - ${formatDate(order.createdAt)}`} />
                   </div>
                 </div>
 

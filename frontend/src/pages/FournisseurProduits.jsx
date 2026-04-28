@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, Search, Package, ShoppingCart, TrendingUp, FileText, Pencil, Trash2, Bot, Sparkles, Eye, Tag, AlertCircle, CheckCircle, Clock, Image as ImageIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import SimpleFooter from "../components/Footer";
@@ -7,21 +7,28 @@ import { useAuth } from "../auth/AuthContext";
 import { getMyProducts, getSupplierStats, deleteProduct, createProduct, smartSearchAI } from "../auth/api.js";
 import AIProductAssistantModal from '../components/ai-assistant-product/AIProductAssistantModal';
 import { Hint } from "../components/MouseTooltip";
+import ReadCardButton from '../components/ReadCardButton';
 
-const StatCard = ({ title, value, icon, iconBg, iconFg }) => (
-  <div className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5">
-    <div className="absolute right-0 top-0 h-24 w-24 -translate-y-8 translate-x-8 rounded-full bg-gradient-to-br from-indigo-50 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-    <div className="flex items-start justify-between">
-      <div className="space-y-2">
-        <p className="text-sm font-medium text-slate-500">{title}</p>
-        <p className="text-3xl font-bold tracking-tight text-slate-900">{value}</p>
-      </div>
-      <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${iconBg} shadow-sm`}>
-        {React.cloneElement(icon, { className: `h-6 w-6 ${iconFg}` })}
+const StatCard = ({ title, value, icon, iconBg, iconFg }) => {
+  const cardRef = useRef();
+  return (
+    <div ref={cardRef} className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5">
+      <div className="absolute right-0 top-0 h-24 w-24 -translate-y-8 translate-x-8 rounded-full bg-gradient-to-br from-indigo-50 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+      <div className="flex items-start justify-between">
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-slate-500">{title}</p>
+          <p className="text-3xl font-bold tracking-tight text-slate-900">{value}</p>
+        </div>
+        <div className="flex flex-col items-end gap-2">
+          <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${iconBg} shadow-sm`}>
+            {React.cloneElement(icon, { className: `h-6 w-6 ${iconFg}` })}
+          </div>
+          <ReadCardButton targetRef={cardRef} />
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 // Professional badge component
 const Badge = ({ children, variant = "default" }) => {

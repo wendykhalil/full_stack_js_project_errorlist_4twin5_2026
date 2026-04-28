@@ -1,4 +1,5 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
+import ReadCardButton from '../components/ReadCardButton';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, Minus, Package, Plus, ShoppingBag, Trash2, X } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
@@ -41,19 +42,19 @@ export default function ArtisanCart() {
     }
   };
 
-  // ── Success screen ────────────────────────────────────────────────────────
+  // â”€â”€ Success screen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (result) {
     return (
       <div className="flex-1 space-y-6">
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-8 text-center">
           <ShoppingBag className="mx-auto h-12 w-12 text-emerald-500" />
-          <h2 className="mt-4 text-2xl font-bold text-emerald-800">Commandes passées !</h2>
+          <h2 className="mt-4 text-2xl font-bold text-emerald-800">Commandes passÃ©es !</h2>
           <p className="mt-2 text-emerald-700">{result.message}</p>
           {result.errors?.length > 0 && (
             <div className="mt-4 rounded-xl bg-amber-50 border border-amber-200 p-4 text-left">
-              <p className="text-sm font-semibold text-amber-800">Produits non commandés :</p>
+              <p className="text-sm font-semibold text-amber-800">Produits non commandÃ©s :</p>
               {result.errors.map((e, i) => (
-                <p key={i} className="text-xs text-amber-700 mt-1">• {e.productName || 'Produit'} — {e.reason}</p>
+                <p key={i} className="text-xs text-amber-700 mt-1">â€¢ {e.productName || 'Produit'} â€” {e.reason}</p>
               ))}
             </div>
           )}
@@ -85,7 +86,7 @@ export default function ArtisanCart() {
         </div>
         <button onClick={() => navigate('/artisan/marketplace')}
           className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium hover:bg-slate-50">
-          ← Continuer mes achats
+          â† Continuer mes achats
         </button>
       </div>
 
@@ -118,9 +119,12 @@ export default function ArtisanCart() {
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-slate-900 truncate">{p.name}</p>
-                    <p className="text-xs text-slate-500">{p.categoryId?.name} · {p.supplierId?.companyName || 'Fournisseur'}</p>
-                    <p className="mt-1 text-sm font-semibold text-indigo-700">{fmt(item.priceSnapshot)} / unité</p>
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="font-semibold text-slate-900 truncate">{p.name}</p>
+                      <ReadCardButton text={`${p.name}. Catégorie: ${p.categoryId?.name}. Fournisseur: ${p.supplierId?.companyName || 'Fournisseur'}. Prix: ${item.priceSnapshot} TND. Quantité: ${item.quantity}.`} />
+                    </div>
+                    <p className="text-xs text-slate-500">{p.categoryId?.name} Â· {p.supplierId?.companyName || 'Fournisseur'}</p>
+                    <p className="mt-1 text-sm font-semibold text-indigo-700">{fmt(item.priceSnapshot)} / unitÃ©</p>
 
                     {/* Qty controls */}
                     <div className="mt-2 flex items-center gap-2">
@@ -155,11 +159,11 @@ export default function ArtisanCart() {
           <div className="space-y-4">
             {/* Summary */}
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <h3 className="text-base font-semibold text-slate-800">Récapitulatif</h3>
+              <h3 className="text-base font-semibold text-slate-800">RÃ©capitulatif</h3>
               <div className="mt-4 space-y-2">
                 {items.map(i => (
                   <div key={i._id} className="flex justify-between text-sm">
-                    <span className="text-slate-600 truncate max-w-[60%]">{i.product.name} ×{i.quantity}</span>
+                    <span className="text-slate-600 truncate max-w-[60%]">{i.product.name} Ã—{i.quantity}</span>
                     <span className="font-medium text-slate-800">{fmt(i.lineTotal)}</span>
                   </div>
                 ))}
@@ -182,7 +186,7 @@ export default function ArtisanCart() {
               <div>
                 <label className="text-xs font-medium text-slate-600">Rue / Quartier</label>
                 <input value={street} onChange={e => setStreet(e.target.value)}
-                  placeholder="Ex: Rue de la Liberté"
+                  placeholder="Ex: Rue de la LibertÃ©"
                   className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none" />
               </div>
               <div>
@@ -194,7 +198,7 @@ export default function ArtisanCart() {
               <div>
                 <label className="text-xs font-medium text-slate-600">Message (optionnel)</label>
                 <textarea value={artisanMessage} onChange={e => setArtisanMessage(e.target.value)}
-                  rows={2} placeholder="Instructions de livraison…"
+                  rows={2} placeholder="Instructions de livraisonâ€¦"
                   className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none resize-none" />
               </div>
 
@@ -203,12 +207,12 @@ export default function ArtisanCart() {
               <button onClick={handleCheckout} disabled={checking || items.length === 0}
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 py-3.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed">
                 {checking
-                  ? <><Loader2 className="h-4 w-4 animate-spin" /> Commande en cours…</>
+                  ? <><Loader2 className="h-4 w-4 animate-spin" /> Commande en coursâ€¦</>
                   : <><ShoppingBag className="h-4 w-4" /> Commander tout le panier</>
                 }
               </button>
               <p className="text-center text-xs text-slate-400">
-                {items.length} produit{items.length > 1 ? 's' : ''} · {items.length} commande{items.length > 1 ? 's' : ''} créée{items.length > 1 ? 's' : ''}
+                {items.length} produit{items.length > 1 ? 's' : ''} Â· {items.length} commande{items.length > 1 ? 's' : ''} crÃ©Ã©e{items.length > 1 ? 's' : ''}
               </p>
             </div>
           </div>
@@ -219,3 +223,4 @@ export default function ArtisanCart() {
     </div>
   );
 }
+

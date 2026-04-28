@@ -1,4 +1,5 @@
-import React from "react";
+﻿import React from "react";
+import ReadCardButton from '../components/ReadCardButton';
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from '../i18n';
 import PageShell from '../components/PageShell';
@@ -40,6 +41,10 @@ export default function ArtisanFactureStep2() {
       <Stepper step={2} />
 
       <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-slate-900">{t('artisanFactureStep2.formTitle')}</h2>
+          <ReadCardButton />
+        </div>
         <h2 className="text-lg font-semibold text-slate-900">{t('artisanFactureStep2.formTitle')}</h2>
 
         <div className="mt-6 rounded-2xl bg-slate-50 p-6">
@@ -96,3 +101,7 @@ export default function ArtisanFactureStep2() {
     </PageShell>
   );
 }
+
+
+
+

@@ -1,4 +1,5 @@
-import React from "react";
+﻿import React from "react";
+import ReadCardButton from '../components/ReadCardButton';
 import { useTranslation } from '../i18n';
 import PageShell from '../components/PageShell';
 import SimpleFooter from '../components/Footer';
@@ -42,9 +43,12 @@ export default function ArtisanFactureStep3() {
       <Stepper step={3} />
 
       <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-        <h2 className="text-xl font-semibold text-slate-900 text-center">
-          {t('artisanFactureStep3.invoiceTitle')}
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold text-slate-900 text-center flex-1">
+            {t('artisanFactureStep3.invoiceTitle')}
+          </h2>
+          <ReadCardButton text={t('artisanFactureStep3.invoiceTitle')} />
+        </div>
         <p className="text-center text-sm text-slate-500">
           {t('artisanFactureStep3.invoiceNumber', { number: 'FACT-879082' })}
         </p>
@@ -97,3 +101,7 @@ export default function ArtisanFactureStep3() {
     </PageShell>
   );
 }
+
+
+
+

@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
+import ReadCardButton from '../components/ReadCardButton';
 import { apiFetch } from "../auth/api";
 import { useAuth } from "../auth/AuthContext";
 import { Activity, RefreshCw, Search, Filter, Info, X, MonitorSmartphone, Globe2, UserCircle2, ShieldCheck } from "lucide-react";
@@ -42,24 +43,24 @@ function detailEntries(it) {
     case "PROFILE_UPDATE":
       return Object.entries(d).filter(([, v]) => v !== undefined && v !== null && String(v).trim() !== "");
     case "LOGIN_SMS":
-      return [["Telephone", d.phone || it.user?.phone || "—"]];
+      return [["Telephone", d.phone || it.user?.phone || "â€”"]];
     case "SET_ROLE":
-      return [["Role", d.role || "—"]];
+      return [["Role", d.role || "â€”"]];
     case "PASSWORD_CHANGE":
       return [["Statut", "Mot de passe mis a jour"]];
     case "LOGOUT":
       return [["Statut", "Utilisateur deconnecte"]];
     case "QUOTE_CREATE":
       return [
-        ["Projet", d.projectTitle || "—"],
-        ["Lignes", d.lineCount ?? "—"],
-        ["Total", d.total ?? "—"],
+        ["Projet", d.projectTitle || "â€”"],
+        ["Lignes", d.lineCount ?? "â€”"],
+        ["Total", d.total ?? "â€”"],
       ];
     case "INVOICE_CREATE":
       return [
-        ["Projet", d.projectTitle || "—"],
-        ["Total", d.total ?? "—"],
-        ["Devis", d.quoteId || "—"],
+        ["Projet", d.projectTitle || "â€”"],
+        ["Total", d.total ?? "â€”"],
+        ["Devis", d.quoteId || "â€”"],
       ];
     default:
       return [];
@@ -79,7 +80,7 @@ function RawViewModal({ item, onClose }) {
             <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-white px-3 py-1 text-xs font-semibold text-indigo-700">
               <ShieldCheck className="h-3.5 w-3.5" /> Details de l'activite
             </div>
-            <h2 className="mt-3 text-2xl font-semibold text-slate-900">{actionLabel(item.action)}</h2>
+            <div className="flex items-center justify-between"><h2 className="mt-3 text-2xl font-semibold text-slate-900">{actionLabel(item.action)}</h2><ReadCardButton text={`${actionLabel(item.action)} - ${item.user?.firstName} ${item.user?.lastName} - ${new Date(item.createdAt).toLocaleDateString('fr-TN')}`} /></div>
             <p className="mt-1 text-sm text-slate-500">Vue administrative structuree pour les informations d'audit.</p>
           </div>
           <button onClick={onClose} className="rounded-2xl border border-slate-200 bg-white p-2 text-slate-500 transition hover:text-slate-900">
@@ -94,10 +95,10 @@ function RawViewModal({ item, onClose }) {
             <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200">
               <table className="min-w-full text-sm">
                 <tbody className="divide-y divide-slate-200">
-                  <tr><td className="w-40 bg-slate-50 px-4 py-3 font-medium text-slate-600">Nom</td><td className="px-4 py-3 text-slate-900">{item.user ? `${item.user.firstName} ${item.user.lastName}` : "—"}</td></tr>
-                  <tr><td className="bg-slate-50 px-4 py-3 font-medium text-slate-600">Email</td><td className="px-4 py-3 text-slate-900">{item.user?.email || "—"}</td></tr>
-                  <tr><td className="bg-slate-50 px-4 py-3 font-medium text-slate-600">Telephone</td><td className="px-4 py-3 text-slate-900">{item.user?.phone || "—"}</td></tr>
-                  <tr><td className="bg-slate-50 px-4 py-3 font-medium text-slate-600">Role</td><td className="px-4 py-3 text-slate-900">{item.user?.role || "—"}</td></tr>
+                  <tr><td className="w-40 bg-slate-50 px-4 py-3 font-medium text-slate-600">Nom</td><td className="px-4 py-3 text-slate-900">{item.user ? `${item.user.firstName} ${item.user.lastName}` : "â€”"}</td></tr>
+                  <tr><td className="bg-slate-50 px-4 py-3 font-medium text-slate-600">Email</td><td className="px-4 py-3 text-slate-900">{item.user?.email || "â€”"}</td></tr>
+                  <tr><td className="bg-slate-50 px-4 py-3 font-medium text-slate-600">Telephone</td><td className="px-4 py-3 text-slate-900">{item.user?.phone || "â€”"}</td></tr>
+                  <tr><td className="bg-slate-50 px-4 py-3 font-medium text-slate-600">Role</td><td className="px-4 py-3 text-slate-900">{item.user?.role || "â€”"}</td></tr>
                   <tr><td className="bg-slate-50 px-4 py-3 font-medium text-slate-600">ID interne</td><td className="px-4 py-3 text-slate-500">Masque</td></tr>
                 </tbody>
               </table>
@@ -110,9 +111,9 @@ function RawViewModal({ item, onClose }) {
               <table className="min-w-full text-sm">
                 <tbody className="divide-y divide-slate-200">
                   <tr><td className="w-40 bg-slate-50 px-4 py-3 font-medium text-slate-600">Date</td><td className="px-4 py-3 text-slate-900">{fmt(item.createdAt)}</td></tr>
-                  <tr><td className="bg-slate-50 px-4 py-3 font-medium text-slate-600">Adresse IP</td><td className="px-4 py-3 text-slate-900">{item.ip || "—"}</td></tr>
-                  <tr><td className="bg-slate-50 px-4 py-3 font-medium text-slate-600">Pays</td><td className="px-4 py-3 text-slate-900">{item.country || "—"}</td></tr>
-                  <tr><td className="bg-slate-50 px-4 py-3 font-medium text-slate-600">Code pays</td><td className="px-4 py-3 text-slate-900">{item.countryCode || "—"}</td></tr>
+                  <tr><td className="bg-slate-50 px-4 py-3 font-medium text-slate-600">Adresse IP</td><td className="px-4 py-3 text-slate-900">{item.ip || "â€”"}</td></tr>
+                  <tr><td className="bg-slate-50 px-4 py-3 font-medium text-slate-600">Pays</td><td className="px-4 py-3 text-slate-900">{item.country || "â€”"}</td></tr>
+                  <tr><td className="bg-slate-50 px-4 py-3 font-medium text-slate-600">Code pays</td><td className="px-4 py-3 text-slate-900">{item.countryCode || "â€”"}</td></tr>
                   <tr><td className="bg-slate-50 px-4 py-3 font-medium text-slate-600">Action</td><td className="px-4 py-3 text-slate-900">{actionLabel(item.action)}</td></tr>
                 </tbody>
               </table>
@@ -147,7 +148,7 @@ function RawViewModal({ item, onClose }) {
 
           <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-2">
             <div className="flex items-center gap-2 text-sm font-semibold text-slate-900"><MonitorSmartphone className="h-4 w-4 text-indigo-600" /> Agent utilisateur</div>
-            <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-700">{item.userAgent || "—"}</div>
+            <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-700">{item.userAgent || "â€”"}</div>
           </section>
         </div>
         </div>
@@ -210,7 +211,7 @@ export default function AdminActivityLogs() {
             <p className="mt-1 text-sm text-slate-600 sm:text-base">Historique administratif des mises a jour de profil, connexions, changements de role et actions de compte.</p>
           </div>
 
-          <Hint text="Recharger les journaux d'activité depuis le serveur.">
+          <Hint text="Recharger les journaux d'activitÃ© depuis le serveur.">
           <button onClick={() => load(page)} className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto">
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             Actualiser
@@ -225,14 +226,14 @@ export default function AdminActivityLogs() {
             <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center">
               <div className="relative w-full sm:max-w-sm">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <Hint text="Rechercher par nom d'utilisateur, email, action ou détails de l'événement.">
+                <Hint text="Rechercher par nom d'utilisateur, email, action ou dÃ©tails de l'Ã©vÃ©nement.">
                 <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Rechercher un utilisateur, une action ou un detail..." className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-indigo-200" />
                 </Hint>
               </div>
 
               <div className="flex items-center gap-2">
                 <Filter className="h-4 w-4 text-slate-400" />
-                <Hint text="Filtrer les journaux par type d'action effectuée sur la plateforme.">
+                <Hint text="Filtrer les journaux par type d'action effectuÃ©e sur la plateforme.">
                 <select value={action} onChange={(e) => setAction(e.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
                   <option value="ALL">Toutes les actions</option>
                   <option value="PROFILE_UPDATE">Mises a jour du profil</option>
@@ -267,7 +268,7 @@ export default function AdminActivityLogs() {
                   <tr key={it._id} className="hover:bg-slate-50/60">
                     <td className="whitespace-nowrap px-4 py-4 text-sm text-slate-700">{fmt(it.createdAt)}</td>
                     <td className="px-4 py-4 text-sm text-slate-700">
-                      <div className="font-medium">{it.user ? `${it.user.firstName} ${it.user.lastName}` : "—"}</div>
+                      <div className="font-medium">{it.user ? `${it.user.firstName} ${it.user.lastName}` : "â€”"}</div>
                       <div className="text-xs text-slate-500">{it.user?.email || it.user?.phone || ""}</div>
                     </td>
                     <td className="px-4 py-4 text-sm">
@@ -285,9 +286,9 @@ export default function AdminActivityLogs() {
                       </button>
                     </td>
                     <td className="px-4 py-4 text-xs text-slate-600">
-                      <div><b>IP:</b> {it.ip || "—"}</div>
-                      <div><b>Pays:</b> {it.country || "—"}</div>
-                      <div className="max-w-[360px] truncate" title={it.userAgent || ""}><b>Agent:</b> {it.userAgent || "—"}</div>
+                      <div><b>IP:</b> {it.ip || "â€”"}</div>
+                      <div><b>Pays:</b> {it.country || "â€”"}</div>
+                      <div className="max-w-[360px] truncate" title={it.userAgent || ""}><b>Agent:</b> {it.userAgent || "â€”"}</div>
                     </td>
                   </tr>
                 ))}
@@ -302,7 +303,7 @@ export default function AdminActivityLogs() {
           </div>
 
           <div className="flex flex-col gap-3 border-t border-slate-200 bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="text-sm text-slate-600">Page <b>{data.currentPage}</b> sur <b>{data.totalPages}</b> - <b>{data.totalItems}</b> éléments</div>
+            <div className="text-sm text-slate-600">Page <b>{data.currentPage}</b> sur <b>{data.totalPages}</b> - <b>{data.totalItems}</b> Ã©lÃ©ments</div>
             <div className="flex items-center gap-2">
               <button disabled={data.currentPage <= 1 || loading} onClick={() => load(data.currentPage - 1)} className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 disabled:opacity-50">Precedent</button>
               <button disabled={data.currentPage >= data.totalPages || loading} onClick={() => load(data.currentPage + 1)} className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 disabled:opacity-50">Suivant</button>
@@ -316,3 +317,6 @@ export default function AdminActivityLogs() {
     </>
   );
 }
+
+
+

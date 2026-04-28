@@ -8,6 +8,7 @@ import StripePaymentForm from '../components/StripePaymentForm';
 import { useAuth } from '../auth/AuthContext';
 import { validatePromoCode, getMySubscription, cancelSubscription, startTrial } from '../auth/api';
 import { Hint } from '../components/MouseTooltip';
+import ReadCardButton from '../components/ReadCardButton';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
@@ -163,7 +164,10 @@ export default function ArtisanSubscription() {
                   <Crown className="h-6 w-6 text-indigo-600" />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Plan actuel</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Plan actuel</p>
+                    <ReadCardButton text={`Plan actuel: ${PLAN_FEATURES[sub.plan]?.label || sub.plan}${sub.isOnTrial ? ' (Essai)' : ''} - Statut: ${sub.status}${sub.endDate ? ' - Expire le ' + new Date(sub.endDate).toLocaleDateString('fr-TN') : ''}`} />
+                  </div>
                     <p className="text-2xl font-bold text-slate-900">
                     {PLAN_FEATURES[sub.plan]?.label || sub.plan}
                     {sub.isOnTrial && <span className="ml-2 rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-700">Essai</span>}
@@ -237,7 +241,10 @@ export default function ArtisanSubscription() {
         {/* Features comparison table */}
         <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
           <div className="px-7 py-4.5 border-b border-slate-100">
-            <h2 className="text-lg font-semibold text-slate-900">Comparaison des plans</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-slate-900">Comparaison des plans</h2>
+              <ReadCardButton text="Comparaison des plans - Gratuit, Basic (40 TND/mois), Pro (399 TND/an) - Projets, Portfolio, Devis, Factures, Messagerie, Marketplace, IA, Météo" />
+            </div>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-[15px]">
@@ -276,7 +283,10 @@ export default function ArtisanSubscription() {
               )}
               <div className="flex items-center justify-between">
                 <h3 className="text-2xl font-semibold text-slate-900">{plan.name}</h3>
-                {selectedPlan === key && <CheckCircle className="h-5 w-5 text-indigo-600" />}
+                <div className="flex items-center gap-2">
+                  {selectedPlan === key && <CheckCircle className="h-5 w-5 text-indigo-600" />}
+                  <ReadCardButton text={`${plan.name} - ${plan.price} TND/${plan.interval} - ${plan.features.join(', ')}`} />
+                </div>
               </div>
               <p className="mt-2 text-4xl font-bold text-indigo-600">
                 {plan.price} TND<span className="text-sm font-normal text-slate-500">/{plan.interval}</span>

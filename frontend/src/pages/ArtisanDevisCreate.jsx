@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Bot, FileSignature, Loader2, Plus, Sparkles, Trash2 } from "lucide-react";
+import ReadCardButton from '../components/ReadCardButton';
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import SimpleFooter from "../components/Footer";
@@ -299,9 +300,12 @@ export default function ArtisanDevisCreate() {
               </div>
 
               <div className="flex-1">
-                <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
-                  Créer un devis
-                </h1>
+                <div className="flex items-center justify-between gap-2">
+                  <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
+                    Créer un devis
+                  </h1>
+                  <ReadCardButton text="Créer un devis - Générez un devis professionnel avec l'aide de l'IA" />
+                </div>
                 <p className="mt-1 text-sm text-slate-500">
                   Générez un devis professionnel et laissez l’IA vous proposer
                   des lignes prêtes à ajuster.

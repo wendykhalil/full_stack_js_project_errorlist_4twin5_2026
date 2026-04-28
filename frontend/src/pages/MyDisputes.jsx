@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
+import ReadCardButton from '../components/ReadCardButton';
 import { Plus, X, MessageSquare, ChevronRight } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import PageShell from '../components/PageShell';
@@ -18,17 +19,17 @@ const STATUS_STYLE = {
 };
 const STATUS_LABEL = {
   OPEN: 'Ouvert', IN_PROGRESS: 'En cours',
-  RESOLVED_FOR_OPENER: 'Résolu (en votre faveur)',
-  RESOLVED_FOR_OPPONENT: 'Résolu (en faveur de l\'autre partie)',
-  CLOSED: 'Clôturé',
+  RESOLVED_FOR_OPENER: 'RÃ©solu (en votre faveur)',
+  RESOLVED_FOR_OPPONENT: 'RÃ©solu (en faveur de l\'autre partie)',
+  CLOSED: 'ClÃ´turÃ©',
 };
 
 const REASONS = [
-  { value: 'NOT_DELIVERED', label: 'Commande non livrée' },
-  { value: 'WRONG_PRODUCT', label: 'Mauvais produit reçu' },
+  { value: 'NOT_DELIVERED', label: 'Commande non livrÃ©e' },
+  { value: 'WRONG_PRODUCT', label: 'Mauvais produit reÃ§u' },
   { value: 'NO_SHOW', label: 'Artisan absent' },
-  { value: 'PAYMENT_ISSUE', label: 'Problème de paiement' },
-  { value: 'QUALITY_ISSUE', label: 'Problème de qualité' },
+  { value: 'PAYMENT_ISSUE', label: 'ProblÃ¨me de paiement' },
+  { value: 'QUALITY_ISSUE', label: 'ProblÃ¨me de qualitÃ©' },
   { value: 'OTHER', label: 'Autre' },
 ];
 
@@ -68,10 +69,10 @@ export default function MyDisputes() {
   const [form, setForm] = useState({ againstId: '', sourceType: 'ORDER', sourceId: '', reason: '', description: '' });
 
   const { errors: formErrors, validate } = useFormValidation({
-    againstId: [rules.required('L\'utilisateur concerné est requis')],
+    againstId: [rules.required('L\'utilisateur concernÃ© est requis')],
     sourceId:  [rules.required('L\'identifiant de la commande/demande est requis')],
     reason:    [rules.required('La raison est requise')],
-    description: [rules.required('La description est requise'), rules.minLength(10, 'Minimum 10 caractères')],
+    description: [rules.required('La description est requise'), rules.minLength(10, 'Minimum 10 caractÃ¨res')],
   });
   const { globalError, handleError, clearErrors } = useServerErrors();
 
@@ -149,7 +150,7 @@ export default function MyDisputes() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Mes litiges</h1>
-            <p className="mt-1 text-sm text-slate-500">Ouvrez un litige en cas de problème avec une commande ou une demande</p>
+            <p className="mt-1 text-sm text-slate-500">Ouvrez un litige en cas de problÃ¨me avec une commande ou une demande</p>
           </div>
           <Hint text="Ouvrir un nouveau litige concernant une commande ou une demande de service.">
           <button onClick={() => setCreateOpen(true)}
@@ -162,7 +163,7 @@ export default function MyDisputes() {
         {err && <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">{err}</div>}
 
         {loading ? (
-          <div className="py-16 text-center text-slate-400">Chargement…</div>
+          <div className="py-16 text-center text-slate-400">Chargementâ€¦</div>
         ) : disputes.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-slate-300 py-16 text-center">
             <p className="text-slate-500">Aucun litige pour l'instant.</p>
@@ -178,14 +179,15 @@ export default function MyDisputes() {
                         {STATUS_LABEL[d.status] || d.status}
                       </span>
                       <span className="text-xs text-slate-400">{d.sourceType}</span>
+                      <ReadCardButton text={`Litige - ${d.sourceType} - Statut: ${STATUS_LABEL[d.status] || d.status} - Contre: ${d.againstId?.firstName} ${d.againstId?.lastName} - ${d.description?.slice(0, 100)}`} />
                     </div>
-                    <p className="mt-1 font-medium text-slate-900">{d.description?.slice(0, 80)}…</p>
+                    <p className="mt-1 font-medium text-slate-900">{d.description?.slice(0, 80)}â€¦</p>
                     <p className="text-xs text-slate-400 mt-1">
-                      Contre: {d.againstId?.firstName} {d.againstId?.lastName} ·
+                      Contre: {d.againstId?.firstName} {d.againstId?.lastName} Â·
                       {new Date(d.createdAt).toLocaleDateString('fr-TN')}
                     </p>
                   </div>
-                  <Hint text="Voir l'historique complet des messages et l'état de ce litige.">
+                  <Hint text="Voir l'historique complet des messages et l'Ã©tat de ce litige.">
                   <button onClick={() => openDetail(d._id)}
                     className="rounded-xl border border-slate-200 p-2 hover:bg-slate-50">
                     <ChevronRight className="h-4 w-4 text-slate-500" />
@@ -214,7 +216,7 @@ export default function MyDisputes() {
 
           <div>
             <label className="text-sm font-medium text-slate-700">
-              {form.sourceType === 'ORDER' ? 'Commande concernée *' : 'Demande de service concernée *'}
+              {form.sourceType === 'ORDER' ? 'Commande concernÃ©e *' : 'Demande de service concernÃ©e *'}
             </label>
             <select value={form.sourceId} onChange={e => {
               const selectedId = e.target.value;
@@ -233,11 +235,11 @@ export default function MyDisputes() {
             }}
               className={`mt-1 w-full rounded-xl border px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-red-500 ${formErrors.sourceId ? 'border-red-400' : 'border-slate-200'}`}
               disabled={sourcesLoading}>
-              <option value="">{sourcesLoading ? 'Chargement…' : 'Choisir…'}</option>
+              <option value="">{sourcesLoading ? 'Chargementâ€¦' : 'Choisirâ€¦'}</option>
               {form.sourceType === 'ORDER'
                 ? orders.map(o => (
                     <option key={o._id} value={o._id}>
-                      {o.orderNumber || o._id.slice(-8)} — {o.productId?.name || 'Produit'}
+                      {o.orderNumber || o._id.slice(-8)} â€” {o.productId?.name || 'Produit'}
                     </option>
                   ))
                 : serviceRequests.map(s => (
@@ -265,7 +267,7 @@ export default function MyDisputes() {
             <label className="text-sm font-medium text-slate-700">Raison *</label>
             <select value={form.reason} onChange={e => setForm(s => ({ ...s, reason: e.target.value }))}
               className={`mt-1 w-full rounded-xl border px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-red-500 ${formErrors.reason ? 'border-red-400' : 'border-slate-200'}`}>
-              <option value="">Choisir une raison…</option>
+              <option value="">Choisir une raisonâ€¦</option>
               {REASONS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
             </select>
             <FieldError error={formErrors.reason} />
@@ -274,20 +276,20 @@ export default function MyDisputes() {
             <label className="text-sm font-medium text-slate-700">Description *</label>
             <textarea value={form.description} onChange={e => setForm(s => ({ ...s, description: e.target.value }))} rows={4}
               className={`mt-1 w-full rounded-xl border px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-red-500 ${formErrors.description ? 'border-red-400' : 'border-slate-200'}`}
-              placeholder="Décrivez le problème en détail…" />
+              placeholder="DÃ©crivez le problÃ¨me en dÃ©tailâ€¦" />
             <FieldError error={formErrors.description} />
           </div>
           {globalError && <p className="text-sm text-red-600">{globalError}</p>}
           <button type="submit" disabled={saving || !form.sourceId || !form.againstId}
             className="w-full rounded-xl bg-red-600 py-3 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50">
-            {saving ? 'Envoi…' : 'Ouvrir le litige'}
+            {saving ? 'Envoiâ€¦' : 'Ouvrir le litige'}
           </button>
         </form>
       </Modal>
 
       {/* Detail Modal */}
-      <Modal open={!!detail} title="Détail du litige" onClose={() => setDetail(null)}>
-        {detailLoading ? <div className="py-8 text-center text-slate-400">Chargement…</div> : detail ? (
+      <Modal open={!!detail} title="DÃ©tail du litige" onClose={() => setDetail(null)}>
+        {detailLoading ? <div className="py-8 text-center text-slate-400">Chargementâ€¦</div> : detail ? (
           <div className="space-y-5">
             <div className="rounded-2xl bg-slate-50 p-4 space-y-1 text-sm">
               <div className="flex items-center gap-2">
@@ -327,7 +329,7 @@ export default function MyDisputes() {
                 <Hint text="Envoyer un message dans le fil de discussion de ce litige.">
                 <input value={newMsg} onChange={e => setNewMsg(e.target.value)}
                   className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="Votre message…" />
+                  placeholder="Votre messageâ€¦" />
                 </Hint>
                 <button type="submit" disabled={sendingMsg || !newMsg.trim()}
                   className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50">
@@ -341,4 +343,5 @@ export default function MyDisputes() {
     </PageShell>
   );
 }
+
 

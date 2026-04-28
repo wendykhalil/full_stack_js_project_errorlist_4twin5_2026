@@ -1,11 +1,12 @@
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+﻿import React, { useEffect, useMemo, useState, useCallback } from "react";
+import ReadCardButton from '../components/ReadCardButton';
 import { Search, ChevronDown, Loader2, ShieldOff, ShieldCheck, X } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { setUserSubscription } from '../auth/api';
 import { useTranslation } from '../i18n';
 import { Hint } from "../components/MouseTooltip";
 
-// Les constantes de durée restent inchangées
+// Les constantes de durÃ©e restent inchangÃ©es
 const DURATIONS = [
   { value: "1h", labelKey: "1h" },
   { value: "3h", labelKey: "3h" },
@@ -29,12 +30,12 @@ const Pill = ({ children, tone = "slate" }) => (
 );
 
 function formatDate(iso) {
-  if (!iso) return "—";
+  if (!iso) return "â€”";
   return new Date(iso).toLocaleDateString("fr-TN", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
 function formatBlockedUntil(iso) {
-  if (!iso) return "—";
+  if (!iso) return "â€”";
   return new Date(iso).toLocaleString("fr-TN", {
     day: "2-digit", month: "2-digit", year: "numeric",
     hour: "2-digit", minute: "2-digit",
@@ -169,9 +170,9 @@ export default function AdminUsers() {
       const target = user.subscriptionStatus === 'ACTIVE' ? { plan: 'FREE', status: 'CANCELED' } : { plan: 'PRO', status: 'ACTIVE' };
       await setUserSubscription({ token, userId: user._id, ...target });
       await fetchUsers();
-      alert(`Abonnement mis à jour pour ${user.firstName} ${user.lastName}`);
+      alert(`Abonnement mis Ã  jour pour ${user.firstName} ${user.lastName}`);
     } catch (e) {
-      console.error('Erreur mise à jour abonnement', e);
+      console.error('Erreur mise Ã  jour abonnement', e);
       alert(e.message);
     } finally {
       setSubLoading(null);
@@ -213,7 +214,7 @@ export default function AdminUsers() {
 
         {/* Filters */}
         <div className="mb-4 sm:mb-6 flex flex-col gap-3 sm:flex-row">
-          <Hint text="Rechercher par nom, email ou téléphone">
+          <Hint text="Rechercher par nom, email ou tÃ©lÃ©phone">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500" />
             <input
@@ -224,7 +225,7 @@ export default function AdminUsers() {
             />
           </div>
           </Hint>
-          <Hint text="Filtrer les utilisateurs par rôle">
+          <Hint text="Filtrer les utilisateurs par rÃ´le">
           <div className="relative w-full sm:w-56 md:w-64 lg:w-72">
             <select
               value={roleFilter}
@@ -245,13 +246,14 @@ export default function AdminUsers() {
         {/* Table Card - Full width with responsive table layout */}
         <div className="rounded-lg sm:rounded-xl lg:rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800 w-full overflow-hidden">
           {/* Table Header with count */}
-          <div className="border-b border-slate-100 px-3 sm:px-4 md:px-5 lg:px-6 py-3 sm:py-4 dark:border-slate-700">
+          <div className="border-b border-slate-100 px-3 sm:px-4 md:px-5 lg:px-6 py-3 sm:py-4 dark:border-slate-700 flex items-center justify-between">
             <span className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300">
               {t('adminUsers.tableTitle')}
               <span className="ml-2 text-xs font-normal text-slate-400 dark:text-slate-500">
                 {t('adminUsers.displayedCount', { count: filtered.length })}
               </span>
             </span>
+            <ReadCardButton text={`${t('adminUsers.tableTitle')} - ${filtered.length} utilisateurs`} />
           </div>
 
           {/* Loading State */}
@@ -290,8 +292,8 @@ export default function AdminUsers() {
                         
                         <div className="grid grid-cols-2 gap-3 text-xs mb-3">
                           <div>
-                            <span className="text-slate-500 dark:text-slate-400">Téléphone:</span>
-                            <span className="ml-1 text-slate-700 dark:text-slate-300">{u.phone || "—"}</span>
+                            <span className="text-slate-500 dark:text-slate-400">TÃ©lÃ©phone:</span>
+                            <span className="ml-1 text-slate-700 dark:text-slate-300">{u.phone || "â€”"}</span>
                           </div>
                           <div>
                             <span className="text-slate-500 dark:text-slate-400">Abonnement:</span>
@@ -310,7 +312,7 @@ export default function AdminUsers() {
                             </span>
                           </div>
                           <div>
-                            <span className="text-slate-500 dark:text-slate-400">Vérifié:</span>
+                            <span className="text-slate-500 dark:text-slate-400">VÃ©rifiÃ©:</span>
                             <span className="ml-1">
                               <Pill tone={u.emailVerified ? "green" : "orange"}>
                                 {u.emailVerified ? t('adminUsers.emailVerified.verified') : t('adminUsers.emailVerified.pending')}
@@ -323,7 +325,7 @@ export default function AdminUsers() {
                           </div>
                           {isBlocked && u.blockedUntil && (
                             <div className="col-span-2">
-                              <span className="text-slate-500 dark:text-slate-400">Bloqué jusqu'à:</span>
+                              <span className="text-slate-500 dark:text-slate-400">BloquÃ© jusqu'Ã :</span>
                               <span className="ml-1 text-slate-700 dark:text-slate-300">{formatBlockedUntil(u.blockedUntil)}</span>
                             </div>
                           )}
@@ -331,11 +333,11 @@ export default function AdminUsers() {
 
                         <div className="flex gap-2">
                           {isAdmin ? (
-                            <span className="text-xs text-slate-300 dark:text-slate-600">Admin - actions désactivées</span>
+                            <span className="text-xs text-slate-300 dark:text-slate-600">Admin - actions dÃ©sactivÃ©es</span>
                           ) : (
                             <>
                               {isBlocked ? (
-                                <Hint text="Rétablir l'accès de cet utilisateur">
+                                <Hint text="RÃ©tablir l'accÃ¨s de cet utilisateur">
                                 <button
                                   onClick={() => handleUnblock(u._id)}
                                   className="flex-1 inline-flex items-center justify-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700 hover:bg-emerald-100 transition-colors dark:border-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-400 dark:hover:bg-emerald-900/60"
@@ -345,7 +347,7 @@ export default function AdminUsers() {
                                 </button>
                                 </Hint>
                               ) : (
-                                <Hint text="Bloquer temporairement l'accès de cet utilisateur">
+                                <Hint text="Bloquer temporairement l'accÃ¨s de cet utilisateur">
                                 <button
                                   onClick={() => setBlockTarget(u)}
                                   className="flex-1 inline-flex items-center justify-center gap-1 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-100 transition-colors dark:border-red-800 dark:bg-red-900/40 dark:text-red-400 dark:hover:bg-red-900/60"
@@ -364,7 +366,7 @@ export default function AdminUsers() {
                                 {subLoading === u._id ? (
                                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                                 ) : u.subscriptionStatus === 'ACTIVE' ? (
-                                  'Désactiver'
+                                  'DÃ©sactiver'
                                 ) : (
                                   'Activer abonnement'
                                 )}
@@ -419,7 +421,7 @@ export default function AdminUsers() {
                             {u.email}
                           </td>
                           <td className="px-4 py-3 text-slate-600 whitespace-nowrap dark:text-slate-300 text-sm">
-                            {u.phone || "—"}
+                            {u.phone || "â€”"}
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap">
                             <Pill>{t(`adminUsers.roles.${u.role?.toLowerCase()}`)}</Pill>
@@ -435,7 +437,7 @@ export default function AdminUsers() {
                             </Pill>
                           </td>
                           <td className="px-4 py-3 text-slate-500 text-xs whitespace-nowrap dark:text-slate-400">
-                            {isBlocked && u.blockedUntil ? formatBlockedUntil(u.blockedUntil) : "—"}
+                            {isBlocked && u.blockedUntil ? formatBlockedUntil(u.blockedUntil) : "â€”"}
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap">
                             <Pill tone={u.emailVerified ? "green" : "orange"}>
@@ -447,11 +449,11 @@ export default function AdminUsers() {
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap">
                             {isAdmin ? (
-                              <span className="text-xs text-slate-300 dark:text-slate-600">—</span>
+                              <span className="text-xs text-slate-300 dark:text-slate-600">â€”</span>
                             ) : (
                               <div className="flex flex-col gap-2">
                                 {isBlocked ? (
-                                  <Hint text="Rétablir l'accès de cet utilisateur">
+                                  <Hint text="RÃ©tablir l'accÃ¨s de cet utilisateur">
                                   <button
                                     onClick={() => handleUnblock(u._id)}
                                     className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-100 transition-colors dark:border-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-400 dark:hover:bg-emerald-900/60"
@@ -461,7 +463,7 @@ export default function AdminUsers() {
                                   </button>
                                   </Hint>
                                 ) : (
-                                  <Hint text="Bloquer temporairement l'accès de cet utilisateur">
+                                  <Hint text="Bloquer temporairement l'accÃ¨s de cet utilisateur">
                                   <button
                                     onClick={() => setBlockTarget(u)}
                                     className="inline-flex items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-2.5 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100 transition-colors dark:border-red-800 dark:bg-red-900/40 dark:text-red-400 dark:hover:bg-red-900/60"
@@ -481,7 +483,7 @@ export default function AdminUsers() {
                                   {subLoading === u._id ? (
                                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
                                   ) : u.subscriptionStatus === 'ACTIVE' ? (
-                                    'Désactiver abonnement'
+                                    'DÃ©sactiver abonnement'
                                   ) : (
                                     'Activer abonnement'
                                   )}
@@ -510,3 +512,5 @@ export default function AdminUsers() {
     </div>
   );
 }
+
+

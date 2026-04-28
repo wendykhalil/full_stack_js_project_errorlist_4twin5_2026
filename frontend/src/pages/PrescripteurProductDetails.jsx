@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
+import ReadCardButton from '../components/ReadCardButton';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from '../i18n';
 import {
@@ -39,7 +40,7 @@ export default function PrescripteurProductDetails() {
         if (found) {
           setProduct(found);
         } else {
-          setError(t('product.notFound', 'Produit non trouvé'));
+          setError(t('product.notFound', 'Produit non trouvÃ©'));
         }
       } catch (err) {
         setError(err.message);
@@ -62,7 +63,7 @@ export default function PrescripteurProductDetails() {
   if (error || !product) {
     return (
       <div className="flex-1 flex items-center justify-center py-20">
-        <div className="text-red-600">{error || t('product.notFound', 'Produit non trouvé')}</div>
+        <div className="text-red-600">{error || t('product.notFound', 'Produit non trouvÃ©')}</div>
       </div>
     );
   }
@@ -91,7 +92,7 @@ export default function PrescripteurProductDetails() {
       </button>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* ── Images ── */}
+        {/* â”€â”€ Images â”€â”€ */}
         <div>
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
             <div className="aspect-square rounded-xl bg-slate-100 overflow-hidden">
@@ -126,15 +127,18 @@ export default function PrescripteurProductDetails() {
           </div>
         </div>
 
-        {/* ── Details ── */}
+        {/* â”€â”€ Details â”€â”€ */}
         <div className="space-y-6">
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             {/* Name + category */}
-            <h1 className="text-3xl font-semibold text-slate-900">{product.name}</h1>
+            <div className="flex items-start justify-between gap-3">
+              <h1 className="text-3xl font-semibold text-slate-900">{product.name}</h1>
+              <ReadCardButton text={`${product.name}. Catégorie: ${product.categoryId?.name}. Prix: ${product.price} TND. Stock: ${product.stock > 0 ? product.stock + ' unités' : 'Rupture'}. ${product.description || ''}`} size="md" />
+            </div>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-3 py-1 text-sm font-medium text-indigo-700">
                 <Tag className="h-3.5 w-3.5" />
-                {product.categoryId?.name || t('common.uncategorized', 'Non catégorisé')}
+                {product.categoryId?.name || t('common.uncategorized', 'Non catÃ©gorisÃ©')}
               </span>
               <span
                 className={`text-sm font-medium px-3 py-1 rounded-full ${
@@ -152,7 +156,7 @@ export default function PrescripteurProductDetails() {
               <span className="text-3xl font-bold text-indigo-700">
                 {product.price?.toFixed(2)} TND
               </span>
-              <span className="text-sm text-slate-500">/ {product.unit || 'pièce'}</span>
+              <span className="text-sm text-slate-500">/ {product.unit || 'piÃ¨ce'}</span>
             </div>
 
             {/* Description */}
@@ -199,7 +203,7 @@ export default function PrescripteurProductDetails() {
             </div>
           </div>
 
-          {/* ── Fiche technique inline ── */}
+          {/* â”€â”€ Fiche technique inline â”€â”€ */}
           {hasSheet && (
             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
               <TechnicalSheetViewer sheet={sheet} title={product.name} />
@@ -212,3 +216,4 @@ export default function PrescripteurProductDetails() {
     </div>
   );
 }
+

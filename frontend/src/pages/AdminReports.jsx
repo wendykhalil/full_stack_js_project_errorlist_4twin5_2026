@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
+﻿import React, { useEffect, useMemo, useState } from 'react';
+import ReadCardButton from '../components/ReadCardButton';
 import {
   AlertTriangle, Ban, CheckCircle, Clock, Eye, Flag,
   Search, ShieldCheck, X, Filter, User, FileText,
@@ -11,14 +12,14 @@ import { Hint } from '../components/MouseTooltip';
 const STATUS = {
   PENDING:      { label: 'En attente',  color: 'bg-amber-100 text-amber-700 border-amber-200',   dot: 'bg-amber-500'   },
   UNDER_REVIEW: { label: 'En cours',    color: 'bg-blue-100 text-blue-700 border-blue-200',       dot: 'bg-blue-500'    },
-  RESOLVED:     { label: 'Résolu',      color: 'bg-emerald-100 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-  REJECTED:     { label: 'Rejeté',      color: 'bg-slate-100 text-slate-600 border-slate-200',    dot: 'bg-slate-400'   },
+  RESOLVED:     { label: 'RÃ©solu',      color: 'bg-emerald-100 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
+  REJECTED:     { label: 'RejetÃ©',      color: 'bg-slate-100 text-slate-600 border-slate-200',    dot: 'bg-slate-400'   },
 };
 
 const SEVERITY = {
   LOW:      { label: 'Faible',   color: 'bg-slate-100 text-slate-600'   },
   MEDIUM:   { label: 'Moyen',    color: 'bg-amber-100 text-amber-700'   },
-  HIGH:     { label: 'Élevé',    color: 'bg-orange-100 text-orange-700' },
+  HIGH:     { label: 'Ã‰levÃ©',    color: 'bg-orange-100 text-orange-700' },
   CRITICAL: { label: 'Critique', color: 'bg-red-100 text-red-700'       },
 };
 
@@ -117,7 +118,7 @@ export default function AdminReports() {
             </div>
             <div>
               <h1 className="text-3xl font-bold tracking-tight text-slate-900">Signalements</h1>
-              <p className="text-sm text-slate-500">Modération et gestion des signalements utilisateurs</p>
+              <p className="text-sm text-slate-500">ModÃ©ration et gestion des signalements utilisateurs</p>
             </div>
           </div>
         </div>
@@ -129,7 +130,7 @@ export default function AdminReports() {
           { label: 'Total',       value: stats.total,    icon: Flag,         bg: 'bg-slate-100',   text: 'text-slate-600'  },
           { label: 'En attente',  value: stats.pending,  icon: Clock,        bg: 'bg-amber-100',   text: 'text-amber-600'  },
           { label: 'En cours',    value: stats.review,   icon: TrendingUp,   bg: 'bg-blue-100',    text: 'text-blue-600'   },
-          { label: 'Résolus',     value: stats.resolved, icon: CheckCircle,  bg: 'bg-emerald-100', text: 'text-emerald-600'},
+          { label: 'RÃ©solus',     value: stats.resolved, icon: CheckCircle,  bg: 'bg-emerald-100', text: 'text-emerald-600'},
         ].map(({ label, value, icon: Icon, bg, text }) => (
           <div key={label} className="overflow-hidden rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between">
@@ -172,8 +173,8 @@ export default function AdminReports() {
             <option value="ALL">Tous les statuts</option>
             <option value="PENDING">En attente</option>
             <option value="UNDER_REVIEW">En cours</option>
-            <option value="RESOLVED">Résolu</option>
-            <option value="REJECTED">Rejeté</option>
+            <option value="RESOLVED">RÃ©solu</option>
+            <option value="REJECTED">RejetÃ©</option>
           </select>
         </div>
       </div>
@@ -187,13 +188,13 @@ export default function AdminReports() {
         ) : filteredReports.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-slate-400">
             <Flag className="mb-3 h-12 w-12 opacity-30" />
-            <p className="text-sm font-medium">Aucun signalement trouvé</p>
+            <p className="text-sm font-medium">Aucun signalement trouvÃ©</p>
           </div>
         ) : (
           <>
             {/* Table header */}
             <div className="hidden border-b border-slate-100 bg-slate-50 px-6 py-3 sm:grid sm:grid-cols-[1fr_1fr_120px_100px_80px] sm:gap-4">
-              {['Signalé', 'Signalé par', 'Raison', 'Statut', ''].map(h => (
+              {['SignalÃ©', 'SignalÃ© par', 'Raison', 'Statut', ''].map(h => (
                 <span key={h} className="text-xs font-bold uppercase tracking-wide text-slate-400">{h}</span>
               ))}
             </div>
@@ -220,7 +221,7 @@ export default function AdminReports() {
                     {/* Reason */}
                     <div>
                       <span className={`inline-flex items-center rounded-xl px-2.5 py-1 text-xs font-semibold ${sv.color}`}>
-                        {report.reason || '—'}
+                        {report.reason || 'â€”'}
                       </span>
                     </div>
                     {/* Status */}
@@ -263,10 +264,13 @@ export default function AdminReports() {
                   <p className="text-xs text-slate-400">#{selectedReport._id?.slice(-8)}</p>
                 </div>
               </div>
-              <button onClick={() => { setSelectedReport(null); setActionType(''); }}
-                className="flex h-8 w-8 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700">
-                <X className="h-5 w-5" />
-              </button>
+              <div className="flex items-center gap-2">
+                <ReadCardButton text={`Signalement #${selectedReport._id?.slice(-8)}. Signalé: ${selectedReport.reportedUser?.name}. Par: ${selectedReport.reportedBy?.name}. Statut: ${selectedReport.status}. ${selectedReport.description || ''}`} />
+                <button onClick={() => { setSelectedReport(null); setActionType(''); }}
+                  className="flex h-8 w-8 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
             </div>
 
             <div className="p-7 space-y-6">
@@ -274,21 +278,21 @@ export default function AdminReports() {
               {/* Parties */}
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">Utilisateur signalé</p>
+                  <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">Utilisateur signalÃ©</p>
                   <div className="flex items-center gap-3">
                     <Avatar name={selectedReport.reportedUser?.name} size={10} />
                     <div>
-                      <p className="font-semibold text-slate-900">{selectedReport.reportedUser?.name || '—'}</p>
+                      <p className="font-semibold text-slate-900">{selectedReport.reportedUser?.name || 'â€”'}</p>
                       <p className="text-xs text-slate-500">{selectedReport.reportedUser?.role || ''}</p>
                     </div>
                   </div>
                 </div>
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">Signalé par</p>
+                  <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">SignalÃ© par</p>
                   <div className="flex items-center gap-3">
                     <Avatar name={selectedReport.reportedBy?.name} size={10} />
                     <div>
-                      <p className="font-semibold text-slate-900">{selectedReport.reportedBy?.name || '—'}</p>
+                      <p className="font-semibold text-slate-900">{selectedReport.reportedBy?.name || 'â€”'}</p>
                       <p className="text-xs text-slate-500">{selectedReport.reportedBy?.role || ''}</p>
                     </div>
                   </div>
@@ -299,7 +303,7 @@ export default function AdminReports() {
               <div className="grid gap-3 sm:grid-cols-3">
                 {[
                   { label: 'Statut',    value: STATUS[selectedReport.status]?.label || selectedReport.status },
-                  { label: 'Sévérité',  value: SEVERITY[selectedReport.severity]?.label || selectedReport.severity || '—' },
+                  { label: 'SÃ©vÃ©ritÃ©',  value: SEVERITY[selectedReport.severity]?.label || selectedReport.severity || 'â€”' },
                   { label: 'Date',      value: new Date(selectedReport.createdAt).toLocaleDateString('fr-FR') },
                 ].map(({ label, value }) => (
                   <div key={label} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
@@ -332,14 +336,14 @@ export default function AdminReports() {
                 </div>
                 <div className="divide-y divide-slate-100">
                   {(selectedReport.actionHistory || []).length === 0 ? (
-                    <p className="px-5 py-4 text-sm text-slate-400">Aucune action enregistrée.</p>
+                    <p className="px-5 py-4 text-sm text-slate-400">Aucune action enregistrÃ©e.</p>
                   ) : (
                     selectedReport.actionHistory.map((item, idx) => (
                       <div key={idx} className="flex items-center gap-3 px-5 py-3">
                         <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" />
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-slate-800">
-                            {item.action} <span className="font-normal text-slate-400">·</span> {item.fromStatus} → {item.toStatus}
+                            {item.action} <span className="font-normal text-slate-400">Â·</span> {item.fromStatus} â†’ {item.toStatus}
                           </p>
                           {item.note && <p className="text-xs text-slate-500">{item.note}</p>}
                         </div>
@@ -372,7 +376,7 @@ export default function AdminReports() {
                       Raison {(actionType === 'WARN' || actionType === 'BAN') && <span className="text-red-500">*</span>}
                     </label>
                     <textarea value={actionReason} onChange={(e) => setActionReason(e.target.value)} rows={3}
-                      placeholder="Décrivez la raison de cette action..."
+                      placeholder="DÃ©crivez la raison de cette action..."
                       className="w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-500/10" />
                   </div>
                   <div>
@@ -403,3 +407,4 @@ export default function AdminReports() {
     </div>
   );
 }
+

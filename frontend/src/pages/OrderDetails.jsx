@@ -22,6 +22,7 @@ import { getOrderById, sendMessage, getOrderMessages, markMessageAsRead } from '
 import OrderStatusBadge from '../components/OrderStatusBadge';
 import OrderReviewForm from '../components/OrderReviewForm';
 import SimpleFooter from '../components/Footer';
+import ReadCardButton from '../components/ReadCardButton';
 
 export default function OrderDetails() {
   const { t } = useTranslation();
@@ -266,10 +267,13 @@ export default function OrderDetails() {
             <div className="lg:col-span-2 space-y-6">
               {/* Produit */}
               <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
-                  <Package className="h-5 w-5" />
-                  {t('orders.product', 'Produit commandé')}
-                </h2>
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+                    <Package className="h-5 w-5" />
+                    {t('orders.product', 'Produit commandé')}
+                  </h2>
+                  <ReadCardButton text={`Produit: ${order.productId?.name || 'Non disponible'} - Quantité: ${order.quantity} - Prix: ${order.productId?.price?.toFixed(2)} TND`} />
+                </div>
                 <div className="mt-4 flex gap-4">
                   {order.productId?.imageUrls?.[0] && (
                     <img
@@ -302,10 +306,13 @@ export default function OrderDetails() {
               )}
 
               {/* Adresse de livraison */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">                <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
-                  <MapPin className="h-5 w-5" />
-                  {t('orders.deliveryAddress', 'Adresse de livraison')}
-                </h2>
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+                    <MapPin className="h-5 w-5" />
+                    {t('orders.deliveryAddress', 'Adresse de livraison')}
+                  </h2>
+                  <ReadCardButton text={`Adresse de livraison: ${getDeliveryAddressString()}`} />
+                </div>
                 <div className="mt-4">
                   <p className="text-slate-900">{getDeliveryAddressString()}</p>
                   {order.deliveryAddress?.additionalInfo && (

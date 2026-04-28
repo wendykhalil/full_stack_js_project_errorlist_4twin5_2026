@@ -8,6 +8,7 @@ import { apiFetch } from "../auth/api";
 import { useAuth } from "../auth/AuthContext";
 import PageShell from '../components/PageShell';
 import { Hint } from "../components/MouseTooltip";
+import ReadCardButton from '../components/ReadCardButton';
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 const ASSET_BASE = API_URL.replace(/\/api\/?$/, "");
@@ -287,7 +288,10 @@ function ProjectCard({ project, onView, onMessage, activeMenuId, setActiveMenuId
       <div className="p-6">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h3 className="line-clamp-1 text-xl font-semibold text-slate-900">{project.title}</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="line-clamp-1 text-xl font-semibold text-slate-900">{project.title}</h3>
+              <ReadCardButton text={`${project.title} - ${project.category || ''} - ${project.location?.city || ''} - Artisan: ${name} - Budget: ${project.budgetTND ? Number(project.budgetTND).toLocaleString() + ' TND' : '—'} - ${formatDate(project.startDate || project.createdAt)}`} />
+            </div>
             {project.description ? <p className="mt-2 line-clamp-2 text-sm text-slate-600">{project.description}</p> : null}
           </div>
         </div>

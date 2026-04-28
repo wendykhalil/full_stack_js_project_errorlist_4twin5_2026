@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
+import ReadCardButton from '../components/ReadCardButton';
 import { useParams, useNavigate } from "react-router-dom";
 import { ChevronDown, Upload, FileText, Plus, X, Image, File } from "lucide-react";
 import SimpleFooter from "../components/Footer";
@@ -114,7 +115,7 @@ export default function FournisseurProduitEdit() {
     description: ''
   });
   
-  // États pour les fichiers
+  // Ã‰tats pour les fichiers
   const [imageFiles, setImageFiles] = useState([]);
   const [docFiles, setDocFiles] = useState([]);
   const [existingImages, setExistingImages] = useState([]);
@@ -128,7 +129,7 @@ export default function FournisseurProduitEdit() {
 
   const { fieldErrors: serverErrors, globalError: serverGlobalError, handleError, clearErrors } = useServerErrors();
   
-  // États pour les catégories
+  // Ã‰tats pour les catÃ©gories
   const [categories, setCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [showNewCategoryInput, setShowNewCategoryInput] = useState(false);
@@ -181,7 +182,7 @@ export default function FournisseurProduitEdit() {
         console.log('Fetching product with ID:', id);
         const data = await getMyProducts({ token, search: '', page: 1, limit: 100 });
         
-        // Gérer différentes structures de données
+        // GÃ©rer diffÃ©rentes structures de donnÃ©es
         let productsArray = [];
         if (data?.products) {
           productsArray = data.products;
@@ -270,10 +271,10 @@ export default function FournisseurProduitEdit() {
         price: formData.price,
         stock: formData.stock,
         description: formData.description,
-        // Envoyer les fichiers existants qui n'ont pas été supprimés
+        // Envoyer les fichiers existants qui n'ont pas Ã©tÃ© supprimÃ©s
         existingImages: existingImages,
         existingDocs: existingDocs,
-        // Envoyer la liste des fichiers à supprimer
+        // Envoyer la liste des fichiers Ã  supprimer
         imagesToDelete: imagesToDelete,
         docsToDelete: docsToDelete
       };
@@ -306,7 +307,7 @@ export default function FournisseurProduitEdit() {
   if (loading || loadingCategories) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <div className="text-center">Chargement des données du produit...</div>
+        <div className="text-center">Chargement des donnÃ©es du produit...</div>
       </div>
     );
   }
@@ -330,6 +331,10 @@ export default function FournisseurProduitEdit() {
       </div>
 
       <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-slate-900">{t('fournisseurProduitNew.formTitle', 'Modifier le produit')}</h2>
+          <ReadCardButton text={t('fournisseurProduitNew.formTitle', 'Modifier le produit')} />
+        </div>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-6 md:grid-cols-2">
             <Input 
@@ -340,7 +345,7 @@ export default function FournisseurProduitEdit() {
               error={serverErrors.name}
             />
             
-            {/* Catégorie avec option d'ajout */}
+            {/* CatÃ©gorie avec option d'ajout */}
             <div>
               <label className="mb-2 block text-sm font-semibold text-slate-900">
                 {t('fournisseurProduitNew.categoryLabel')}
@@ -376,7 +381,7 @@ export default function FournisseurProduitEdit() {
                       type="text"
                       value={newCategoryName}
                       onChange={(e) => setNewCategoryName(e.target.value)}
-                      placeholder="Nouvelle catégorie"
+                      placeholder="Nouvelle catÃ©gorie"
                       className="flex-1 rounded-xl border border-slate-200 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none"
                       autoFocus
                     />
@@ -482,5 +487,8 @@ export default function FournisseurProduitEdit() {
     </div>
   );
 }
+
+
+
 
 

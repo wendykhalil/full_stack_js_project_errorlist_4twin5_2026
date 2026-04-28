@@ -1,7 +1,8 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { getSupplierStats, getSupplierOrders, getMyProducts } from '../auth/api';
 import SimpleFooter from '../components/Footer';
+import ReadCardButton from '../components/ReadCardButton';
 import {
   TrendingUp, TrendingDown, Package, ShoppingBag,
   DollarSign, BarChart2, Lightbulb, AlertCircle, CheckCircle,
@@ -158,6 +159,7 @@ function HBarChart({ data, color, valueFormatter = v => v }) {
 /* ──────────────────────── sub-components ─────────────────────── */
 
 function KpiCard({ icon, label, value, sub, trend, color = 'blue' }) {
+  const cardRef = useRef();
   const colors = {
     blue:   'bg-blue-50 text-blue-600 border-blue-100',
     green:  'bg-green-50 text-green-600 border-green-100',
@@ -168,12 +170,15 @@ function KpiCard({ icon, label, value, sub, trend, color = 'blue' }) {
   const TrendIcon = trend === 'up' ? TrendingUp : trend === 'down' ? TrendingDown : Minus;
   const trendColor = trend === 'up' ? 'text-green-600' : trend === 'down' ? 'text-red-500' : 'text-slate-400';
   return (
-    <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+    <div ref={cardRef} className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
       <div className="mb-3 flex items-start justify-between">
         <span className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border ${colors[color]}`}>
           {icon}
         </span>
-        {trend && <TrendIcon className={`h-4 w-4 ${trendColor}`} />}
+        <div className="flex items-center gap-1.5">
+          {trend && <TrendIcon className={`h-4 w-4 ${trendColor}`} />}
+          <ReadCardButton targetRef={cardRef} />
+        </div>
       </div>
       <p className="text-2xl font-bold text-slate-900">{value}</p>
       <p className="mt-0.5 text-sm font-medium text-slate-600">{label}</p>
@@ -183,11 +188,15 @@ function KpiCard({ icon, label, value, sub, trend, color = 'blue' }) {
 }
 
 function ChartCard({ title, subtitle, children }) {
+  const cardRef = useRef();
   return (
-    <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-      <div className="mb-4">
-        <h3 className="text-base font-semibold text-slate-800">{title}</h3>
-        {subtitle && <p className="text-xs text-slate-400">{subtitle}</p>}
+    <div ref={cardRef} className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+      <div className="mb-4 flex items-start justify-between">
+        <div>
+          <h3 className="text-base font-semibold text-slate-800">{title}</h3>
+          {subtitle && <p className="text-xs text-slate-400">{subtitle}</p>}
+        </div>
+        <ReadCardButton targetRef={cardRef} />
       </div>
       {children}
     </div>

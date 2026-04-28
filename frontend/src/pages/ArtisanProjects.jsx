@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Bot,
@@ -30,6 +30,7 @@ import AIAssistantModal from "../components/ai-assistant/AIAssistantModal";
 import PageShell from '../components/PageShell';
 import MapPickerModal from '../components/MapPickerModal';
 import { Hint } from '../components/MouseTooltip';
+import ReadCardButton from '../components/ReadCardButton';
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 const ASSET_BASE = API_URL.replace(/\/api\/?$/, "");
@@ -1046,6 +1047,7 @@ const onCreate = async (e) => {
             </div>
 
             <div className="relative shrink-0 self-start">
+              <ReadCardButton text={`${p.title}. ${p.description || ''}. Statut: ${p.status}. Budget: ${p.budgetTND ? p.budgetTND + ' TND' : 'non défini'}.`} className="mb-2" />
               <button
                 type="button"
                 onClick={() =>

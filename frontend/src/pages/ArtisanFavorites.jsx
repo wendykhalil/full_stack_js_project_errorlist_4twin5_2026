@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
+﻿import { useCallback, useEffect, useState } from 'react';
+import ReadCardButton from '../components/ReadCardButton';
 import { useNavigate } from 'react-router-dom';
 import { Eye, Heart, Loader2, Package, ShoppingCart, Star } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
@@ -47,7 +48,7 @@ export default function ArtisanFavorites() {
           <h1 className="text-3xl font-semibold text-slate-900 flex items-center gap-2">
             <Heart className="h-7 w-7 text-red-500 fill-red-500" /> Mes favoris
           </h1>
-          <p className="mt-1 text-sm text-slate-500">{products.length} produit{products.length !== 1 ? 's' : ''} sauvegardé{products.length !== 1 ? 's' : ''}</p>
+          <p className="mt-1 text-sm text-slate-500">{products.length} produit{products.length !== 1 ? 's' : ''} sauvegardÃ©{products.length !== 1 ? 's' : ''}</p>
         </div>
         <button onClick={() => navigate('/artisan/cart')}
           className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium hover:bg-slate-50">
@@ -89,9 +90,14 @@ export default function ArtisanFavorites() {
                 </div>
 
                 <div className="p-4">
-                  <p className="text-xs text-indigo-600 font-medium">{product.categoryId?.name}</p>
-                  <h3 className="mt-1 font-semibold text-slate-900 line-clamp-2">{product.name}</h3>
-                  <p className="mt-0.5 text-xs text-slate-500">{product.supplierId?.companyName || 'Fournisseur'}</p>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-xs text-indigo-600 font-medium">{product.categoryId?.name}</p>
+                      <h3 className="mt-1 font-semibold text-slate-900 line-clamp-2">{product.name}</h3>
+                      <p className="mt-0.5 text-xs text-slate-500">{product.supplierId?.companyName || 'Fournisseur'}</p>
+                    </div>
+                    <ReadCardButton text={`${product.name}. Catégorie: ${product.categoryId?.name}. Fournisseur: ${product.supplierId?.companyName || 'Fournisseur'}. Prix: ${product.price} TND.`} />
+                  </div>
 
                   <div className="mt-2 flex items-center gap-1">
                     {[1,2,3,4,5].map(s => (
@@ -110,7 +116,7 @@ export default function ArtisanFavorites() {
                   <div className="mt-3 flex gap-2">
                     <button onClick={() => navigate(`/artisan/product/${product._id}`)}
                       className="flex flex-1 items-center justify-center gap-1 rounded-xl border border-indigo-200 bg-indigo-50 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-100">
-                      <Eye className="h-3.5 w-3.5" /> Détails
+                      <Eye className="h-3.5 w-3.5" /> DÃ©tails
                     </button>
                     <button onClick={() => handleAddToCart(product)}
                       disabled={product.stock <= 0 || adding === product._id}
@@ -133,3 +139,4 @@ export default function ArtisanFavorites() {
     </div>
   );
 }
+

@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+﻿import React, { useCallback, useEffect, useRef, useState } from "react";
+import ReadCardButton from '../components/ReadCardButton';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -12,7 +13,7 @@ import { useAuth } from "../auth/AuthContext";
 import { getAdminAiInsights } from "../auth/api";
 import { Hint } from "../components/MouseTooltip";
 
-// ── Score ring ────────────────────────────────────────────────────────────────
+// â”€â”€ Score ring â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function ScoreRing({ score }) {
   const radius = 52;
   const circumference = 2 * Math.PI * radius;
@@ -21,7 +22,7 @@ function ScoreRing({ score }) {
   const color =
     score >= 80 ? "#10b981" : score >= 60 ? "#f59e0b" : score >= 40 ? "#f97316" : "#ef4444";
   const label =
-    score >= 80 ? "Sain" : score >= 60 ? "Modéré" : score >= 40 ? "À surveiller" : "Critique";
+    score >= 80 ? "Sain" : score >= 60 ? "ModÃ©rÃ©" : score >= 40 ? "Ã€ surveiller" : "Critique";
 
   return (
     <div className="flex flex-col items-center gap-2">
@@ -57,7 +58,7 @@ function ScoreRing({ score }) {
   );
 }
 
-// ── List card ─────────────────────────────────────────────────────────────────
+// â”€â”€ List card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function InsightCard({ title, icon, items, tone }) {
   const tones = {
     green: {
@@ -86,11 +87,14 @@ function InsightCard({ title, icon, items, tone }) {
 
   return (
     <div className={`rounded-2xl border ${t.border} ${t.bg} p-5`}>
-      <div className="mb-4 flex items-center gap-3">
-        <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${t.iconBg}`}>
-          {React.cloneElement(icon, { className: `h-5 w-5 ${t.iconFg}` })}
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${t.iconBg}`}>
+            {React.cloneElement(icon, { className: `h-5 w-5 ${t.iconFg}` })}
+          </div>
+          <h3 className="text-sm font-semibold text-slate-800">{title}</h3>
         </div>
-        <h3 className="text-sm font-semibold text-slate-800">{title}</h3>
+        <ReadCardButton text={`${title}. ${items.join('. ')}`} />
       </div>
       <ul className="space-y-2">
         {items.map((item, i) => (
@@ -104,7 +108,7 @@ function InsightCard({ title, icon, items, tone }) {
   );
 }
 
-// ── Metric pill ───────────────────────────────────────────────────────────────
+// â”€â”€ Metric pill â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function MetricPill({ label, value }) {
   return (
     <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-center shadow-sm">
@@ -114,7 +118,7 @@ function MetricPill({ label, value }) {
   );
 }
 
-// ── Main page ─────────────────────────────────────────────────────────────────
+// â”€â”€ Main page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function AdminAiInsights() {
   const { token } = useAuth();
   const [data, setData] = useState(null);
@@ -167,11 +171,11 @@ export default function AdminAiInsights() {
             </h1>
           </div>
           <p className="mt-1 text-sm text-slate-500">
-            Analyse IA de la santé de la plateforme et recommandations actionnables.
+            Analyse IA de la santÃ© de la plateforme et recommandations actionnables.
           </p>
           {lastFetched && !loading && (
             <p className="mt-1 text-xs text-slate-400">
-              Dernière mise à jour : {lastFetched.toLocaleTimeString()}
+              DerniÃ¨re mise Ã  jour : {lastFetched.toLocaleTimeString()}
               {data?.source === "heuristic" && (
                 <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-amber-700">
                   mode heuristique (IA hors ligne)
@@ -185,7 +189,7 @@ export default function AdminAiInsights() {
             </p>
           )}
         </div>
-        <Hint text="Forcer une nouvelle analyse IA avec les données les plus récentes (ignore le cache).">
+        <Hint text="Forcer une nouvelle analyse IA avec les donnÃ©es les plus rÃ©centes (ignore le cache).">
         <button
           type="button"
           onClick={() => load(true)}
@@ -206,7 +210,7 @@ export default function AdminAiInsights() {
       {loading && (
         <div className="flex flex-col items-center justify-center rounded-3xl border border-slate-200 bg-white py-20 shadow-sm">
           <Loader2 className="h-10 w-10 animate-spin text-indigo-500" />
-          <p className="mt-4 text-sm text-slate-500">Analyse des données de la plateforme en cours…</p>
+          <p className="mt-4 text-sm text-slate-500">Analyse des donnÃ©es de la plateforme en coursâ€¦</p>
         </div>
       )}
 
@@ -227,7 +231,7 @@ export default function AdminAiInsights() {
             </div>
             <div className="lg:col-span-2 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
               <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">
-                Résumé
+                RÃ©sumÃ©
               </h2>
               <p className="text-base leading-relaxed text-slate-700">{data.summary}</p>
 
@@ -251,7 +255,7 @@ export default function AdminAiInsights() {
 
           {/* Positives / Risks / Recommendations */}
           <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-            <Hint text="Points forts détectés par l'IA : croissance, engagement, performance des ventes, etc.">
+            <Hint text="Points forts dÃ©tectÃ©s par l'IA : croissance, engagement, performance des ventes, etc.">
             <InsightCard
               title="Tendances positives"
               icon={<TrendingUp />}
@@ -259,7 +263,7 @@ export default function AdminAiInsights() {
               tone="green"
             />
             </Hint>
-            <Hint text="Risques et anomalies identifiés par l'IA nécessitant votre attention.">
+            <Hint text="Risques et anomalies identifiÃ©s par l'IA nÃ©cessitant votre attention.">
             <InsightCard
               title="Risques & Alertes"
               icon={<AlertTriangle />}
@@ -267,7 +271,7 @@ export default function AdminAiInsights() {
               tone="red"
             />
             </Hint>
-            <Hint text="Actions concrètes suggérées par l'IA pour améliorer les performances de la plateforme.">
+            <Hint text="Actions concrÃ¨tes suggÃ©rÃ©es par l'IA pour amÃ©liorer les performances de la plateforme.">
             <InsightCard
               title="Recommandations"
               icon={<Lightbulb />}
@@ -280,7 +284,7 @@ export default function AdminAiInsights() {
           {/* Generated at */}
           {data.generatedAt && (
             <p className="text-center text-xs text-slate-400">
-              Rapport généré le {new Date(data.generatedAt).toLocaleString("fr-TN")}
+              Rapport gÃ©nÃ©rÃ© le {new Date(data.generatedAt).toLocaleString("fr-TN")}
             </p>
           )}
         </>
@@ -288,3 +292,6 @@ export default function AdminAiInsights() {
     </div>
   );
 }
+
+
+

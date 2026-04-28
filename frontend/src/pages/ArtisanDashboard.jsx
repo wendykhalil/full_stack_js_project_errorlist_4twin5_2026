@@ -46,10 +46,13 @@ const activityMeta = {
   order: { icon: ShoppingCart, tone: "bg-slate-100 text-slate-700" },
 };
 
+import ReadCardButton from '../components/ReadCardButton';
+
 /* ── Small reusable stat card ── */
 function StatCard({ title, value, helper, icon, iconBg, iconFg, hint }) {
+  const cardRef = React.useRef();
   const card = (
-    <div className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5">
+    <div ref={cardRef} className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5">
       <div className="absolute right-0 top-0 h-24 w-24 -translate-y-8 translate-x-8 rounded-full bg-gradient-to-br from-indigo-50 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
       <div className="flex items-start justify-between">
         <div className="space-y-1.5 flex-1 min-w-0">
@@ -57,8 +60,11 @@ function StatCard({ title, value, helper, icon, iconBg, iconFg, hint }) {
           <p className="text-3xl font-bold tracking-tight text-slate-900">{value}</p>
           <p className="text-xs text-slate-500">{helper}</p>
         </div>
-        <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${iconBg} shadow-sm`}>
-          {React.cloneElement(icon, { className: `h-6 w-6 ${iconFg}` })}
+        <div className="flex flex-col items-end gap-2">
+          <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${iconBg} shadow-sm`}>
+            {React.cloneElement(icon, { className: `h-6 w-6 ${iconFg}` })}
+          </div>
+          <ReadCardButton targetRef={cardRef} />
         </div>
       </div>
     </div>

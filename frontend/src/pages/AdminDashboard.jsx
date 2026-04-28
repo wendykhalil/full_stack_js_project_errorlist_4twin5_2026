@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import ReadCardButton from '../components/ReadCardButton';
 import {
   AlertCircle,
   ArrowLeftRight,
@@ -50,16 +51,20 @@ function SectionTitle({ children }) {
 }
 
 function KpiCard({ icon, label, value, helper, iconBg = "bg-slate-100", iconFg = "text-slate-600", accent }) {
+  const cardRef = useRef();
   return (
-    <div className={`relative overflow-hidden rounded-2xl border bg-white p-6 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 ${accent ? `border-l-4 ${accent}` : 'border-slate-200'}`}>
+    <div ref={cardRef} className={`relative overflow-hidden rounded-2xl border bg-white p-6 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 ${accent ? `border-l-4 ${accent}` : 'border-slate-200'}`}>
       <div className="flex items-start justify-between">
         <div className="space-y-1 flex-1 min-w-0">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</p>
           <p className="text-3xl font-bold tracking-tight text-slate-900 mt-2">{value}</p>
           {helper && <p className="text-xs text-slate-500 mt-1">{helper}</p>}
         </div>
-        <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${iconBg} shadow-sm`}>
-          {React.cloneElement(icon, { className: `h-6 w-6 ${iconFg}` })}
+        <div className="flex flex-col items-end gap-2">
+          <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${iconBg} shadow-sm`}>
+            {React.cloneElement(icon, { className: `h-6 w-6 ${iconFg}` })}
+          </div>
+          <ReadCardButton targetRef={cardRef} />
         </div>
       </div>
     </div>

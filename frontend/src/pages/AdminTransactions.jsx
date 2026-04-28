@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import { useAuth } from "../auth/AuthContext";
 import { apiFetch } from "../auth/api";
 import {
@@ -6,6 +6,7 @@ import {
   Search, ChevronDown, Download
 } from "lucide-react";
 import { Hint } from "../components/MouseTooltip";
+import ReadCardButton from '../components/ReadCardButton';
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -31,9 +32,13 @@ const STATUS_META = {
 };
 
 function StatCard({ icon, label, value, sub, color }) {
+  const ref = useRef();
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className={`inline-flex rounded-xl p-2.5 ${color}`}>{icon}</div>
+    <div ref={ref} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex items-start justify-between">
+        <div className={`inline-flex rounded-xl p-2.5 ${color}`}>{icon}</div>
+        <ReadCardButton targetRef={ref} />
+      </div>
       <p className="mt-3 text-2xl font-bold text-slate-900">{value}</p>
       <p className="text-sm font-medium text-slate-700">{label}</p>
       {sub && <p className="mt-0.5 text-xs text-slate-400">{sub}</p>}

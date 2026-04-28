@@ -4,6 +4,7 @@ import { useTranslation } from '../i18n';
 import { apiFetch } from '../auth/api';
 import SimpleFooter from '../components/Footer';
 import { Cloud, CloudRain, Sun, Wind, Droplets, Eye, Gauge } from 'lucide-react';
+import ReadCardButton from '../components/ReadCardButton';
 
 const ArtisanWeather = () => {
   const { user, token } = useAuth();
@@ -213,7 +214,10 @@ const ArtisanWeather = () => {
             }`}>
               <div className="flex items-start justify-between mb-6">
                 <div>
-                  <p className="text-lg opacity-90 mb-2">{goodDay ? t('weather.goodDay') : t('weather.notIdeal')}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-lg opacity-90 mb-2">{goodDay ? t('weather.goodDay') : t('weather.notIdeal')}</p>
+                    <ReadCardButton text={`Météo ${weather.name} - ${weather.weather[0].description} - Température: ${Math.round(weather.main.temp)}°C - Humidité: ${weather.main.humidity}% - Vent: ${weather.wind.speed} m/s`} />
+                  </div>
                   <div className="flex items-baseline">
                     <span className="text-6xl font-bold">{Math.round(weather.main.temp)}</span>
                     <span className="text-3xl ml-2">°C</span>

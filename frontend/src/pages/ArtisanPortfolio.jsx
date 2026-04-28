@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { getMySubscription } from '../auth/api';
+import ReadCardButton from '../components/ReadCardButton';
 import { Plus, Eye, Trash2, Edit, Calendar, MapPin, Image as ImageIcon, Loader2, AlertCircle, X, ChevronLeft, ChevronRight, Tag, Package } from 'lucide-react';
 import SimpleFooter from '../components/Footer';
 import SubscriptionAlert from '../components/SubscriptionAlert';
@@ -197,9 +198,12 @@ export default function ArtisanPortfolio() {
 
               {/* Content */}
               <div className="p-4">
-                <h3 className="font-semibold text-slate-900 mb-2">
-                  {project.title}
-                </h3>
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="font-semibold text-slate-900 mb-2">
+                    {project.title}
+                  </h3>
+                  <ReadCardButton text={`${project.title} - ${project.description || ''} - ${formatDate(project.date)} - ${project.location || ''}`} />
+                </div>
                 
                 <p className="text-sm text-slate-600 line-clamp-2 mb-3">
                   {project.description}

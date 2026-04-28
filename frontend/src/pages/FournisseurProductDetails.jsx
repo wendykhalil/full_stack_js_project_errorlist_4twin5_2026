@@ -5,6 +5,7 @@ import { Building, ChevronLeft, Image as ImageIcon } from 'lucide-react';
 import { getCatalogProducts } from '../auth/api';
 import TechnicalSheetViewer from '../components/TechnicalSheetViewer';
 import SimpleFooter from '../components/Footer';
+import ReadCardButton from '../components/ReadCardButton';
 
 export default function FournisseurProductDetails() {
   const { t } = useTranslation();
@@ -116,7 +117,10 @@ export default function FournisseurProductDetails() {
 
         <div className="space-y-6">
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h1 className="text-3xl font-semibold text-slate-900">{product.name}</h1>
+            <div className="flex items-start justify-between">
+              <h1 className="text-3xl font-semibold text-slate-900">{product.name}</h1>
+              <ReadCardButton text={`${product.name}. Catégorie: ${product.categoryId?.name || 'Non catégorisé'}. Prix: ${product.price?.toFixed(2)} TND. Stock: ${product.stock > 0 ? product.stock + ' unités' : 'Rupture de stock'}. ${product.description || ''}`} />
+            </div>
             <div className="mt-4 flex items-center gap-2">
               <span className="rounded-full bg-indigo-100 px-3 py-1 text-sm font-medium text-indigo-700">
                 {product.categoryId?.name || t('common.uncategorized', 'Non catégorisé')}

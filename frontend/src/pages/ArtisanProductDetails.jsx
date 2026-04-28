@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from '../i18n';
+import ReadCardButton from '../components/ReadCardButton';
 import {
   ShoppingCart,
   Building2,
@@ -530,9 +531,9 @@ export default function ArtisanProductDetails() {
 
           {/* Description */}
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-3">
-              <Package className="h-4 w-4 text-indigo-400" />
-              Description
+            <h2 className="flex items-center justify-between gap-2 text-sm font-semibold text-slate-700 mb-3">
+              <span className="flex items-center gap-2"><Package className="h-4 w-4 text-indigo-400" />Description</span>
+              <ReadCardButton text={`Description: ${product.description || 'Aucune description disponible.'}`} />
             </h2>
             <p className="text-sm text-slate-600 leading-relaxed">
               {product.description || 'Aucune description disponible.'}
@@ -541,9 +542,9 @@ export default function ArtisanProductDetails() {
 
           {/* Supplier */}
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-4">
-              <Building2 className="h-4 w-4 text-indigo-400" />
-              Fournisseur
+            <h2 className="flex items-center justify-between gap-2 text-sm font-semibold text-slate-700 mb-4">
+              <span className="flex items-center gap-2"><Building2 className="h-4 w-4 text-indigo-400" />Fournisseur</span>
+              <ReadCardButton text={`Fournisseur: ${supplierName}. ${supplier.supplierProfile?.description || ''}`} />
             </h2>
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center flex-shrink-0">

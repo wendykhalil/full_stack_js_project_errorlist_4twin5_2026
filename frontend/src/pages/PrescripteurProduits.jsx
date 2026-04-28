@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
+import ReadCardButton from '../components/ReadCardButton';
 import { Search, ChevronDown, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
@@ -15,7 +16,7 @@ const Card = ({ cat, title, desc, supplier, price, unit, onDetails }) => {
       </span>
 
       <h3 className="mt-4 text-lg font-semibold text-slate-900">{title}</h3>
-      <p className="mt-1 text-sm text-slate-500 line-clamp-2">{desc}</p>
+      <ReadCardButton text={`${title}. Catégorie: ${cat}. Fournisseur: ${supplier}. Prix: ${price} TND. ${desc || ''}`} className="mt-1" />
 
       <div className="mt-4 flex items-center gap-2 text-sm text-slate-600">
         <FileText className="h-4 w-4 text-slate-400" />
@@ -28,7 +29,7 @@ const Card = ({ cat, title, desc, supplier, price, unit, onDetails }) => {
           <div className="text-xs text-slate-500">{unit}</div>
         </div>
 
-        <Hint text="Voir la fiche complète du produit et contacter le fournisseur.">
+        <Hint text="Voir la fiche complÃ¨te du produit et contacter le fournisseur.">
         <button
           onClick={onDetails}
           className="rounded-xl bg-indigo-600 px-5 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors"
@@ -133,7 +134,7 @@ export default function PrescripteurProduits() {
           </div>
           </Hint>
 
-          <Hint text="Filtrer les produits par catégorie de matériaux de construction.">
+          <Hint text="Filtrer les produits par catÃ©gorie de matÃ©riaux de construction.">
           <div className="relative w-full md:w-64">
             <select 
               value={category}
@@ -188,7 +189,7 @@ export default function PrescripteurProduits() {
                   disabled={currentPage === 1 || loading}
                   className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  Précédent
+                  PrÃ©cÃ©dent
                 </button>
 
                 <div className="flex items-center gap-2">
@@ -241,4 +242,5 @@ export default function PrescripteurProduits() {
     </div>
   );
 }
+
 

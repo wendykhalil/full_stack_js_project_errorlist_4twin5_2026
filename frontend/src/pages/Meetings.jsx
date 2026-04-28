@@ -6,6 +6,7 @@ import { Calendar, Clock, User, CheckCircle, XCircle, Clock as ClockIcon, Loader
 import meetingsService from '../services/meetingsService';
 import { Hint } from '../components/MouseTooltip';
 import { MeetingModal } from '../components/MeetingModal';
+import ReadCardButton from '../components/ReadCardButton';
 
 const STATUS_COLORS = {
   PENDING: { bg: 'bg-gradient-to-br from-yellow-50 to-amber-50', border: 'border-yellow-300', text: 'text-yellow-800', badge: 'bg-yellow-200 text-yellow-900 font-bold' },
@@ -48,6 +49,7 @@ function MeetingCard({ meeting, isArtisan, onAccept, onReject, onCancel, onDelet
               <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${colors.badge}`}>
                 {STATUS_LABELS[meeting.status]}
               </span>
+              <ReadCardButton text={`${meeting.title || 'Réunion'} - avec ${otherUser?.firstName} ${otherUser?.lastName} - ${startDate.toLocaleDateString('fr-TN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} ${startDate.toLocaleTimeString('fr-TN', { hour: '2-digit', minute: '2-digit' })} - Statut: ${STATUS_LABELS[meeting.status]}`} />
             </div>
             <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
               avec <span className="font-semibold text-slate-800 dark:text-slate-200">{otherUser?.firstName} {otherUser?.lastName}</span>

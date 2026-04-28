@@ -8,6 +8,7 @@ import { useAuth } from "../auth/AuthContext";
 import { useCart } from "../context/CartContext";
 import SubscriptionAlert from '../components/SubscriptionAlert';
 import { Hint } from "../components/MouseTooltip";
+import ReadCardButton from '../components/ReadCardButton';
 
 const ProductCard = ({
   product,
@@ -65,7 +66,10 @@ const ProductCard = ({
           {category}
         </span>
 
-        <h3 className="mt-3 text-lg font-semibold text-slate-900">{title}</h3>
+        <div className="flex items-center justify-between mt-3">
+          <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
+          <ReadCardButton text={`${title} - ${category} - ${supplier} - ${price} TND/${unit} - ${description}`} />
+        </div>
         <p className="mt-1 text-sm text-slate-500 line-clamp-2">{description}</p>
         <div className="mt-2 text-sm text-slate-600">{supplier}</div>
 

@@ -1,4 +1,5 @@
 ﻿import React, { useEffect, useState, useRef, useCallback } from "react";
+import ReadCardButton from '../components/ReadCardButton';
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { useTranslation } from '../i18n';
@@ -468,7 +469,7 @@ export default function Profile() {
                   <div className="border-b border-slate-100 px-8 py-6">
                     <div className="flex items-center gap-4">
                       <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-100"><UserCircle className="h-6 w-6 text-indigo-600" /></div>
-                      <div><h2 className="text-lg font-bold text-slate-900">Informations personnelles</h2><p className="text-xs text-slate-500">Vos informations de base visibles sur votre profil</p></div>
+                      <div className="flex items-center justify-between"><div><h2 className="text-lg font-bold text-slate-900">Informations personnelles</h2><ReadCardButton text="Informations personnelles" /></div><p className="text-xs text-slate-500">Vos informations de base visibles sur votre profil</p></div>
                     </div>
                   </div>
                   <div className="p-8">
@@ -746,3 +747,5 @@ export default function Profile() {
     </>
   );
 }
+
+

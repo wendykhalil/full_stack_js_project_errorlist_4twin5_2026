@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
+import ReadCardButton from '../components/ReadCardButton';
 import { apiFetch } from "../auth/api";
 import { useAuth } from "../auth/AuthContext";
 import { History, RefreshCw } from "lucide-react";
@@ -76,6 +77,7 @@ export default function AdminAuthLogs() {
         )}
 
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4"><h2 className="text-sm font-semibold text-slate-700">Journaux d'authentification</h2><ReadCardButton text="Journaux d'authentification" /></div>
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead className="bg-slate-50 text-slate-600">
@@ -102,11 +104,11 @@ export default function AdminAuthLogs() {
                       <td className="whitespace-nowrap px-4 py-3 text-slate-700">{fmt(it.createdAt)}</td>
                       <td className="px-4 py-3 text-slate-900">
                         <div className="font-medium">
-                          {[it.user?.firstName, it.user?.lastName].filter(Boolean).join(" ") || "—"}
+                          {[it.user?.firstName, it.user?.lastName].filter(Boolean).join(" ") || "â€”"}
                         </div>
                         <div className="text-xs text-slate-500">{it.user?.email || ""}</div>
                       </td>
-                      <td className="px-4 py-3 text-slate-700">{it.user?.role || "—"}</td>
+                      <td className="px-4 py-3 text-slate-700">{it.user?.role || "â€”"}</td>
                       <td className="px-4 py-3">
                         <span
                           className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
@@ -118,13 +120,13 @@ export default function AdminAuthLogs() {
                           {it.action === "LOGIN" ? t('adminLogs.action.login') : t('adminLogs.action.logout')}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-slate-700">{it.ip || "—"}</td>
-                      <td className="px-4 py-3 text-slate-700">{it.country || it.countryCode || "—"}</td>
+                      <td className="px-4 py-3 text-slate-700">{it.ip || "â€”"}</td>
+                      <td className="px-4 py-3 text-slate-700">{it.country || it.countryCode || "â€”"}</td>
                       <td
                         className="max-w-[360px] truncate px-4 py-3 text-slate-500"
                         title={it.userAgent || ""}
                       >
-                        {it.userAgent || "—"}
+                        {it.userAgent || "â€”"}
                       </td>
                     </tr>
                   ))
@@ -171,3 +173,4 @@ export default function AdminAuthLogs() {
     </>
   );
 }
+

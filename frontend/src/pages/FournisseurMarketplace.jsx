@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
+import ReadCardButton from '../components/ReadCardButton';
 import { useNavigate } from "react-router-dom";
 import { Search, ChevronDown, Eye, Star } from "lucide-react";
 import SimpleFooter from "../components/Footer";
@@ -56,7 +57,7 @@ const ProductCard = ({
         </span>
 
         <h3 className="mt-3 text-lg font-semibold text-slate-900">{title}</h3>
-        <p className="mt-1 text-sm text-slate-500 line-clamp-2">{description}</p>
+        <ReadCardButton text={`${title}. ${description}. Fournisseur: ${supplier}. Prix: ${price} TND. Catégorie: ${category}.`} className="mt-1" />
 
         <div className="mt-2 text-xs text-slate-600">{supplier}</div>
 
@@ -77,7 +78,7 @@ const ProductCard = ({
             className="w-full rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700 hover:bg-indigo-100 transition-colors"
           >
             <Eye className="h-4 w-4 inline-block mr-1" />
-            Voir les détails
+            Voir les dÃ©tails
           </button>
         </div>
       </div>
@@ -166,7 +167,7 @@ export default function FournisseurMarketplace() {
     <div className="flex-1">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-semibold text-slate-900">{t('fournisseurMarketplace.title', 'Marché')}</h1>
+          <h1 className="text-3xl font-semibold text-slate-900">{t('fournisseurMarketplace.title', 'MarchÃ©')}</h1>
           <p className="mt-2 text-sm text-slate-500">{t('fournisseurMarketplace.subtitle', 'Parcourez les produits disponibles')}</p>
         </div>
       </div>
@@ -205,7 +206,7 @@ export default function FournisseurMarketplace() {
       ) : error ? (
         <div className="mt-8 text-center py-12 text-red-600">{t('common.error', 'Erreur')} : {error}</div>
       ) : products.length === 0 ? (
-        <div className="mt-8 text-center py-12 text-slate-500">{t('fournisseurMarketplace.noProducts', 'Aucun produit trouvé')}</div>
+        <div className="mt-8 text-center py-12 text-slate-500">{t('fournisseurMarketplace.noProducts', 'Aucun produit trouvÃ©')}</div>
       ) : (
         <>
           <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -237,7 +238,7 @@ export default function FournisseurMarketplace() {
                   disabled={currentPage === 1 || loading}
                   className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  Précédent
+                  PrÃ©cÃ©dent
                 </button>
 
                 <div className="flex items-center gap-2">
@@ -291,3 +292,6 @@ export default function FournisseurMarketplace() {
     </div>
   );
 }
+
+
+

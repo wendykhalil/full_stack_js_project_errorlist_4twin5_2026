@@ -17,6 +17,7 @@ import {
   acceptApplication, rejectApplication, getMyServiceRequest,
   getReviewsForUser, getArtisanAvailability,
 } from "../auth/api";
+import ReadCardButton from '../components/ReadCardButton';
 
 // ── Shared Avatar ─────────────────────────────────────────────────────────────
 function Avatar({ src, name, size = "md" }) {
@@ -480,6 +481,7 @@ export default function PrescripteurServiceRequests() {
                       <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_STYLE[item.status]}`}>
                         {STATUS_LABEL[item.status]}
                       </span>
+                      <ReadCardButton text={`${item.title} - ${item.trade}${item.city ? ' - ' + item.city : ''}${item.budgetTND > 0 ? ' - ' + item.budgetTND.toLocaleString() + ' TND' : ''} - Statut: ${STATUS_LABEL[item.status]} - ${item.applications?.length || 0} candidature(s)`} />
                     </div>
                     <div className="mt-1 flex flex-wrap gap-3 text-xs text-slate-500">
                       <span>{item.trade}</span>

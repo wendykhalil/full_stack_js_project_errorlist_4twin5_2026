@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
+import ReadCardButton from '../components/ReadCardButton';
 import { Plus, Trash2, Pencil, X, Tag, CheckCircle, XCircle } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { getPromoCodes, createPromoCode, updatePromoCode, deletePromoCode } from "../auth/api";
@@ -17,7 +18,7 @@ function Modal({ open, title, onClose, children }) {
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="relative w-full max-w-lg rounded-3xl bg-white shadow-xl">
         <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
-          <h3 className="font-semibold text-slate-900">{title}</h3>
+          <div className="flex items-center justify-between"><h3 className="font-semibold text-slate-900">{title}</h3><ReadCardButton text={title} /></div>
           <button onClick={onClose} className="rounded-xl p-2 hover:bg-slate-100"><X className="h-5 w-5" /></button>
         </div>
         <div className="px-6 py-5">{children}</div>
@@ -49,7 +50,7 @@ function PromoForm({ form, setForm, onSubmit, loading, submitLabel }) {
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="text-sm font-medium text-slate-700">Remise (%) *</label>
-          <Hint text="Pourcentage de réduction appliqué au montant total">
+          <Hint text="Pourcentage de rÃ©duction appliquÃ© au montant total">
           <input value={form.discountPercent} onChange={e => { setForm(s => ({ ...s, discountPercent: e.target.value })); clearErrors(); }}
             className={`mt-1 w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 ${fieldErrors.discountPercent ? 'border-red-400' : 'border-slate-200'}`}
             placeholder="20" />
@@ -61,14 +62,14 @@ function PromoForm({ form, setForm, onSubmit, loading, submitLabel }) {
           <Hint text="Nombre maximum d'utilisations avant expiration automatique">
           <input value={form.maxUses} onChange={e => { setForm(s => ({ ...s, maxUses: e.target.value })); clearErrors(); }}
             className={`mt-1 w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 ${fieldErrors.maxUses ? 'border-red-400' : 'border-slate-200'}`}
-            placeholder="Illimité" />
+            placeholder="IllimitÃ©" />
           </Hint>
           <FieldError error={fieldErrors.maxUses} />
         </div>
       </div>
       <div>
         <label className="text-sm font-medium text-slate-700">Date d'expiration</label>
-        <Hint text="Date après laquelle le code ne sera plus valide">
+        <Hint text="Date aprÃ¨s laquelle le code ne sera plus valide">
         <input value={form.expiresAt} onChange={e => setForm(s => ({ ...s, expiresAt: e.target.value }))}
           type="date" className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
         </Hint>
@@ -90,7 +91,7 @@ function PromoForm({ form, setForm, onSubmit, loading, submitLabel }) {
       </div>
       <button type="submit" disabled={loading}
         className="w-full rounded-xl bg-indigo-600 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50">
-        {loading ? "Enregistrement…" : submitLabel}
+        {loading ? "Enregistrementâ€¦" : submitLabel}
       </button>
       {globalError && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -165,9 +166,9 @@ export default function AdminPromoCodes() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Codes Promo</h1>
-          <p className="mt-1.5 text-base text-slate-500">Gérez les remises pour les abonnements</p>
+          <p className="mt-1.5 text-base text-slate-500">GÃ©rez les remises pour les abonnements</p>
         </div>
-        <Hint text="Créer un nouveau code promotionnel">
+        <Hint text="CrÃ©er un nouveau code promotionnel">
         <button onClick={() => { setForm(emptyForm); setCreateOpen(true); }}
           className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white hover:bg-indigo-700">
           <Plus className="h-4 w-4" /> Nouveau code
@@ -178,11 +179,11 @@ export default function AdminPromoCodes() {
       {err && <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">{err}</div>}
 
       {loading ? (
-        <div className="py-16 text-center text-slate-400">Chargement…</div>
+        <div className="py-16 text-center text-slate-400">Chargementâ€¦</div>
       ) : codes.length === 0 ? (
         <div className="rounded-3xl border border-dashed border-slate-300 py-16 text-center">
           <Tag className="mx-auto h-8 w-8 text-slate-300" />
-          <p className="mt-2 text-slate-500">Aucun code promo créé.</p>
+          <p className="mt-2 text-slate-500">Aucun code promo crÃ©Ã©.</p>
         </div>
       ) : (
         <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
@@ -207,16 +208,16 @@ export default function AdminPromoCodes() {
                     <td className="px-5 py-4 font-mono font-semibold text-slate-900">{c.code}</td>
                     <td className="px-5 py-4 text-emerald-600 font-semibold">{c.discountPercent}%</td>
                     <td className="px-5 py-4 text-slate-600">
-                      {c.usedCount}{c.maxUses !== null ? ` / ${c.maxUses}` : ' / ∞'}
+                      {c.usedCount}{c.maxUses !== null ? ` / ${c.maxUses}` : ' / âˆž'}
                     </td>
                     <td className="px-5 py-4 text-slate-500">
-                      {c.expiresAt ? new Date(c.expiresAt).toLocaleDateString("fr-TN") : "—"}
+                      {c.expiresAt ? new Date(c.expiresAt).toLocaleDateString("fr-TN") : "â€”"}
                     </td>
                     <td className="px-5 py-4 text-slate-500 capitalize">{c.appliesTo}</td>
                     <td className="px-5 py-4">
                       {expired || exhausted ? (
                         <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-600">
-                          {expired ? "Expiré" : "Épuisé"}
+                          {expired ? "ExpirÃ©" : "Ã‰puisÃ©"}
                         </span>
                       ) : c.isActive ? (
                         <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700">Actif</span>
@@ -226,19 +227,19 @@ export default function AdminPromoCodes() {
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-2">
-                        <Hint text="Activer ou désactiver ce code sans le supprimer">
-                        <button onClick={() => toggleActive(c)} title={c.isActive ? "Désactiver" : "Activer"}
+                        <Hint text="Activer ou dÃ©sactiver ce code sans le supprimer">
+                        <button onClick={() => toggleActive(c)} title={c.isActive ? "DÃ©sactiver" : "Activer"}
                           className="rounded-lg p-1.5 hover:bg-slate-100">
                           {c.isActive ? <XCircle className="h-4 w-4 text-slate-400" /> : <CheckCircle className="h-4 w-4 text-emerald-500" />}
                         </button>
                         </Hint>
-                        <Hint text="Modifier les paramètres de ce code promo">
+                        <Hint text="Modifier les paramÃ¨tres de ce code promo">
                         <button onClick={() => { setEditItem(c); setForm({ code: c.code, discountPercent: c.discountPercent, maxUses: c.maxUses || "", expiresAt: c.expiresAt ? c.expiresAt.slice(0, 10) : "", isActive: c.isActive, appliesTo: c.appliesTo }); }}
                           className="rounded-lg p-1.5 hover:bg-slate-100">
                           <Pencil className="h-4 w-4 text-slate-400" />
                         </button>
                         </Hint>
-                        <Hint text="Supprimer définitivement ce code promo">
+                        <Hint text="Supprimer dÃ©finitivement ce code promo">
                         <button onClick={() => handleDelete(c._id)}
                           className="rounded-lg p-1.5 hover:bg-red-50">
                           <Trash2 className="h-4 w-4 text-slate-400 hover:text-red-500" />
@@ -255,7 +256,7 @@ export default function AdminPromoCodes() {
       )}
 
       <Modal open={createOpen} title="Nouveau code promo" onClose={() => setCreateOpen(false)}>
-        <PromoForm form={form} setForm={setForm} onSubmit={handleCreate} loading={saving} submitLabel="Créer le code" />
+        <PromoForm form={form} setForm={setForm} onSubmit={handleCreate} loading={saving} submitLabel="CrÃ©er le code" />
       </Modal>
 
       <Modal open={!!editItem} title="Modifier le code" onClose={() => setEditItem(null)}>
@@ -264,3 +265,7 @@ export default function AdminPromoCodes() {
     </div>
   );
 }
+
+
+
+

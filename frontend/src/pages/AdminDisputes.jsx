@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { X, MessageSquare, CheckCircle, XCircle } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
+import ReadCardButton from '../components/ReadCardButton';
 import { getAdminDisputes, adminResolveDispute } from '../auth/api';
 import { Hint } from '../components/MouseTooltip';
 
@@ -110,12 +111,15 @@ export default function AdminDisputes() {
                   </td>
                   <td className="px-4 py-3 text-xs text-slate-400">{new Date(d.createdAt).toLocaleDateString('fr-TN')}</td>
                   <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <ReadCardButton text={`Litige de ${d.openedBy?.firstName} ${d.openedBy?.lastName} contre ${d.againstId?.firstName} ${d.againstId?.lastName}. Type: ${d.sourceType}. Raison: ${d.reason}. Statut: ${STATUS_LABEL[d.status]}.`} />
                     <Hint text="Ouvrir le détail du litige et prendre une décision">
                     <button onClick={() => setSelected(d)}
                       className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50">
                       Gérer
                     </button>
                     </Hint>
+                    </div>
                   </td>
                 </tr>
               ))}

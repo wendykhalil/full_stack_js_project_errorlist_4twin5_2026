@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
+import ReadCardButton from '../components/ReadCardButton';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 
@@ -26,7 +27,7 @@ export default function ArtisanPortfolio() {
   const [error, setError] = useState(null);
   const [deleting, setDeleting] = useState(null);
 
-  // Utilisation de useCallback pour mémoriser la fonction fetchProjects
+  // Utilisation de useCallback pour mÃ©moriser la fonction fetchProjects
   const fetchProjects = useCallback(async () => {
     if (!token) return;
     
@@ -48,11 +49,11 @@ export default function ArtisanPortfolio() {
     } finally {
       setLoading(false);
     }
-  }, [token]); // token est maintenant une dépendance de fetchProjects
+  }, [token]); // token est maintenant une dÃ©pendance de fetchProjects
 
   useEffect(() => {
     fetchProjects();
-  }, [fetchProjects]); // fetchProjects est maintenant inclus dans les dépendances
+  }, [fetchProjects]); // fetchProjects est maintenant inclus dans les dÃ©pendances
 
   const handleDelete = async (projectId) => {
     if (!window.confirm('Voulez-vous vraiment supprimer ce projet ?')) return;
@@ -93,10 +94,10 @@ export default function ArtisanPortfolio() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-semibold text-slate-900">
-            Mes réalisations
+            Mes rÃ©alisations
           </h1>
           <p className="mt-2 text-sm text-slate-500">
-            Gérez vos projets et travaux réalisés
+            GÃ©rez vos projets et travaux rÃ©alisÃ©s
           </p>
         </div>
 
@@ -122,7 +123,7 @@ export default function ArtisanPortfolio() {
             onClick={fetchProjects}
             className="mt-4 rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
           >
-            Réessayer
+            RÃ©essayer
           </button>
         </div>
       ) : projects.length === 0 ? (
@@ -132,7 +133,7 @@ export default function ArtisanPortfolio() {
             Aucun projet
           </h3>
           <p className="mt-2 text-sm text-slate-500">
-            Vous n'avez pas encore ajouté de projet à votre portfolio.
+            Vous n'avez pas encore ajoutÃ© de projet Ã  votre portfolio.
           </p>
           <button
             onClick={() => navigate('/artisan/portfolio/add')}
@@ -171,9 +172,12 @@ export default function ArtisanPortfolio() {
 
               {/* Content */}
               <div className="p-4">
-                <h3 className="font-semibold text-slate-900 mb-2">
-                  {project.title}
-                </h3>
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="font-semibold text-slate-900 mb-2">
+                    {project.title}
+                  </h3>
+                  <ReadCardButton text={`${project.title}. ${project.description || ''}. ${formatDate(project.date)}`} />
+                </div>
                 
                 <p className="text-sm text-slate-600 line-clamp-2 mb-3">
                   {project.description}
@@ -225,3 +229,5 @@ export default function ArtisanPortfolio() {
     </div>
   );
 }
+
+

@@ -5,6 +5,7 @@ import { apiFetch } from "../auth/api";
 import PageShell from "../components/PageShell";
 import SimpleFooter from "../components/Footer";
 import { Hint } from "../components/MouseTooltip";
+import ReadCardButton from '../components/ReadCardButton';
 
 const STATUS = {
   AVAILABLE: {
@@ -292,7 +293,10 @@ export default function ArtisanAvailability() {
                     <GradientIcon Icon={Calendar} gradientClass="text-blue-600 dark:text-blue-400" size={18} />
                     Couverture du mois
                   </p>
-                  <p className="text-sm font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{availabilityPercent}%</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{availabilityPercent}%</p>
+                    <ReadCardButton text={`Disponibilités ${monthLabel} - Couverture: ${availabilityPercent}% - ${markedDays} jours sur ${totalDays} - Disponible: ${statusCounts.AVAILABLE} - Occupé: ${statusCounts.BUSY} - Réservé: ${statusCounts.BOOKED}`} />
+                  </div>
                 </div>
                 <div className="relative h-3 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
                   <div className={`h-full transition-all duration-500 bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 shadow-lg`}

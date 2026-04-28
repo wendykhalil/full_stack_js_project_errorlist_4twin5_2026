@@ -8,6 +8,7 @@ import { getMySubscription } from "../auth/api";
 import SubscriptionAlert from '../components/SubscriptionAlert';
 import PageShell from '../components/PageShell';
 import { Hint } from "../components/MouseTooltip";
+import ReadCardButton from '../components/ReadCardButton';
 
 function getReference(item, type) {
   return item.reference || item.number || `${type === 'quote' ? 'QUOTE' : 'INVOICE'}-${new Date(item.createdAt || Date.now()).getFullYear()}`;
@@ -25,7 +26,10 @@ function DocRow({ type, item, onCreateInvoice }) {
       <div className="flex items-start gap-4">
         <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-700">{icon}</div>
         <div>
-          <div className="text-sm font-semibold text-slate-900">{title} • {getReference(item, type)}</div>
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-sm font-semibold text-slate-900">{title} • {getReference(item, type)}</div>
+            <ReadCardButton text={`${title} ${getReference(item, type)} - Projet: ${getProjectLabel(item)} - Statut: ${item.status} - Total: ${Number(item.total || 0).toFixed(3)} TND`} />
+          </div>
           <div className="mt-2 text-sm text-slate-600">Projet : {getProjectLabel(item)}</div>
           <div className="mt-1 text-sm text-slate-600">Statut : {item.status}</div>
           <div className="mt-1 text-sm font-semibold text-slate-900">Total : {Number(item.total || 0).toFixed(3)} TND</div>

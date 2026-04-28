@@ -7,6 +7,7 @@ import SimpleFooter from '../components/Footer';
 import Pagination from '../components/Pagination';
 import ArtisanReviewsList from '../components/ArtisanReviewsList';
 import { Hint } from '../components/MouseTooltip';
+import ReadCardButton from '../components/ReadCardButton';
 
 const ArtisanCard = ({ artisan, onViewProfile }) => {
   const { t } = useTranslation();
@@ -60,6 +61,7 @@ const ArtisanCard = ({ artisan, onViewProfile }) => {
               {artisan.distance.text || `${artisan.distance} km`}
             </div>
           )}
+          <ReadCardButton text={`${artisan.name} - ${artisan.trade || 'Artisan'} - ${artisan.region || ''} - Note: ${rating > 0 ? rating.toFixed(1) : 'Nouveau'} - ${artisan.totalProjects || 0} projet(s)`} />
         </div>
 
         <div className="mt-4 flex items-center gap-2 text-sm text-slate-600">

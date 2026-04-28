@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
+import ReadCardButton from '../components/ReadCardButton';
 import {
   Users,
   Star,
@@ -57,7 +58,7 @@ function ArtisanCard({ artisan, rank }) {
       </div>
       <div className="flex-1 min-w-0">
         <div className="font-medium text-slate-900 truncate">{artisan.name}</div>
-        <div className="text-sm text-slate-500">{artisan.trade} • {artisan.region}</div>
+        <div className="text-sm text-slate-500">{artisan.trade} â€¢ {artisan.region}</div>
       </div>
       <div className="text-right">
         <div className="flex items-center gap-1 text-sm font-medium text-slate-900">
@@ -92,7 +93,7 @@ function ProjectCard({ project }) {
       </div>
       <div className="mt-3 flex items-center justify-between text-sm">
         <div className="text-slate-600">
-          {project.budgetTND ? `${project.budgetTND.toLocaleString()} TND` : 'Budget non défini'}
+          {project.budgetTND ? `${project.budgetTND.toLocaleString()} TND` : 'Budget non dÃ©fini'}
         </div>
         <div className="text-slate-500">
           {new Date(project.createdAt).toLocaleDateString('fr-FR')}
@@ -186,7 +187,7 @@ export default function AdminArtisanDashboard() {
           Dashboard Artisans
         </h1>
         <p className="mt-1 text-sm text-slate-500 sm:text-base">
-          Statistiques en temps réel sur les artisans et leurs projets
+          Statistiques en temps rÃ©el sur les artisans et leurs projets
         </p>
       </div>
 
@@ -210,9 +211,9 @@ export default function AdminArtisanDashboard() {
         />
         <StatCard
           icon={<CheckCircle />}
-          label="Projets Terminés"
+          label="Projets TerminÃ©s"
           value={projectStats.completed}
-          helper={`${Math.round((projectStats.completed / projectStats.total) * 100 || 0)}% de réussite`}
+          helper={`${Math.round((projectStats.completed / projectStats.total) * 100 || 0)}% de rÃ©ussite`}
           iconBg="bg-emerald-50"
           iconFg="text-emerald-600"
         />
@@ -229,7 +230,7 @@ export default function AdminArtisanDashboard() {
       {/* Charts Section */}
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
         <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-          <h2 className="text-lg font-semibold text-slate-900">Évolution Mensuelle des Projets</h2>
+          <div className="flex items-center justify-between"><h2 className="text-lg font-semibold text-slate-900">Ã‰volution Mensuelle des Projets</h2><ReadCardButton /></div>
           <div className="mt-4 h-72">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={monthlyTrends}>
@@ -244,14 +245,14 @@ export default function AdminArtisanDashboard() {
         </div>
 
         <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-          <h2 className="text-lg font-semibold text-slate-900">Répartition des Statuts</h2>
+          <div className="flex items-center justify-between"><h2 className="text-lg font-semibold text-slate-900">RÃ©partition des Statuts</h2><ReadCardButton /></div>
           <div className="mt-4 h-72">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie 
                   data={[
                     { name: 'Actifs', value: projectStats.active },
-                    { name: 'Terminés', value: projectStats.completed },
+                    { name: 'TerminÃ©s', value: projectStats.completed },
                     { name: 'En attente', value: projectStats.pending }
                   ]} 
                   dataKey="value" 
@@ -261,7 +262,7 @@ export default function AdminArtisanDashboard() {
                 >
                   {[
                     { name: 'Actifs', value: projectStats.active },
-                    { name: 'Terminés', value: projectStats.completed },
+                    { name: 'TerminÃ©s', value: projectStats.completed },
                     { name: 'En attente', value: projectStats.pending }
                   ].map((entry, index) => (
                     <Cell key={entry.name} fill={PIE_COLORS[index % PIE_COLORS.length]} />
@@ -280,7 +281,7 @@ export default function AdminArtisanDashboard() {
         <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <div className="flex items-center gap-2 mb-4">
             <Award className="h-5 w-5 text-yellow-500" />
-            <h2 className="text-lg font-semibold text-slate-900">Top Artisans (Notes)</h2>
+            <div className="flex items-center justify-between"><h2 className="text-lg font-semibold text-slate-900">Top Artisans (Notes)</h2><ReadCardButton /></div>
           </div>
           <div className="space-y-3">
             {topRated.length > 0 ? (
@@ -298,7 +299,7 @@ export default function AdminArtisanDashboard() {
         <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="h-5 w-5 text-green-500" />
-            <h2 className="text-lg font-semibold text-slate-900">Plus Actifs (Projets)</h2>
+            <div className="flex items-center justify-between"><h2 className="text-lg font-semibold text-slate-900">Plus Actifs (Projets)</h2><ReadCardButton /></div>
           </div>
           <div className="space-y-3">
             {mostActive.length > 0 ? (
@@ -309,17 +310,17 @@ export default function AdminArtisanDashboard() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-slate-900 truncate">{artisan.name}</div>
-                    <div className="text-sm text-slate-500">{artisan.trade} • {artisan.region}</div>
+                    <div className="text-sm text-slate-500">{artisan.trade} â€¢ {artisan.region}</div>
                   </div>
                   <div className="text-right">
                     <div className="text-sm font-medium text-slate-900">{artisan.projectCount} projets</div>
-                    <div className="text-xs text-slate-500">{artisan.completionRate}% terminés</div>
+                    <div className="text-xs text-slate-500">{artisan.completionRate}% terminÃ©s</div>
                   </div>
                 </div>
               ))
             ) : (
               <div className="text-center text-slate-500 py-8">
-                Aucun projet enregistré pour le moment
+                Aucun projet enregistrÃ© pour le moment
               </div>
             )}
           </div>
@@ -330,7 +331,7 @@ export default function AdminArtisanDashboard() {
       <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
         <div className="flex items-center gap-2 mb-4">
           <Calendar className="h-5 w-5 text-blue-500" />
-          <h2 className="text-lg font-semibold text-slate-900">Projets Récents</h2>
+          <div className="flex items-center justify-between"><h2 className="text-lg font-semibold text-slate-900">Projets RÃ©cents</h2><ReadCardButton /></div>
         </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {recentProjects.length > 0 ? (
@@ -339,7 +340,7 @@ export default function AdminArtisanDashboard() {
             ))
           ) : (
             <div className="col-span-full text-center text-slate-500 py-8">
-              Aucun projet récent à afficher
+              Aucun projet rÃ©cent Ã  afficher
             </div>
           )}
         </div>
@@ -349,3 +350,5 @@ export default function AdminArtisanDashboard() {
     </div>
   );
 }
+
+

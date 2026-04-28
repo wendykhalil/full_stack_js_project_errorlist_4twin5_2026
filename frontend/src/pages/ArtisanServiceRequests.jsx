@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useCallback } from "react";
+﻿import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Briefcase, MapPin, Wallet, Calendar, X, ChevronRight, Clock, ExternalLink, Undo2, CheckCircle2, XCircle } from "lucide-react";
+import ReadCardButton from '../components/ReadCardButton';
 import { useAuth } from "../auth/AuthContext";
 import PageShell from "../components/PageShell";
 import SimpleFooter from "../components/Footer";
@@ -42,8 +43,8 @@ function Avatar({ src, name, size = "md" }) {
   );
 }
 
-const TRADES = ["Plombier","�lectricien","Ma�on","Peintre","Menuisier","Carreleur","Chauffagiste","Climatisation","Jardinier","Autre"];
-const TUNISIA_CITIES = ["Tunis","Ariana","Ben Arous","Manouba","Nabeul","Sousse","Monastir","Mahdia","Sfax","Kairouan","Bizerte","Beja","Jendouba","Le Kef","Siliana","Zaghouan","Kasserine","Sidi Bouzid","Gab�s","Gafsa","Tozeur","K�bili","Medenine","Tataouine"];
+const TRADES = ["Plombier","ï¿½lectricien","Maï¿½on","Peintre","Menuisier","Carreleur","Chauffagiste","Climatisation","Jardinier","Autre"];
+const TUNISIA_CITIES = ["Tunis","Ariana","Ben Arous","Manouba","Nabeul","Sousse","Monastir","Mahdia","Sfax","Kairouan","Bizerte","Beja","Jendouba","Le Kef","Siliana","Zaghouan","Kasserine","Sidi Bouzid","Gabï¿½s","Gafsa","Tozeur","Kï¿½bili","Medenine","Tataouine"];
 
 const APP_STATUS_STYLE = {
   PENDING:  "bg-orange-100 text-orange-700",
@@ -53,7 +54,7 @@ const APP_STATUS_STYLE = {
 
 const APP_STATUS_LABEL = {
   PENDING:  "En attente",
-  ACCEPTED: "Accept�e",
+  ACCEPTED: "Acceptï¿½e",
   REJECTED: "Non retenue",
 };
 
@@ -87,7 +88,7 @@ function RequestCard({ item, onView }) {
               <h3 className="font-semibold text-slate-900 truncate">{item.title}</h3>
               {item.hasApplied && (
                 <span className="rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-700">
-                  Candidature envoy�e
+                  Candidature envoyï¿½e
                 </span>
               )}
             </div>
@@ -101,7 +102,7 @@ function RequestCard({ item, onView }) {
               {item.deadline && <span className="inline-flex items-center gap-1"><Calendar className="h-3.5 w-3.5" />{new Date(item.deadline).toLocaleDateString()}</span>}
             </div>
             {item.description && <p className="mt-2 text-sm text-slate-600 line-clamp-2">{item.description}</p>}
-            <p className="mt-2 text-xs text-slate-400">{item.applicationsCount} candidat(s){item.maxApplicants ? <span className="ml-1 font-medium text-indigo-600">/ {item.maxApplicants} max{item.applicationsCount >= item.maxApplicants ? " � Complet" : ""}</span> : ""}</p>
+            <p className="mt-2 text-xs text-slate-400">{item.applicationsCount} candidat(s){item.maxApplicants ? <span className="ml-1 font-medium text-indigo-600">/ {item.maxApplicants} max{item.applicationsCount >= item.maxApplicants ? " ï¿½ Complet" : ""}</span> : ""}</p>
           </div>
         </div>
         <button
@@ -146,7 +147,7 @@ export default function ArtisanServiceRequests() {
   const [reviewSourceId, setReviewSourceId] = useState(null);
 
   const { errors: applyFormErrors, validate: validateApply } = useFormValidation({
-    applyPrice: [rules.required("Le prix propos� est obligatoire"), rules.positiveNumber("Doit �tre un nombre positif")],
+    applyPrice: [rules.required("Le prix proposï¿½ est obligatoire"), rules.positiveNumber("Doit ï¿½tre un nombre positif")],
     applyMsg: [rules.maxLength(500)],
   });
   const {
@@ -284,7 +285,7 @@ export default function ArtisanServiceRequests() {
       <div className="mx-auto max-w-4xl space-y-6 p-4 sm:p-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Demandes de service</h1>
-          <p className="mt-1 text-sm text-slate-500">Trouvez des missions publi�es par des prescripteurs</p>
+          <p className="mt-1 text-sm text-slate-500">Trouvez des missions publiï¿½es par des prescripteurs</p>
         </div>
 
         {/* Tabs */}
@@ -293,7 +294,7 @@ export default function ArtisanServiceRequests() {
             { key: "browse", label: "Offres disponibles" },
             { key: "applications", label: "Mes candidatures", badge: pendingCount },
           ].map(t => (
-            <Hint key={t.key} text={t.key === 'browse' ? 'Parcourir les missions disponibles correspondant � votre m�tier.' : 'Voir l\'\u00e9tat de vos candidatures envoy\u00e9es aux prescripteurs.'}>
+            <Hint key={t.key} text={t.key === 'browse' ? 'Parcourir les missions disponibles correspondant ï¿½ votre mï¿½tier.' : 'Voir l\'\u00e9tat de vos candidatures envoy\u00e9es aux prescripteurs.'}>
             <button
               onClick={() => setTab(t.key)}
               className={`relative rounded-xl px-4 py-2 text-sm font-medium transition-colors ${
@@ -322,22 +323,22 @@ export default function ArtisanServiceRequests() {
         {tab === "browse" && (
           <>
             <div className="flex flex-wrap gap-3">
-              <Hint text="Filtrer les missions par corps de m�tier (plombier, �lectricien, ma�on...).">
+              <Hint text="Filtrer les missions par corps de mï¿½tier (plombier, ï¿½lectricien, maï¿½on...).">
               <select
                 value={tradeFilter}
                 onChange={e => setTradeFilter(e.target.value)}
                 className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
               >
-                <option value="">Tous les m�tiers</option>
+                <option value="">Tous les mï¿½tiers</option>
                 {TRADES.map(t => <option key={t} value={t}>{t}</option>)}
               </select>
               </Hint>
-              <Hint text="Filtrer les missions par ville ou r�gion en Tunisie.">
+              <Hint text="Filtrer les missions par ville ou rï¿½gion en Tunisie.">
               <input
                 value={cityFilter}
                 onChange={e => setCityFilter(e.target.value)}
                 list="cities-filter"
-                placeholder="Filtrer par ville�"
+                placeholder="Filtrer par villeï¿½"
                 className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
               />
               </Hint>
@@ -348,14 +349,14 @@ export default function ArtisanServiceRequests() {
                   onClick={() => { setTradeFilter(""); setCityFilter(""); }}
                   className="rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-500 hover:bg-slate-50"
                 >
-                  R�initialiser
+                  Rï¿½initialiser
                 </button>
                 </Hint>
               )}
             </div>
 
             {loading ? (
-              <div className="py-16 text-center text-slate-400">Chargement�</div>
+              <div className="py-16 text-center text-slate-400">Chargementï¿½</div>
             ) : items.length === 0 ? (
               <div className="rounded-3xl border border-dashed border-slate-300 py-16 text-center">
                 <p className="text-slate-500">Aucune demande disponible pour votre profil.</p>
@@ -371,7 +372,7 @@ export default function ArtisanServiceRequests() {
                       disabled={page === 1 || loading}
                       className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-40"
                     >
-                      Pr�c�dent
+                      Prï¿½cï¿½dent
                     </button>
                     <span className="text-sm text-slate-500">
                       Page {page} / {totalPages}
@@ -393,15 +394,19 @@ export default function ArtisanServiceRequests() {
         {/* -- My applications tab -- */}
         {tab === "applications" && (
           loading ? (
-            <div className="py-16 text-center text-slate-400">Chargement�</div>
+            <div className="py-16 text-center text-slate-400">Chargementï¿½</div>
           ) : myApps.length === 0 ? (
             <div className="rounded-3xl border border-dashed border-slate-300 py-16 text-center">
-              <p className="text-slate-500">Vous n'avez pas encore postul� � des demandes.</p>
+              <p className="text-slate-500">Vous n'avez pas encore postulï¿½ ï¿½ des demandes.</p>
             </div>
           ) : (
             <div className="space-y-3">
               {myApps.map(item => (
                 <div key={item._id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                      <div className="flex items-center justify-between">
+                      <h3 className="font-semibold text-slate-900">{item.title}</h3>
+                        <ReadCardButton />
+                      </div>
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-slate-900">{item.title}</h3>
@@ -417,7 +422,7 @@ export default function ArtisanServiceRequests() {
                       )}
                       {item.application?.proposedPrice && (
                         <p className="mt-1 text-xs text-slate-500">
-                          Prix propos� : <span className="font-semibold">{item.application.proposedPrice.toLocaleString()} TND</span>
+                          Prix proposï¿½ : <span className="font-semibold">{item.application.proposedPrice.toLocaleString()} TND</span>
                         </p>
                       )}
                     </div>
@@ -453,9 +458,9 @@ export default function ArtisanServiceRequests() {
       </div>
 
       {/* -- Detail & Apply Modal -- */}
-      <Modal open={!!detail} title="D�tail de la demande" onClose={() => setDetail(null)}>
+      <Modal open={!!detail} title="Dï¿½tail de la demande" onClose={() => setDetail(null)}>
         {detailLoading ? (
-          <div className="py-8 text-center text-slate-400">Chargement�</div>
+          <div className="py-8 text-center text-slate-400">Chargementï¿½</div>
         ) : detail ? (
           <div className="space-y-5">
 
@@ -496,7 +501,7 @@ export default function ArtisanServiceRequests() {
               <div className="space-y-3">
                 <div className="rounded-2xl bg-emerald-50 border border-emerald-200 px-4 py-4 text-center space-y-1">
                   <CheckCircle2 className="mx-auto h-8 w-8 text-emerald-500" />
-                  <p className="font-semibold text-emerald-700">Candidature envoy�e !</p>
+                  <p className="font-semibold text-emerald-700">Candidature envoyï¿½e !</p>
                   <p className="text-sm text-emerald-600">Le prescripteur examinera votre profil.</p>
                 </div>
                 {applyWarning && (
@@ -512,7 +517,7 @@ export default function ArtisanServiceRequests() {
               <div className="rounded-2xl border border-indigo-200 bg-indigo-50 px-4 py-4 space-y-3">
                 <div className="flex items-center gap-2 text-indigo-700">
                   <CheckCircle2 className="h-5 w-5" />
-                  <p className="text-sm font-semibold">Vous avez d�j� postul� � cette demande.</p>
+                  <p className="text-sm font-semibold">Vous avez dï¿½jï¿½ postulï¿½ ï¿½ cette demande.</p>
                 </div>
                 {detail.myApplication?.message && (
                   <p className="text-sm text-slate-600 italic bg-white rounded-xl px-3 py-2">
@@ -521,7 +526,7 @@ export default function ArtisanServiceRequests() {
                 )}
                 {detail.myApplication?.proposedPrice && (
                   <p className="text-xs text-slate-500">
-                    Prix propos� : <span className="font-semibold">{detail.myApplication.proposedPrice.toLocaleString()} TND</span>
+                    Prix proposï¿½ : <span className="font-semibold">{detail.myApplication.proposedPrice.toLocaleString()} TND</span>
                   </p>
                 )}
                 {detail.myApplication?.status === "PENDING" && (
@@ -531,7 +536,7 @@ export default function ArtisanServiceRequests() {
                     className="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-100 disabled:opacity-50"
                   >
                     <Undo2 className="h-4 w-4" />
-                    {withdrawing ? "Retrait�" : "Retirer ma candidature"}
+                    {withdrawing ? "Retraitï¿½" : "Retirer ma candidature"}
                   </button>
                 )}
               </div>
@@ -542,7 +547,7 @@ export default function ArtisanServiceRequests() {
                 <h4 className="font-semibold text-slate-800">Postuler</h4>
                 <div>
                   <label className="text-sm font-medium text-slate-700">
-                    Prix propos� (TND) <span className="text-red-500">*</span>
+                    Prix proposï¿½ (TND) <span className="text-red-500">*</span>
                   </label>
                   <input
                     value={applyPrice}
@@ -563,7 +568,7 @@ export default function ArtisanServiceRequests() {
                     className={`mt-1 w-full rounded-xl border ${
                       applyFormErrors.applyMsg || applyServerErrors.applyMsg ? "border-red-400" : "border-slate-200"
                     } px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500`}
-                    placeholder="Pr�sentez-vous et expliquez pourquoi vous �tes le bon choix�"
+                    placeholder="Prï¿½sentez-vous et expliquez pourquoi vous ï¿½tes le bon choixï¿½"
                   />
                   <FieldError error={applyFormErrors.applyMsg || applyServerErrors.applyMsg} />
                 </div>
@@ -575,7 +580,7 @@ export default function ArtisanServiceRequests() {
                   disabled={applying}
                   className="w-full rounded-xl bg-indigo-600 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
                 >
-                  {applying ? "Envoi�" : "Envoyer ma candidature"}
+                  {applying ? "Envoiï¿½" : "Envoyer ma candidature"}
                 </button>
               </form>
             )}
@@ -593,6 +598,7 @@ export default function ArtisanServiceRequests() {
     </PageShell>
   );
 }
+
 
 
 
