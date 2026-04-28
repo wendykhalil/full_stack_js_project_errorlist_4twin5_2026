@@ -316,7 +316,7 @@ export default function Profile() {
   return (
     <>
       <Notification notification={notification} onClose={hideNotification} />
-      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
+      <div className="w-full px-4 py-6 sm:px-6 lg:px-8">
 
         {/* Page Header */}
         <div className="mb-6">
@@ -341,7 +341,7 @@ export default function Profile() {
         )}
 
         {/* Two-column layout */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
 
           {/* ── LEFT SIDEBAR ── */}
           <aside className="space-y-4">
