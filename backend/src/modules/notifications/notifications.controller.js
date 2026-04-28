@@ -1,4 +1,5 @@
 const Notification = require('../../models/Notification');
+const Availability = require('../../models/Availability');
 
 function uid(req) { return req.user?._id || req.user?.id; }
 
@@ -51,4 +52,45 @@ async function remove(req, res, next) {
   } catch (err) { return next(err); }
 }
 
-module.exports = { list, unreadCount, markRead, markAllRead, remove };
+async function sendWelcome(req, res, next) {
+  try {
+    const { userName } = req.body;
+    const userId = uid(req);
+    
+    // Get today's date at start of day (local timezone)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Check if there's an availability entry for today
+    const todayAvailability = await Availability.findOne({
+      artisanId: userId,
+      date: today
+    }).lean();
+    
+    let title = `Bienvenue ${userName || ''}! 👋`;
+    let message = `Vous avez activé "Se souvenir de moi". À la prochaine connexion, vous serez automatiquement reconnecté.`;
+    
+    // If there's a note/reminder for today, add it to the notification
+    if (todayAvailability && todayAvailability.note) {
+      const statusLabels = {
+        AVAILABLE: 'Disponible',
+        BUSY: 'Occupé',
+        BOOKED: 'Réservé'
+      };
+      const statusLabel = statusLabels[todayAvailability.status] || 'Statut';
+      message = `${statusLabel}: ${todayAvailability.note}`;
+    }
+    
+    const notification = await Notification.create({
+      userId,
+      type: 'GENERAL',
+      title,
+      message,
+      link: ''
+    });
+    
+    return res.json({ ok: true, notification });
+  } catch (err) { return next(err); }
+}
+
+module.exports = { list, unreadCount, markRead, markAllRead, remove, sendWelcome };

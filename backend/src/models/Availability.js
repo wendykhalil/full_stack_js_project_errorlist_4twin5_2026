@@ -22,6 +22,14 @@ const availabilitySchema = new mongoose.Schema(
       maxlength: 200,
       default: "",
     },
+    timeSlots: {
+      type: {
+        morning: { type: Boolean, default: false },
+        afternoon: { type: Boolean, default: false },
+        evening: { type: Boolean, default: false },
+      },
+      default: {},
+    },
   },
   { timestamps: true }
 );

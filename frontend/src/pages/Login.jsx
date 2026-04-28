@@ -20,6 +20,7 @@ export default function Login() {
   const [emailOrPhone, setEmailOrPhone] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(() => localStorage.getItem("rememberMe") === "true");
   const [loading, setLoading] = useState(false);
   const [info] = useState(() => location.state?.info || "");
   const [resendState, setResendState] = useState({ loading: false, message: "" });
@@ -96,6 +97,31 @@ export default function Login() {
     setLoading(true);
     try {
       const user = await login(emailOrPhone.trim(), password);
+      
+      // Save remember me preference
+      if (rememberMe) {
+        localStorage.setItem("rememberMe", "true");
+      } else {
+        localStorage.removeItem("rememberMe");
+      }
+      
+      // Get the token from localStorage (it was just set by login/persist)
+      const token = localStorage.getItem("bmptn_token");
+      
+      // Send welcome notification to the backend (always, regardless of rememberMe)
+      if (token) {
+        try {
+          await apiFetch("/notifications/send-welcome", { 
+            token,
+            method: "POST",
+            body: { userName: user.firstName || user.email }
+          });
+        } catch (e) {
+          console.error("Welcome notification failed:", e);
+          // Don't fail login if notification fails
+        }
+      }
+      
       navigate(roleToBasePath(user.role), { replace: true });
     } catch (err) {
       handleError(err);
@@ -273,7 +299,16 @@ Commencer              </Link>
                     <FieldError error={fieldErrors.password} />
                   </div>
 
-                  <div className="flex items-center justify-end">
+                  <div className="flex items-center justify-between">
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                      />
+                      <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900">Se souvenir de moi</span>
+                    </label>
                     <button type="button" onClick={() => navigate("/forgot-password")}
                       className="text-xs font-medium text-blue-600 transition-colors hover:text-blue-700 hover:underline">
                       Mot de passe oublié ?

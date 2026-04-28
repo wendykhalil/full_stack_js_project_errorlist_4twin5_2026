@@ -10,6 +10,8 @@ const validateUpsertAvailability = validate([
   body('note').optional().trim()
     .isLength({ max: 200 }).withMessage('La note ne peut pas dépasser 200 caractères')
     .escape(),
+  body('timeSlots').optional()
+    .isObject().withMessage('timeSlots doit être un objet'),
 ]);
 
 const validateDateParam = validate([
