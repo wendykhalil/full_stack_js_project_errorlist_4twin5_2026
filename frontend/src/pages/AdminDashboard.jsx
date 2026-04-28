@@ -40,21 +40,28 @@ const PIE_COLORS = ["#4f46e5", "#f97316", "#10b981", "#64748b", "#ef4444", "#06b
 
 function SectionTitle({ children }) {
   return (
-    <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-      {children}
-    </h2>
+    <div className="flex items-center gap-2 mb-1">
+      <div className="h-4 w-1 rounded-full bg-indigo-500" />
+      <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500">
+        {children}
+      </h2>
+    </div>
   );
 }
 
-function KpiCard({ icon, label, value, helper, iconBg = "bg-slate-100", iconFg = "text-slate-600" }) {
+function KpiCard({ icon, label, value, helper, iconBg = "bg-slate-100", iconFg = "text-slate-600", accent }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className={`inline-flex h-10 w-10 items-center justify-center rounded-xl ${iconBg}`}>
-        {React.cloneElement(icon, { className: `h-5 w-5 ${iconFg}` })}
+    <div className={`relative overflow-hidden rounded-2xl border bg-white p-6 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 ${accent ? `border-l-4 ${accent}` : 'border-slate-200'}`}>
+      <div className="flex items-start justify-between">
+        <div className="space-y-1 flex-1 min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</p>
+          <p className="text-3xl font-bold tracking-tight text-slate-900 mt-2">{value}</p>
+          {helper && <p className="text-xs text-slate-500 mt-1">{helper}</p>}
+        </div>
+        <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${iconBg} shadow-sm`}>
+          {React.cloneElement(icon, { className: `h-6 w-6 ${iconFg}` })}
+        </div>
       </div>
-      <div className="mt-3 text-2xl font-bold tracking-tight text-slate-900">{value}</div>
-      <div className="mt-0.5 text-sm font-medium text-slate-700">{label}</div>
-      {helper && <div className="mt-1 text-xs text-slate-400">{helper}</div>}
     </div>
   );
 }
@@ -234,7 +241,7 @@ export default function AdminDashboard() {
   /* ── Loading / error shell ── */
   if (loadingS) {
     return (
-      <div className="flex min-h-screen flex-col bg-gray-50">
+      <div className="flex min-h-[calc(100vh-4rem)] flex-col bg-gray-50">
         <main className="flex flex-1 items-center justify-center">
           <div className="text-center">
             <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-gray-200 border-t-indigo-600" />
@@ -248,7 +255,7 @@ export default function AdminDashboard() {
 
   if (errorS) {
     return (
-      <div className="flex min-h-screen flex-col bg-gray-50">
+      <div className="flex min-h-[calc(100vh-4rem)] flex-col bg-gray-50">
         <main className="flex flex-1 items-center justify-center p-8">
           <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-700 max-w-lg w-full">
             {errorS}
@@ -260,12 +267,12 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-50">
+    <div className="flex min-h-[calc(100vh-4rem)] flex-col bg-gray-50">
       <main className="flex-1">
-        <div className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl space-y-10 px-4 py-8 sm:px-6 lg:px-8">
 
           {/* ── Page header ─────────────────────────────────────────────── */}
-          <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-4 pb-2 border-b border-slate-200">
             <div>
               <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
                 Tableau de bord
@@ -322,7 +329,7 @@ export default function AdminDashboard() {
           {/* ══ 1. ALERTES CRITIQUES ════════════════════════════════════ */}
           {criticalAlerts.length > 0 && (
             <section className="space-y-3">
-              <SectionTitle>Alertes critiques</SectionTitle>
+              <SectionTitle>Alertes critiques — action requise</SectionTitle>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {criticalAlerts.map((a) => (
                   <Hint key={a.id} text="Alerte critique nécessitant une action immédiate de votre part.">
@@ -336,9 +343,11 @@ export default function AdminDashboard() {
           )}
 
           {/* ══ 2. KPIs PRINCIPAUX ══════════════════════════════════════ */}
-          <section className="space-y-3">
-            <SectionTitle>Indicateurs clés</SectionTitle>
-            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <section className="space-y-4">
+            <SectionTitle>Indicateurs clés de la plateforme</SectionTitle>
+
+            {/* Primary KPIs — 4 big cards */}
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
               <Hint text="Nombre de comptes avec le statut ACTIF. Les comptes bloqués ou inactifs ne sont pas comptés.">
                 <div>
                   <KpiCard
@@ -347,6 +356,7 @@ export default function AdminDashboard() {
                     value={stats.activeUsers ?? 0}
                     helper={`${stats.totalUsers ?? 0} comptes au total`}
                     iconBg="bg-indigo-50" iconFg="text-indigo-600"
+                    accent="border-l-indigo-500"
                   />
                 </div>
               </Hint>
@@ -354,10 +364,11 @@ export default function AdminDashboard() {
                 <div>
                   <KpiCard
                     icon={<ShoppingCart />}
-                    label="Commandes"
+                    label="Commandes totales"
                     value={stats.totalOrders ?? 0}
-                    helper={`${stats.openOrders ?? 0} en cours`}
+                    helper={`${stats.openOrders ?? 0} en cours de traitement`}
                     iconBg="bg-emerald-50" iconFg="text-emerald-600"
+                    accent="border-l-emerald-500"
                   />
                 </div>
               </Hint>
@@ -365,10 +376,11 @@ export default function AdminDashboard() {
                 <div>
                   <KpiCard
                     icon={<ArrowLeftRight />}
-                    label="Volume livré"
+                    label="Volume livré (TND)"
                     value={money.format(stats.deliveredRevenue || 0)}
                     helper="Commandes livrées cumulées"
                     iconBg="bg-orange-50" iconFg="text-orange-600"
+                    accent="border-l-orange-500"
                   />
                 </div>
               </Hint>
@@ -378,46 +390,47 @@ export default function AdminDashboard() {
                     icon={<Package />}
                     label="Produits approuvés"
                     value={stats.approvedProducts ?? 0}
-                    helper={`${stats.totalProducts ?? 0} enregistrés`}
+                    helper={`${stats.totalProducts ?? 0} enregistrés au total`}
                     iconBg="bg-slate-100" iconFg="text-slate-600"
+                    accent="border-l-slate-400"
                   />
                 </div>
               </Hint>
             </div>
 
-            {/* Secondary KPIs row */}
+            {/* Secondary KPIs — 3 smaller metric cards */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <Hint text="Variation du nombre de nouveaux inscrits par rapport à la période précédente de même durée. Positif = croissance.">
-                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                  <p className="text-xs text-slate-500">Croissance utilisateurs</p>
-                  <p className="mt-1 text-xl font-bold text-slate-900">{changes.userGrowthPct}%</p>
-                  <p className={`mt-1 flex items-center gap-1 text-xs font-medium ${changes.userGrowthPct >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-all">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Croissance utilisateurs</p>
+                  <p className="mt-3 text-2xl font-bold text-slate-900">{changes.userGrowthPct}%</p>
+                  <p className={`mt-1.5 flex items-center gap-1 text-xs font-medium ${changes.userGrowthPct >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
                     <TrendingUp className="h-3.5 w-3.5" />
                     {changes.userGrowthPct >= 0 ? "Hausse" : "Baisse"} vs période précédente
                   </p>
                 </div>
               </Hint>
               <Hint text="Le rôle ayant le plus grand nombre d'utilisateurs inscrits sur la plateforme (Artisan, Fournisseur, Prescripteur ou Admin).">
-                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                  <p className="text-xs text-slate-500">Rôle le plus actif</p>
-                  <p className="mt-1 text-xl font-bold text-slate-900">{hl.mostActiveRole.role}</p>
-                  <p className="mt-1 text-xs text-slate-400">{hl.mostActiveRole.count} utilisateurs</p>
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-all">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Rôle le plus actif</p>
+                  <p className="mt-3 text-2xl font-bold text-slate-900">{hl.mostActiveRole.role}</p>
+                  <p className="mt-1.5 text-xs text-slate-500">{hl.mostActiveRole.count} utilisateurs inscrits</p>
                 </div>
               </Hint>
               <Hint text="Différence de revenus entre le début et la fin de la période sélectionnée. Indique si les ventes progressent ou régressent.">
-                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                  <p className="text-xs text-slate-500">Tendance revenus</p>
-                  <p className={`mt-1 text-xl font-bold ${hl.revenueTrend >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-all">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Tendance revenus</p>
+                  <p className={`mt-3 text-2xl font-bold ${hl.revenueTrend >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
                     {money.format(hl.revenueTrend || 0)}
                   </p>
-                  <p className="mt-1 text-xs text-slate-400">Variation sur la fenêtre sélectionnée</p>
+                  <p className="mt-1.5 text-xs text-slate-500">Variation sur la fenêtre sélectionnée</p>
                 </div>
               </Hint>
             </div>
           </section>
 
           {/* ══ 3. ANALYSES IA ══════════════════════════════════════════ */}
-          <section className="space-y-3">
+          <section className="space-y-4">
             <div className="flex items-center justify-between">
               <SectionTitle>Analyses IA</SectionTitle>
               {ai?.source === "heuristic" && (
@@ -515,8 +528,8 @@ export default function AdminDashboard() {
           </section>
 
           {/* ══ 4. TENDANCES / GRAPHIQUES ═══════════════════════════════ */}
-          <section className="space-y-3">
-            <SectionTitle>Tendances</SectionTitle>
+          <section className="space-y-4">
+            <SectionTitle>Tendances &amp; Graphiques</SectionTitle>
             <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
 
               {/* User growth line chart */}
@@ -599,8 +612,8 @@ export default function AdminDashboard() {
           </section>
 
           {/* ══ 5. FLUX RÉCENT & LOCALISATION ═══════════════════════════ */}
-          <section className="space-y-3">
-            <SectionTitle>Flux récent</SectionTitle>
+          <section className="space-y-4">
+            <SectionTitle>Flux récent &amp; Géolocalisation</SectionTitle>
             <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.4fr_0.6fr]">
 
               {/* Other alerts */}
@@ -645,7 +658,7 @@ export default function AdminDashboard() {
           </section>
 
           {/* ══ 6. ACTIONS RAPIDES ══════════════════════════════════════ */}
-          <section className="space-y-3">
+          <section className="space-y-4">
             <SectionTitle>Actions rapides</SectionTitle>
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">

@@ -49,16 +49,16 @@ const activityMeta = {
 /* ── Small reusable stat card ── */
 function StatCard({ title, value, helper, icon, iconBg, iconFg, hint }) {
   const card = (
-    <div className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5">
-      <div className="absolute right-0 top-0 h-20 w-20 -translate-y-6 translate-x-6 rounded-full bg-gradient-to-br from-indigo-50 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+    <div className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5">
+      <div className="absolute right-0 top-0 h-24 w-24 -translate-y-8 translate-x-8 rounded-full bg-gradient-to-br from-indigo-50 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
       <div className="flex items-start justify-between">
-        <div className="space-y-1">
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-400">{title}</p>
-          <p className="text-2xl font-bold tracking-tight text-slate-900">{value}</p>
+        <div className="space-y-1.5 flex-1 min-w-0">
+          <p className="text-xs font-bold uppercase tracking-widest text-slate-400">{title}</p>
+          <p className="text-3xl font-bold tracking-tight text-slate-900">{value}</p>
           <p className="text-xs text-slate-500">{helper}</p>
         </div>
-        <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${iconBg} shadow-sm`}>
-          {React.cloneElement(icon, { className: `h-5 w-5 ${iconFg}` })}
+        <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${iconBg} shadow-sm`}>
+          {React.cloneElement(icon, { className: `h-6 w-6 ${iconFg}` })}
         </div>
       </div>
     </div>
@@ -71,15 +71,15 @@ function ActionCard({ to, icon, label, description, iconBg, iconFg, hint }) {
   const card = (
     <Link
       to={to}
-      className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 flex flex-col"
+      className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 flex flex-col"
     >
-      <div className="absolute -right-4 -top-4 h-16 w-16 rounded-full bg-gradient-to-br from-indigo-100 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-      <div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-xl ${iconBg} transition-transform group-hover:scale-110`}>
-        {React.cloneElement(icon, { className: `h-5 w-5 ${iconFg}` })}
+      <div className="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-gradient-to-br from-indigo-100 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+      <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl ${iconBg} transition-transform group-hover:scale-110`}>
+        {React.cloneElement(icon, { className: `h-6 w-6 ${iconFg}` })}
       </div>
-      <h3 className="text-sm font-semibold text-slate-900">{label}</h3>
-      <p className="mt-1 text-xs text-slate-500 flex-1">{description}</p>
-      <div className="mt-3 flex items-center text-xs font-medium text-indigo-600 opacity-0 transition-opacity group-hover:opacity-100">
+      <h3 className="text-sm font-bold text-slate-900">{label}</h3>
+      <p className="mt-1.5 text-xs text-slate-500 flex-1 leading-relaxed">{description}</p>
+      <div className="mt-4 flex items-center text-xs font-semibold text-indigo-600 opacity-0 transition-opacity group-hover:opacity-100">
         Accéder <ArrowUpRight className="ml-1 h-3 w-3" />
       </div>
     </Link>
@@ -90,14 +90,14 @@ function ActionCard({ to, icon, label, description, iconBg, iconFg, hint }) {
 /* ── Section header ── */
 function SectionHeader({ icon, title, subtitle, action }) {
   return (
-    <div className="flex items-center justify-between mb-4">
+    <div className="flex items-center justify-between mb-5">
       <div className="flex items-center gap-3">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100">
-          {React.cloneElement(icon, { className: "h-4 w-4 text-slate-600" })}
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50">
+          {React.cloneElement(icon, { className: "h-5 w-5 text-indigo-600" })}
         </div>
         <div>
-          <h2 className="text-base font-semibold text-slate-900">{title}</h2>
-          {subtitle && <p className="text-xs text-slate-500">{subtitle}</p>}
+          <h2 className="text-base font-bold text-slate-900">{title}</h2>
+          {subtitle && <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>}
         </div>
       </div>
       {action}
@@ -156,7 +156,8 @@ export default function ArtisanDashboard() {
   };
 
   return (
-    <div className="space-y-6 pb-2">
+    <div className="flex flex-col min-h-[calc(100vh-4rem)]">
+      <div className="flex-1 space-y-6 pb-2">
 
       {/* ── Subscription expiry warning ── */}
       {subWarning && (
@@ -251,11 +252,11 @@ export default function ArtisanDashboard() {
               SECTION 2 — Chiffres clés (4 stats)
           ══════════════════════════════════════════ */}
           <div>
-            <div className="flex items-center gap-2 mb-3">
-              <BarChart3 className="h-4 w-4 text-slate-500" />
-              <h2 className="text-sm font-semibold text-slate-600 uppercase tracking-wide">Chiffres clés</h2>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="h-4 w-1 rounded-full bg-indigo-500" />
+              <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500">Chiffres clés</h2>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
               <StatCard
                 title="Total projets"
                 value={stats.totalProjects}
@@ -306,9 +307,12 @@ export default function ArtisanDashboard() {
             />
 
             {/* Groupe A : Projets & Documents */}
-            <div className="mb-5">
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Projets &amp; Documents</p>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="h-3 w-1 rounded-full bg-indigo-400" />
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Projets &amp; Documents</p>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <ActionCard
                   to="/artisan/projects"
                   icon={<Plus />}
@@ -350,8 +354,11 @@ export default function ArtisanDashboard() {
 
             {/* Groupe B : Outils IA & Analyse */}
             <div>
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Outils IA &amp; Analyse</p>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="h-3 w-1 rounded-full bg-purple-400" />
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Outils IA &amp; Analyse</p>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <ActionCard
                   to="/artisan/ml-predictions"
                   icon={<Brain />}
@@ -482,6 +489,7 @@ export default function ArtisanDashboard() {
         </>
       )}
 
+      </div>{/* end flex-1 */}
       <SimpleFooter />
     </div>
   );

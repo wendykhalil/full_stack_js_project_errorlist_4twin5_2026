@@ -190,7 +190,8 @@ const ArtisanWeather = () => {
   const goodDay = isGoodDayToWork(weather);
 
   return (
-    <div className="w-full min-h-screen bg-gradient-to-br from-blue-50 to-blue-100">
+    <div className="flex flex-col min-h-[calc(100vh-4rem)] w-full bg-gradient-to-br from-blue-50 to-blue-100">
+      <div className="flex-1">
       {/* Header */}
       <div className="w-full bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-6">
@@ -352,8 +353,9 @@ const ArtisanWeather = () => {
           </>
         )}
       </div>
+      </div>{/* end flex-1 */}
+      <SimpleFooter />
     </div>
-    <SimpleFooter />
   );
 };
 

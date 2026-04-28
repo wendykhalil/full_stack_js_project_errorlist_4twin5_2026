@@ -142,8 +142,8 @@ export default function ArtisanSubscription() {
   if (subLoading) return <div className="py-20 text-center text-slate-400">Chargement…</div>;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white py-12">
-      <div className="mx-auto max-w-none px-5 sm:px-7 space-y-9">
+    <div className="flex flex-col min-h-[calc(100vh-4rem)] bg-gradient-to-br from-slate-50 to-white">
+      <div className="flex-1 mx-auto max-w-none w-full px-5 sm:px-7 space-y-9 py-12">
 
         {/* Header */}
         <div className="text-center">
@@ -353,8 +353,8 @@ export default function ArtisanSubscription() {
           </div>
         )}
 
-      </div>
+      </div>{/* end flex-1 */}
+      <SimpleFooter />
     </div>
-    <SimpleFooter />
   );
 }

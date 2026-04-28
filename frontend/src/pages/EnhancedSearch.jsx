@@ -138,8 +138,8 @@ export default function EnhancedSearch() {
   const pageDescription = "Recherchez des artisans, fournisseurs et services près de chez vous. Utilisez la recherche vocale ou tapez votre demande.";
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="flex flex-col min-h-[calc(100vh-4rem)] bg-gray-50">
+      <div className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
         
         {/* Header */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
@@ -376,6 +376,7 @@ export default function EnhancedSearch() {
           )}
         </div>
       </div>
+      </div>{/* end flex-1 */}
       <SimpleFooter />
     </div>
   );

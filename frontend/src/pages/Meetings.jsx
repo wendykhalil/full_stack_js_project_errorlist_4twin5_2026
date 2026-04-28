@@ -454,7 +454,8 @@ export default function Meetings() {
   }
 
   return (
-    <div className="flex-1">
+    <div className="flex flex-col min-h-[calc(100vh-4rem)]">
+      <div className="flex-1">
       <div className="mb-10">
         <h1 className="text-4xl font-bold text-slate-900 dark:text-slate-100">
           {isArtisan ? 'Demandes de réunion reçues' : 'Réunions planifiées'}
@@ -568,6 +569,7 @@ export default function Meetings() {
         meetingTitle={selectedMeeting?.title}
         onClose={() => setSelectedMeeting(null)}
       />
+      </div>{/* end flex-1 */}
       <SimpleFooter />
     </div>
   );

@@ -419,7 +419,8 @@ export default function FournisseurDashboard() {
   const lastMonthLabel = new Date(now.getFullYear(), now.getMonth() - 1).toLocaleString('fr-FR', { month: 'long', year: 'numeric' });
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col min-h-[calc(100vh-4rem)]">
+      <div className="flex-1 space-y-6">
 
       {/* ── Header ── */}
       <div>
@@ -583,6 +584,7 @@ export default function FournisseurDashboard() {
           {advice.map((tip, i) => <AdviceCard key={i} {...tip} />)}
         </div>
       </div>
+      </div>{/* end flex-1 */}
       <SimpleFooter />
     </div>
   );
