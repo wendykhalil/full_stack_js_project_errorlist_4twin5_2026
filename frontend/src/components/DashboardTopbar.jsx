@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Search, ChevronDown, User, Settings, LogOut, Accessibility, MessageCircle, MapPin, Loader2, Mic, MicOff } from "lucide-react";
 import LanguageSwitcher from "./LanguageSwitcher";
+import DarkModeToggle from "./DarkModeToggle";
 import { getCurrentLang } from "../i18n";
 import { useLocation, useNavigate } from "react-router-dom";
 import { apiFetch } from "../auth/api";
@@ -414,6 +415,9 @@ export default function DashboardTopbar({ role = "ARTISAN", unreadCount = 0, onL
       <div className="flex items-center gap-3">
         {/* Language Switcher */}
         <LanguageSwitcher />
+
+        {/* Dark Mode Toggle */}
+        <DarkModeToggle />
 
         {/* Voice Navigation Button */}
         <div className="relative">

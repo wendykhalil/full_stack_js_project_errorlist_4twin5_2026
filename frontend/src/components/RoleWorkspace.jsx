@@ -133,7 +133,7 @@ function SidebarLink({ item, collapsed, onClick }) {
 
 function SectionLabel({ children, collapsed }) {
   if (collapsed) return null;
-  return <div className="mb-2 mt-4 px-3 text-[11px] font-semibold uppercase tracking-wider text-blue-200">{children}</div>;
+      <div className="mb-2 mt-4 px-3 text-[11px] font-semibold uppercase tracking-wider text-blue-200 dark:text-slate-400">{children}</div>;
 }
 
 export default function RoleWorkspace({
@@ -192,13 +192,13 @@ export default function RoleWorkspace({
   const sidebarContent = (
     <>
       {/* Logo Section */}
-      <div className={`flex h-16 items-center border-b border-blue-700/50 ${isSidebarCollapsed ? "justify-center px-2" : "px-4"}`}>
+      <div className={`flex h-16 items-center border-b border-blue-700/50 dark:border-slate-700 ${isSidebarCollapsed ? "justify-center px-2" : "px-4"}`}>
         <div className="flex items-center gap-3">
           <img src={logo} alt="BMP.tn" className="h-10 w-10 rounded-2xl bg-white p-1 shadow-sm" />
           {!isSidebarCollapsed ? (
             <div>
               <div className="text-base font-bold text-white">BMP.tn</div>
-              <div className="text-xs font-semibold text-blue-200 tracking-wide">{roleLabel}</div>
+              <div className="text-xs font-semibold text-blue-200 dark:text-slate-400 tracking-wide">{roleLabel}</div>
             </div>
           ) : null}
         </div>
@@ -267,11 +267,11 @@ export default function RoleWorkspace({
       </div>
 
       {/* Logout */}
-      <div className="border-t border-blue-700/50 p-3">
+      <div className="border-t border-blue-700/50 dark:border-slate-700 p-3">
         <button
           type="button"
           onClick={onLogout}
-          className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium text-blue-200 transition-all duration-200 hover:bg-white/10 hover:text-white w-full ${isSidebarCollapsed ? "justify-center" : ""}`}
+          className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium text-blue-200 dark:text-slate-300 transition-all duration-200 hover:bg-white/10 dark:hover:bg-slate-700 hover:text-white dark:hover:text-slate-100 w-full ${isSidebarCollapsed ? "justify-center" : ""}`}
           title={isSidebarCollapsed ? "Déconnexion" : undefined}
         >
           <LogOut className="h-4 w-4" />
@@ -284,10 +284,10 @@ export default function RoleWorkspace({
   return (
     <>
       <Notification notification={notification} onClose={hideNotification} />
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-30 hidden border-r border-blue-800/30 bg-gradient-to-b from-blue-800 via-blue-700 to-blue-800 shadow-xl transition-all duration-300 xl:flex xl:flex-col ${
+        className={`fixed inset-y-0 left-0 z-30 hidden border-r border-blue-800/30 dark:border-slate-700 bg-gradient-to-b from-blue-800 via-blue-700 to-blue-800 dark:from-slate-800 dark:via-slate-800 dark:to-slate-900 shadow-xl transition-all duration-300 xl:flex xl:flex-col ${
           isSidebarCollapsed ? "w-20" : "w-64"
         }`}
       >
@@ -305,19 +305,19 @@ export default function RoleWorkspace({
       {/* Main content */}
       <div className={`min-h-screen transition-all duration-300 ${isSidebarCollapsed ? "xl:ml-20" : "xl:ml-64"}`}>
         {/* Mobile header */}
-        <header className="sticky top-0 z-20 border-b border-blue-800/30 bg-gradient-to-r from-blue-800 via-blue-700 to-blue-800 backdrop-blur-md xl:hidden">
+        <header className="sticky top-0 z-20 border-b border-blue-800/30 dark:border-slate-700 bg-gradient-to-r from-blue-800 via-blue-700 to-blue-800 dark:from-slate-800 dark:via-slate-800 dark:to-slate-900 backdrop-blur-md xl:hidden">
           <div className="flex items-center justify-between px-4 py-3">
             <div className="flex items-center gap-2">
               <img src={logo} alt="BMP.tn" className="h-9 w-9 rounded-2xl bg-white p-1 shadow-sm" />
               <div>
                 <div className="text-sm font-bold text-white">BMP.tn</div>
-                <div className="text-[10px] font-medium text-blue-100">{roleLabel}</div>
+                <div className="text-[10px] font-medium text-blue-100 dark:text-slate-400">{roleLabel}</div>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => navigate(`${getRoleBasePath(role)}/messages`)}
-                className="relative rounded-full p-2 text-blue-200 hover:bg-white/10"
+                className="relative rounded-full p-2 text-blue-200 dark:text-slate-400 hover:bg-white/10 dark:hover:bg-slate-700/50"
                 title="Messages"
               >
                 <MessageCircle className="h-4 w-4" />
@@ -330,7 +330,7 @@ export default function RoleWorkspace({
               <button
                 onClick={handleAutoDetectLocation}
                 disabled={isUpdatingLocation}
-                className="relative rounded-full p-2 text-blue-200 hover:bg-white/10 disabled:opacity-50"
+                className="relative rounded-full p-2 text-blue-200 dark:text-slate-400 hover:bg-white/10 dark:hover:bg-slate-700/50 disabled:opacity-50"
                 title={isUpdatingLocation ? "Mise à jour de la position..." : "Localisation rapide"}
               >
                 {isUpdatingLocation ? (
@@ -339,12 +339,12 @@ export default function RoleWorkspace({
                   <MapPin className="h-4 w-4" />
                 )}
               </button>
-              <button className="rounded-full p-2 text-blue-200 hover:bg-white/10">
+              <button className="rounded-full p-2 text-blue-200 dark:text-slate-400 hover:bg-white/10 dark:hover:bg-slate-700/50">
                 <Bell className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setIsMobileMenuOpen((v) => !v)}
-                className="rounded-md p-2 text-blue-200 hover:bg-white/10"
+                className="rounded-md p-2 text-blue-200 dark:text-slate-400 hover:bg-white/10 dark:hover:bg-slate-700/50"
               >
                 {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
@@ -366,10 +366,10 @@ export default function RoleWorkspace({
         {/* Mobile menu overlay */}
         <div className={`fixed inset-0 z-40 xl:hidden ${isMobileMenuOpen ? "pointer-events-auto" : "pointer-events-none"}`}>
           <div
-            className={`absolute inset-0 bg-slate-950/45 transition-opacity ${isMobileMenuOpen ? "opacity-100" : "opacity-0"}`}
+            className={`absolute inset-0 bg-slate-950/45 dark:bg-black/60 transition-opacity ${isMobileMenuOpen ? "opacity-100" : "opacity-0"}`}
             onClick={closeMobileMenu}
           />
-          <div className={`absolute left-0 top-0 h-full w-[84%] max-w-[300px] bg-gradient-to-b from-blue-800 via-blue-700 to-blue-800 shadow-2xl transition-transform ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
+          <div className={`absolute left-0 top-0 h-full w-[84%] max-w-[300px] bg-gradient-to-b from-blue-800 via-blue-700 to-blue-800 dark:from-slate-800 dark:via-slate-800 dark:to-slate-900 shadow-2xl transition-transform ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
             {sidebarContent}
           </div>
         </div>

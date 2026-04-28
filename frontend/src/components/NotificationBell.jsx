@@ -135,11 +135,11 @@ export default function NotificationBell() {
           {/* List */}
           <div className="max-h-96 overflow-y-auto">
             {loading ? (
-              <div className="py-8 text-center text-sm text-slate-400">Chargement…</div>
+              <div className="py-8 text-center text-sm text-slate-400 dark:text-slate-500">Chargement…</div>
             ) : items.length === 0 ? (
               <div className="py-10 text-center">
-                <Bell className="mx-auto h-8 w-8 text-slate-300" />
-                <p className="mt-2 text-sm text-slate-400">Aucune notification</p>
+                <Bell className="mx-auto h-8 w-8 text-slate-300 dark:text-slate-600" />
+                <p className="mt-2 text-sm text-slate-400 dark:text-slate-500">Aucune notification</p>
               </div>
             ) : items.map(item => (
               <div key={item._id} onClick={() => handleClick(item)}
@@ -149,13 +149,13 @@ export default function NotificationBell() {
                   <p className={`text-sm ${!item.read ? 'font-semibold text-slate-900 dark:text-white' : 'text-slate-700 dark:text-slate-300'}`}>
                     {item.title}
                   </p>
-                  {item.message && <p className="mt-0.5 text-xs text-slate-500 line-clamp-2">{item.message}</p>}
-                  <p className="mt-1 text-xs text-slate-400">{timeAgo(item.createdAt)}</p>
+                  {item.message && <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 line-clamp-2">{item.message}</p>}
+                  <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">{timeAgo(item.createdAt)}</p>
                 </div>
                 <div className="flex shrink-0 items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {item.link && <ExternalLink className="h-3.5 w-3.5 text-slate-400" />}
+                  {item.link && <ExternalLink className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />}
                   <button onClick={(e) => handleDelete(e, item._id)}
-                    className="rounded p-0.5 text-slate-400 hover:text-red-500">
+                    className="rounded p-0.5 text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400">
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 </div>

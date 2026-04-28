@@ -203,29 +203,29 @@ export default function ArtisanAvailability() {
 
   return (
     <PageShell title="Disponibilités">
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 p-4 sm:p-6 lg:p-8">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 dark:from-slate-950 dark:via-slate-900/30 dark:to-slate-950 p-4 sm:p-6 lg:p-8">
         <div className="mx-auto max-w-7xl">
           {/* Header Section */}
           <div className="mb-8">
             <div className="flex items-start justify-between">
               <div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">Mon calendrier</h1>
-                <p className="mt-2 text-slate-600">Gérez vos disponibilités et vos réservations</p>
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">Mon calendrier</h1>
+                <p className="mt-2 text-slate-600 dark:text-slate-400">Gérez vos disponibilités et vos réservations</p>
               </div>
               <div className="flex gap-2">
                 <button onClick={() => { setViewMode("month"); setWeekOffset(0); }}
                   className={`rounded-xl px-4 py-2 font-medium transition-all ${
                     viewMode === "month" 
-                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-200" 
-                      : "bg-white text-slate-700 hover:bg-slate-100"
+                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-200 dark:shadow-blue-900/30" 
+                      : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
                   }`}>
                   Mois
                 </button>
                 <button onClick={() => setViewMode("week")}
                   className={`rounded-xl px-4 py-2 font-medium transition-all ${
                     viewMode === "week" 
-                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-200" 
-                      : "bg-white text-slate-700 hover:bg-slate-100"
+                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-200 dark:shadow-blue-900/30" 
+                      : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
                   }`}>
                   Semaine
                 </button>
@@ -244,16 +244,16 @@ export default function ArtisanAvailability() {
                     <button key={status} onClick={() => setFilterStatus(filterStatus === status ? null : status)}
                       className={`group rounded-2xl border-2 p-4 transition-all ${
                         filterStatus === status
-                          ? `border-blue-400 bg-blue-50 shadow-lg shadow-blue-100`
-                          : `border-slate-200 bg-white hover:border-slate-300 hover:shadow-md`
+                          ? `border-blue-400 bg-blue-50 dark:bg-blue-950/30 shadow-lg shadow-blue-100 dark:shadow-blue-900/20`
+                          : `border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-md`
                       }`}>
                       <div className="flex items-center gap-3">
                         <div className={`rounded-xl p-2 ${meta.lightColor}`}>
                           <span className={`text-lg font-bold ${meta.text}`}>{meta.icon}</span>
                         </div>
                         <div className="text-left">
-                          <p className="text-sm font-medium text-slate-600">{meta.label}</p>
-                          <p className="text-2xl font-bold text-slate-900">{count}</p>
+                          <p className="text-sm font-medium text-slate-600 dark:text-slate-400">{meta.label}</p>
+                          <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{count}</p>
                         </div>
                       </div>
                     </button>
@@ -262,37 +262,37 @@ export default function ArtisanAvailability() {
               </div>
 
               {/* Progress Bar */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
                 <div className="flex items-center justify-between mb-3">
-                  <p className="font-semibold text-slate-900">Couverture du mois</p>
-                  <p className="text-sm font-bold text-blue-600">{availabilityPercent}%</p>
+                  <p className="font-semibold text-slate-900 dark:text-slate-100">Couverture du mois</p>
+                  <p className="text-sm font-bold text-blue-600 dark:text-blue-400">{availabilityPercent}%</p>
                 </div>
-                <div className="relative h-3 overflow-hidden rounded-full bg-slate-200">
+                <div className="relative h-3 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
                   <div className={`h-full transition-all duration-500 bg-gradient-to-r from-blue-500 to-indigo-600`}
                     style={{ width: `${availabilityPercent}%` }} />
                 </div>
-                <p className="mt-2 text-xs text-slate-500">{markedDays} jour(s) sur {totalDays}</p>
+                <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">{markedDays} jour(s) sur {totalDays}</p>
               </div>
 
               {/* Calendar Card */}
-              <div className="rounded-3xl border border-slate-200 bg-white shadow-lg overflow-hidden">
+              <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg overflow-hidden">
                 {/* Header */}
-                <div className="flex items-center justify-between bg-gradient-to-r from-slate-50 to-blue-50 px-8 py-6 border-b border-slate-200">
-                  <button onClick={prevMonth} className="group rounded-xl p-3 hover:bg-white shadow-sm hover:shadow-md transition-all">
-                    <ChevronLeft className="h-5 w-5 text-slate-700 group-hover:text-blue-600" />
+                <div className="flex items-center justify-between bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-700 dark:to-slate-800 px-8 py-6 border-b border-slate-200 dark:border-slate-700">
+                  <button onClick={prevMonth} className="group rounded-xl p-3 hover:bg-white dark:hover:bg-slate-700 shadow-sm hover:shadow-md transition-all">
+                    <ChevronLeft className="h-5 w-5 text-slate-700 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" />
                   </button>
-                  <h2 className="text-2xl font-bold text-slate-900 capitalize min-w-max">
+                  <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 capitalize min-w-max">
                     {viewMode === "month" ? monthLabel : weekLabel}
                   </h2>
-                  <button onClick={nextMonth} className="group rounded-xl p-3 hover:bg-white shadow-sm hover:shadow-md transition-all">
-                    <ChevronRight className="h-5 w-5 text-slate-700 group-hover:text-blue-600" />
+                  <button onClick={nextMonth} className="group rounded-xl p-3 hover:bg-white dark:hover:bg-slate-700 shadow-sm hover:shadow-md transition-all">
+                    <ChevronRight className="h-5 w-5 text-slate-700 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" />
                   </button>
                 </div>
 
                 {/* Day headers */}
-                <div className="grid grid-cols-7 bg-slate-50/50 border-b border-slate-100">
+                <div className="grid grid-cols-7 bg-slate-50/50 dark:bg-slate-700/30 border-b border-slate-100 dark:border-slate-700">
                   {["Dim","Lun","Mar","Mer","Jeu","Ven","Sam"].map(d => (
-                    <div key={d} className="py-4 text-center text-sm font-semibold text-slate-500">{d}</div>
+                    <div key={d} className="py-4 text-center text-sm font-semibold text-slate-500 dark:text-slate-400">{d}</div>
                   ))}
                 </div>
 
@@ -303,9 +303,9 @@ export default function ArtisanAvailability() {
                     <p className="mt-3 text-slate-500">Chargement du calendrier…</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-7 gap-px bg-slate-100 p-px">
+                  <div className="grid grid-cols-7 gap-px bg-slate-100 dark:bg-slate-700 p-px">
                     {days.map((day, i) => {
-                      if (!day) return <div key={`empty-${i}`} className="min-h-28 bg-slate-50" />;
+                      if (!day) return <div key={`empty-${i}`} className="min-h-28 bg-slate-50 dark:bg-slate-800" />;
                       const key = toKey(day);
                       const data = availability[key];
                       const status = data?.status;
@@ -339,10 +339,10 @@ export default function ArtisanAvailability() {
                         <Hint key={key} text={tooltipText}>
                         <button onClick={() => !isPast && handleSelectDate(key)}
                           disabled={isPast}
-                          className={`relative min-h-28 flex flex-col items-center justify-center transition-all bg-white group
-                            ${isPast ? "opacity-40 cursor-not-allowed bg-slate-50" : "hover:bg-blue-50 cursor-pointer"}
-                            ${isSelected ? "ring-2 ring-inset ring-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50" : ""}
-                            ${isToday && !isSelected ? "ring-2 ring-inset ring-amber-400 bg-amber-50/30" : ""}`}>
+                          className={`relative min-h-28 flex flex-col items-center justify-center transition-all bg-white dark:bg-slate-800 group
+                            ${isPast ? "opacity-40 cursor-not-allowed bg-slate-50 dark:bg-slate-900" : "hover:bg-blue-50 dark:hover:bg-slate-700 cursor-pointer"}
+                            ${isSelected ? "ring-2 ring-inset ring-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/50 dark:to-indigo-950/50" : ""}
+                            ${isToday && !isSelected ? "ring-2 ring-inset ring-amber-400 bg-amber-50/30 dark:bg-amber-950/20" : ""}`}>
                           
                           {/* Today Badge */}
                           {isToday && (
@@ -381,14 +381,14 @@ export default function ArtisanAvailability() {
               {selected && (
                 <div className="sticky top-6 space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
                   {/* Card Header */}
-                  <div className="rounded-3xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6 shadow-lg">
+                  <div className="rounded-3xl border-2 border-blue-200 dark:border-blue-800/50 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-950/30 dark:via-indigo-950/30 dark:to-purple-950/30 p-6 shadow-lg">
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="rounded-xl bg-blue-100 p-3">
-                        <Calendar className="h-5 w-5 text-blue-600" />
+                      <div className="rounded-xl bg-blue-100 dark:bg-blue-900/30 p-3">
+                        <Calendar className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                       </div>
                       <div>
-                        <p className="text-sm text-slate-600">Date sélectionnée</p>
-                        <p className="text-lg font-bold text-slate-900">
+                        <p className="text-sm text-slate-600 dark:text-slate-400">Date sélectionnée</p>
+                        <p className="text-lg font-bold text-slate-900 dark:text-slate-100">
                           {new Date(selected).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
                         </p>
                       </div>
@@ -396,8 +396,8 @@ export default function ArtisanAvailability() {
                   </div>
 
                   {/* Status Selector - Segmented */}
-                  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                    <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Statut</p>
+                  <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm">
+                    <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Statut</p>
                     <div className="flex gap-2">
                       {Object.entries(STATUS).map(([key, val]) => (
                         <Hint key={key} text={
@@ -417,13 +417,13 @@ export default function ArtisanAvailability() {
                   </div>
 
                   {/* Time Slots */}
-                  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                    <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm">
+                    <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                       <Clock className="h-4 w-4" /> Horaires
                     </p>
                     <div className="space-y-2">
                       {TIMES.map(time => (
-                        <label key={time.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors">
+                        <label key={time.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer transition-colors">
                           <input
                             type="checkbox"
                             checked={timeSlots[time.id] || false}
@@ -431,8 +431,8 @@ export default function ArtisanAvailability() {
                             className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                           />
                           <div className="flex-1">
-                            <p className="text-sm font-medium text-slate-700">{time.icon} {time.label}</p>
-                            <p className="text-xs text-slate-500">{time.range}</p>
+                            <p className="text-sm font-medium text-slate-700 dark:text-slate-300">{time.icon} {time.label}</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">{time.range}</p>
                           </div>
                         </label>
                       ))}
@@ -440,8 +440,8 @@ export default function ArtisanAvailability() {
                   </div>
 
                   {/* Notes */}
-                  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                    <label className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm">
+                    <label className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                       <FileText className="h-4 w-4" /> Raison / Rappel
                     </label>
                     <textarea
@@ -449,9 +449,9 @@ export default function ArtisanAvailability() {
                       onChange={(e) => setNote(e.target.value)}
                       placeholder="Ex: Réunion client, Chantier en cours, Congés..."
                       maxLength={200}
-                      className="w-full h-20 px-3 py-2 rounded-xl border border-slate-300 bg-white text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                      className="w-full h-20 px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                     />
-                    <p className="mt-1 text-xs text-slate-500">{note.length}/200 caractères</p>
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{note.length}/200 caractères</p>
                   </div>
 
                   {/* Action Buttons */}
@@ -474,10 +474,10 @@ export default function ArtisanAvailability() {
                   {/* Delete Button */}
                   {availability[selected] && (
                     <button onClick={() => handleSet(null)} disabled={saving}
-                      className="w-full rounded-xl py-2 px-3 font-semibold text-red-700 bg-red-50 border border-red-200 hover:bg-red-100 transition-all disabled:opacity-50">
+                      className="w-full rounded-xl py-2 px-3 font-semibold text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/50 hover:bg-red-100 dark:hover:bg-red-950/50 transition-all disabled:opacity-50">
                       Effacer ce jour
                     </button>
-                  )}
+                  )}}
 
                   {/* Error Message */}
                   {err && (

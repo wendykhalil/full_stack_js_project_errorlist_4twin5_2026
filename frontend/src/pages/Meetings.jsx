@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { apiFetch } from '../auth/api';
-import { Calendar, Clock, User, CheckCircle, XCircle, Clock as ClockIcon, Loader2, AlertCircle, ChevronDown, MapPin, MessageSquare, Trash2 } from 'lucide-react';
+import { Calendar, Clock, User, CheckCircle, XCircle, Clock as ClockIcon, Loader2, AlertCircle, ChevronDown, MapPin, MessageSquare, Trash2, Search, X } from 'lucide-react';
 import meetingsService from '../services/meetingsService';
 import { Hint } from '../components/MouseTooltip';
 import { MeetingModal } from '../components/MeetingModal';
@@ -35,29 +35,29 @@ function MeetingCard({ meeting, isArtisan, onAccept, onReject, onCancel, onDelet
   const otherUser = isArtisan ? meeting.prescripteurId : meeting.artisanId;
 
   return (
-    <div className={`rounded-2xl border-2 ${colors.border} ${colors.bg} overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 backdrop-blur-sm`}>
+    <div className={`rounded-2xl border-2 ${colors.border} ${colors.bg} overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 backdrop-blur-sm dark:border-slate-700`}>
       <div className="p-4">
         {/* Header with status */}
-        <div className="flex items-start justify-between mb-3 pb-3 border-b border-slate-200 border-opacity-50">
+        <div className="flex items-start justify-between mb-3 pb-3 border-b border-slate-200 dark:border-slate-700 border-opacity-50">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <h3 className="text-base font-bold text-slate-900">
+              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
                 {meeting.title || 'Réunion'}
               </h3>
               <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${colors.badge}`}>
                 {STATUS_LABELS[meeting.status]}
               </span>
             </div>
-            <p className="text-sm font-medium text-slate-600">
-              avec <span className="font-semibold text-slate-800">{otherUser?.firstName} {otherUser?.lastName}</span>
+            <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+              avec <span className="font-semibold text-slate-800 dark:text-slate-200">{otherUser?.firstName} {otherUser?.lastName}</span>
             </p>
           </div>
         </div>
 
         {/* Meeting details */}
         <div className="space-y-2 mb-4">
-          <div className="flex items-center gap-2 text-slate-700 p-2 bg-gradient-to-r from-slate-100 to-slate-50 rounded-lg hover:from-slate-200 hover:to-slate-100 transition-colors">
-            <Calendar className="h-4 w-4 text-indigo-600 flex-shrink-0" />
+          <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300 p-2 bg-gradient-to-r from-slate-100 to-slate-50 dark:from-slate-700 dark:to-slate-800 rounded-lg hover:from-slate-200 hover:to-slate-100 dark:hover:from-slate-600 dark:hover:to-slate-700 transition-colors">
+            <Calendar className="h-4 w-4 text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
             <span className="text-xs font-medium">
               {startDate.toLocaleDateString('fr-TN', {
                 weekday: 'long',
@@ -68,8 +68,8 @@ function MeetingCard({ meeting, isArtisan, onAccept, onReject, onCancel, onDelet
             </span>
           </div>
 
-          <div className="flex items-center gap-2 text-slate-700 p-2 bg-gradient-to-r from-slate-100 to-slate-50 rounded-lg hover:from-slate-200 hover:to-slate-100 transition-colors">
-            <Clock className="h-4 w-4 text-indigo-600 flex-shrink-0" />
+          <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300 p-2 bg-gradient-to-r from-slate-100 to-slate-50 dark:from-slate-700 dark:to-slate-800 rounded-lg hover:from-slate-200 hover:to-slate-100 dark:hover:from-slate-600 dark:hover:to-slate-700 transition-colors">
+            <Clock className="h-4 w-4 text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
             <span className="text-xs font-medium">
               {startDate.toLocaleTimeString('fr-TN', {
                 hour: '2-digit',
@@ -82,22 +82,22 @@ function MeetingCard({ meeting, isArtisan, onAccept, onReject, onCancel, onDelet
           </div>
 
           {otherUser?.phone && (
-            <div className="flex items-center gap-2 text-slate-700 p-2 bg-gradient-to-r from-slate-100 to-slate-50 rounded-lg hover:from-slate-200 hover:to-slate-100 transition-colors">
-              <User className="h-4 w-4 text-indigo-600 flex-shrink-0" />
+            <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300 p-2 bg-gradient-to-r from-slate-100 to-slate-50 dark:from-slate-700 dark:to-slate-800 rounded-lg hover:from-slate-200 hover:to-slate-100 dark:hover:from-slate-600 dark:hover:to-slate-700 transition-colors">
+              <User className="h-4 w-4 text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
               <span className="text-xs font-medium">{otherUser.phone}</span>
             </div>
           )}
 
           {otherUser?.email && (
-            <div className="flex items-center gap-2 text-slate-700 p-2 bg-gradient-to-r from-slate-100 to-slate-50 rounded-lg hover:from-slate-200 hover:to-slate-100 transition-colors">
-              <MessageSquare className="h-4 w-4 text-indigo-600 flex-shrink-0" />
+            <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300 p-2 bg-gradient-to-r from-slate-100 to-slate-50 dark:from-slate-700 dark:to-slate-800 rounded-lg hover:from-slate-200 hover:to-slate-100 dark:hover:from-slate-600 dark:hover:to-slate-700 transition-colors">
+              <MessageSquare className="h-4 w-4 text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
               <span className="text-xs font-medium break-all">{otherUser.email}</span>
             </div>
           )}
         </div>
 
           {meeting.googleMeetLink && (
-            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-200 border-opacity-50">
+            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-200 dark:border-slate-700 border-opacity-50">
               <Hint text="Rejoindre la réunion en visioconférence via Google Meet.">
               <button
                 onClick={() => onOpenMeeting(meeting)}
@@ -230,6 +230,8 @@ export default function Meetings() {
   const [actionLoading, setActionLoading] = useState(null);
   const [filterStatus, setFilterStatus] = useState('all');
   const [selectedMeeting, setSelectedMeeting] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedDate, setSelectedDate] = useState('');
 
   // Load meetings
   useEffect(() => {
@@ -420,9 +422,24 @@ export default function Meetings() {
     }
   };
 
-  const filteredMeetings = filterStatus === 'all'
-    ? meetings
-    : meetings.filter(m => m.status === filterStatus);
+  const filteredMeetings = meetings.filter(meeting => {
+    // Filter by status
+    const statusMatch = filterStatus === 'all' || meeting.status === filterStatus;
+    
+    // Filter by search term (title or participant name)
+    const searchMatch = searchTerm === '' || 
+      meeting.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      meeting.artisanId?.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      meeting.artisanId?.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      meeting.prescripteurId?.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      meeting.prescripteurId?.lastName?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Filter by date
+    const dateMatch = !selectedDate || 
+      new Date(meeting.startDateTime).toLocaleDateString('fr-TN') === new Date(selectedDate).toLocaleDateString('fr-TN');
+    
+    return statusMatch && searchMatch && dateMatch;
+  });
 
   if (loading) {
     return (
@@ -438,10 +455,10 @@ export default function Meetings() {
   return (
     <div className="flex-1">
       <div className="mb-10">
-        <h1 className="text-4xl font-bold text-slate-900">
+        <h1 className="text-4xl font-bold text-slate-900 dark:text-slate-100">
           {isArtisan ? 'Demandes de réunion reçues' : 'Réunions planifiées'}
         </h1>
-        <p className="mt-3 text-lg text-slate-600 font-medium">
+        <p className="mt-3 text-lg text-slate-600 dark:text-slate-400 font-medium">
           {isArtisan
             ? 'Gérez les demandes de réunion des prescripteurs'
             : 'Suivez et gérez vos réunions planifiées avec les artisans'}
@@ -449,11 +466,53 @@ export default function Meetings() {
       </div>
 
       {error && (
-        <div className="mb-8 rounded-2xl bg-red-50 border-2 border-red-200 p-5 flex items-center gap-4 shadow-md">
-          <AlertCircle className="h-6 w-6 text-red-600 flex-shrink-0" />
-          <p className="text-sm text-red-700 font-medium">{error}</p>
+        <div className="mb-8 rounded-2xl bg-red-50 dark:bg-red-950/30 border-2 border-red-200 dark:border-red-800/50 p-5 flex items-center gap-4 shadow-md">
+          <AlertCircle className="h-6 w-6 text-red-600 dark:text-red-400 flex-shrink-0" />
+          <p className="text-sm text-red-700 dark:text-red-300 font-medium">{error}</p>
         </div>
       )}
+
+      {/* Search and Date Filter */}
+      <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-4">
+        {/* Search Bar */}
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400 dark:text-slate-500" />
+          <input
+            type="text"
+            placeholder="Rechercher par titre ou participant..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:border-indigo-600 dark:focus:border-indigo-400 transition-colors"
+          />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm('')}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          )}
+        </div>
+
+        {/* Date Filter */}
+        <div className="relative">
+          <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400 dark:text-slate-500" />
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="pl-10 pr-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-600 dark:focus:border-indigo-400 transition-colors"
+          />
+          {selectedDate && (
+            <button
+              onClick={() => setSelectedDate('')}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          )}
+        </div>
+      </div>
 
       {/* Filter tabs */}
       <div className="mb-8 flex gap-3 overflow-x-auto pb-2">
@@ -463,8 +522,8 @@ export default function Meetings() {
             onClick={() => setFilterStatus(status)}
             className={`px-6 py-3 rounded-xl whitespace-nowrap text-sm font-bold transition-all duration-300 transform ${
               filterStatus === status
-                ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-lg hover:shadow-xl scale-105'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200 hover:shadow-md'
+                ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-lg hover:shadow-xl scale-105 dark:shadow-indigo-900/30'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 hover:shadow-md'
             }`}
           >
             {status === 'all' ? 'Toutes' : STATUS_LABELS[status]}
@@ -474,9 +533,9 @@ export default function Meetings() {
 
       {/* Meetings list */}
       {filteredMeetings.length === 0 ? (
-        <div className="rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 border-2 border-slate-200 p-16 text-center">
-          <Calendar className="mx-auto h-16 w-16 text-slate-300 mb-4" />
-          <p className="text-slate-600 text-lg font-medium">
+        <div className="rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 border-2 border-slate-200 dark:border-slate-700 p-16 text-center">
+          <Calendar className="mx-auto h-16 w-16 text-slate-300 dark:text-slate-600 mb-4" />
+          <p className="text-slate-600 dark:text-slate-400 text-lg font-medium">
             {filterStatus === 'all'
               ? isArtisan
                 ? 'Aucune demande de réunion pour le moment'

@@ -101,9 +101,11 @@ import AccessibilityDemo from "./pages/AccessibilityDemo";
 import AppErrorBoundary from "./components/AppErrorBoundary";
 import AiChat from "./components/ai-chat"; // ton composant chat modernisé
 import { MouseTooltipProvider } from "./components/MouseTooltip";
+import { DarkModeProvider } from "./contexts/DarkModeContext";
 
 export default function App() {
     return (
+        <DarkModeProvider>
         <AppErrorBoundary>
         <MouseTooltipProvider>
         <BrowserRouter>
@@ -255,5 +257,6 @@ export default function App() {
         </BrowserRouter>
         </MouseTooltipProvider>
         </AppErrorBoundary>
+        </DarkModeProvider>
     );
 }

@@ -164,10 +164,10 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
 
       {/* ── Navbar ── */}
-      <nav className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
+      <nav className="sticky top-0 z-50 w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between lg:h-20">
             <Link to="/" className="flex items-center gap-2 group shrink-0">
@@ -175,23 +175,23 @@ export default function Login() {
                 <img src={logo} alt="BMP.tn" className="h-8 w-8 lg:h-10 lg:w-10 rounded-xl shadow-sm transition-transform group-hover:scale-105" />
                 <div className="absolute -inset-1 rounded-xl bg-blue-500/20 blur-lg opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent lg:text-2xl">BMP.tn</span>
+              <span className="text-xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent lg:text-2xl">BMP.tn</span>
             </Link>
 
             <div className="hidden md:flex md:items-center md:gap-4 lg:gap-6">
               <div className="relative">
                 <button onClick={() => setRoleDropdownOpen(!roleDropdownOpen)}
-                  className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 transition-all hover:bg-slate-100 hover:text-blue-600 lg:text-base">
+                  className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 transition-all hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400 lg:text-base">
                   <span>rejoindre en tant que</span>
                   <ChevronDown className={`h-4 w-4 transition-transform ${roleDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
                 {roleDropdownOpen && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setRoleDropdownOpen(false)} />
-                    <div className="absolute left-0 mt-2 w-48 rounded-xl border border-slate-200 bg-white shadow-lg z-20 overflow-hidden">
+                    <div className="absolute left-0 mt-2 w-48 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg z-20 overflow-hidden">
                       {roles.map((role) => (
                         <Link key={role.name} to={role.path}
-                          className="flex items-center gap-2 px-4 py-3 text-sm text-slate-700 transition-colors hover:bg-blue-50 hover:text-blue-600"
+                          className="flex items-center gap-2 px-4 py-3 text-sm text-slate-700 dark:text-slate-300 transition-colors hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400"
                           onClick={() => setRoleDropdownOpen(false)}>
                           <span>{role.icon}</span><span>{role.name}</span>
                         </Link>
