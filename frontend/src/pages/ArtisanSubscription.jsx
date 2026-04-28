@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Elements } from '@stripe/react-stripe-js';
+import SimpleFooter from '../components/Footer';
 import { loadStripe } from '@stripe/stripe-js';
 import { ShieldCheck, CreditCard, ArrowRight, AlertCircle, CheckCircle, Tag, X, Crown, Clock, XCircle, History, Zap, Check } from 'lucide-react';
 import StripePaymentForm from '../components/StripePaymentForm';
@@ -354,5 +355,6 @@ export default function ArtisanSubscription() {
 
       </div>
     </div>
+    <SimpleFooter />
   );
 }

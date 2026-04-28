@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from '../i18n';
 import PageShell from '../components/PageShell';
+import SimpleFooter from '../components/Footer';
 
 const Stepper = ({ step }) => (
   <div className="mt-6 flex items-center gap-4">
@@ -93,5 +94,6 @@ export default function ArtisanFactureStep2() {
       </div>
     </main>
     </PageShell>
+    <SimpleFooter />
   );
 }

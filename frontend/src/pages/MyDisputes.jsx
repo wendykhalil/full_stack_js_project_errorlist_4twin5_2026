@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Plus, X, MessageSquare, ChevronRight } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import PageShell from '../components/PageShell';
+import SimpleFooter from '../components/Footer';
 import FieldError from '../components/FieldError';
 import { useFormValidation, rules } from '../hooks/useFormValidation';
 import { useServerErrors } from '../hooks/useServerErrors';
@@ -338,5 +339,7 @@ export default function MyDisputes() {
         ) : null}
       </Modal>
     </PageShell>
+    <SimpleFooter />
   );
 }
+

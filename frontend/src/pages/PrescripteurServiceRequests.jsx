@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import PageShell from "../components/PageShell";
+import SimpleFooter from "../components/Footer";
 import ReviewModal from "../components/ReviewModal";
 import { Stars } from "../components/StarRating";
 import FieldError from "../components/FieldError";
@@ -691,5 +692,7 @@ export default function PrescripteurServiceRequests() {
         sourceId={reviewSourceId}
       />
     </PageShell>
+    <SimpleFooter />
   );
 }
+

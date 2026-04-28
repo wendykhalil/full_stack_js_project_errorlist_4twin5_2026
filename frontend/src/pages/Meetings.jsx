@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { apiFetch } from '../auth/api';
+import SimpleFooter from '../components/Footer';
 import { Calendar, Clock, User, CheckCircle, XCircle, Clock as ClockIcon, Loader2, AlertCircle, ChevronDown, MapPin, MessageSquare, Trash2, Search, X } from 'lucide-react';
 import meetingsService from '../services/meetingsService';
 import { Hint } from '../components/MouseTooltip';
@@ -567,6 +568,7 @@ export default function Meetings() {
         meetingTitle={selectedMeeting?.title}
         onClose={() => setSelectedMeeting(null)}
       />
+      <SimpleFooter />
     </div>
   );
 }

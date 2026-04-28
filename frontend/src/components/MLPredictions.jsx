@@ -487,14 +487,19 @@ const MLPredictions = () => {
         <h2 className="text-2xl font-bold text-gray-800 mb-2">
           Prédictions IA pour Projets
         </h2>
-        <p className="text-gray-600">
-          Utilisez l'intelligence artificielle pour estimer la durée et le coût de vos projets
+        <p className="text-gray-600 text-sm leading-relaxed">
+          Renseignez les caractéristiques de votre projet ci-dessous. Notre modèle d'IA analysera
+          ces données pour vous fournir une estimation personnalisée de durée, de coût et de risque de retard.
         </p>
       </div>
 
       {/* Project Mode Selection */}
-      <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-        <h3 className="text-lg font-medium text-gray-800 mb-3">Mode de prédiction</h3>
+      <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+        <h3 className="text-base font-semibold text-gray-800 mb-1">Mode de prédiction</h3>
+        <p className="text-xs text-gray-500 mb-3">
+          Choisissez "Nouveau projet" pour saisir manuellement les données, ou "Projet existant" pour
+          pré-remplir automatiquement les champs à partir d'un de vos projets enregistrés.
+        </p>
         <div className="flex gap-4">
           <button
             className={`px-4 py-2 rounded-lg font-medium flex items-center gap-2 ${
@@ -938,111 +943,183 @@ const MLPredictions = () => {
 
       {/* Results */}
       {result && (
-        <div className="mt-6 p-6 bg-green-50 border border-green-200 rounded-lg">
-          <h3 className="text-lg font-semibold text-green-800 mb-3">
-            Résultat de la prédiction
-          </h3>
-          {activeTab === 'combined' ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="flex items-center gap-3 bg-white rounded-xl p-4 border border-green-200">
-                <Clock className="text-blue-600 shrink-0" size={28} />
-                <div>
-                  <p className="text-2xl font-bold text-blue-800">
-                    {result.estimated_duration_days} jours
-                  </p>
-                  <p className="text-sm text-blue-600">Durée estimée</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 bg-white rounded-xl p-4 border border-green-200">
-                <DollarSign className="text-emerald-600 shrink-0" size={28} />
-                <div>
-                  <p className="text-2xl font-bold text-emerald-800">
-                    {result.estimated_cost_euros?.toLocaleString()} DT
-                  </p>
-                  <p className="text-sm text-emerald-600">Coût estimé (TND)</p>
-                </div>
-              </div>
-            </div>
-          ) : activeTab === 'duration' ? (
-            <div className="flex items-center gap-3">
-              <Clock className="text-green-600" size={24} />
-              <div>
-                <p className="text-2xl font-bold text-green-800">
-                  {result.estimated_duration_days} jours
-                </p>
-                <p className="text-green-600">Durée estimée pour ce projet</p>
-              </div>
-            </div>
-          ) : activeTab === 'pricing' ? (
-            <div className="flex items-center gap-3">
-              <DollarSign className="text-green-600" size={24} />
-              <div>
-                <p className="text-2xl font-bold text-green-800">
-                  {result.estimated_cost_euros?.toLocaleString()} DT
-                </p>
-                <p className="text-green-600">Coût estimé pour ce projet (Dinar Tunisien)</p>
-              </div>
-            </div>
-          ) : (
-            // Delay Risk Results
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <AlertTriangle className={`${
-                  result.delay_risk === 'HIGH' ? 'text-red-600' : 
-                  result.delay_risk === 'MEDIUM' ? 'text-yellow-600' : 'text-green-600'
-                }`} size={24} />
-                <div>
-                  <p className={`text-2xl font-bold ${
-                    result.delay_risk === 'HIGH' ? 'text-red-800' : 
-                    result.delay_risk === 'MEDIUM' ? 'text-yellow-800' : 'text-green-800'
-                  }`}>
-                    Risque {result.delay_risk === 'HIGH' ? 'ÉLEVÉ' : result.delay_risk === 'MEDIUM' ? 'MOYEN' : 'FAIBLE'}
-                  </p>
-                  <p className="text-gray-600">
-                    Confiance: {(result.confidence * 100).toFixed(1)}%
-                  </p>
-                </div>
-              </div>
-              
-              {result.risk_factors && result.risk_factors.length > 0 && (
-                <div className="mt-4">
-                  <h4 className="font-medium text-gray-800 mb-2">Facteurs de risque identifiés:</h4>
-                  <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
-                    {result.risk_factors.map((factor, index) => (
-                      <li key={index}>{factor}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              
-              {result.recommendation && (
-                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <h4 className="font-medium text-blue-800 mb-1">Recommandation:</h4>
-                  <p className="text-sm text-blue-700">{result.recommendation}</p>
-                </div>
-              )}
-              
-              {result.probabilities && (
-                <div className="mt-4">
-                  <h4 className="font-medium text-gray-800 mb-2">Probabilités détaillées:</h4>
-                  <div className="grid grid-cols-3 gap-2 text-sm">
-                    <div className="text-center p-2 bg-green-100 rounded">
-                      <div className="font-medium text-green-800">FAIBLE</div>
-                      <div className="text-green-600">{(result.probabilities.LOW * 100).toFixed(1)}%</div>
+        <div className="mt-6 space-y-4">
+          <div className="p-6 bg-green-50 border border-green-200 rounded-xl">
+            <h3 className="text-lg font-semibold text-green-800 mb-4 flex items-center gap-2">
+              <TrendingUp size={20} />
+              Résultat de la prédiction
+            </h3>
+            {activeTab === 'combined' ? (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                  <div className="flex items-center gap-3 bg-white rounded-xl p-4 border border-green-200">
+                    <Clock className="text-blue-600 shrink-0" size={28} />
+                    <div>
+                      <p className="text-2xl font-bold text-blue-800">
+                        {result.estimated_duration_days} jours
+                      </p>
+                      <p className="text-sm text-blue-600">Durée estimée</p>
                     </div>
-                    <div className="text-center p-2 bg-yellow-100 rounded">
-                      <div className="font-medium text-yellow-800">MOYEN</div>
-                      <div className="text-yellow-600">{(result.probabilities.MEDIUM * 100).toFixed(1)}%</div>
-                    </div>
-                    <div className="text-center p-2 bg-red-100 rounded">
-                      <div className="font-medium text-red-800">ÉLEVÉ</div>
-                      <div className="text-red-600">{(result.probabilities.HIGH * 100).toFixed(1)}%</div>
+                  </div>
+                  <div className="flex items-center gap-3 bg-white rounded-xl p-4 border border-green-200">
+                    <DollarSign className="text-emerald-600 shrink-0" size={28} />
+                    <div>
+                      <p className="text-2xl font-bold text-emerald-800">
+                        {result.estimated_cost_euros?.toLocaleString()} DT
+                      </p>
+                      <p className="text-sm text-emerald-600">Coût estimé (TND)</p>
                     </div>
                   </div>
                 </div>
-              )}
-            </div>
-          )}
+                {/* Recommendations for combined */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
+                  <p className="font-semibold mb-2">💡 Que faire avec ces résultats ?</p>
+                  <ul className="space-y-1 list-disc list-inside">
+                    <li>Utilisez la durée estimée comme base pour planifier votre calendrier de chantier</li>
+                    <li>Ajoutez une marge de 10–15 % sur le coût estimé pour couvrir les imprévus</li>
+                    <li>Partagez ces estimations avec votre client pour préparer un devis réaliste</li>
+                    <li>Consultez l'onglet "Risque de Retard" pour compléter votre analyse</li>
+                  </ul>
+                </div>
+              </>
+            ) : activeTab === 'duration' ? (
+              <>
+                <div className="flex items-center gap-3 mb-4">
+                  <Clock className="text-green-600" size={24} />
+                  <div>
+                    <p className="text-2xl font-bold text-green-800">
+                      {result.estimated_duration_days} jours
+                    </p>
+                    <p className="text-green-600 text-sm">Durée estimée pour ce projet</p>
+                  </div>
+                </div>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
+                  <p className="font-semibold mb-2">💡 Conseils sur la durée</p>
+                  <ul className="space-y-1 list-disc list-inside">
+                    <li>Prévoyez une marge de 10–20 % pour les aléas (météo, livraisons, absences)</li>
+                    <li>Planifiez les phases critiques en début de projet pour éviter les blocages</li>
+                    <li>Communiquez cette estimation à votre client avec une fourchette réaliste</li>
+                  </ul>
+                </div>
+              </>
+            ) : activeTab === 'pricing' ? (
+              <>
+                <div className="flex items-center gap-3 mb-4">
+                  <DollarSign className="text-green-600" size={24} />
+                  <div>
+                    <p className="text-2xl font-bold text-green-800">
+                      {result.estimated_cost_euros?.toLocaleString()} DT
+                    </p>
+                    <p className="text-green-600 text-sm">Coût estimé pour ce projet (Dinar Tunisien)</p>
+                  </div>
+                </div>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
+                  <p className="font-semibold mb-2">💡 Conseils sur le budget</p>
+                  <ul className="space-y-1 list-disc list-inside">
+                    <li>Ajoutez une réserve de 10–15 % pour les imprévus et variations de prix des matériaux</li>
+                    <li>Comparez ce coût avec vos devis fournisseurs pour valider la cohérence</li>
+                    <li>Utilisez ce montant comme point de départ pour votre devis client</li>
+                  </ul>
+                </div>
+              </>
+            ) : (
+              // Delay Risk Results
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <AlertTriangle className={`${
+                    result.delay_risk === 'HIGH' ? 'text-red-600' : 
+                    result.delay_risk === 'MEDIUM' ? 'text-yellow-600' : 'text-green-600'
+                  }`} size={24} />
+                  <div>
+                    <p className={`text-2xl font-bold ${
+                      result.delay_risk === 'HIGH' ? 'text-red-800' : 
+                      result.delay_risk === 'MEDIUM' ? 'text-yellow-800' : 'text-green-800'
+                    }`}>
+                      Risque {result.delay_risk === 'HIGH' ? 'ÉLEVÉ' : result.delay_risk === 'MEDIUM' ? 'MOYEN' : 'FAIBLE'}
+                    </p>
+                    <p className="text-gray-600 text-sm">
+                      Niveau de confiance du modèle : {(result.confidence * 100).toFixed(1)}%
+                    </p>
+                  </div>
+                </div>
+
+                {result.risk_factors && result.risk_factors.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold text-gray-800 mb-2">⚠️ Facteurs de risque identifiés :</h4>
+                    <ul className="list-disc list-inside space-y-1 text-sm text-gray-700 bg-white rounded-lg p-3 border border-gray-200">
+                      {result.risk_factors.map((factor, index) => (
+                        <li key={index}>{factor}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {result.recommendation && (
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <h4 className="font-semibold text-blue-800 mb-1">📋 Recommandation principale :</h4>
+                    <p className="text-sm text-blue-700">{result.recommendation}</p>
+                  </div>
+                )}
+
+                {/* Contextual recommendations based on risk level */}
+                <div className={`p-4 rounded-lg border text-sm ${
+                  result.delay_risk === 'HIGH' ? 'bg-red-50 border-red-200 text-red-800' :
+                  result.delay_risk === 'MEDIUM' ? 'bg-amber-50 border-amber-200 text-amber-800' :
+                  'bg-green-50 border-green-200 text-green-800'
+                }`}>
+                  <p className="font-semibold mb-2">
+                    {result.delay_risk === 'HIGH' ? '🚨 Actions urgentes recommandées :' :
+                     result.delay_risk === 'MEDIUM' ? '⚠️ Précautions à prendre :' :
+                     '✅ Bonnes pratiques à maintenir :'}
+                  </p>
+                  <ul className="space-y-1 list-disc list-inside">
+                    {result.delay_risk === 'HIGH' ? (
+                      <>
+                        <li>Revoyez le délai demandé — il semble trop court par rapport à la taille du projet</li>
+                        <li>Augmentez le nombre d'ouvriers ou réduisez la portée du projet</li>
+                        <li>Négociez une extension de délai avec votre client avant de commencer</li>
+                        <li>Préparez un plan de contingence en cas de retard</li>
+                      </>
+                    ) : result.delay_risk === 'MEDIUM' ? (
+                      <>
+                        <li>Planifiez des points de contrôle hebdomadaires pour suivre l'avancement</li>
+                        <li>Anticipez les commandes de matériaux pour éviter les ruptures de stock</li>
+                        <li>Informez votre client des risques potentiels dès le départ</li>
+                        <li>Prévoyez une marge de 1–2 semaines dans votre planning</li>
+                      </>
+                    ) : (
+                      <>
+                        <li>Votre projet est bien dimensionné — continuez sur cette lancée</li>
+                        <li>Maintenez une communication régulière avec votre client</li>
+                        <li>Documentez l'avancement pour anticiper tout changement de scope</li>
+                        <li>Restez vigilant aux conditions météo si le projet est en extérieur</li>
+                      </>
+                    )}
+                  </ul>
+                </div>
+
+                {result.probabilities && (
+                  <div>
+                    <h4 className="font-semibold text-gray-800 mb-2">📊 Probabilités détaillées :</h4>
+                    <div className="grid grid-cols-3 gap-2 text-sm">
+                      <div className="text-center p-3 bg-green-100 rounded-lg">
+                        <div className="font-semibold text-green-800">FAIBLE</div>
+                        <div className="text-xl font-bold text-green-700">{(result.probabilities.LOW * 100).toFixed(1)}%</div>
+                      </div>
+                      <div className="text-center p-3 bg-yellow-100 rounded-lg">
+                        <div className="font-semibold text-yellow-800">MOYEN</div>
+                        <div className="text-xl font-bold text-yellow-700">{(result.probabilities.MEDIUM * 100).toFixed(1)}%</div>
+                      </div>
+                      <div className="text-center p-3 bg-red-100 rounded-lg">
+                        <div className="font-semibold text-red-800">ÉLEVÉ</div>
+                        <div className="text-xl font-bold text-red-700">{(result.probabilities.HIGH * 100).toFixed(1)}%</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       )}
 

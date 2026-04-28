@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { useTranslation } from '../i18n';
 import { apiFetch } from '../auth/api';
+import SimpleFooter from '../components/Footer';
 import { Cloud, CloudRain, Sun, Wind, Droplets, Eye, Gauge } from 'lucide-react';
 
 const ArtisanWeather = () => {
@@ -352,6 +353,7 @@ const ArtisanWeather = () => {
         )}
       </div>
     </div>
+    <SimpleFooter />
   );
 };
 

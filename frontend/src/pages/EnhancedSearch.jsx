@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Filter, MapPin, Star, Phone, Mail } from 'lucide-react';
+import SimpleFooter from '../components/Footer';
 import { useSimpleMode } from '../context/SimpleModeContext';
 import TextToSpeech from '../components/TextToSpeech';
 import VoiceInput from '../components/VoiceInput';
@@ -375,6 +376,8 @@ export default function EnhancedSearch() {
           )}
         </div>
       </div>
+      <SimpleFooter />
     </div>
   );
 }
+

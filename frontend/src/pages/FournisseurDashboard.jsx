@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { getSupplierStats, getSupplierOrders, getMyProducts } from '../auth/api';
+import SimpleFooter from '../components/Footer';
 import {
   TrendingUp, TrendingDown, Package, ShoppingBag,
   DollarSign, BarChart2, Lightbulb, AlertCircle, CheckCircle,
@@ -582,7 +583,7 @@ export default function FournisseurDashboard() {
           {advice.map((tip, i) => <AdviceCard key={i} {...tip} />)}
         </div>
       </div>
-
+      <SimpleFooter />
     </div>
   );
 }

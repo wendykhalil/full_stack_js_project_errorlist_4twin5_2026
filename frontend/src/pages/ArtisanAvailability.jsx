@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Calendar, Clock, FileText, Check, CheckCircl
 import { useAuth } from "../auth/AuthContext";
 import { apiFetch } from "../auth/api";
 import PageShell from "../components/PageShell";
+import SimpleFooter from "../components/Footer";
 import { Hint } from "../components/MouseTooltip";
 
 const STATUS = {
@@ -589,5 +590,6 @@ export default function ArtisanAvailability() {
         </div>
       </div>
     </PageShell>
+    <SimpleFooter />
   );
 }
