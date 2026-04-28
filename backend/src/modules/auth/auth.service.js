@@ -347,8 +347,19 @@ async function updateProfile(userId, profileData) {
     user.profilePicture = String(profileData.profilePicture || '').trim();
   }
 
+  // Location fields — saved for all roles
+  if (profileData.city !== undefined) user.city = String(profileData.city || '').trim();
+  if (profileData.zone !== undefined) user.zone = String(profileData.zone || '').trim();
+  const _lat = profileData.latitude !== undefined ? profileData.latitude : profileData.lat;
+  const _lng = profileData.longitude !== undefined ? profileData.longitude : profileData.lng;
+  if (_lat !== undefined && _lat !== '' && _lat !== null) {
+    user.location = { lat: Number(_lat), lng: user.location?.lng ?? null, updatedAt: new Date() };
+  }
+  if (_lng !== undefined && _lng !== '' && _lng !== null) {
+    user.location = { lat: user.location?.lat ?? null, lng: Number(_lng), updatedAt: new Date() };
+  }
+
   await user.save();
-  console.log('User saved');
 
   // 2. Si l'utilisateur est un fournisseur, mettre à jour SupplierProfile
   if (user.role === 'SUPPLIER') {

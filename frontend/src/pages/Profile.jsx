@@ -73,8 +73,8 @@ export default function Profile() {
   const [resetErr, setResetErr] = useState("");
 
   const { errors: profileFieldErrors, validate: validateProfile } = useFormValidation({
-    firstName: [rules.required('Prénom requis'), rules.minLength(2)],
-    lastName: [rules.required('Nom requis'), rules.minLength(2)],
+    firstName: [rules.minLength(2)],
+    lastName: [rules.minLength(2)],
   });
   const { errors: profilePhoneErrors, validate: validateProfilePhone } = useFormValidation({
     phone: [rules.phone()],
@@ -126,8 +126,8 @@ export default function Profile() {
     setProfilePicturePreview(user.profilePicture || "");
     setCity(user.city || "");
     setZone(user.zone || "");
-    setLatitude(user.latitude || "");
-    setLongitude(user.longitude || "");
+    setLatitude(user.location?.lat ? String(user.location.lat) : "");
+    setLongitude(user.location?.lng ? String(user.location.lng) : "");
     setYearsOfExperience(user.yearsOfExperience || "");
     setSpecialty(user.specialty || "");
     setServiceRadius(user.serviceRadius || "");
@@ -236,37 +236,84 @@ export default function Profile() {
   async function onSave(e) {
     e.preventDefault();
     clearProfileErrors(); setErr(""); setMsg("");
-    if (!validateProfile({ firstName, lastName })) return;
+    // Only validate non-empty fields — never block a photo/logo-only save
+    const toValidate = {};
+    if (firstName) toValidate.firstName = firstName;
+    if (lastName)  toValidate.lastName  = lastName;
+    if (!validateProfile(toValidate)) return;
     if (phone.trim() && !validateProfilePhone({ phone })) return;
     setSaving(true);
     try {
       let updateData;
-      if (isArtisan) {
-        if (profilePictureFile) {
-          updateData = new FormData();
-          ['firstName','lastName','phone','city','zone','latitude','longitude','yearsOfExperience','specialty','serviceRadius'].forEach(k => updateData.append(k, eval(k)));
-          updateData.append('profilePicture', profilePictureFile);
-        } else {
-          updateData = { firstName, lastName, phone, city, zone, latitude, longitude, yearsOfExperience, specialty, serviceRadius, profilePicture };
-        }
-      } else if (isSupplier) {
+
+      // Helper: append only non-empty string values
+      const appendIfSet = (fd, key, val) => { if (val !== undefined && val !== null && val !== '') fd.append(key, val); };
+
+      if (isSupplier) {
         if (logoFile) {
           updateData = new FormData();
-          ['firstName','lastName','phone','companyName','companyPhone','address','description','city','latitude','longitude'].forEach(k => updateData.append(k, eval(k)));
+          appendIfSet(updateData, 'firstName', firstName);
+          appendIfSet(updateData, 'lastName', lastName);
+          appendIfSet(updateData, 'phone', phone);
+          appendIfSet(updateData, 'companyName', companyName);
+          appendIfSet(updateData, 'companyPhone', companyPhone);
+          appendIfSet(updateData, 'address', address);
+          appendIfSet(updateData, 'description', description);
+          appendIfSet(updateData, 'city', city);
+          if (latitude !== '' && latitude !== null) updateData.append('latitude', latitude);
+          if (longitude !== '' && longitude !== null) updateData.append('longitude', longitude);
           updateData.append('categories', JSON.stringify(selectedCategories));
           updateData.append('logo', logoFile);
         } else {
-          updateData = { firstName, lastName, phone, companyName, companyPhone, address, description, city, latitude, longitude, categories: selectedCategories, logo };
+          updateData = {};
+          if (firstName)   updateData.firstName   = firstName;
+          if (lastName)    updateData.lastName    = lastName;
+          if (phone)       updateData.phone       = phone;
+          if (companyName) updateData.companyName = companyName;
+          if (companyPhone)updateData.companyPhone= companyPhone;
+          if (address)     updateData.address     = address;
+          if (description) updateData.description = description;
+          if (city)        updateData.city        = city;
+          if (latitude  !== '') updateData.latitude  = latitude;
+          if (longitude !== '') updateData.longitude = longitude;
+          updateData.categories = selectedCategories;
+          if (logo)        updateData.logo        = logo;
         }
       } else {
+        // Artisan or generic (admin/prescripteur)
         if (profilePictureFile) {
           updateData = new FormData();
-          ['firstName','lastName','phone','city','zone','latitude','longitude'].forEach(k => updateData.append(k, eval(k)));
+          appendIfSet(updateData, 'firstName', firstName);
+          appendIfSet(updateData, 'lastName', lastName);
+          appendIfSet(updateData, 'phone', phone);
+          appendIfSet(updateData, 'city', city);
+          appendIfSet(updateData, 'zone', zone);
+          if (latitude !== '' && latitude !== null) updateData.append('latitude', latitude);
+          if (longitude !== '' && longitude !== null) updateData.append('longitude', longitude);
+          if (isArtisan) {
+            appendIfSet(updateData, 'yearsOfExperience', yearsOfExperience);
+            appendIfSet(updateData, 'specialty', specialty);
+            appendIfSet(updateData, 'serviceRadius', serviceRadius);
+          }
           updateData.append('profilePicture', profilePictureFile);
         } else {
-          updateData = { firstName, lastName, phone, city, zone, latitude, longitude, profilePicture };
+          updateData = {};
+          if (firstName)          updateData.firstName          = firstName;
+          if (lastName)           updateData.lastName           = lastName;
+          if (phone)              updateData.phone              = phone;
+          if (city)               updateData.city               = city;
+          if (zone)               updateData.zone               = zone;
+          if (latitude  !== '')   updateData.latitude           = latitude;
+          if (longitude !== '')   updateData.longitude          = longitude;
+          if (profilePicture)     updateData.profilePicture     = profilePicture;
+          if (isArtisan) {
+            if (yearsOfExperience) updateData.yearsOfExperience = yearsOfExperience;
+            if (specialty)         updateData.specialty         = specialty;
+            if (serviceRadius)     updateData.serviceRadius     = serviceRadius;
+          }
         }
       }
+
       await updateProfile(updateData);
       await refreshMe();
       setMsg(t('profile.saveSuccess') || 'Profil mis à jour avec succès !');
@@ -313,127 +360,94 @@ export default function Profile() {
   const avatarSrc = profilePicturePreview || null;
   const logoSrc = logoPreview || (logo ? (logo.startsWith('http') ? logo : `${SERVER_URL}${logo}`) : null);
 
+
   return (
     <>
       <Notification notification={notification} onClose={hideNotification} />
-      <div className="w-full px-4 py-6 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-10">
 
         {/* Page Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-            {t('profile.title') || 'Mon Profil'}
-          </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            {t('profile.subtitle') || 'Gérez vos informations personnelles'}
-          </p>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">{t('profile.title') || 'Mon Profil'}</h1>
+          <p className="mt-1.5 text-sm text-slate-500">{t('profile.subtitle') || 'Gérez vos informations personnelles et paramètres de compte'}</p>
         </div>
 
-        {/* Global alerts */}
         {err && (
-          <div className="mb-4 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            <AlertCircle className="h-4 w-4 shrink-0" /> {err}
+          <div className="mb-6 flex items-center gap-3 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700 shadow-sm">
+            <AlertCircle className="h-5 w-5 shrink-0" /> {err}
           </div>
         )}
         {msg && (
-          <div className="mb-4 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-            <CheckCircle className="h-4 w-4 shrink-0" /> {msg}
+          <div className="mb-6 flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-700 shadow-sm">
+            <CheckCircle className="h-5 w-5 shrink-0" /> {msg}
           </div>
         )}
 
-        {/* Two-column layout */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[360px_1fr]">
 
-          {/* ── LEFT SIDEBAR ── */}
-          <aside className="space-y-5">
-            {/* Identity card */}
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-              {/* Cover banner */}
-              <div className="relative h-24 bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-500">
-                <div className="absolute inset-0 opacity-20" style={{backgroundImage:"radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)",backgroundSize:"24px 24px"}} />
+          {/* SIDEBAR */}
+          <aside className="space-y-6">
+            <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-md">
+              <div className="relative h-32 bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-500">
+                <div className="absolute inset-0 opacity-30" style={{backgroundImage:"radial-gradient(circle at 15% 50%, white 1.5px, transparent 1.5px), radial-gradient(circle at 85% 20%, white 1.5px, transparent 1.5px)",backgroundSize:"28px 28px"}} />
               </div>
-              {/* Avatar + info */}
-              <div className="relative px-6 pb-6">
-                <div className="relative -mt-10 mb-3 inline-block">
+              <div className="relative px-7 pb-7">
+                <div className="relative -mt-12 mb-4 inline-block">
                   {isSupplier ? (
-                    logoSrc ? (
-                      <img src={logoSrc} alt="Logo" className="h-20 w-20 rounded-2xl object-cover ring-4 ring-white shadow-lg" />
-                    ) : (
-                      <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-500 ring-4 ring-white shadow-lg">
-                        <Building className="h-10 w-10 text-white" />
-                      </div>
-                    )
+                    logoSrc ? <img src={logoSrc} alt="Logo" className="h-24 w-24 rounded-2xl object-cover ring-4 ring-white shadow-xl" />
+                    : <div className="flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-500 ring-4 ring-white shadow-xl"><Building className="h-12 w-12 text-white" /></div>
                   ) : (
-                    avatarSrc ? (
-                      <img src={avatarSrc} alt="Avatar" className="h-20 w-20 rounded-2xl object-cover ring-4 ring-white shadow-lg" />
-                    ) : (
-                      <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-500 ring-4 ring-white shadow-lg">
-                        <User className="h-10 w-10 text-white" />
-                      </div>
-                    )
+                    avatarSrc ? <img src={avatarSrc} alt="Avatar" className="h-24 w-24 rounded-2xl object-cover ring-4 ring-white shadow-xl" />
+                    : <div className="flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-500 ring-4 ring-white shadow-xl"><User className="h-12 w-12 text-white" /></div>
                   )}
-                  <button
-                    type="button"
-                    onClick={() => isSupplier ? logoInputRef.current?.click() : fileInputRef.current?.click()}
-                    className="absolute -bottom-1.5 -right-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-indigo-600 text-white shadow-md ring-2 ring-white transition hover:bg-indigo-700"
-                  >
-                    <Camera className="h-3.5 w-3.5" />
+                  <button type="button" onClick={() => isSupplier ? logoInputRef.current?.click() : fileInputRef.current?.click()}
+                    className="absolute -bottom-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg ring-2 ring-white transition hover:bg-indigo-700 hover:scale-110">
+                    <Camera className="h-4 w-4" />
                   </button>
                   <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
                   <input type="file" ref={logoInputRef} onChange={handleLogoChange} accept="image/jpeg,image/png,image/gif" className="hidden" />
                 </div>
-                <h3 className="text-lg font-bold text-slate-900">
-                  {isSupplier && companyName ? companyName : `${firstName} ${lastName}`}
-                </h3>
-                <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700">
-                  {roleLabel}
-                </span>
-                <div className="mt-4 space-y-2.5 border-t border-slate-100 pt-4">
-                  <div className="flex items-center gap-2.5 text-sm text-slate-600">
-                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100">
-                      <Mail className="h-3.5 w-3.5 text-slate-500" />
-                    </div>
-                    <span className="truncate">{user?.email}</span>
+                <h3 className="text-xl font-bold text-slate-900">{isSupplier && companyName ? companyName : `${firstName} ${lastName}`}</h3>
+                <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-indigo-600 px-3 py-1 text-xs font-semibold text-white shadow-sm">{roleLabel}</span>
+                <div className="mt-5 space-y-3 border-t border-slate-100 pt-5">
+                  <div className="flex items-center gap-3 text-sm text-slate-600">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-indigo-50"><Mail className="h-4 w-4 text-indigo-500" /></div>
+                    <span className="truncate font-medium">{user?.email}</span>
                   </div>
                   {phone && (
-                    <div className="flex items-center gap-2.5 text-sm text-slate-600">
-                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100">
-                        <Phone className="h-3.5 w-3.5 text-slate-500" />
-                      </div>
-                      <span>{phone}</span>
+                    <div className="flex items-center gap-3 text-sm text-slate-600">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-50"><Phone className="h-4 w-4 text-emerald-500" /></div>
+                      <span className="font-medium">{phone}</span>
                     </div>
                   )}
                   {city && (
-                    <div className="flex items-center gap-2.5 text-sm text-slate-600">
-                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100">
-                        <MapPin className="h-3.5 w-3.5 text-slate-500" />
-                      </div>
-                      <span>{city}</span>
+                    <div className="flex items-center gap-3 text-sm text-slate-600">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-50"><MapPin className="h-4 w-4 text-amber-500" /></div>
+                      <span className="font-medium">{city}</span>
                     </div>
                   )}
                 </div>
               </div>
             </div>
 
-            {/* Tab navigation */}
-            <nav className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-              <div className="px-3 py-3">
-                <p className="px-2 pb-2 text-[10px] font-semibold uppercase tracking-widest text-slate-400">Navigation</p>
+            <nav className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-md">
+              <div className="p-3">
+                <p className="px-3 pb-2 pt-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Menu</p>
                 {TABS.map((tab) => {
                   const Icon = tab.icon;
+                  const desc = { info: 'Nom, email, téléphone', location: 'Adresse et position GPS', security: 'Mot de passe et Face ID' };
                   return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
-                        activeTab === tab.id
-                          ? 'bg-indigo-600 text-white shadow-sm'
-                          : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                      }`}
-                    >
-                      <Icon className={`h-4 w-4 shrink-0 ${activeTab === tab.id ? 'text-white' : 'text-slate-400'}`} />
-                      {tab.label}
+                    <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                      className={`flex w-full items-center gap-4 rounded-2xl px-4 py-3.5 text-left transition-all ${activeTab === tab.id ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}>
+                      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${activeTab === tab.id ? 'bg-white/20' : 'bg-slate-100'}`}>
+                        <Icon style={{width:'18px',height:'18px'}} className={activeTab === tab.id ? 'text-white' : 'text-slate-500'} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className={`text-sm font-semibold ${activeTab === tab.id ? 'text-white' : 'text-slate-800'}`}>{tab.label}</p>
+                        <p className={`text-xs truncate ${activeTab === tab.id ? 'text-white/70' : 'text-slate-400'}`}>{desc[tab.id]}</p>
+                      </div>
                       {activeTab === tab.id && (
-                        <svg className="ml-auto h-4 w-4 text-white/70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <svg className="ml-auto h-4 w-4 shrink-0 text-white/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                         </svg>
                       )}
@@ -444,58 +458,43 @@ export default function Profile() {
             </nav>
           </aside>
 
-          {/* ── RIGHT MAIN AREA ── */}
+          {/* MAIN */}
           <main className="min-w-0">
 
-            {/* ── TAB: INFORMATIONS ── */}
+            {/* INFO TAB */}
             {activeTab === 'info' && (
               <form onSubmit={onSave} className="space-y-6">
-                {/* Common info */}
-                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                  <div className="border-b border-slate-100 px-6 py-5">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100">
-                        <UserCircle className="h-5 w-5 text-indigo-600" />
-                      </div>
-                      <div>
-                        <h2 className="text-base font-semibold text-slate-900">Informations personnelles</h2>
-                        <p className="text-xs text-slate-500">Vos informations de base</p>
-                      </div>
+                <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-md">
+                  <div className="border-b border-slate-100 px-8 py-6">
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-100"><UserCircle className="h-6 w-6 text-indigo-600" /></div>
+                      <div><h2 className="text-lg font-bold text-slate-900">Informations personnelles</h2><p className="text-xs text-slate-500">Vos informations de base visibles sur votre profil</p></div>
                     </div>
                   </div>
-                  <div className="p-6">
-                    <div className="grid gap-5 sm:grid-cols-2">
+                  <div className="p-8">
+                    <div className="grid gap-6 sm:grid-cols-2">
                       <div>
-                        <label className="mb-1.5 block text-sm font-medium text-slate-700">{t('profile.firstNameLabel') || 'Prénom'}</label>
-                        <input
-                          value={firstName} onChange={(e) => setFirstName(e.target.value)}
-                          placeholder="Votre prénom"
-                          className={`w-full rounded-xl border ${profileFieldErrors.firstName || profileServerErrors.firstName ? 'border-red-400' : 'border-slate-200'} bg-white px-4 py-3 text-sm outline-none transition-all focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20`}
-                        />
+                        <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-500">{t('profile.firstNameLabel') || 'Prénom'}</label>
+                        <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Votre prénom"
+                          className={`w-full rounded-2xl border ${profileFieldErrors.firstName || profileServerErrors.firstName ? 'border-red-400 bg-red-50' : 'border-slate-200 bg-slate-50'} px-4 py-3.5 text-sm font-medium text-slate-900 outline-none transition-all focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-500/10`} />
                         <FieldError error={profileFieldErrors.firstName || profileServerErrors.firstName} />
                       </div>
                       <div>
-                        <label className="mb-1.5 block text-sm font-medium text-slate-700">{t('profile.lastNameLabel') || 'Nom'}</label>
-                        <input
-                          value={lastName} onChange={(e) => setLastName(e.target.value)}
-                          placeholder="Votre nom"
-                          className={`w-full rounded-xl border ${profileFieldErrors.lastName || profileServerErrors.lastName ? 'border-red-400' : 'border-slate-200'} bg-white px-4 py-3 text-sm outline-none transition-all focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20`}
-                        />
+                        <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-500">{t('profile.lastNameLabel') || 'Nom'}</label>
+                        <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Votre nom"
+                          className={`w-full rounded-2xl border ${profileFieldErrors.lastName || profileServerErrors.lastName ? 'border-red-400 bg-red-50' : 'border-slate-200 bg-slate-50'} px-4 py-3.5 text-sm font-medium text-slate-900 outline-none transition-all focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-500/10`} />
                         <FieldError error={profileFieldErrors.lastName || profileServerErrors.lastName} />
                       </div>
                       <div>
-                        <label className="mb-1.5 block text-sm font-medium text-slate-700">{t('profile.emailLabel') || 'Email'}</label>
-                        <input value={user?.email || ""} disabled className="w-full cursor-not-allowed rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-400" />
+                        <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-500">{t('profile.emailLabel') || 'Email'}</label>
+                        <input value={user?.email || ""} disabled className="w-full cursor-not-allowed rounded-2xl border border-slate-200 bg-slate-100 px-4 py-3.5 text-sm text-slate-400" />
                       </div>
                       <div>
-                        <label className="mb-1.5 block text-sm font-medium text-slate-700">{t('profile.phoneLabel') || 'Téléphone'}</label>
+                        <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-500">{t('profile.phoneLabel') || 'Téléphone'}</label>
                         <div className="relative">
-                          <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                          <input
-                            value={phone} onChange={(e) => setPhone(e.target.value)}
-                            placeholder="+216 XX XXX XXX"
-                            className={`w-full rounded-xl border ${profilePhoneErrors.phone || profileServerErrors.phone ? 'border-red-400' : 'border-slate-200'} bg-white pl-10 pr-4 py-3 text-sm outline-none transition-all focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20`}
-                          />
+                          <Phone className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                          <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+216 XX XXX XXX"
+                            className={`w-full rounded-2xl border ${profilePhoneErrors.phone || profileServerErrors.phone ? 'border-red-400 bg-red-50' : 'border-slate-200 bg-slate-50'} pl-11 pr-4 py-3.5 text-sm font-medium text-slate-900 outline-none transition-all focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-500/10`} />
                         </div>
                         <FieldError error={profilePhoneErrors.phone || profileServerErrors.phone} />
                       </div>
@@ -503,117 +502,99 @@ export default function Profile() {
                   </div>
                 </div>
 
-                {/* Artisan-specific */}
                 {isArtisan && (
-                  <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                    <div className="border-b border-slate-100 px-6 py-5">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100">
-                          <Tag className="h-5 w-5 text-amber-600" />
-                        </div>
-                        <div>
-                          <h2 className="text-base font-semibold text-slate-900">Informations métier</h2>
-                          <p className="text-xs text-slate-500">Spécialité et expérience</p>
-                        </div>
+                  <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-md">
+                    <div className="border-b border-slate-100 px-8 py-6">
+                      <div className="flex items-center gap-4">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-100"><Tag className="h-6 w-6 text-amber-600" /></div>
+                        <div><h2 className="text-lg font-bold text-slate-900">Informations métier</h2><p className="text-xs text-slate-500">Spécialité, expérience et rayon d'intervention</p></div>
                       </div>
                     </div>
-                    <div className="p-6">
-                      <div className="grid gap-5 sm:grid-cols-2">
+                    <div className="p-8">
+                      <div className="grid gap-6 sm:grid-cols-2">
                         <div>
-                          <label className="mb-1.5 block text-sm font-medium text-slate-700">Années d'expérience</label>
+                          <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-500">Années d'expérience</label>
                           <input value={yearsOfExperience} onChange={(e) => setYearsOfExperience(e.target.value)} type="text" placeholder="Ex : 5"
-                            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition-all focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20" />
+                            className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-medium text-slate-900 outline-none transition-all focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-500/10" />
                         </div>
                         <div>
-                          <label className="mb-1.5 block text-sm font-medium text-slate-700">Métier / Spécialité</label>
+                          <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-500">Métier / Spécialité</label>
                           <select value={specialty} onChange={(e) => setSpecialty(e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition-all focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20">
+                            className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-medium text-slate-900 outline-none transition-all focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-500/10">
                             <option value="">Sélectionnez votre spécialité</option>
                             {['Maçonnerie','Plomberie','Électricité','Peinture','Carrelage','Menuiserie','Climatisation','Isolation','Toiture','Jardinage','Autre'].map(s => <option key={s} value={s}>{s}</option>)}
                           </select>
                         </div>
                         <div>
-                          <label className="mb-1.5 block text-sm font-medium text-slate-700">Rayon d'intervention (km)</label>
+                          <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-500">Rayon d'intervention (km)</label>
                           <input value={serviceRadius} onChange={(e) => setServiceRadius(e.target.value)} type="text" placeholder="Ex : 25"
-                            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition-all focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20" />
+                            className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-medium text-slate-900 outline-none transition-all focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-500/10" />
                         </div>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* Supplier-specific */}
                 {isSupplier && (
-                  <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                    <div className="border-b border-slate-100 px-6 py-5">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-100">
-                          <Building className="h-5 w-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <h2 className="text-base font-semibold text-slate-900">Informations société</h2>
-                          <p className="text-xs text-slate-500">Détails de votre entreprise</p>
-                        </div>
+                  <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-md">
+                    <div className="border-b border-slate-100 px-8 py-6">
+                      <div className="flex items-center gap-4">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-100"><Building className="h-6 w-6 text-blue-600" /></div>
+                        <div><h2 className="text-lg font-bold text-slate-900">Informations société</h2><p className="text-xs text-slate-500">Détails de votre entreprise et logo</p></div>
                       </div>
                     </div>
-                    <div className="p-6 space-y-5">
-                      <div className="grid gap-5 sm:grid-cols-2">
+                    <div className="p-8 space-y-6">
+                      <div className="grid gap-6 sm:grid-cols-2">
                         <div>
-                          <label className="mb-1.5 block text-sm font-medium text-slate-700">Nom de la société</label>
+                          <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-500">Nom de la société</label>
                           <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="Ex : BMP Distribution"
-                            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition-all focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20" />
+                            className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-medium text-slate-900 outline-none transition-all focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-500/10" />
                         </div>
                         <div>
-                          <label className="mb-1.5 block text-sm font-medium text-slate-700">Téléphone société</label>
+                          <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-500">Téléphone société</label>
                           <input value={companyPhone} onChange={(e) => setCompanyPhone(e.target.value)} placeholder="+216 XX XXX XXX"
-                            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition-all focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20" />
+                            className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-medium text-slate-900 outline-none transition-all focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-500/10" />
                         </div>
                         <div className="sm:col-span-2">
-                          <label className="mb-1.5 block text-sm font-medium text-slate-700">Description / Bio</label>
-                          <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows="3" placeholder="Présentez votre société..."
-                            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition-all focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20" />
+                          <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-500">Description / Bio</label>
+                          <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows="4" placeholder="Présentez votre société, vos services..."
+                            className="w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-medium text-slate-900 outline-none transition-all focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-500/10" />
                         </div>
                       </div>
-
-                      {/* Logo */}
-                      <div>
-                        <label className="mb-2 block text-sm font-medium text-slate-700">Logo de la société</label>
-                        <div className="flex items-center gap-4">
-                          {logoSrc && (
-                            <div className="relative">
-                              <img src={logoSrc} alt="Logo" className="h-16 w-16 rounded-xl object-cover border border-slate-200"
-                                onError={(e) => { e.target.src = 'https://via.placeholder.com/64x64?text=Logo'; }} />
-                              <button type="button" onClick={removeLogo} className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white hover:bg-red-600">
-                                <Trash2 className="h-3 w-3" />
-                              </button>
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                        <label className="mb-3 block text-xs font-bold uppercase tracking-wide text-slate-500">Logo de la société</label>
+                        <div className="flex items-center gap-5">
+                          {logoSrc ? (
+                            <div className="relative shrink-0">
+                              <img src={logoSrc} alt="Logo" className="h-20 w-20 rounded-2xl object-cover border-2 border-white shadow-md" onError={(e) => { e.target.src = 'https://via.placeholder.com/80x80?text=Logo'; }} />
+                              <button type="button" onClick={removeLogo} className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-white shadow-md hover:bg-red-600 transition"><Trash2 className="h-3 w-3" /></button>
                             </div>
+                          ) : (
+                            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-white"><Upload className="h-7 w-7 text-slate-300" /></div>
                           )}
-                          <button type="button" onClick={() => logoInputRef.current?.click()}
-                            className="inline-flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-medium text-indigo-700 hover:bg-indigo-100">
-                            <Upload className="h-4 w-4" />
-                            {logoFile ? 'Changer le logo' : (logo ? 'Changer le logo' : 'Choisir un logo')}
-                          </button>
-                          <p className="text-xs text-slate-400">JPG, PNG, GIF (max 2MB)</p>
+                          <div>
+                            <button type="button" onClick={() => logoInputRef.current?.click()} className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition">
+                              <Upload className="h-4 w-4" />{logoFile ? 'Changer le logo' : (logo ? 'Changer le logo' : 'Choisir un logo')}
+                            </button>
+                            <p className="mt-1.5 text-xs text-slate-400">JPG, PNG, GIF — max 2 Mo</p>
+                          </div>
                         </div>
                       </div>
-
-                      {/* Categories */}
                       <div>
-                        <label className="mb-2 block text-sm font-medium text-slate-700">Catégories de produits</label>
+                        <label className="mb-3 block text-xs font-bold uppercase tracking-wide text-slate-500">Catégories de produits</label>
                         {loadingCategories ? (
-                          <div className="flex justify-center py-4"><Loader2 className="h-6 w-6 animate-spin text-indigo-600" /></div>
+                          <div className="flex justify-center py-6"><Loader2 className="h-6 w-6 animate-spin text-indigo-600" /></div>
                         ) : (
                           <>
-                            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
                               {allCategories.map((cat) => (
-                                <label key={cat._id} className="flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 p-3 hover:bg-indigo-50 transition">
-                                  <input type="checkbox" checked={selectedCategories.includes(cat._id)} onChange={() => handleCategoryToggle(cat._id)}
-                                    className="rounded border-slate-300 text-indigo-600" />
-                                  <span className="text-sm text-slate-700">{cat.name}</span>
+                                <label key={cat._id} className={`flex cursor-pointer items-center gap-2.5 rounded-2xl border p-3.5 transition-all ${selectedCategories.includes(cat._id) ? 'border-indigo-300 bg-indigo-50' : 'border-slate-200 bg-white hover:border-indigo-200 hover:bg-indigo-50/50'}`}>
+                                  <input type="checkbox" checked={selectedCategories.includes(cat._id)} onChange={() => handleCategoryToggle(cat._id)} className="rounded border-slate-300 text-indigo-600" />
+                                  <span className="text-sm font-medium text-slate-700">{cat.name}</span>
                                 </label>
                               ))}
                             </div>
-                            <p className="mt-2 text-xs text-slate-400">{selectedCategories.length} catégorie(s) sélectionnée(s)</p>
+                            <p className="mt-2.5 text-xs text-slate-400">{selectedCategories.length} catégorie(s) sélectionnée(s)</p>
                           </>
                         )}
                       </div>
@@ -621,67 +602,47 @@ export default function Profile() {
                   </div>
                 )}
 
-                {/* Photo for non-supplier */}
                 {!isSupplier && (
-                  <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                    <div className="border-b border-slate-100 px-6 py-5">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-100">
-                          <Camera className="h-5 w-5 text-violet-600" />
-                        </div>
-                        <div>
-                          <h2 className="text-base font-semibold text-slate-900">Photo de profil</h2>
-                          <p className="text-xs text-slate-500">JPG, PNG, GIF — max 5 Mo</p>
-                        </div>
+                  <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-md">
+                    <div className="border-b border-slate-100 px-8 py-6">
+                      <div className="flex items-center gap-4">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-100"><Camera className="h-6 w-6 text-violet-600" /></div>
+                        <div><h2 className="text-lg font-bold text-slate-900">Photo de profil</h2><p className="text-xs text-slate-500">JPG, PNG, GIF — max 5 Mo</p></div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-5 p-6">
-                      {avatarSrc ? (
-                        <img src={avatarSrc} alt="Avatar" className="h-16 w-16 rounded-2xl object-cover ring-2 ring-slate-200" />
-                      ) : (
-                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100">
-                          <User className="h-8 w-8 text-slate-400" />
-                        </div>
-                      )}
+                    <div className="flex items-center gap-6 p-8">
+                      {avatarSrc ? <img src={avatarSrc} alt="Avatar" className="h-20 w-20 rounded-2xl object-cover ring-4 ring-slate-100 shadow-md shrink-0" />
+                        : <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50"><User className="h-9 w-9 text-slate-300" /></div>}
                       <div>
-                        <button type="button" onClick={() => fileInputRef.current?.click()}
-                          className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition">
-                          <Camera className="h-4 w-4" />
-                          {profilePictureFile ? "Changer l'image" : "Choisir une image"}
+                        <button type="button" onClick={() => fileInputRef.current?.click()} className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition">
+                          <Camera className="h-4 w-4" />{profilePictureFile ? "Changer l'image" : "Choisir une image"}
                         </button>
-                        {profilePictureFile && <p className="mt-1.5 text-xs text-slate-500">{profilePictureFile.name}</p>}
+                        {profilePictureFile && <p className="mt-2 text-xs font-medium text-slate-500">{profilePictureFile.name}</p>}
                       </div>
                     </div>
                   </div>
                 )}
 
-                <div className="flex gap-3 pt-1">
-                  <button type="button" onClick={() => navigate(roleHomePath)} className="rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
-                    Annuler
-                  </button>
-                  <button type="submit" disabled={saving} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:opacity-50">
-                    {saving ? <><Loader2 className="h-4 w-4 animate-spin" /> Enregistrement...</> : t('profile.saveButton') || 'Enregistrer les modifications'}
+                <div className="flex gap-4 pt-2">
+                  <button type="button" onClick={() => navigate(roleHomePath)} className="rounded-2xl border border-slate-200 bg-white px-7 py-3.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:shadow-md">Annuler</button>
+                  <button type="submit" disabled={saving} className="flex flex-1 items-center justify-center gap-2.5 rounded-2xl bg-indigo-600 px-7 py-3.5 text-sm font-bold text-white shadow-md transition hover:bg-indigo-700 hover:shadow-lg disabled:opacity-50">
+                    {saving ? <><Loader2 className="h-4 w-4 animate-spin" /> Enregistrement...</> : <><CheckCircle className="h-4 w-4" /> {t('profile.saveButton') || 'Enregistrer les modifications'}</>}
                   </button>
                 </div>
               </form>
             )}
 
-            {/* ── TAB: LOCALISATION ── */}
+            {/* LOCATION TAB */}
             {activeTab === 'location' && (
               <form onSubmit={onSave} className="space-y-6">
-                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                  <div className="border-b border-slate-100 px-6 py-5">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100">
-                        <MapPin className="h-5 w-5 text-indigo-600" />
-                      </div>
-                      <div>
-                        <h2 className="text-base font-semibold text-slate-900">Localisation</h2>
-                        <p className="text-xs text-slate-500">Votre position aide à vous trouver facilement.</p>
-                      </div>
+                <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-md">
+                  <div className="border-b border-slate-100 px-8 py-6">
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-100"><MapPin className="h-6 w-6 text-indigo-600" /></div>
+                      <div><h2 className="text-lg font-bold text-slate-900">Localisation</h2><p className="text-xs text-slate-500">Détectez automatiquement ou saisissez manuellement</p></div>
                     </div>
                   </div>
-                  <div className="p-6">
+                  <div className="p-8">
                     <LiveLocationSection
                       city={city} setCity={setCity}
                       zone={zone} setZone={setZone}
@@ -692,102 +653,51 @@ export default function Profile() {
                       onOpenMap={() => setIsMapPickerOpen(true)}
                       onMapSelection={applyMapSelection}
                     />
-                    {isSupplier && (
-                      <div className="mt-5">
-                        <label className="mb-1.5 block text-sm font-medium text-slate-700">Adresse complète</label>
-                        <textarea value={address} onChange={(e) => setAddress(e.target.value)} rows="3" placeholder="Rue, ville, code postal, pays"
-                          className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20" />
-                      </div>
-                    )}
-                    <div className="mt-5 grid gap-5 sm:grid-cols-2">
-                      <div>
-                        <label className="mb-1.5 block text-sm font-medium text-slate-700">Ville</label>
-                        <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Ex : Tunis"
-                          className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20" />
-                      </div>
-                      {!isSupplier && (
-                        <div>
-                          <label className="mb-1.5 block text-sm font-medium text-slate-700">Zone / Quartier</label>
-                          <input value={zone} onChange={(e) => setZone(e.target.value)} placeholder="Ex : Lac 2"
-                            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20" />
-                        </div>
-                      )}
-                      <div>
-                        <label className="mb-1.5 block text-sm font-medium text-slate-700">Latitude</label>
-                        <input value={latitude} onChange={(e) => setLatitude(e.target.value)} type="text" placeholder="Ex : 36.8065"
-                          className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20" />
-                      </div>
-                      <div>
-                        <label className="mb-1.5 block text-sm font-medium text-slate-700">Longitude</label>
-                        <input value={longitude} onChange={(e) => setLongitude(e.target.value)} type="text" placeholder="Ex : 10.1815"
-                          className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20" />
-                      </div>
-                    </div>
-                    {isSupplier && (
-                      <div className="mt-4">
-                        <button type="button" onClick={() => setIsMapPickerOpen(true)}
-                          className="inline-flex items-center gap-2 rounded-xl bg-indigo-50 px-4 py-2.5 text-sm font-medium text-indigo-700 transition hover:bg-indigo-100">
-                          <MapPin className="h-4 w-4" /> Ouvrir la carte
-                        </button>
-                      </div>
-                    )}
                   </div>
                 </div>
-                <div className="flex gap-3 pt-1">
-                  <button type="button" onClick={() => navigate(roleHomePath)} className="rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
-                    Annuler
-                  </button>
-                  <button type="submit" disabled={saving} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:opacity-50">
-                    {saving ? <><Loader2 className="h-4 w-4 animate-spin" /> Enregistrement...</> : 'Enregistrer les modifications'}
+                <div className="flex gap-4 pt-2">
+                  <button type="button" onClick={() => navigate(roleHomePath)} className="rounded-2xl border border-slate-200 bg-white px-7 py-3.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:shadow-md">Annuler</button>
+                  <button type="submit" disabled={saving} className="flex flex-1 items-center justify-center gap-2.5 rounded-2xl bg-indigo-600 px-7 py-3.5 text-sm font-bold text-white shadow-md transition hover:bg-indigo-700 hover:shadow-lg disabled:opacity-50">
+                    {saving ? <><Loader2 className="h-4 w-4 animate-spin" /> Enregistrement...</> : <><CheckCircle className="h-4 w-4" /> Enregistrer les modifications</>}
                   </button>
                 </div>
               </form>
             )}
 
-            {/* ── TAB: SÉCURITÉ ── */}
+            {/* SECURITY TAB */}
             {activeTab === 'security' && (
               <div className="space-y-6">
-                {/* Change password */}
-                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                  <div className="border-b border-slate-100 px-6 py-5">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100">
-                        <Lock className="h-5 w-5 text-slate-600" />
-                      </div>
-                      <div>
-                        <h2 className="text-base font-semibold text-slate-900">Changer le mot de passe</h2>
-                        <p className="text-xs text-slate-500">Minimum 6 caractères</p>
-                      </div>
+                <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-md">
+                  <div className="border-b border-slate-100 px-8 py-6">
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100"><Lock className="h-6 w-6 text-slate-600" /></div>
+                      <div><h2 className="text-lg font-bold text-slate-900">Changer le mot de passe</h2><p className="text-xs text-slate-500">Minimum 6 caractères recommandé</p></div>
                     </div>
                   </div>
-                  <div className="p-6">
-                    <form onSubmit={onChangePassword} className="grid gap-5 sm:grid-cols-2">
+                  <div className="p-8">
+                    <form onSubmit={onChangePassword} className="grid gap-6 sm:grid-cols-2">
                       <div>
-                        <label className="mb-1.5 block text-sm font-medium text-slate-700">Mot de passe actuel</label>
+                        <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-500">Mot de passe actuel</label>
                         <div className="relative">
-                          <Key className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                          <Key className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                           <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="Votre mot de passe actuel"
-                            className={`w-full rounded-xl border ${pwFieldErrors.currentPassword || pwServerErrors.currentPassword ? 'border-red-400' : 'border-slate-200'} bg-white pl-10 pr-4 py-3 text-sm outline-none transition-all focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20`} />
+                            className={`w-full rounded-2xl border ${pwFieldErrors.currentPassword || pwServerErrors.currentPassword ? 'border-red-400 bg-red-50' : 'border-slate-200 bg-slate-50'} pl-11 pr-4 py-3.5 text-sm font-medium text-slate-900 outline-none transition-all focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-500/10`} />
                         </div>
                         <FieldError error={pwFieldErrors.currentPassword || pwServerErrors.currentPassword} />
                       </div>
                       <div>
-                        <label className="mb-1.5 block text-sm font-medium text-slate-700">Nouveau mot de passe</label>
+                        <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-500">Nouveau mot de passe</label>
                         <div className="relative">
-                          <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                          <Lock className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                           <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Minimum 6 caractères"
-                            className={`w-full rounded-xl border ${pwFieldErrors.newPassword || pwServerErrors.newPassword ? 'border-red-400' : 'border-slate-200'} bg-white pl-10 pr-4 py-3 text-sm outline-none transition-all focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20`} />
+                            className={`w-full rounded-2xl border ${pwFieldErrors.newPassword || pwServerErrors.newPassword ? 'border-red-400 bg-red-50' : 'border-slate-200 bg-slate-50'} pl-11 pr-4 py-3.5 text-sm font-medium text-slate-900 outline-none transition-all focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-500/10`} />
                         </div>
                         <FieldError error={pwFieldErrors.newPassword || pwServerErrors.newPassword} />
                       </div>
-                      {(pwErr || pwGlobalError) && (
-                        <div className="sm:col-span-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">{pwErr || pwGlobalError}</div>
-                      )}
-                      {pwMsg && (
-                        <div className="sm:col-span-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-700">{pwMsg}</div>
-                      )}
+                      {(pwErr || pwGlobalError) && <div className="sm:col-span-2 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{pwErr || pwGlobalError}</div>}
+                      {pwMsg && <div className="sm:col-span-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{pwMsg}</div>}
                       <div className="sm:col-span-2">
-                        <button type="submit" disabled={pwLoading} className="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:opacity-50">
+                        <button type="submit" disabled={pwLoading} className="w-full rounded-2xl bg-slate-900 px-4 py-3.5 text-sm font-bold text-white transition hover:bg-slate-700 disabled:opacity-50">
                           {pwLoading ? <span className="flex items-center justify-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Mise à jour...</span> : 'Changer le mot de passe'}
                         </button>
                       </div>
@@ -795,48 +705,34 @@ export default function Profile() {
                   </div>
                 </div>
 
-                {/* Reset link */}
-                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                  <div className="border-b border-slate-100 px-6 py-5">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100">
-                        <Mail className="h-5 w-5 text-indigo-600" />
-                      </div>
-                      <div>
-                        <h2 className="text-base font-semibold text-slate-900">Lien de réinitialisation</h2>
-                        <p className="text-xs text-slate-500">Recevez un lien par email</p>
-                      </div>
+                <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-md">
+                  <div className="border-b border-slate-100 px-8 py-6">
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-100"><Mail className="h-6 w-6 text-indigo-600" /></div>
+                      <div><h2 className="text-lg font-bold text-slate-900">Lien de réinitialisation</h2><p className="text-xs text-slate-500">Recevez un lien de réinitialisation par email</p></div>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between gap-4 p-6">
+                  <div className="flex items-center justify-between gap-6 p-8">
                     <div>
-                      <p className="text-sm text-slate-600">Envoyer à <span className="font-medium text-slate-900">{user?.email}</span></p>
-                      {resetErr && <p className="mt-1 text-xs text-red-600">{resetErr}</p>}
-                      {resetMsg && <p className="mt-1 text-xs text-emerald-600">{resetMsg}</p>}
+                      <p className="text-sm text-slate-600">Envoyer à <span className="font-bold text-slate-900">{user?.email}</span></p>
+                      {resetErr && <p className="mt-1.5 text-xs text-red-600">{resetErr}</p>}
+                      {resetMsg && <p className="mt-1.5 text-xs text-emerald-600">{resetMsg}</p>}
                     </div>
                     <button type="button" onClick={onSendResetLink} disabled={resetLoading}
-                      className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50">
-                      {resetLoading ? <><Loader2 className="h-4 w-4 animate-spin" /> Envoi...</> : <><Send className="h-4 w-4" /> Envoyer</>}
+                      className="inline-flex shrink-0 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:shadow-md disabled:opacity-50">
+                      {resetLoading ? <><Loader2 className="h-4 w-4 animate-spin" /> Envoi...</> : <><Send className="h-4 w-4" /> Envoyer le lien</>}
                     </button>
                   </div>
                 </div>
 
-                {/* Face ID */}
-                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                  <div className="border-b border-slate-100 px-6 py-5">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-100">
-                        <ShieldCheck className="h-5 w-5 text-blue-600" />
-                      </div>
-                      <div>
-                        <h2 className="text-base font-semibold text-slate-900">Authentification biométrique</h2>
-                        <p className="text-xs text-slate-500">Face ID et sécurité avancée</p>
-                      </div>
+                <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-md">
+                  <div className="border-b border-slate-100 px-8 py-6">
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-100"><ShieldCheck className="h-6 w-6 text-blue-600" /></div>
+                      <div><h2 className="text-lg font-bold text-slate-900">Authentification biométrique</h2><p className="text-xs text-slate-500">Face ID et sécurité avancée du compte</p></div>
                     </div>
                   </div>
-                  <div className="p-6">
-                    <FaceIdSettings />
-                  </div>
+                  <div className="p-8"><FaceIdSettings /></div>
                 </div>
               </div>
             )}
@@ -845,12 +741,7 @@ export default function Profile() {
         </div>
       </div>
 
-      <MapPickerModal
-        open={isMapPickerOpen}
-        onClose={() => setIsMapPickerOpen(false)}
-        initialValue={{ latitude, longitude, city, address: isSupplier ? address : zone }}
-        onUsePlace={applyMapSelection}
-      />
+      <MapPickerModal open={isMapPickerOpen} onClose={() => setIsMapPickerOpen(false)} initialValue={{ latitude, longitude, city, address: isSupplier ? address : zone }} onUsePlace={applyMapSelection} />
       <Footer />
     </>
   );

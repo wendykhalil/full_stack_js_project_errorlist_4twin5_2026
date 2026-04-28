@@ -131,7 +131,10 @@ const userSchema = new mongoose.Schema(
       lat: { type: Number, default: null },
       lng: { type: Number, default: null },
       updatedAt: { type: Date, default: null },
-    }
+    },
+
+    city: { type: String, default: '', trim: true },
+    zone: { type: String, default: '', trim: true },
   },
   { timestamps: true }
 );
