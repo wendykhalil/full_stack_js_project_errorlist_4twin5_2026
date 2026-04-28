@@ -590,6 +590,5 @@ export default function ArtisanAvailability() {
         </div>
       </div>
     </PageShell>
-    <SimpleFooter />
   );
 }

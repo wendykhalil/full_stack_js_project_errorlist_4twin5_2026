@@ -141,6 +141,5 @@ export default function ArtisanFactureStep1() {
       </div>
     </main>
     </PageShell>
-    <SimpleFooter />
   );
 }

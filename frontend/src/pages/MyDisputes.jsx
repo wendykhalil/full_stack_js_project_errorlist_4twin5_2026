@@ -339,7 +339,6 @@ export default function MyDisputes() {
         ) : null}
       </Modal>
     </PageShell>
-    <SimpleFooter />
   );
 }
 

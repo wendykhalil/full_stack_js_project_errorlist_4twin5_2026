@@ -692,7 +692,6 @@ export default function PrescripteurServiceRequests() {
         sourceId={reviewSourceId}
       />
     </PageShell>
-    <SimpleFooter />
   );
 }
 
