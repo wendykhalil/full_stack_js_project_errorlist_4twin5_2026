@@ -305,70 +305,89 @@ export default function ArtisanProfile() {
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
 
             {/* ── LEFT SIDEBAR ── */}
-            <aside className="space-y-4">
+            <aside className="space-y-5">
               {/* Identity card */}
               <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                <div className="bg-gradient-to-br from-indigo-600 to-indigo-500 px-6 py-8 text-center">
-                  <div className="relative mx-auto mb-3 h-24 w-24">
+                {/* Cover banner */}
+                <div className="relative h-24 bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-500">
+                  <div className="absolute inset-0 opacity-20" style={{backgroundImage:"radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)",backgroundSize:"24px 24px"}} />
+                </div>
+                <div className="relative px-6 pb-6">
+                  <div className="relative -mt-10 mb-3 inline-block">
                     {avatarUrl ? (
-                      <img src={avatarUrl} alt="Avatar" className="h-24 w-24 rounded-full object-cover ring-4 ring-white/40" />
+                      <img src={avatarUrl} alt="Avatar" className="h-20 w-20 rounded-2xl object-cover ring-4 ring-white shadow-lg" />
                     ) : (
-                      <div className="flex h-24 w-24 items-center justify-center rounded-full bg-white/20 ring-4 ring-white/40">
-                        <User className="h-12 w-12 text-white" />
+                      <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-500 ring-4 ring-white shadow-lg">
+                        <User className="h-10 w-10 text-white" />
                       </div>
                     )}
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-md transition hover:bg-indigo-50"
+                      className="absolute -bottom-1.5 -right-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-indigo-600 text-white shadow-md ring-2 ring-white transition hover:bg-indigo-700"
                     >
-                      <Camera className="h-3.5 w-3.5 text-indigo-600" />
+                      <Camera className="h-3.5 w-3.5" />
                     </button>
                     <input type="file" ref={fileInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
                   </div>
-                  <p className="text-base font-semibold text-white">{user?.firstName} {user?.lastName}</p>
-                  <p className="mt-0.5 text-xs text-indigo-200">{profile.trade || 'Artisan'}</p>
-                </div>
-                <div className="divide-y divide-slate-100 px-4 py-2 text-sm">
-                  <div className="flex items-center gap-2 py-2.5 text-slate-600">
-                    <Mail className="h-4 w-4 text-slate-400" />
-                    <span className="truncate">{user?.email}</span>
+                  <h3 className="text-lg font-bold text-slate-900">{user?.firstName} {user?.lastName}</h3>
+                  <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700">
+                    {profile.trade || 'Artisan'}
+                  </span>
+                  <div className="mt-4 space-y-2.5 border-t border-slate-100 pt-4">
+                    <div className="flex items-center gap-2.5 text-sm text-slate-600">
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100">
+                        <Mail className="h-3.5 w-3.5 text-slate-500" />
+                      </div>
+                      <span className="truncate">{user?.email}</span>
+                    </div>
+                    {profile.phone && (
+                      <div className="flex items-center gap-2.5 text-sm text-slate-600">
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100">
+                          <Phone className="h-3.5 w-3.5 text-slate-500" />
+                        </div>
+                        <span>{profile.phone}</span>
+                      </div>
+                    )}
+                    {profile.region && (
+                      <div className="flex items-center gap-2.5 text-sm text-slate-600">
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100">
+                          <MapPin className="h-3.5 w-3.5 text-slate-500" />
+                        </div>
+                        <span>{profile.region}</span>
+                      </div>
+                    )}
                   </div>
-                  {profile.phone && (
-                    <div className="flex items-center gap-2 py-2.5 text-slate-600">
-                      <Phone className="h-4 w-4 text-slate-400" />
-                      <span>{profile.phone}</span>
-                    </div>
-                  )}
-                  {profile.region && (
-                    <div className="flex items-center gap-2 py-2.5 text-slate-600">
-                      <MapPin className="h-4 w-4 text-slate-400" />
-                      <span>{profile.region}</span>
-                    </div>
-                  )}
                 </div>
               </div>
 
               {/* Tab navigation */}
               <nav className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                {TABS.map((tab) => {
-                  const Icon = tab.icon;
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`flex w-full items-center gap-3 px-4 py-3 text-sm font-medium transition-colors first:rounded-t-2xl last:rounded-b-2xl ${
-                        activeTab === tab.id
-                          ? 'bg-indigo-50 text-indigo-700'
-                          : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                      }`}
-                    >
-                      <Icon className={`h-4 w-4 ${activeTab === tab.id ? 'text-indigo-600' : 'text-slate-400'}`} />
-                      {tab.label}
-                      {activeTab === tab.id && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-indigo-600" />}
-                    </button>
-                  );
-                })}
+                <div className="px-3 py-3">
+                  <p className="px-2 pb-2 text-[10px] font-semibold uppercase tracking-widest text-slate-400">Navigation</p>
+                  {TABS.map((tab) => {
+                    const Icon = tab.icon;
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
+                          activeTab === tab.id
+                            ? 'bg-indigo-600 text-white shadow-sm'
+                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                        }`}
+                      >
+                        <Icon className={`h-4 w-4 shrink-0 ${activeTab === tab.id ? 'text-white' : 'text-slate-400'}`} />
+                        {tab.label}
+                        {activeTab === tab.id && (
+                          <svg className="ml-auto h-4 w-4 text-white/70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                          </svg>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </nav>
             </aside>
 
@@ -377,30 +396,35 @@ export default function ArtisanProfile() {
 
               {/* ── TAB: INFORMATIONS ── */}
               {activeTab === 'info' && (
-                <form onSubmit={handleSubmit} className="space-y-5">
+                <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                    <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white px-6 py-4">
-                      <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900">
-                        <UserCircle className="h-5 w-5 text-indigo-600" /> Informations personnelles
-                      </h2>
-                      <p className="mt-0.5 text-xs text-slate-500">Ces informations sont visibles par les prescripteurs.</p>
+                    <div className="border-b border-slate-100 px-6 py-5">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100">
+                          <UserCircle className="h-5 w-5 text-indigo-600" />
+                        </div>
+                        <div>
+                          <h2 className="text-base font-semibold text-slate-900">Informations personnelles</h2>
+                          <p className="text-xs text-slate-500">Visibles par les prescripteurs</p>
+                        </div>
+                      </div>
                     </div>
                     <div className="p-6">
                       <div className="grid gap-5 sm:grid-cols-2">
                         <div>
                           <label className="mb-1.5 block text-sm font-medium text-slate-700">Prénom</label>
-                          <input value={user?.firstName || ''} disabled className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-500" />
+                          <input value={user?.firstName || ''} disabled className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-400" />
                         </div>
                         <div>
                           <label className="mb-1.5 block text-sm font-medium text-slate-700">Nom</label>
-                          <input value={user?.lastName || ''} disabled className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-500" />
+                          <input value={user?.lastName || ''} disabled className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-400" />
                         </div>
                         <div>
                           <label className="mb-1.5 block text-sm font-medium text-slate-700">Métier <span className="text-red-500">*</span></label>
                           <select
                             value={profile.trade}
                             onChange={(e) => setProfile({ ...profile, trade: e.target.value })}
-                            className={`w-full rounded-xl border ${profileFormErrors.trade || profileServerErrors.trade ? 'border-red-400' : 'border-slate-200'} bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20`}
+                            className={`w-full rounded-xl border ${profileFormErrors.trade || profileServerErrors.trade ? 'border-red-400' : 'border-slate-200'} bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20`}
                           >
                             <option value="">Sélectionner un métier</option>
                             {tradeOptions.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -415,7 +439,7 @@ export default function ArtisanProfile() {
                               type="tel" value={profile.phone}
                               onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
                               placeholder="+216 XX XXX XXX"
-                              className={`w-full rounded-xl border ${profileFormErrors.phone || profileServerErrors.phone ? 'border-red-400' : 'border-slate-200'} bg-white pl-10 pr-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20`}
+                              className={`w-full rounded-xl border ${profileFormErrors.phone || profileServerErrors.phone ? 'border-red-400' : 'border-slate-200'} bg-white pl-10 pr-4 py-3 text-sm text-slate-900 outline-none transition-all focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20`}
                             />
                           </div>
                           <FieldError error={profileFormErrors.phone || profileServerErrors.phone} />
@@ -426,7 +450,7 @@ export default function ArtisanProfile() {
                             value={profile.description}
                             onChange={(e) => setProfile({ ...profile, description: e.target.value })}
                             rows="4" placeholder="Décrivez votre expérience, vos compétences..."
-                            className={`w-full rounded-xl border ${profileFormErrors.description || profileServerErrors.description ? 'border-red-400' : 'border-slate-200'} bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20`}
+                            className={`w-full rounded-xl border ${profileFormErrors.description || profileServerErrors.description ? 'border-red-400' : 'border-slate-200'} bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20`}
                           />
                           <FieldError error={profileFormErrors.description || profileServerErrors.description} />
                           <p className="mt-1 text-xs text-slate-400">Maximum 500 caractères</p>
@@ -434,12 +458,12 @@ export default function ArtisanProfile() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex gap-3">
-                    <button type="button" onClick={() => navigate('/artisan')} className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                  <div className="flex gap-3 pt-1">
+                    <button type="button" onClick={() => navigate('/artisan')} className="rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
                       Annuler
                     </button>
-                    <button type="submit" disabled={saving} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:from-indigo-700 hover:to-indigo-600 disabled:opacity-50">
-                      {saving ? <><Loader2 className="h-4 w-4 animate-spin" /> Enregistrement...</> : <><Save className="h-4 w-4" /> Enregistrer</>}
+                    <button type="submit" disabled={saving} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:opacity-50">
+                      {saving ? <><Loader2 className="h-4 w-4 animate-spin" /> Enregistrement...</> : <><Save className="h-4 w-4" /> Enregistrer les modifications</>}
                     </button>
                   </div>
                 </form>
@@ -447,14 +471,19 @@ export default function ArtisanProfile() {
 
               {/* ── TAB: LOCALISATION ── */}
               {activeTab === 'location' && (
-                <form onSubmit={handleSubmit} className="space-y-5">
+                <form onSubmit={handleSubmit} className="space-y-6">
                   {/* Auto-detect */}
                   <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                    <div className="border-b border-slate-100 bg-gradient-to-r from-emerald-50 to-white px-6 py-4">
-                      <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900">
-                        <Zap className="h-5 w-5 text-emerald-600" /> Détection automatique
-                      </h2>
-                      <p className="mt-0.5 text-xs text-slate-500">Utilisez votre position GPS actuelle.</p>
+                    <div className="border-b border-slate-100 px-6 py-5">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100">
+                          <Zap className="h-5 w-5 text-emerald-600" />
+                        </div>
+                        <div>
+                          <h2 className="text-base font-semibold text-slate-900">Détection automatique</h2>
+                          <p className="text-xs text-slate-500">Utilisez votre position GPS actuelle</p>
+                        </div>
+                      </div>
                     </div>
                     <div className="flex items-center justify-between gap-4 p-6">
                       <div>
@@ -463,7 +492,7 @@ export default function ArtisanProfile() {
                       </div>
                       <button
                         type="button" onClick={handleAutoDetectLocation} disabled={autoDetecting}
-                        className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-50"
+                        className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-50"
                       >
                         {autoDetecting ? <><Loader2 className="h-4 w-4 animate-spin" /> Détection...</> : <><Zap className="h-4 w-4" /> Détecter</>}
                       </button>
@@ -472,16 +501,22 @@ export default function ArtisanProfile() {
 
                   {/* Manual location */}
                   <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                    <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white px-6 py-4">
-                      <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900">
-                        <MapPin className="h-5 w-5 text-indigo-600" /> Adresse manuelle
-                      </h2>
+                    <div className="border-b border-slate-100 px-6 py-5">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100">
+                          <MapPin className="h-5 w-5 text-indigo-600" />
+                        </div>
+                        <div>
+                          <h2 className="text-base font-semibold text-slate-900">Adresse manuelle</h2>
+                          <p className="text-xs text-slate-500">Saisissez ou choisissez sur la carte</p>
+                        </div>
+                      </div>
                     </div>
                     <div className="p-6">
-                      <div className="mb-4">
+                      <div className="mb-5">
                         <button
                           type="button" onClick={() => setIsMapPickerOpen(true)} disabled={updatingLocation}
-                          className="inline-flex items-center gap-2 rounded-xl bg-indigo-50 px-4 py-2.5 text-sm font-medium text-indigo-700 transition hover:bg-indigo-100 disabled:opacity-50"
+                          className="inline-flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-medium text-indigo-700 transition hover:bg-indigo-100 disabled:opacity-50"
                         >
                           <Navigation className="h-4 w-4" />
                           {updatingLocation ? 'Enregistrement...' : 'Choisir sur la carte'}
@@ -496,54 +531,51 @@ export default function ArtisanProfile() {
                               type="text" value={profile.region}
                               onChange={(e) => setProfile({ ...profile, region: e.target.value })}
                               placeholder="Ex: Tunis, Sousse..."
-                              className={`w-full rounded-xl border ${profileFormErrors.region || profileServerErrors.region ? 'border-red-400' : 'border-slate-200'} bg-white pl-10 pr-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20`}
+                              className={`w-full rounded-xl border ${profileFormErrors.region || profileServerErrors.region ? 'border-red-400' : 'border-slate-200'} bg-white pl-10 pr-4 py-3 text-sm text-slate-900 outline-none transition-all focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20`}
                             />
                           </div>
                           <FieldError error={profileFormErrors.region || profileServerErrors.region} />
                         </div>
                         <div>
                           <label className="mb-1.5 block text-sm font-medium text-slate-700">Ville</label>
-                          <input
-                            type="text" value={profile.address.city}
+                          <input type="text" value={profile.address.city}
                             onChange={(e) => setProfile({ ...profile, address: { ...profile.address, city: e.target.value } })}
                             placeholder="Ex: Lac 2"
-                            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
+                            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20"
                           />
                         </div>
                         <div>
                           <label className="mb-1.5 block text-sm font-medium text-slate-700">Rue / Quartier</label>
-                          <input
-                            type="text" value={profile.address.street}
+                          <input type="text" value={profile.address.street}
                             onChange={(e) => setProfile({ ...profile, address: { ...profile.address, street: e.target.value } })}
                             placeholder="Ex: Rue de la Liberté"
-                            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
+                            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20"
                           />
                         </div>
                         <div>
                           <label className="mb-1.5 block text-sm font-medium text-slate-700">Code postal</label>
-                          <input
-                            type="text" value={profile.address.postalCode}
+                          <input type="text" value={profile.address.postalCode}
                             onChange={(e) => setProfile({ ...profile, address: { ...profile.address, postalCode: e.target.value } })}
                             placeholder="Ex: 1000"
-                            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
+                            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20"
                           />
                         </div>
                       </div>
                       {profile.location.latitude !== 0 && (
-                        <div className="mt-4 rounded-xl bg-slate-50 px-4 py-3 text-xs text-slate-500">
-                          <span className="font-medium">Position enregistrée:</span>{' '}
-                          {profile.location.latitude.toFixed(6)}°, {profile.location.longitude.toFixed(6)}°
+                        <div className="mt-4 flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-3 text-xs text-emerald-700">
+                          <MapPin className="h-3.5 w-3.5 shrink-0" />
+                          <span><span className="font-medium">Position enregistrée:</span> {profile.location.latitude.toFixed(6)}°, {profile.location.longitude.toFixed(6)}°</span>
                         </div>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex gap-3">
-                    <button type="button" onClick={() => navigate('/artisan')} className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                  <div className="flex gap-3 pt-1">
+                    <button type="button" onClick={() => navigate('/artisan')} className="rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
                       Annuler
                     </button>
-                    <button type="submit" disabled={saving} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:from-indigo-700 hover:to-indigo-600 disabled:opacity-50">
-                      {saving ? <><Loader2 className="h-4 w-4 animate-spin" /> Enregistrement...</> : <><Save className="h-4 w-4" /> Enregistrer</>}
+                    <button type="submit" disabled={saving} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:opacity-50">
+                      {saving ? <><Loader2 className="h-4 w-4 animate-spin" /> Enregistrement...</> : <><Save className="h-4 w-4" /> Enregistrer les modifications</>}
                     </button>
                   </div>
                 </form>
@@ -551,13 +583,19 @@ export default function ArtisanProfile() {
 
               {/* ── TAB: SÉCURITÉ ── */}
               {activeTab === 'security' && (
-                <div className="space-y-5">
+                <div className="space-y-6">
                   {/* Change password */}
                   <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                    <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white px-6 py-4">
-                      <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900">
-                        <Lock className="h-5 w-5 text-indigo-600" /> Changer le mot de passe
-                      </h2>
+                    <div className="border-b border-slate-100 px-6 py-5">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100">
+                          <Lock className="h-5 w-5 text-slate-600" />
+                        </div>
+                        <div>
+                          <h2 className="text-base font-semibold text-slate-900">Changer le mot de passe</h2>
+                          <p className="text-xs text-slate-500">Minimum 6 caractères</p>
+                        </div>
+                      </div>
                     </div>
                     <div className="p-6">
                       <form onSubmit={onChangePassword} className="grid gap-5 sm:grid-cols-2">
@@ -565,12 +603,8 @@ export default function ArtisanProfile() {
                           <label className="mb-1.5 block text-sm font-medium text-slate-700">Mot de passe actuel</label>
                           <div className="relative">
                             <Key className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                            <input
-                              type="password" value={currentPassword}
-                              onChange={(e) => setCurrentPassword(e.target.value)}
-                              placeholder="Votre mot de passe actuel"
-                              className={`w-full rounded-xl border ${pwFormErrors.currentPassword || pwServerErrors.currentPassword ? 'border-red-400' : 'border-slate-200'} bg-white pl-10 pr-4 py-2.5 text-sm outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20`}
-                            />
+                            <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="Votre mot de passe actuel"
+                              className={`w-full rounded-xl border ${pwFormErrors.currentPassword || pwServerErrors.currentPassword ? 'border-red-400' : 'border-slate-200'} bg-white pl-10 pr-4 py-3 text-sm outline-none transition-all focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20`} />
                           </div>
                           <FieldError error={pwFormErrors.currentPassword || pwServerErrors.currentPassword} />
                         </div>
@@ -578,12 +612,8 @@ export default function ArtisanProfile() {
                           <label className="mb-1.5 block text-sm font-medium text-slate-700">Nouveau mot de passe</label>
                           <div className="relative">
                             <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                            <input
-                              type="password" value={newPassword}
-                              onChange={(e) => setNewPassword(e.target.value)}
-                              placeholder="Minimum 6 caractères"
-                              className={`w-full rounded-xl border ${pwFormErrors.newPassword || pwServerErrors.newPassword ? 'border-red-400' : 'border-slate-200'} bg-white pl-10 pr-4 py-2.5 text-sm outline-none transition-all focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20`}
-                            />
+                            <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Minimum 6 caractères"
+                              className={`w-full rounded-xl border ${pwFormErrors.newPassword || pwServerErrors.newPassword ? 'border-red-400' : 'border-slate-200'} bg-white pl-10 pr-4 py-3 text-sm outline-none transition-all focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20`} />
                           </div>
                           <FieldError error={pwFormErrors.newPassword || pwServerErrors.newPassword} />
                         </div>
@@ -594,7 +624,7 @@ export default function ArtisanProfile() {
                           <div className="sm:col-span-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-700">{pwMsg}</div>
                         )}
                         <div className="sm:col-span-2">
-                          <button type="submit" disabled={pwLoading} className="w-full rounded-xl bg-slate-800 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:opacity-50">
+                          <button type="submit" disabled={pwLoading} className="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:opacity-50">
                             {pwLoading ? <span className="flex items-center justify-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Mise à jour...</span> : 'Changer le mot de passe'}
                           </button>
                         </div>
@@ -604,22 +634,25 @@ export default function ArtisanProfile() {
 
                   {/* Reset link */}
                   <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                    <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white px-6 py-4">
-                      <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900">
-                        <Mail className="h-5 w-5 text-indigo-600" /> Lien de réinitialisation
-                      </h2>
+                    <div className="border-b border-slate-100 px-6 py-5">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100">
+                          <Mail className="h-5 w-5 text-indigo-600" />
+                        </div>
+                        <div>
+                          <h2 className="text-base font-semibold text-slate-900">Lien de réinitialisation</h2>
+                          <p className="text-xs text-slate-500">Recevez un lien par email</p>
+                        </div>
+                      </div>
                     </div>
                     <div className="flex items-center justify-between gap-4 p-6">
                       <div>
-                        <p className="text-sm font-medium text-slate-700">Envoyer un lien par email</p>
-                        <p className="text-xs text-slate-500">{user?.email}</p>
+                        <p className="text-sm text-slate-600">Envoyer à <span className="font-medium text-slate-900">{user?.email}</span></p>
                         {resetErr && <p className="mt-1 text-xs text-red-600">{resetErr}</p>}
                         {resetMsg && <p className="mt-1 text-xs text-emerald-600">{resetMsg}</p>}
                       </div>
-                      <button
-                        type="button" onClick={onSendResetLink} disabled={resetLoading}
-                        className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
-                      >
+                      <button type="button" onClick={onSendResetLink} disabled={resetLoading}
+                        className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50">
                         {resetLoading ? <><Loader2 className="h-4 w-4 animate-spin" /> Envoi...</> : <><Send className="h-4 w-4" /> Envoyer</>}
                       </button>
                     </div>
@@ -627,11 +660,16 @@ export default function ArtisanProfile() {
 
                   {/* Face ID */}
                   <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                    <div className="border-b border-slate-100 bg-gradient-to-r from-blue-50 to-white px-6 py-4">
-                      <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900">
-                        <ShieldCheck className="h-5 w-5 text-blue-600" /> Authentification biométrique
-                      </h2>
-                      <p className="mt-0.5 text-xs text-slate-500">Gérez votre Face ID et la sécurité du compte.</p>
+                    <div className="border-b border-slate-100 px-6 py-5">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-100">
+                          <ShieldCheck className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <h2 className="text-base font-semibold text-slate-900">Authentification biométrique</h2>
+                          <p className="text-xs text-slate-500">Face ID et sécurité avancée</p>
+                        </div>
+                      </div>
                     </div>
                     <div className="p-6">
                       <FaceIdSettings />
