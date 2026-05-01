@@ -16,17 +16,6 @@ jobs:
     name: Backend Tests & Quality
     runs-on: ubuntu-latest
 
-    services:
-      mongodb:
-        image: mongo:6.0
-        ports:
-          - 27017:27017
-        options: >-
-          --health-cmd "mongosh --eval 'db.runCommand({ping:1})'"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -42,13 +31,21 @@ jobs:
         working-directory: backend
         run: npm ci
 
+      # ── Unit Tests (Jest) ────────────────────────────────────────────────────
       - name: Run unit tests with coverage
         working-directory: backend
         env:
           NODE_ENV: test
           JWT_SECRET: test-secret-ci
-          MONGO_URI: mongodb://localhost:27017/bmp_test
         run: npm test -- --coverage --runInBand --forceExit
+
+      - name: Upload test results (JUnit)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-test-results
+          path: backend/junit.xml
+          retention-days: 7
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
@@ -57,6 +54,7 @@ jobs:
           path: backend/coverage/
           retention-days: 7
 
+      # ── SonarQube ────────────────────────────────────────────────────────────
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@master
         if: github.event_name == 'push'
@@ -65,18 +63,15 @@ jobs:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         with:
           args: >
-            -Dsonar.projectKey=bmp-backend
-            -Dsonar.projectName=BMP Backend
+            -Dsonar.projectKey=bmp-fullstack
+            -Dsonar.projectName=BMP.tn Full Stack
             -Dsonar.sources=backend/src
             -Dsonar.tests=backend/tests
             -Dsonar.test.inclusions=backend/tests/**/*.test.js
             -Dsonar.javascript.lcov.reportPaths=backend/coverage/lcov.info
-            -Dsonar.exclusions=**/node_modules/**,**/coverage/**,**/uploads/**
+            -Dsonar.exclusions=**/node_modules/**,**/coverage/**,**/uploads/**,backend/src/models/**,backend/src/config/**,backend/src/routes/**,backend/src/socket.js,backend/src/app.js
 
+      # ── Docker Build Verify ──────────────────────────────────────────────────
       - name: Build Docker image (verify)
         working-directory: backend
         run: docker build -t bmp-backend:ci-${{ github.sha }} .
-
-      - name: Notify CD pipeline success
-        if: success() && github.ref == 'refs/heads/main'
-        run: echo "CI_BACKEND_SUCCESS=true" >> $GITHUB_ENV

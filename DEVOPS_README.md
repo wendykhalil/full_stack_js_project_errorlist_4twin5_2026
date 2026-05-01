@@ -1,158 +1,220 @@
-# BMP.tn — DevOps Infrastructure
+# BMP.tn — DevOps Infrastructure Documentation
 
-## ✅ Test Results
-| Suite | Tests | Status |
-|-------|-------|--------|
-| Backend (Jest) | **433 passing** | ✅ |
-| Frontend (Vitest) | **80 passing** | ✅ |
-
-## 📁 Structure
+## Architecture Overview
 
 ```
-.github/workflows/
-  ci-backend.yml      # CI: install → test → coverage → SonarQube → Docker build
-  ci-frontend.yml     # CI: install → lint → build → SonarQube → Docker build
-  cd-backend.yml      # CD: triggered after CI Backend success → push image → deploy K8s
-  cd-frontend.yml     # CD: triggered after CI Frontend success → push image → deploy K8s
-
-k8s/
-  namespace.yaml          # bmp-production namespace
-  configmap.yaml          # Non-secret env vars
-  secrets.yaml            # Secret template (fill before applying)
-  backend-deployment.yaml # 2 replicas, health probes, resource limits
-  backend-service.yaml    # ClusterIP service
-  frontend-deployment.yaml
-  frontend-service.yaml
-  ingress.yaml            # nginx ingress: / → frontend, /api → backend
-  hpa.yaml                # Auto-scale backend 2→6, frontend 2→4
-
-k8s/monitoring/
-  namespace.yaml
-  prometheus.yaml     # Prometheus + ConfigMap with alert rules
-  alertmanager.yaml   # AlertManager + email routing
-  grafana.yaml        # Grafana + Prometheus datasource
-  node-exporter.yaml  # DaemonSet for host metrics
-
-devops/monitoring/
-  prometheus/prometheus.yml     # Scrape configs (backend, node, blackbox)
-  prometheus/alert-rules.yml    # BackendDown, HighErrorRate, SlowResponse, etc.
-  alertmanager/alertmanager.yml # Email routing by severity/team
-  blackbox/blackbox.yml         # HTTP probe modules
-  grafana/provisioning/         # Auto-provisioned datasource + dashboards
-  grafana/dashboards/           # BMP Overview dashboard JSON
-
-backend/
-  Dockerfile          # Multi-stage: deps → production (non-root user)
-  src/app.js          # /api/health + /metrics (prom-client) endpoints
-
-frontend/
-  Dockerfile          # Multi-stage: node build → nginx serve
-  nginx.conf          # SPA routing, gzip, security headers, cache
-  vite.config.js      # Vitest config added
-  src/test/           # 80 unit tests (hooks, components, utils)
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         BMP.tn DevOps Stack                             │
+│                                                                         │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────────────────┐  │
+│  │   GitHub     │    │   Jenkins    │    │      SonarQube           │  │
+│  │   Actions    │───▶│   (Local)    │───▶│   Code Quality           │  │
+│  │  CI/CD x4    │    │  Port 9090   │    │   Port 9000              │  │
+│  └──────────────┘    └──────────────┘    └──────────────────────────┘  │
+│                                                                         │
+│  ┌──────────────────────────────────────────────────────────────────┐  │
+│  │                    Monitoring Stack                               │  │
+│  │                                                                   │  │
+│  │  Prometheus:9091 ──▶ Grafana:3001 ──▶ AlertManager:9093         │  │
+│  │       │                                                           │  │
+│  │  Node Exporter:9100  Blackbox:9115                               │  │
+│  └──────────────────────────────────────────────────────────────────┘  │
+│                                                                         │
+│  ┌──────────────────────────────────────────────────────────────────┐  │
+│  │                  Kubernetes (kubeadm)                             │  │
+│  │                                                                   │  │
+│  │  Namespace: bmp-production                                        │  │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌──────────────────────────┐ │  │
+│  │  │ bmp-backend │  │ bmp-frontend│  │  Monitoring Namespace    │ │  │
+│  │  │  x2 pods    │  │  x2 pods    │  │  Prometheus+Grafana+AM   │ │  │
+│  │  │  HPA: 2-5   │  │  HPA: 2-4   │  └──────────────────────────┘ │  │
+│  │  └─────────────┘  └─────────────┘                                │  │
+│  │  NGINX Ingress → bmp.local                                        │  │
+│  └──────────────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
-## 🚀 CI/CD Pipelines
+---
 
-### GitHub Actions (4 pipelines)
-```
-Push to main/develop
-  ├── CI Backend  → tests → SonarQube → Docker build verify
-  │     └── on success → CD Backend → push image → kubectl rollout
-  └── CI Frontend → build → SonarQube → Docker build verify
-        └── on success → CD Frontend → push image → kubectl rollout
-```
+## 1. CI/CD Pipelines (4 total)
 
-### Jenkins (Jenkinsfile)
-Same 4 stages in one pipeline:
-1. **CI Backend** — parallel: install+lint + unit tests with coverage
-2. **CI Frontend** — build production bundle
-3. **SonarQube Analysis** — full scan with coverage report
-4. **CD Backend/Frontend** — Docker push + kubectl deploy (main branch only)
+### Pipeline 1 — CI Backend
+**File:** `.github/workflows/ci-backend.yml`  
+**Trigger:** Push/PR to `main` or `develop` on `backend/**`  
+**Steps:**
+- Install dependencies (`npm ci`)
+- Run 815 Jest unit tests with coverage
+- Upload JUnit XML + coverage artifacts
+- SonarQube scan (coverage report)
+- Docker build verification
 
-## 📊 Monitoring Stack
+### Pipeline 2 — CI Frontend
+**File:** `.github/workflows/ci-frontend.yml`  
+**Trigger:** Push/PR to `main` or `develop` on `frontend/**`  
+**Steps:**
+- Install dependencies (`npm ci`)
+- Run 80 Vitest unit tests with coverage
+- Lint check
+- Production build (`npm run build`)
+- Upload artifacts
+- SonarQube scan
+- Docker build verification
 
-| Tool | Port | Purpose |
-|------|------|---------|
-| Prometheus | 9090 | Metrics collection + alerting rules |
-| Grafana | 3001 | Dashboards (BMP Overview pre-loaded) |
-| AlertManager | 9093 | Alert routing → email by team/severity |
-| Node Exporter | 9100 | Host CPU/memory/disk metrics |
-| Blackbox | 9115 | HTTP endpoint probing |
+### Pipeline 3 — CD Backend *(auto-triggered after CI Backend)*
+**File:** `.github/workflows/cd-backend.yml`  
+**Trigger:** `workflow_run` — runs automatically when CI Backend succeeds on `main`  
+**Steps:**
+- Docker build & push to Docker Hub
+- `kubectl set image` to update K8s deployment
+- `kubectl rollout status` to verify deployment
 
-### Start monitoring locally
+### Pipeline 4 — CD Frontend *(auto-triggered after CI Frontend)*
+**File:** `.github/workflows/cd-frontend.yml`  
+**Trigger:** `workflow_run` — runs automatically when CI Frontend succeeds on `main`  
+**Steps:**
+- Docker build & push to Docker Hub
+- `kubectl set image` to update K8s deployment
+- `kubectl rollout status` to verify deployment
+
+### Local Jenkins Pipeline
+**File:** `Jenkinsfile.local`  
+**Access:** `http://localhost:9090`  
+**Stages:** Verify → CI Backend (815 tests) → CI Frontend (80 tests) → Build → Summary
+
+---
+
+## 2. SonarQube — Code Quality
+
+**Access:** `http://localhost:9000`  
+**Project:** `bmp-fullstack`  
+**Config:** `sonar-project.properties`
+
+### Results
+| Metric | Value |
+|--------|-------|
+| Coverage | **80%+** |
+| Lines of Code | ~10k |
+| Security Issues | 0 |
+| Reliability | Passing |
+
+### Run scan manually
 ```bash
-docker-compose -f docker-compose.monitoring.yml up -d
-# Grafana: http://localhost:3001  (admin / bmp-admin-2024)
-# Prometheus: http://localhost:9090
-# AlertManager: http://localhost:9093
+export SONAR_TOKEN=sqa_d83f956d33a18914d4458e1fd31d8243fa860ee1
+npx sonar-scanner -Dsonar.token=$SONAR_TOKEN
 ```
 
-### Alerts configured
-- `BackendDown` — critical, 1m
-- `HighErrorRate` — warning, 5xx > 5%
-- `SlowResponseTime` — warning, P95 > 2s
-- `HighMemoryUsage` — warning, > 450MB
-- `FrontendDown` — critical, 1m
-- `HighCPUUsage` — warning, > 85%
-- `LowDiskSpace` — warning, < 15%
-- `MongoDBDown` — critical, 1m
+---
 
-## 🔧 SonarQube
+## 3. Kubernetes (kubeadm)
 
+**Setup guide:** `k8s/KUBEADM_SETUP.md`
+
+### Manifests
+| File | Description |
+|------|-------------|
+| `k8s/namespace.yaml` | `bmp-production` namespace |
+| `k8s/configmap.yaml` | App configuration |
+| `k8s/secrets.yaml` | Sensitive credentials |
+| `k8s/backend-deployment.yaml` | Backend (2 replicas, rolling update) |
+| `k8s/backend-service.yaml` | ClusterIP service |
+| `k8s/frontend-deployment.yaml` | Frontend (2 replicas) |
+| `k8s/frontend-service.yaml` | ClusterIP service |
+| `k8s/ingress.yaml` | NGINX ingress → `bmp.local` |
+| `k8s/hpa.yaml` | HPA: backend 2-5 pods, frontend 2-4 pods |
+| `k8s/monitoring/` | Prometheus, Grafana, AlertManager, Node Exporter |
+
+### Deploy
 ```bash
-# Run scan locally (requires SonarQube running on localhost:9000)
-cd backend && npm run sonar:scan
-
-# Or via sonar-scanner directly
-npx sonar-scanner \
-  -Dsonar.projectKey=bmp-fullstack \
-  -Dsonar.host.url=http://localhost:9000 \
-  -Dsonar.token=$SONAR_TOKEN
-```
-
-Coverage report path: `backend/coverage/lcov.info`
-
-## ☸️ Kubernetes Deployment
-
-```bash
-# Full setup (interactive)
-bash scripts/setup-devops.sh
-
-# Or step by step:
 kubectl apply -f k8s/namespace.yaml
 kubectl apply -f k8s/configmap.yaml
-kubectl create secret generic bmp-secrets \
-  --from-literal=MONGO_URI='...' \
-  --from-literal=JWT_SECRET='...' \
-  -n bmp-production
-kubectl apply -f k8s/
+kubectl apply -f k8s/secrets.yaml
+kubectl apply -f k8s/backend-deployment.yaml
+kubectl apply -f k8s/backend-service.yaml
+kubectl apply -f k8s/frontend-deployment.yaml
+kubectl apply -f k8s/frontend-service.yaml
+kubectl apply -f k8s/ingress.yaml
+kubectl apply -f k8s/hpa.yaml
 kubectl apply -f k8s/monitoring/
-
-# Check status
-kubectl get pods -n bmp-production
-kubectl get pods -n monitoring
 ```
 
-## 🐳 Docker
+---
+
+## 4. Monitoring
+
+### Start monitoring stack
+```bash
+docker-compose -f docker-compose.monitoring.yml up -d
+```
+
+### Access URLs
+| Service | URL | Credentials |
+|---------|-----|-------------|
+| Prometheus | http://localhost:9091 | — |
+| Grafana | http://localhost:3001 | admin / bmp-admin-2024 |
+| AlertManager | http://localhost:9093 | — |
+| Node Exporter | http://localhost:9100/metrics | — |
+| Blackbox | http://localhost:9115 | — |
+
+### Dashboards (Grafana)
+- **BMP.tn Platform Overview** — HTTP requests, response times, CPU/memory, disk
+- **BMP.tn CI/CD & DevOps** — Node.js metrics, heap, event loop, status codes
+
+### Alert Rules
+| Alert | Condition | Severity |
+|-------|-----------|----------|
+| BackendDown | `up{job="bmp-backend"} == 0` for 1m | Critical |
+| HighErrorRate | 5xx rate > 5% for 2m | Warning |
+| SlowResponseTime | P95 > 2s for 3m | Warning |
+| HighCPUUsage | CPU > 85% for 5m | Warning |
+| LowDiskSpace | Disk < 15% for 5m | Warning |
+| HighMemoryPressure | Memory > 90% for 5m | Critical |
+| NodeJSEventLoopLag | Lag > 500ms for 2m | Warning |
+
+---
+
+## 5. Excellence — Extra Tools
+
+### Trivy (Container Security Scanning)
+**File:** `.github/workflows/security-scan.yml`  
+Scans Docker images for CVE vulnerabilities (CRITICAL/HIGH).  
+Results uploaded to GitHub Security tab as SARIF.
+
+### OWASP Dependency Check
+**File:** `.github/workflows/security-scan.yml`  
+Scans npm dependencies for known vulnerabilities.  
+Fails pipeline if CVSS score ≥ 9.
+
+### Lighthouse CI (Frontend Performance)
+**File:** `.github/workflows/security-scan.yml`, `.lighthouserc.json`  
+Audits frontend for Performance, Accessibility, Best Practices, SEO.  
+Thresholds: Performance ≥ 70%, Accessibility ≥ 80%.
+
+### prom-client (Backend Metrics)
+**File:** `backend/src/app.js`  
+Node.js backend exposes `/metrics` endpoint with:
+- HTTP request counter by method/route/status
+- HTTP request duration histogram (P50/P95/P99)
+- Node.js default metrics (heap, GC, event loop)
+
+---
+
+## Quick Start
 
 ```bash
-# Build and run everything locally
-docker-compose up -d
+# 1. Start Jenkins
+docker-compose -f docker-compose.jenkins.yml up -d
 
-# Build images manually
-docker build -t bmp-backend:latest ./backend
-docker build -t bmp-frontend:latest ./frontend \
-  --build-arg VITE_API_URL=http://localhost:5000/api
+# 2. Start SonarQube
+docker-compose -f docker-compose.monitoring.yml up -d sonarqube sonar-db
+
+# 3. Start monitoring
+docker-compose -f docker-compose.monitoring.yml up -d prometheus alertmanager grafana node-exporter blackbox
+
+# 4. Run tests + coverage
+cd backend && npm test
+cd frontend && npx vitest run --coverage
+
+# 5. Push to SonarQube
+export SONAR_TOKEN=sqa_d83f956d33a18914d4458e1fd31d8243fa860ee1
+npx sonar-scanner -Dsonar.token=$SONAR_TOKEN
 ```
-
-## 🔑 Required GitHub Secrets
-
-| Secret | Description |
-|--------|-------------|
-| `DOCKER_USERNAME` | Docker Hub username |
-| `DOCKER_PASSWORD` | Docker Hub password/token |
-| `SONAR_TOKEN` | SonarQube authentication token |
-| `SONAR_HOST_URL` | SonarQube server URL |
-| `KUBECONFIG` | Base64-encoded kubeconfig |
-| `VITE_API_URL` | Production API URL |

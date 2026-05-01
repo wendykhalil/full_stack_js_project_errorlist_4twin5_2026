@@ -1,0 +1,143 @@
+name: Security & Quality Scan
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Excellence: Security scanning with Trivy + OWASP Dependency Check
+# These tools are NOT covered in the DevOps course — added for excellence points
+# ─────────────────────────────────────────────────────────────────────────────
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Run every Monday at 08:00 UTC
+    - cron: '0 8 * * 1'
+
+jobs:
+
+  # ── Trivy — Container Image Vulnerability Scan ──────────────────────────────
+  trivy-scan:
+    name: Trivy Container Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build backend image for scanning
+        run: docker build -t bmp-backend:scan ./backend
+
+      - name: Run Trivy on backend image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'bmp-backend:scan'
+          format: 'sarif'
+          output: 'trivy-backend.sarif'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '0'  # Don't fail pipeline, just report
+
+      - name: Build frontend image for scanning
+        run: docker build -t bmp-frontend:scan ./frontend
+
+      - name: Run Trivy on frontend image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'bmp-frontend:scan'
+          format: 'sarif'
+          output: 'trivy-frontend.sarif'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '0'
+
+      - name: Run Trivy filesystem scan (source code)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '0'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-backend.sarif'
+          category: 'trivy-backend'
+
+  # ── OWASP Dependency Check ──────────────────────────────────────────────────
+  owasp-check:
+    name: OWASP Dependency Vulnerability Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run OWASP Dependency Check — Backend
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: 'BMP Backend'
+          path: './backend'
+          format: 'HTML'
+          out: 'reports/backend'
+          args: >
+            --enableRetired
+            --failOnCVSS 9
+            --exclude "**/node_modules/**"
+
+      - name: Run OWASP Dependency Check — Frontend
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: 'BMP Frontend'
+          path: './frontend'
+          format: 'HTML'
+          out: 'reports/frontend'
+          args: >
+            --enableRetired
+            --failOnCVSS 9
+            --exclude "**/node_modules/**"
+
+      - name: Upload OWASP reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: owasp-dependency-check-reports
+          path: reports/
+          retention-days: 14
+
+  # ── Lighthouse CI — Frontend Performance & Accessibility ────────────────────
+  lighthouse:
+    name: Lighthouse Performance Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: frontend
+        env:
+          VITE_API_URL: http://localhost:5000/api
+        run: npm run build
+
+      - name: Run Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v11
+        with:
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+          configPath: '.lighthouserc.json'
+
+      - name: Upload Lighthouse results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse-results
+          path: '.lighthouseci/'
+          retention-days: 7

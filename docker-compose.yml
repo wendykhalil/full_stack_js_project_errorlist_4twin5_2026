@@ -1,5 +1,16 @@
 version: '3.8'
 
+# ─────────────────────────────────────────────────────────────────────────────
+# BMP.tn — Full Application Stack
+#
+# Start everything: docker-compose up -d
+# Backend only:     docker-compose up -d backend
+# Frontend only:    docker-compose up -d frontend
+#
+# For monitoring:   docker-compose -f docker-compose.monitoring.yml up -d
+# For Jenkins:      docker-compose -f docker-compose.jenkins.yml up -d
+# ─────────────────────────────────────────────────────────────────────────────
+
 networks:
   app:
     driver: bridge
@@ -10,44 +21,26 @@ volumes:
 
 services:
 
-  # ── MongoDB ─────────────────────────────────────────────────────────────────
-  mongodb:
-    image: mongo:6.0
-    container_name: bmp-mongodb
-    restart: unless-stopped
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo_data:/data/db
-    environment:
-      MONGO_INITDB_DATABASE: bmp
-    networks:
-      - app
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.runCommand({ping:1})"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   # ── Backend ─────────────────────────────────────────────────────────────────
   backend:
     build:
       context: ./backend
-      target: production
+      dockerfile: Dockerfile
     container_name: bmp-backend
     restart: unless-stopped
     ports:
       - "5000:5000"
-    env_file:
-      - ./backend/.env
     environment:
       - NODE_ENV=production
-      - MONGO_URI=mongodb://mongodb:27017/bmp
+      - PORT=5000
+      - MONGO_URI=${MONGO_URI}
+      - JWT_SECRET=${JWT_SECRET}
+      - CLIENT_ORIGIN=http://localhost:5173
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
     volumes:
       - uploads_data:/app/uploads
-    depends_on:
-      mongodb:
-        condition: service_healthy
     networks:
       - app
     healthcheck:
@@ -61,18 +54,20 @@ services:
   frontend:
     build:
       context: ./frontend
+      dockerfile: Dockerfile
       args:
-        VITE_API_URL: http://localhost:5000/api
+        - VITE_API_URL=http://localhost:5000/api
     container_name: bmp-frontend
     restart: unless-stopped
     ports:
       - "80:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
       - app
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:80"]
       interval: 30s
-      timeout: 5s
+      timeout: 10s
       retries: 3

@@ -1,0 +1,59 @@
+{
+  "title": "BMP.tn — CI/CD & DevOps",
+  "uid": "bmp-cicd",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "1m",
+  "time": { "from": "now-24h", "to": "now" },
+  "tags": ["bmp", "cicd", "devops"],
+  "panels": [
+    {
+      "id": 1,
+      "title": "SonarQube — Code Coverage",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "targets": [{ "expr": "sonarqube_coverage{project=\"bmp-fullstack\"}", "legendFormat": "Coverage %" }],
+      "fieldConfig": { "defaults": { "unit": "percent", "thresholds": { "steps": [{ "color": "red", "value": 0 }, { "color": "yellow", "value": 60 }, { "color": "green", "value": 70 }] } } }
+    },
+    {
+      "id": 2,
+      "title": "Backend — HTTP Request Rate",
+      "type": "timeseries",
+      "gridPos": { "x": 6, "y": 0, "w": 18, "h": 8 },
+      "targets": [
+        { "expr": "sum(rate(bmp_http_requests_total[5m])) by (status_code)", "legendFormat": "{{status_code}}" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "reqps" } }
+    },
+    {
+      "id": 3,
+      "title": "Node.js Event Loop Lag",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "targets": [{ "expr": "bmp_backend_nodejs_eventloop_lag_seconds", "legendFormat": "Event Loop Lag" }],
+      "fieldConfig": { "defaults": { "unit": "s" } }
+    },
+    {
+      "id": 4,
+      "title": "Node.js Heap Used",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "targets": [{ "expr": "bmp_backend_nodejs_heap_size_used_bytes", "legendFormat": "Heap Used" }],
+      "fieldConfig": { "defaults": { "unit": "bytes" } }
+    },
+    {
+      "id": 5,
+      "title": "HTTP Status Code Distribution",
+      "type": "piechart",
+      "gridPos": { "x": 0, "y": 16, "w": 8, "h": 8 },
+      "targets": [{ "expr": "sum by (status_code)(bmp_http_requests_total)", "legendFormat": "{{status_code}}" }]
+    },
+    {
+      "id": 6,
+      "title": "Top Routes by Request Count",
+      "type": "table",
+      "gridPos": { "x": 8, "y": 16, "w": 16, "h": 8 },
+      "targets": [{ "expr": "topk(10, sum by (route, method)(bmp_http_requests_total))", "legendFormat": "{{method}} {{route}}", "instant": true }]
+    }
+  ]
+}

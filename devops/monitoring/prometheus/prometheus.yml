@@ -3,6 +3,7 @@ global:
   evaluation_interval: 15s
   external_labels:
     monitor: 'bmp-monitor'
+    environment: 'local'
 
 alerting:
   alertmanagers:
@@ -13,44 +14,35 @@ rule_files:
   - /etc/prometheus/alert-rules.yml
 
 scrape_configs:
-  # Prometheus itself
+
+  # ── Prometheus itself ──────────────────────────────────────────────────────
   - job_name: 'prometheus'
     static_configs:
       - targets: ['localhost:9090']
 
-  # Backend Node.js app (prom-client)
+  # ── BMP Backend (Node.js + prom-client) ───────────────────────────────────
+  # Uses host.docker.internal to reach the backend running on the host
   - job_name: 'bmp-backend'
     static_configs:
-      - targets: ['backend:5000']
+      - targets: ['host.docker.internal:5000']
     metrics_path: /metrics
     scrape_interval: 10s
 
-  # Frontend via nginx
-  - job_name: 'bmp-frontend'
-    static_configs:
-      - targets: ['frontend:80']
-    metrics_path: /metrics
-    scrape_interval: 30s
-
-  # Node exporter (host metrics)
+  # ── Node Exporter (host system metrics) ───────────────────────────────────
   - job_name: 'node-exporter'
     static_configs:
       - targets: ['node-exporter:9100']
+    scrape_interval: 15s
 
-  # MongoDB exporter
-  - job_name: 'mongodb'
-    static_configs:
-      - targets: ['mongodb-exporter:9216']
-
-  # Blackbox — HTTP endpoint probing
+  # ── Blackbox — HTTP endpoint probing ──────────────────────────────────────
   - job_name: 'blackbox-http'
     metrics_path: /probe
     params:
       module: [http_2xx]
     static_configs:
       - targets:
-          - http://backend:5000/api/health
-          - http://frontend:80
+          - http://host.docker.internal:5000/api/health
+          - http://host.docker.internal:5173
     relabel_configs:
       - source_labels: [__address__]
         target_label: __param_target
@@ -58,3 +50,10 @@ scrape_configs:
         target_label: instance
       - target_label: __address__
         replacement: blackbox:9115
+
+  # ── Jenkins (if running) ──────────────────────────────────────────────────
+  - job_name: 'jenkins'
+    static_configs:
+      - targets: ['host.docker.internal:9090']
+    metrics_path: /prometheus
+    scrape_interval: 30s

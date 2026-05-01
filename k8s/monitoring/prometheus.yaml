@@ -1,4 +1,5 @@
 ---
+# ConfigMap — prometheus.yml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -9,23 +10,30 @@ data:
     global:
       scrape_interval: 15s
       evaluation_interval: 15s
+
     alerting:
       alertmanagers:
         - static_configs:
             - targets: ['alertmanager:9093']
+
     rule_files:
       - /etc/prometheus/alert-rules.yml
+
     scrape_configs:
       - job_name: 'prometheus'
         static_configs:
           - targets: ['localhost:9090']
+
       - job_name: 'bmp-backend'
         static_configs:
           - targets: ['bmp-backend.bmp-production.svc.cluster.local:5000']
         metrics_path: /metrics
+        scrape_interval: 10s
+
       - job_name: 'node-exporter'
         static_configs:
           - targets: ['node-exporter:9100']
+
       - job_name: 'blackbox-http'
         metrics_path: /probe
         params:
@@ -41,6 +49,7 @@ data:
             target_label: instance
           - target_label: __address__
             replacement: blackbox:9115
+
   alert-rules.yml: |
     groups:
       - name: bmp-alerts
@@ -52,6 +61,8 @@ data:
               severity: critical
             annotations:
               summary: "BMP Backend is DOWN"
+              description: "Backend unreachable for > 1 minute"
+
           - alert: HighErrorRate
             expr: rate(bmp_http_requests_total{status_code=~"5.."}[5m]) / rate(bmp_http_requests_total[5m]) > 0.05
             for: 2m
@@ -59,19 +70,32 @@ data:
               severity: warning
             annotations:
               summary: "High 5xx error rate"
-          - alert: HighMemoryUsage
-            expr: process_resident_memory_bytes{job="bmp-backend"} / 1024 / 1024 > 450
+              description: "More than 5% of requests returning 5xx"
+
+          - alert: HighCPUUsage
+            expr: 100 - (avg by(instance)(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
             for: 5m
             labels:
               severity: warning
             annotations:
-              summary: "Backend memory > 450MB"
+              summary: "High CPU usage > 85%"
+
+          - alert: LowDiskSpace
+            expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 15
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Low disk space < 15%"
 ---
+# Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: prometheus
   namespace: monitoring
+  labels:
+    app: prometheus
 spec:
   replicas: 1
   selector:
@@ -95,7 +119,7 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /etc/prometheus
-            - name: storage
+            - name: data
               mountPath: /prometheus
           resources:
             requests:
@@ -108,14 +132,17 @@ spec:
         - name: config
           configMap:
             name: prometheus-config
-        - name: storage
+        - name: data
           emptyDir: {}
 ---
+# Service
 apiVersion: v1
 kind: Service
 metadata:
   name: prometheus
   namespace: monitoring
+  labels:
+    app: prometheus
 spec:
   selector:
     app: prometheus

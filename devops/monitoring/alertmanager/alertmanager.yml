@@ -1,13 +1,14 @@
 global:
   resolve_timeout: 5m
-  smtp_smarthost: 'smtp.gmail.com:587'
-  smtp_from: 'bmp.alerts@gmail.com'
-  smtp_auth_username: 'bmp.alerts@gmail.com'
-  smtp_auth_password: 'YOUR_APP_PASSWORD'
-  smtp_require_tls: true
+  # Configure SMTP for email alerts (update with real credentials)
+  # smtp_smarthost: 'smtp.gmail.com:587'
+  # smtp_from: 'bmp.alerts@gmail.com'
+  # smtp_auth_username: 'bmp.alerts@gmail.com'
+  # smtp_auth_password: 'YOUR_APP_PASSWORD'
+  # smtp_require_tls: true
 
 route:
-  group_by: ['alertname', 'team']
+  group_by: ['alertname', 'severity', 'team']
   group_wait: 30s
   group_interval: 5m
   repeat_interval: 4h
@@ -17,6 +18,7 @@ route:
         severity: critical
       receiver: 'critical-receiver'
       repeat_interval: 1h
+      continue: true
     - match:
         team: backend
       receiver: 'backend-team'
@@ -29,40 +31,36 @@ route:
 
 receivers:
   - name: 'default-receiver'
-    email_configs:
-      - to: 'team@bmp.tn'
-        subject: '[BMP Alert] {{ .GroupLabels.alertname }}'
-        body: |
-          {{ range .Alerts }}
-          Alert: {{ .Annotations.summary }}
-          Description: {{ .Annotations.description }}
-          Severity: {{ .Labels.severity }}
-          Time: {{ .StartsAt }}
-          {{ end }}
+    # Webhook example (replace with real Slack/Teams webhook)
+    # webhook_configs:
+    #   - url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+    #     send_resolved: true
+    #     title: '[{{ .Status | toUpper }}] {{ .GroupLabels.alertname }}'
+    #     text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
 
   - name: 'critical-receiver'
-    email_configs:
-      - to: 'oncall@bmp.tn'
-        subject: '🚨 [CRITICAL] {{ .GroupLabels.alertname }}'
-        send_resolved: true
+    # email_configs:
+    #   - to: 'oncall@bmp.tn'
+    #     subject: '🚨 [CRITICAL] {{ .GroupLabels.alertname }}'
+    #     send_resolved: true
 
   - name: 'backend-team'
-    email_configs:
-      - to: 'backend@bmp.tn'
-        subject: '[Backend Alert] {{ .GroupLabels.alertname }}'
-        send_resolved: true
+    # email_configs:
+    #   - to: 'backend@bmp.tn'
+    #     subject: '[Backend Alert] {{ .GroupLabels.alertname }}'
+    #     send_resolved: true
 
   - name: 'frontend-team'
-    email_configs:
-      - to: 'frontend@bmp.tn'
-        subject: '[Frontend Alert] {{ .GroupLabels.alertname }}'
-        send_resolved: true
+    # email_configs:
+    #   - to: 'frontend@bmp.tn'
+    #     subject: '[Frontend Alert] {{ .GroupLabels.alertname }}'
+    #     send_resolved: true
 
   - name: 'infra-team'
-    email_configs:
-      - to: 'infra@bmp.tn'
-        subject: '[Infra Alert] {{ .GroupLabels.alertname }}'
-        send_resolved: true
+    # email_configs:
+    #   - to: 'infra@bmp.tn'
+    #     subject: '[Infra Alert] {{ .GroupLabels.alertname }}'
+    #     send_resolved: true
 
 inhibit_rules:
   - source_match:

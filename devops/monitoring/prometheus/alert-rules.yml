@@ -1,9 +1,10 @@
 groups:
+
+  # ── Backend Alerts ──────────────────────────────────────────────────────────
   - name: bmp-backend-alerts
     interval: 30s
     rules:
 
-      # Backend down
       - alert: BackendDown
         expr: up{job="bmp-backend"} == 0
         for: 1m
@@ -11,79 +12,94 @@ groups:
           severity: critical
           team: backend
         annotations:
-          summary: "BMP Backend is DOWN"
-          description: "The backend service has been unreachable for more than 1 minute."
+          summary: "🔴 BMP Backend is DOWN"
+          description: "Backend has been unreachable for > 1 minute. Check the Node.js process."
 
-      # High error rate (5xx)
       - alert: HighErrorRate
         expr: |
-          rate(http_requests_total{job="bmp-backend", status=~"5.."}[5m]) /
-          rate(http_requests_total{job="bmp-backend"}[5m]) > 0.05
+          rate(bmp_http_requests_total{status_code=~"5.."}[5m]) /
+          rate(bmp_http_requests_total[5m]) > 0.05
         for: 2m
         labels:
           severity: warning
           team: backend
         annotations:
-          summary: "High HTTP 5xx error rate on backend"
-          description: "More than 5% of requests are returning 5xx errors."
+          summary: "⚠️ High HTTP 5xx error rate"
+          description: "More than 5% of requests returning 5xx errors for 2 minutes."
 
-      # Slow response time
       - alert: SlowResponseTime
         expr: |
           histogram_quantile(0.95,
-            rate(http_request_duration_seconds_bucket{job="bmp-backend"}[5m])
+            rate(bmp_http_request_duration_seconds_bucket[5m])
           ) > 2
         for: 3m
         labels:
           severity: warning
           team: backend
         annotations:
-          summary: "Backend P95 response time > 2s"
+          summary: "⚠️ Backend P95 response time > 2s"
           description: "95th percentile response time exceeds 2 seconds."
 
-      # High memory usage
       - alert: HighMemoryUsage
         expr: |
-          process_resident_memory_bytes{job="bmp-backend"} /
-          (1024 * 1024) > 450
+          bmp_backend_process_resident_memory_bytes / (1024 * 1024) > 450
         for: 5m
         labels:
           severity: warning
           team: backend
         annotations:
-          summary: "Backend memory usage > 450MB"
+          summary: "⚠️ Backend memory > 450MB"
           description: "Backend process is using more than 450MB of memory."
 
+      - alert: NodeJSEventLoopLag
+        expr: bmp_backend_nodejs_eventloop_lag_seconds > 0.5
+        for: 2m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "⚠️ Node.js event loop lag > 500ms"
+          description: "Event loop is lagging, indicating CPU-bound work or blocking I/O."
+
+  # ── Frontend Alerts ─────────────────────────────────────────────────────────
   - name: bmp-frontend-alerts
     rules:
 
-      # Frontend down
       - alert: FrontendDown
-        expr: probe_success{job="blackbox-http", instance="http://frontend:80"} == 0
+        expr: probe_success{job="blackbox-http", instance=~".*5173.*"} == 0
         for: 1m
         labels:
           severity: critical
           team: frontend
         annotations:
-          summary: "BMP Frontend is DOWN"
-          description: "Frontend HTTP probe has been failing for more than 1 minute."
+          summary: "🔴 BMP Frontend is DOWN"
+          description: "Frontend HTTP probe failing for > 1 minute."
 
+      - alert: BackendHealthCheckFailing
+        expr: probe_success{job="blackbox-http", instance=~".*health.*"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "🔴 Backend health check failing"
+          description: "The /api/health endpoint is not responding with 2xx."
+
+  # ── Infrastructure Alerts ───────────────────────────────────────────────────
   - name: bmp-infrastructure-alerts
     rules:
 
-      # High CPU on host
       - alert: HighCPUUsage
         expr: |
-          100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
+          100 - (avg by(instance)(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
         for: 5m
         labels:
           severity: warning
           team: infra
         annotations:
-          summary: "Host CPU usage > 85%"
-          description: "CPU usage on {{ $labels.instance }} is above 85%."
+          summary: "⚠️ Host CPU usage > 85%"
+          description: "CPU usage on {{ $labels.instance }} is above 85% for 5 minutes."
 
-      # Low disk space
       - alert: LowDiskSpace
         expr: |
           (node_filesystem_avail_bytes{mountpoint="/"} /
@@ -93,16 +109,17 @@ groups:
           severity: warning
           team: infra
         annotations:
-          summary: "Low disk space on host"
+          summary: "⚠️ Low disk space < 15%"
           description: "Less than 15% disk space remaining on {{ $labels.instance }}."
 
-      # MongoDB down
-      - alert: MongoDBDown
-        expr: up{job="mongodb"} == 0
-        for: 1m
+      - alert: HighMemoryPressure
+        expr: |
+          (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) /
+          node_memory_MemTotal_bytes * 100 > 90
+        for: 5m
         labels:
           severity: critical
-          team: backend
+          team: infra
         annotations:
-          summary: "MongoDB is DOWN"
-          description: "MongoDB exporter is unreachable — database may be down."
+          summary: "🔴 Host memory usage > 90%"
+          description: "System memory usage is critically high on {{ $labels.instance }}."

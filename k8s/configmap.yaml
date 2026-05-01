@@ -3,8 +3,10 @@ kind: ConfigMap
 metadata:
   name: bmp-config
   namespace: bmp-production
+  labels:
+    app: bmp
 data:
+  CLIENT_ORIGIN: "http://bmp.local"
   NODE_ENV: "production"
   PORT: "5000"
-  CLIENT_ORIGIN: "http://bmp.local"
   APP_BASE_URL: "http://bmp.local"

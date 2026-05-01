@@ -1,4 +1,5 @@
 ---
+# ConfigMap — datasources
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -13,12 +14,35 @@ data:
         access: proxy
         url: http://prometheus:9090
         isDefault: true
+        editable: true
 ---
+# ConfigMap — dashboard provisioning
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards-config
+  namespace: monitoring
+data:
+  dashboards.yml: |
+    apiVersion: 1
+    providers:
+      - name: 'BMP Dashboards'
+        orgId: 1
+        folder: 'BMP'
+        type: file
+        disableDeletion: false
+        updateIntervalSeconds: 30
+        options:
+          path: /var/lib/grafana/dashboards
+---
+# Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: grafana
   namespace: monitoring
+  labels:
+    app: grafana
 spec:
   replicas: 1
   selector:
@@ -44,7 +68,9 @@ spec:
           volumeMounts:
             - name: datasources
               mountPath: /etc/grafana/provisioning/datasources
-            - name: storage
+            - name: dashboards-config
+              mountPath: /etc/grafana/provisioning/dashboards
+            - name: data
               mountPath: /var/lib/grafana
           resources:
             requests:
@@ -52,19 +78,25 @@ spec:
               cpu: "100m"
             limits:
               memory: "256Mi"
-              cpu: "300m"
+              cpu: "200m"
       volumes:
         - name: datasources
           configMap:
             name: grafana-datasources
-        - name: storage
+        - name: dashboards-config
+          configMap:
+            name: grafana-dashboards-config
+        - name: data
           emptyDir: {}
 ---
+# Service
 apiVersion: v1
 kind: Service
 metadata:
   name: grafana
   namespace: monitoring
+  labels:
+    app: grafana
 spec:
   selector:
     app: grafana

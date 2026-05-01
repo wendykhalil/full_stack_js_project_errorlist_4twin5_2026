@@ -1,3 +1,5 @@
+---
+# DaemonSet — runs on every node
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -14,17 +16,16 @@ spec:
       labels:
         app: node-exporter
     spec:
-      hostPID: true
-      hostIPC: true
       hostNetwork: true
+      hostPID: true
       containers:
         - name: node-exporter
           image: prom/node-exporter:v1.7.0
           args:
             - '--path.procfs=/host/proc'
-            - '--path.sysfs=/host/sys'
             - '--path.rootfs=/rootfs'
-            - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+            - '--path.sysfs=/host/sys'
+            - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($|/)'
           ports:
             - containerPort: 9100
               hostPort: 9100
@@ -55,15 +56,23 @@ spec:
         - name: rootfs
           hostPath:
             path: /
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
 ---
+# Service
 apiVersion: v1
 kind: Service
 metadata:
   name: node-exporter
   namespace: monitoring
+  labels:
+    app: node-exporter
 spec:
   selector:
     app: node-exporter
   ports:
     - port: 9100
       targetPort: 9100
+  type: ClusterIP
