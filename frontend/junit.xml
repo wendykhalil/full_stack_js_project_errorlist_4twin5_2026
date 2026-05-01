@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="80" failures="0" errors="0" time="0.402611122">
+    <testsuite name="src/graja-tests/graja.frontend.feature-suite.test.js" timestamp="2026-05-01T22:15:25.245Z" hostname="a74d5145aac7" tests="27" failures="0" errors="0" skipped="0" time="0.012363515">
+        <testcase classname="src/graja-tests/graja.frontend.feature-suite.test.js" name="Graja Frontend Feature Tests - Auth and Security &gt; login, register, forgot password and reset password UI exist" time="0.003053796">
+        </testcase>
+        <testcase classname="src/graja-tests/graja.frontend.feature-suite.test.js" name="Graja Frontend Feature Tests - Auth and Security &gt; Google login integration exists" time="0.000385972">
+        </testcase>
+        <testcase classname="src/graja-tests/graja.frontend.feature-suite.test.js" name="Graja Frontend Feature Tests - Auth and Security &gt; Face ID / passkey / camera login frontend exists" time="0.000159204">
+        </testcase>
+        <testcase classname="src/graja-tests/graja.frontend.feature-suite.test.js" name="Graja Frontend Feature Tests - Auth and Security &gt; phone login and SMS verification UI exists" time="0.000140084">
+        </testcase>
+        <testcase classname="src/graja-tests/graja.frontend.feature-suite.test.js" name="Graja Frontend Feature Tests - AI, ML and Admin &gt; AI project generation / Ollama UI exists" time="0.000741314">
+        </testcase>
+        <testcase classname="src/graja-tests/graja.frontend.feature-suite.test.js" name="Graja Frontend Feature Tests - AI, ML and Admin &gt; AI quote and invoice generation UI exists" time="0.00074371">
+        </testcase>
+        <testcase classname="src/graja-tests/graja.frontend.feature-suite.test.js" name="Graja Frontend Feature Tests - AI, ML and Admin &gt; ML risk and delay prediction UI exists" time="0.000127963">
+        </testcase>
+        <testcase classname="src/graja-tests/graja.frontend.feature-suite.test.js" name="Graja Frontend Feature Tests - AI, ML and Admin &gt; fraud detection and admin analytics dashboard UI exists" time="0.00010056">
+        </testcase>
+        <testcase classname="src/graja-tests/graja.frontend.feature-suite.test.js" name="Graja Frontend Feature Tests - AI, ML and Admin &gt; admin artisan dashboard/statistics UI exists" time="0.000362043">
+        </testcase>
+        <testcase classname="src/graja-tests/graja.frontend.feature-suite.test.js" name="Graja Frontend Feature Tests - Messaging and Media &gt; messaging UI exists" time="0.000121301">
+        </testcase>
+        <testcase classname="src/graja-tests/graja.frontend.feature-suite.test.js" name="Graja Frontend Feature Tests - Messaging and Media &gt; message update/delete/archive UI exists" time="0.000305581">
+        </testcase>
+        <testcase classname="src/graja-tests/graja.frontend.feature-suite.test.js" name="Graja Frontend Feature Tests - Messaging and Media &gt; realtime notification for messages exists" time="0.000237311">
+        </testcase>
+        <testcase classname="src/graja-tests/graja.frontend.feature-suite.test.js" name="Graja Frontend Feature Tests - Messaging and Media &gt; PDF/image/vocal attachments in messaging exist" time="0.00016071">
+        </testcase>
+        <testcase classname="src/graja-tests/graja.frontend.feature-suite.test.js" name="Graja Frontend Feature Tests - Artisan, Prescripteur, Projects &gt; artisan CRUD and artisan pages exist" time="0.000077374">
+        </testcase>
+        <testcase classname="src/graja-tests/graja.frontend.feature-suite.test.js" name="Graja Frontend Feature Tests - Artisan, Prescripteur, Projects &gt; prescripteur project display exists" time="0.000090174">
+        </testcase>
+        <testcase classname="src/graja-tests/graja.frontend.feature-suite.test.js" name="Graja Frontend Feature Tests - Artisan, Prescripteur, Projects &gt; project pagination and three-dot actions exist" time="0.000222463">
+        </testcase>
+        <testcase classname="src/graja-tests/graja.frontend.feature-suite.test.js" name="Graja Frontend Feature Tests - Artisan, Prescripteur, Projects &gt; project and profile localisation/map picker exists" time="0.000073951">
+        </testcase>
+        <testcase classname="src/graja-tests/graja.frontend.feature-suite.test.js" name="Graja Frontend Feature Tests - Quotes, Invoices, PDF, Excel &gt; quotes/devis CRUD frontend exists" time="0.000069059">
+        </testcase>
+        <testcase classname="src/graja-tests/graja.frontend.feature-suite.test.js" name="Graja Frontend Feature Tests - Quotes, Invoices, PDF, Excel &gt; invoice CRUD frontend exists" time="0.000168748">
+        </testcase>
+        <testcase classname="src/graja-tests/graja.frontend.feature-suite.test.js" name="Graja Frontend Feature Tests - Quotes, Invoices, PDF, Excel &gt; PDF and Excel export/display exists" time="0.000183628">
+        </testcase>
+        <testcase classname="src/graja-tests/graja.frontend.feature-suite.test.js" name="Graja Frontend Feature Tests - Translation and Accessibility &gt; LibreTranslate / translation API frontend exists" time="0.000436402">
+        </testcase>
+        <testcase classname="src/graja-tests/graja.frontend.feature-suite.test.js" name="Graja Frontend Feature Tests - Translation and Accessibility &gt; mouse selection description helper exists" time="0.000374082">
+        </testcase>
+        <testcase classname="src/graja-tests/graja.frontend.feature-suite.test.js" name="Graja Frontend Feature Tests - Translation and Accessibility &gt; text-to-speech page reading exists" time="0.000182139">
+        </testcase>
+        <testcase classname="src/graja-tests/graja.frontend.feature-suite.test.js" name="Graja Frontend Feature Tests - Translation and Accessibility &gt; voice navigation / microphone accessibility exists" time="0.000116897">
+        </testcase>
+        <testcase classname="src/graja-tests/graja.frontend.feature-suite.test.js" name="Graja Frontend Feature Tests - Cloudinary and UI Fixes &gt; Cloudinary image saving frontend exists" time="0.000234609">
+        </testcase>
+        <testcase classname="src/graja-tests/graja.frontend.feature-suite.test.js" name="Graja Frontend Feature Tests - Cloudinary and UI Fixes &gt; theme provider / layout fixes exist" time="0.000318443">
+        </testcase>
+        <testcase classname="src/graja-tests/graja.frontend.feature-suite.test.js" name="Graja Frontend Feature Tests - Cloudinary and UI Fixes &gt; frontend source has enough feature files" time="0.000924525">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/test/components.ReadCardButton.test.jsx" timestamp="2026-05-01T22:15:25.270Z" hostname="a74d5145aac7" tests="8" failures="0" errors="0" skipped="0" time="0.224858556">
+        <testcase classname="src/test/components.ReadCardButton.test.jsx" name="ReadCardButton &gt; renders a button with aria-label" time="0.131795698">
+        </testcase>
+        <testcase classname="src/test/components.ReadCardButton.test.jsx" name="ReadCardButton &gt; calls speechSynthesis.speak when clicked" time="0.014772595">
+        </testcase>
+        <testcase classname="src/test/components.ReadCardButton.test.jsx" name="ReadCardButton &gt; passes the correct text to SpeechSynthesisUtterance" time="0.015675081">
+        </testcase>
+        <testcase classname="src/test/components.ReadCardButton.test.jsx" name="ReadCardButton &gt; calls speechSynthesis.cancel when clicked while reading" time="0.011684511">
+        </testcase>
+        <testcase classname="src/test/components.ReadCardButton.test.jsx" name="ReadCardButton &gt; stops propagation on click (does not bubble to parent)" time="0.021184053">
+        </testcase>
+        <testcase classname="src/test/components.ReadCardButton.test.jsx" name="ReadCardButton &gt; renders with size=&quot;md&quot; larger class" time="0.009456458">
+        </testcase>
+        <testcase classname="src/test/components.ReadCardButton.test.jsx" name="ReadCardButton &gt; renders with size=&quot;sm&quot; smaller class by default" time="0.007393025">
+        </testcase>
+        <testcase classname="src/test/components.ReadCardButton.test.jsx" name="ReadCardButton &gt; does not speak when text is empty" time="0.007618916">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/test/hooks.useFormValidation.test.js" timestamp="2026-05-01T22:15:25.277Z" hostname="a74d5145aac7" tests="14" failures="0" errors="0" skipped="0" time="0.046144602">
+        <testcase classname="src/test/hooks.useFormValidation.test.js" name="useFormValidation &gt; rules.required &gt; fails on empty string" time="0.017873144">
+        </testcase>
+        <testcase classname="src/test/hooks.useFormValidation.test.js" name="useFormValidation &gt; rules.required &gt; fails on whitespace-only string" time="0.001441151">
+        </testcase>
+        <testcase classname="src/test/hooks.useFormValidation.test.js" name="useFormValidation &gt; rules.required &gt; passes on non-empty string" time="0.002593958">
+        </testcase>
+        <testcase classname="src/test/hooks.useFormValidation.test.js" name="useFormValidation &gt; rules.minLength &gt; fails when string is too short" time="0.002489508">
+        </testcase>
+        <testcase classname="src/test/hooks.useFormValidation.test.js" name="useFormValidation &gt; rules.minLength &gt; passes when string meets minimum length" time="0.001189317">
+        </testcase>
+        <testcase classname="src/test/hooks.useFormValidation.test.js" name="useFormValidation &gt; rules.minLength &gt; fails on empty string (minLength always validates)" time="0.001129549">
+        </testcase>
+        <testcase classname="src/test/hooks.useFormValidation.test.js" name="useFormValidation &gt; rules.maxLength &gt; fails when string exceeds max length" time="0.003767741">
+        </testcase>
+        <testcase classname="src/test/hooks.useFormValidation.test.js" name="useFormValidation &gt; rules.maxLength &gt; passes when string is within max length" time="0.001298183">
+        </testcase>
+        <testcase classname="src/test/hooks.useFormValidation.test.js" name="useFormValidation &gt; rules.phone &gt; fails on invalid phone number" time="0.001302761">
+        </testcase>
+        <testcase classname="src/test/hooks.useFormValidation.test.js" name="useFormValidation &gt; rules.phone &gt; passes on valid Tunisian phone number" time="0.001216559">
+        </testcase>
+        <testcase classname="src/test/hooks.useFormValidation.test.js" name="useFormValidation &gt; rules.phone &gt; fails on empty phone (phone regex requires digits)" time="0.001499483">
+        </testcase>
+        <testcase classname="src/test/hooks.useFormValidation.test.js" name="useFormValidation &gt; multiple rules &gt; stops at first failing rule" time="0.002044066">
+        </testcase>
+        <testcase classname="src/test/hooks.useFormValidation.test.js" name="useFormValidation &gt; multiple rules &gt; validates all fields and returns false if any fail" time="0.003455788">
+        </testcase>
+        <testcase classname="src/test/hooks.useFormValidation.test.js" name="useFormValidation &gt; multiple rules &gt; returns true when all fields pass" time="0.001054582">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/test/hooks.useNotification.test.js" timestamp="2026-05-01T22:15:25.286Z" hostname="a74d5145aac7" tests="6" failures="0" errors="0" skipped="0" time="0.03178681">
+        <testcase classname="src/test/hooks.useNotification.test.js" name="useNotification &gt; starts with no notification" time="0.016185148">
+        </testcase>
+        <testcase classname="src/test/hooks.useNotification.test.js" name="useNotification &gt; showNotification sets message and type" time="0.004193798">
+        </testcase>
+        <testcase classname="src/test/hooks.useNotification.test.js" name="useNotification &gt; hideNotification clears the notification" time="0.003152113">
+        </testcase>
+        <testcase classname="src/test/hooks.useNotification.test.js" name="useNotification &gt; defaults type to success when not specified" time="0.002227407">
+        </testcase>
+        <testcase classname="src/test/hooks.useNotification.test.js" name="useNotification &gt; supports success type" time="0.001146406">
+        </testcase>
+        <testcase classname="src/test/hooks.useNotification.test.js" name="useNotification &gt; supports warning type" time="0.001089034">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/test/utils.apiResponse.test.js" timestamp="2026-05-01T22:15:25.290Z" hostname="a74d5145aac7" tests="6" failures="0" errors="0" skipped="0" time="0.015210223">
+        <testcase classname="src/test/utils.apiResponse.test.js" name="apiFetch &gt; makes a GET request and returns parsed JSON" time="0.00728525">
+        </testcase>
+        <testcase classname="src/test/utils.apiResponse.test.js" name="apiFetch &gt; sends Authorization header when token provided" time="0.00084821">
+        </testcase>
+        <testcase classname="src/test/utils.apiResponse.test.js" name="apiFetch &gt; sends Content-Type: application/json for JSON body" time="0.000644319">
+        </testcase>
+        <testcase classname="src/test/utils.apiResponse.test.js" name="apiFetch &gt; does NOT set Content-Type for FormData body" time="0.000918753">
+        </testcase>
+        <testcase classname="src/test/utils.apiResponse.test.js" name="apiFetch &gt; includes method in request options" time="0.000365332">
+        </testcase>
+        <testcase classname="src/test/utils.apiResponse.test.js" name="apiFetch &gt; handles empty response body gracefully" time="0.000289689">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/test/utils.geolocation.test.js" timestamp="2026-05-01T22:15:25.295Z" hostname="a74d5145aac7" tests="3" failures="0" errors="0" skipped="0" time="0.061785655">
+        <testcase classname="src/test/utils.geolocation.test.js" name="geolocation utilities &gt; getCurrentPositionWithAddress &gt; resolves with coordinates when geolocation succeeds" time="0.0517453">
+        </testcase>
+        <testcase classname="src/test/utils.geolocation.test.js" name="geolocation utilities &gt; getCurrentPositionWithAddress &gt; rejects when geolocation is denied" time="0.003435016">
+        </testcase>
+        <testcase classname="src/test/utils.geolocation.test.js" name="geolocation utilities &gt; getCurrentPositionWithAddress &gt; rejects when geolocation is not supported" time="0.002206903">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/wendy-tests/wendy.frontend.feature-suite.test.js" timestamp="2026-05-01T22:15:25.297Z" hostname="a74d5145aac7" tests="16" failures="0" errors="0" skipped="0" time="0.010461761">
+        <testcase classname="src/wendy-tests/wendy.frontend.feature-suite.test.js" name="Wendy Frontend - User &amp; Fournisseur &gt; user management UI exists" time="0.003755683">
+        </testcase>
+        <testcase classname="src/wendy-tests/wendy.frontend.feature-suite.test.js" name="Wendy Frontend - User &amp; Fournisseur &gt; fournisseur/supplier profile UI exists" time="0.000283119">
+        </testcase>
+        <testcase classname="src/wendy-tests/wendy.frontend.feature-suite.test.js" name="Wendy Frontend - User &amp; Fournisseur &gt; fournisseur CRUD UI exists" time="0.001385872">
+        </testcase>
+        <testcase classname="src/wendy-tests/wendy.frontend.feature-suite.test.js" name="Wendy Frontend - Orders System &gt; order request UI exists" time="0.000161049">
+        </testcase>
+        <testcase classname="src/wendy-tests/wendy.frontend.feature-suite.test.js" name="Wendy Frontend - Orders System &gt; order history and status UI exists" time="0.000980088">
+        </testcase>
+        <testcase classname="src/wendy-tests/wendy.frontend.feature-suite.test.js" name="Wendy Frontend - Orders System &gt; supplier dashboard statistics UI exists" time="0.000093982">
+        </testcase>
+        <testcase classname="src/wendy-tests/wendy.frontend.feature-suite.test.js" name="Wendy Frontend - Email &amp; Notifications &gt; email / notification UI exists" time="0.000070458">
+        </testcase>
+        <testcase classname="src/wendy-tests/wendy.frontend.feature-suite.test.js" name="Wendy Frontend - AI / ML / Insights &gt; AI insights UI exists" time="0.000062451">
+        </testcase>
+        <testcase classname="src/wendy-tests/wendy.frontend.feature-suite.test.js" name="Wendy Frontend - AI / ML / Insights &gt; ML prediction UI exists" time="0.000056777">
+        </testcase>
+        <testcase classname="src/wendy-tests/wendy.frontend.feature-suite.test.js" name="Wendy Frontend - Real-time &amp; Messaging &gt; real-time updates UI exists" time="0.000534103">
+        </testcase>
+        <testcase classname="src/wendy-tests/wendy.frontend.feature-suite.test.js" name="Wendy Frontend - Favorites, Cart, Reviews &gt; favorites UI exists" time="0.000163451">
+        </testcase>
+        <testcase classname="src/wendy-tests/wendy.frontend.feature-suite.test.js" name="Wendy Frontend - Favorites, Cart, Reviews &gt; cart system UI exists" time="0.000081549">
+        </testcase>
+        <testcase classname="src/wendy-tests/wendy.frontend.feature-suite.test.js" name="Wendy Frontend - Favorites, Cart, Reviews &gt; review system UI exists" time="0.000092256">
+        </testcase>
+        <testcase classname="src/wendy-tests/wendy.frontend.feature-suite.test.js" name="Wendy Frontend - Search &amp; Portfolio &gt; artisan portfolio UI exists" time="0.000104118">
+        </testcase>
+        <testcase classname="src/wendy-tests/wendy.frontend.feature-suite.test.js" name="Wendy Frontend - Search &amp; Portfolio &gt; search functionality UI exists" time="0.00007145">
+        </testcase>
+        <testcase classname="src/wendy-tests/wendy.frontend.feature-suite.test.js" name="Wendy Frontend - DevOps readiness &gt; frontend has enough source files" time="0.00017405">
+        </testcase>
+    </testsuite>
+</testsuites>

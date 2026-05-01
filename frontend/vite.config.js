@@ -8,16 +8,34 @@ export default defineConfig({
       '/api': 'http://localhost:5000',
       '/uploads': 'http://localhost:5000',
     },
-    // Serve .wasm files with the correct MIME type so TensorFlow's WASM
-    // backend can compile them. Without this Vite returns text/html (404 page)
-    // and tf.js falls through all backends and crashes.
     headers: {
       '*.wasm': { 'Content-Type': 'application/wasm' },
     },
   },
-  // Ensure .wasm files are served as assets, not processed by Vite
   assetsInclude: ['**/*.wasm'],
   define: {
     'import.meta.env.VITE_RECAPTCHA_SITE_KEY': JSON.stringify('6LcmPnMsAAAAAFv4ZE_GJlVZw5sBw7lYLbPy86MB'),
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/test/setup.js',
+    reporters: ['verbose', 'junit'],
+    outputFile: {
+      junit: './junit.xml',
+    },
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov', 'html'],
+      reportsDirectory: './coverage',
+      exclude: [
+        'node_modules/**',
+        'src/test/**',
+        'src/assets/**',
+        '**/*.config.*',
+        '**/main.jsx',
+      ],
+    },
+    exclude: ['node_modules', 'dist'],
   },
 })

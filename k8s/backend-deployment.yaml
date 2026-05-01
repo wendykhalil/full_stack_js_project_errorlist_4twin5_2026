@@ -1,25 +1,92 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: backend
+  name: bmp-backend
+  namespace: bmp-production
+  labels:
+    app: bmp-backend
+    tier: backend
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
-      app: backend
+      app: bmp-backend
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   template:
     metadata:
       labels:
-        app: backend
+        app: bmp-backend
+        tier: backend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "5000"
+        prometheus.io/path: "/metrics"
     spec:
       containers:
         - name: backend
-          image: node:20
-          command: ["sh", "-c", "cd /app && npm install && npm start"]
-          volumeMounts:
-            - name: backend-volume
-              mountPath: /app
-      volumes:
-        - name: backend-volume
-          hostPath:
-            path: /run/desktop/mnt/host/c/Users/Amine/Desktop/devo/full_stack_js_project_errorlist_4twin5_2026/backend
+          image: bmptn/bmp-backend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5000
+              name: http
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "5000"
+            - name: MONGO_URI
+              valueFrom:
+                secretKeyRef:
+                  name: bmp-secrets
+                  key: MONGO_URI
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: bmp-secrets
+                  key: JWT_SECRET
+            - name: CLOUDINARY_CLOUD_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: bmp-secrets
+                  key: CLOUDINARY_CLOUD_NAME
+            - name: CLOUDINARY_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: bmp-secrets
+                  key: CLOUDINARY_API_KEY
+            - name: CLOUDINARY_API_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: bmp-secrets
+                  key: CLOUDINARY_API_SECRET
+            - name: CLIENT_ORIGIN
+              valueFrom:
+                configMapKeyRef:
+                  name: bmp-config
+                  key: CLIENT_ORIGIN
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 5000
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+      restartPolicy: Always

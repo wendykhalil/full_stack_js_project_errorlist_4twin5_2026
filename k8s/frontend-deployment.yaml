@@ -1,25 +1,51 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: frontend
+  name: bmp-frontend
+  namespace: bmp-production
+  labels:
+    app: bmp-frontend
+    tier: frontend
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
-      app: frontend
+      app: bmp-frontend
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   template:
     metadata:
       labels:
-        app: frontend
+        app: bmp-frontend
+        tier: frontend
     spec:
       containers:
         - name: frontend
-          image: node:20
-          command: ["sh", "-c", "cd /app && npm install && npm run dev -- --host"]
-          volumeMounts:
-            - name: frontend-volume
-              mountPath: /app
-      volumes:
-        - name: frontend-volume
-          hostPath:
-            path: /run/desktop/mnt/host/c/Users/Amine/Desktop/devo/full_stack_js_project_errorlist_4twin5_2026/frontend
+          image: bmptn/bmp-frontend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+              name: http
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "100m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+      restartPolicy: Always

@@ -1,27 +1,108 @@
 groups:
-  - name: pilastversion-alerts
+  - name: bmp-backend-alerts
+    interval: 30s
     rules:
+
+      # Backend down
       - alert: BackendDown
-        expr: up{job="backend"} == 0
+        expr: up{job="bmp-backend"} == 0
         for: 1m
         labels:
           severity: critical
+          team: backend
         annotations:
-          summary: Backend application is down
-          description: Backend API is not reachable by Prometheus.
-      - alert: FrontendDown
-        expr: up{job="frontend"} == 0
-        for: 1m
-        labels:
-          severity: warning
-        annotations:
-          summary: Frontend application is down
-          description: Frontend app is not reachable by Prometheus.
-      - alert: SonarQubeDown
-        expr: up{job="sonarqube"} == 0
+          summary: "BMP Backend is DOWN"
+          description: "The backend service has been unreachable for more than 1 minute."
+
+      # High error rate (5xx)
+      - alert: HighErrorRate
+        expr: |
+          rate(http_requests_total{job="bmp-backend", status=~"5.."}[5m]) /
+          rate(http_requests_total{job="bmp-backend"}[5m]) > 0.05
         for: 2m
         labels:
           severity: warning
+          team: backend
         annotations:
-          summary: SonarQube is down
-          description: DevOps quality tool SonarQube is unreachable.
+          summary: "High HTTP 5xx error rate on backend"
+          description: "More than 5% of requests are returning 5xx errors."
+
+      # Slow response time
+      - alert: SlowResponseTime
+        expr: |
+          histogram_quantile(0.95,
+            rate(http_request_duration_seconds_bucket{job="bmp-backend"}[5m])
+          ) > 2
+        for: 3m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Backend P95 response time > 2s"
+          description: "95th percentile response time exceeds 2 seconds."
+
+      # High memory usage
+      - alert: HighMemoryUsage
+        expr: |
+          process_resident_memory_bytes{job="bmp-backend"} /
+          (1024 * 1024) > 450
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Backend memory usage > 450MB"
+          description: "Backend process is using more than 450MB of memory."
+
+  - name: bmp-frontend-alerts
+    rules:
+
+      # Frontend down
+      - alert: FrontendDown
+        expr: probe_success{job="blackbox-http", instance="http://frontend:80"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: frontend
+        annotations:
+          summary: "BMP Frontend is DOWN"
+          description: "Frontend HTTP probe has been failing for more than 1 minute."
+
+  - name: bmp-infrastructure-alerts
+    rules:
+
+      # High CPU on host
+      - alert: HighCPUUsage
+        expr: |
+          100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
+        for: 5m
+        labels:
+          severity: warning
+          team: infra
+        annotations:
+          summary: "Host CPU usage > 85%"
+          description: "CPU usage on {{ $labels.instance }} is above 85%."
+
+      # Low disk space
+      - alert: LowDiskSpace
+        expr: |
+          (node_filesystem_avail_bytes{mountpoint="/"} /
+           node_filesystem_size_bytes{mountpoint="/"}) * 100 < 15
+        for: 5m
+        labels:
+          severity: warning
+          team: infra
+        annotations:
+          summary: "Low disk space on host"
+          description: "Less than 15% disk space remaining on {{ $labels.instance }}."
+
+      # MongoDB down
+      - alert: MongoDBDown
+        expr: up{job="mongodb"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "MongoDB is DOWN"
+          description: "MongoDB exporter is unreachable — database may be down."

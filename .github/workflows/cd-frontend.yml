@@ -4,34 +4,63 @@ on:
   workflow_run:
     workflows: ["CI Frontend"]
     types: [completed]
+    branches: [main]
 
 jobs:
-  build-and-deploy:
-    name: Build frontend image and deploy
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+  deploy:
+    name: Deploy Frontend
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build frontend Docker image
-        run: docker build -t pilastversion-frontend:${{ github.sha }} ./frontend
-
-      - name: Save frontend Docker image artifact
-        run: docker save pilastversion-frontend:${{ github.sha }} -o frontend-image.tar
-
-      - name: Upload frontend image artifact
-        uses: actions/upload-artifact@v4
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
         with:
-          name: frontend-image
-          path: frontend-image.tar
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Deploy frontend to kubeadm cluster
-        if: ${{ vars.SONAR_TOKEN != '' || secrets.SONAR_TOKEN != '' }}
-        env:
-          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/bmp-frontend:latest
+            ${{ secrets.DOCKER_USERNAME }}/bmp-frontend:${{ github.sha }}
+          build-args: |
+            VITE_API_URL=${{ secrets.VITE_API_URL }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.28.0'
+
+      - name: Configure kubeconfig
         run: |
           mkdir -p ~/.kube
-          echo "$KUBE_CONFIG" | base64 -d > ~/.kube/config
-          kubectl apply -f devops/k8s/namespace.yml
-          kubectl apply -f devops/k8s/frontend-deployment.yml
+          echo "${{ secrets.KUBECONFIG }}" | base64 -d > ~/.kube/config
+
+      - name: Update frontend image in Kubernetes
+        run: |
+          kubectl set image deployment/bmp-frontend \
+            frontend=${{ secrets.DOCKER_USERNAME }}/bmp-frontend:${{ github.sha }} \
+            -n bmp-production
+          kubectl rollout status deployment/bmp-frontend -n bmp-production --timeout=120s
+
+      - name: Verify deployment
+        run: |
+          kubectl get pods -n bmp-production -l app=bmp-frontend
+          kubectl get svc -n bmp-production
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "Frontend deployment FAILED for commit ${{ github.sha }}"

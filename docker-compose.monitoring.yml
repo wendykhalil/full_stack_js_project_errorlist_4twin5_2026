@@ -1,24 +1,147 @@
-version: '3'
+version: '3.8'
+
+networks:
+  monitoring:
+    driver: bridge
+  app:
+    external: true
+
+volumes:
+  prometheus_data: {}
+  grafana_data: {}
+  sonarqube_data: {}
+  sonarqube_logs: {}
+  sonarqube_extensions: {}
+  postgresql_data: {}
 
 services:
+
+  # ── SonarQube ───────────────────────────────────────────────────────────────
+  sonarqube:
+    image: sonarqube:10.4-community
+    container_name: bmp-sonarqube
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+    environment:
+      - SONAR_JDBC_URL=jdbc:postgresql://sonar-db:5432/sonar
+      - SONAR_JDBC_USERNAME=sonar
+      - SONAR_JDBC_PASSWORD=sonar
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_logs:/opt/sonarqube/logs
+      - sonarqube_extensions:/opt/sonarqube/extensions
+    depends_on:
+      sonar-db:
+        condition: service_healthy
+    networks:
+      - monitoring
+
+  sonar-db:
+    image: postgres:15-alpine
+    container_name: bmp-sonar-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=sonar
+      - POSTGRES_PASSWORD=sonar
+      - POSTGRES_DB=sonar
+    volumes:
+      - postgresql_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sonar"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - monitoring
+
+  # ── Prometheus ──────────────────────────────────────────────────────────────
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v2.48.0
+    container_name: bmp-prometheus
+    restart: unless-stopped
     ports:
       - "9090:9090"
     volumes:
       - ./devops/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./devops/monitoring/prometheus/alert-rules.yml:/etc/prometheus/alert-rules.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=15d'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+    networks:
+      - monitoring
+      - app
 
+  # ── AlertManager ────────────────────────────────────────────────────────────
   alertmanager:
-    image: prom/alertmanager:latest
+    image: prom/alertmanager:v0.26.0
+    container_name: bmp-alertmanager
+    restart: unless-stopped
     ports:
       - "9093:9093"
     volumes:
       - ./devops/monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:9093'
+    networks:
+      - monitoring
 
+  # ── Grafana ─────────────────────────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:10.2.0
+    container_name: bmp-grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=bmp-admin-2024
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=http://localhost:3001
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./devops/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./devops/monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    networks:
+      - monitoring
+
+  # ── Node Exporter (host metrics) ────────────────────────────────────────────
+  node-exporter:
+    image: prom/node-exporter:v1.7.0
+    container_name: bmp-node-exporter
+    restart: unless-stopped
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    networks:
+      - monitoring
+
+  # ── Blackbox Exporter (HTTP probing) ────────────────────────────────────────
   blackbox:
-    image: prom/blackbox-exporter:latest
+    image: prom/blackbox-exporter:v0.24.0
+    container_name: bmp-blackbox
+    restart: unless-stopped
     ports:
       - "9115:9115"
     volumes:
       - ./devops/monitoring/blackbox/blackbox.yml:/etc/blackbox_exporter/config.yml:ro
+    networks:
+      - monitoring
+      - app

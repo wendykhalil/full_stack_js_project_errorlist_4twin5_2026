@@ -1,0 +1,295 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// BMP.tn — Local Jenkins CI/CD Pipeline
+//
+// Project is mounted at /workspace/bmp inside the Jenkins container.
+// We work directly from that path — no file copying needed.
+//
+// Stages:
+//   1. CI Backend  — npm ci, jest tests + coverage, publish results
+//   2. CI Frontend — npm ci, vitest tests + coverage, vite build
+//   3. CD Backend  — Docker build & push (main branch only)
+//   4. CD Frontend — Docker build & push (main branch only)
+//   5. Summary
+// ─────────────────────────────────────────────────────────────────────────────
+pipeline {
+  agent any
+
+  tools {
+    nodejs 'NodeJS_20'
+  }
+
+  environment {
+    PROJECT_DIR           = '/workspace/bmp'
+    DOCKER_IMAGE_BACKEND  = 'bmptn/bmp-backend'
+    DOCKER_IMAGE_FRONTEND = 'bmptn/bmp-frontend'
+    IMAGE_TAG             = "build-${env.BUILD_NUMBER}"
+    NODE_ENV              = 'test'
+    CI                    = 'true'
+  }
+
+  options {
+    timeout(time: 30, unit: 'MINUTES')
+    buildDiscarder(logRotator(numToKeepStr: '10'))
+    disableConcurrentBuilds()
+  }
+
+  stages {
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // STAGE 1 — Verify project is accessible
+    // ══════════════════════════════════════════════════════════════════════════
+    stage('Verify Workspace') {
+      steps {
+        sh '''
+          echo "=== Jenkins Build #${BUILD_NUMBER} ==="
+          echo "Node: $(node --version)"
+          echo "NPM:  $(npm --version)"
+          echo ""
+          echo "=== Project structure ==="
+          ls -la ${PROJECT_DIR}/
+          echo ""
+          echo "=== Backend package.json ==="
+          cat ${PROJECT_DIR}/backend/package.json | grep '"name"\\|"version"'
+          echo ""
+          echo "=== Frontend package.json ==="
+          cat ${PROJECT_DIR}/frontend/package.json | grep '"name"\\|"version"'
+        '''
+      }
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // STAGE 2 — CI BACKEND
+    // ══════════════════════════════════════════════════════════════════════════
+    stage('CI Backend — Install') {
+      steps {
+        sh '''
+          echo "📦 Installing backend dependencies..."
+          cd ${PROJECT_DIR}/backend
+          npm ci --prefer-offline
+          echo "✅ Backend dependencies installed"
+        '''
+      }
+    }
+
+    stage('CI Backend — Unit Tests + Coverage') {
+      steps {
+        sh '''
+          echo "🧪 Running backend unit tests (Jest)..."
+          cd ${PROJECT_DIR}/backend
+          npm test -- --forceExit --runInBand
+          echo "✅ Backend tests complete"
+        '''
+      }
+      post {
+        always {
+          // Publish JUnit XML test results
+          junit(
+            testResults: "${env.PROJECT_DIR}/backend/junit.xml",
+            allowEmptyResults: true,
+            skipPublishingChecks: false
+          )
+          // Archive coverage artifacts
+          archiveArtifacts(
+            artifacts: "${env.PROJECT_DIR}/backend/coverage/lcov.info",
+            allowEmptyArchive: true,
+            fingerprint: true
+          )
+          // Publish HTML coverage report
+          publishHTML(target: [
+            allowMissing         : true,
+            alwaysLinkToLastBuild: true,
+            keepAll              : true,
+            reportDir            : "${env.PROJECT_DIR}/backend/coverage/lcov-report",
+            reportFiles          : 'index.html',
+            reportName           : 'Backend Coverage Report'
+          ])
+        }
+        success {
+          echo '✅ All backend tests PASSED'
+        }
+        failure {
+          echo '❌ Backend tests FAILED'
+          error 'Stopping pipeline — backend tests failed'
+        }
+      }
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // STAGE 3 — CI FRONTEND
+    // ══════════════════════════════════════════════════════════════════════════
+    stage('CI Frontend — Install') {
+      steps {
+        sh '''
+          echo "📦 Installing frontend dependencies..."
+          cd ${PROJECT_DIR}/frontend
+          npm ci --prefer-offline
+          echo "✅ Frontend dependencies installed"
+        '''
+      }
+    }
+
+    stage('CI Frontend — Unit Tests + Coverage') {
+      steps {
+        sh '''
+          echo "🧪 Running frontend unit tests (Vitest)..."
+          cd ${PROJECT_DIR}/frontend
+          npx vitest run --coverage --reporter=verbose --reporter=junit --outputFile=junit.xml
+          echo "✅ Frontend tests complete"
+        '''
+      }
+      post {
+        always {
+          junit(
+            testResults: "${env.PROJECT_DIR}/frontend/junit.xml",
+            allowEmptyResults: true,
+            skipPublishingChecks: false
+          )
+          publishHTML(target: [
+            allowMissing         : true,
+            alwaysLinkToLastBuild: true,
+            keepAll              : true,
+            reportDir            : "${env.PROJECT_DIR}/frontend/coverage",
+            reportFiles          : 'index.html',
+            reportName           : 'Frontend Coverage Report'
+          ])
+        }
+        success {
+          echo '✅ All frontend tests PASSED'
+        }
+        failure {
+          echo '❌ Frontend tests FAILED'
+          error 'Stopping pipeline — frontend tests failed'
+        }
+      }
+    }
+
+    stage('CI Frontend — Production Build') {
+      steps {
+        sh '''
+          echo "🏗️  Building frontend production bundle..."
+          cd ${PROJECT_DIR}/frontend
+          VITE_API_URL=http://localhost:5000/api npm run build
+          echo "✅ Frontend build complete"
+          du -sh ${PROJECT_DIR}/frontend/dist/
+        '''
+      }
+      post {
+        success {
+          archiveArtifacts(
+            artifacts: "${env.PROJECT_DIR}/frontend/dist/**",
+            allowEmptyArchive: true,
+            fingerprint: true
+          )
+          echo '✅ Frontend build artifact archived'
+        }
+      }
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // STAGE 4 — CD BACKEND (main branch only)
+    // Triggered automatically after CI Backend passes
+    // ══════════════════════════════════════════════════════════════════════════
+    stage('CD Backend — Docker Build & Push') {
+      when {
+        anyOf {
+          environment name: 'GIT_BRANCH', value: 'main'
+          environment name: 'BRANCH_NAME', value: 'main'
+        }
+      }
+      steps {
+        echo '🐳 Building and pushing backend Docker image...'
+        withCredentials([usernamePassword(
+          credentialsId: 'docker-hub-credentials',
+          usernameVariable: 'DOCKER_USER',
+          passwordVariable: 'DOCKER_PASS'
+        )]) {
+          sh """
+            echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin
+            docker build \\
+              -t ${DOCKER_IMAGE_BACKEND}:${IMAGE_TAG} \\
+              -t ${DOCKER_IMAGE_BACKEND}:latest \\
+              ${PROJECT_DIR}/backend
+            docker push ${DOCKER_IMAGE_BACKEND}:${IMAGE_TAG}
+            docker push ${DOCKER_IMAGE_BACKEND}:latest
+            docker logout
+            echo "✅ Backend image pushed: ${DOCKER_IMAGE_BACKEND}:${IMAGE_TAG}"
+          """
+        }
+      }
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // STAGE 5 — CD FRONTEND (main branch only)
+    // Triggered automatically after CI Frontend passes
+    // ══════════════════════════════════════════════════════════════════════════
+    stage('CD Frontend — Docker Build & Push') {
+      when {
+        anyOf {
+          environment name: 'GIT_BRANCH', value: 'main'
+          environment name: 'BRANCH_NAME', value: 'main'
+        }
+      }
+      steps {
+        echo '🐳 Building and pushing frontend Docker image...'
+        withCredentials([usernamePassword(
+          credentialsId: 'docker-hub-credentials',
+          usernameVariable: 'DOCKER_USER',
+          passwordVariable: 'DOCKER_PASS'
+        )]) {
+          sh """
+            echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin
+            docker build \\
+              --build-arg VITE_API_URL=http://bmp.local/api \\
+              -t ${DOCKER_IMAGE_FRONTEND}:${IMAGE_TAG} \\
+              -t ${DOCKER_IMAGE_FRONTEND}:latest \\
+              ${PROJECT_DIR}/frontend
+            docker push ${DOCKER_IMAGE_FRONTEND}:${IMAGE_TAG}
+            docker push ${DOCKER_IMAGE_FRONTEND}:latest
+            docker logout
+            echo "✅ Frontend image pushed: ${DOCKER_IMAGE_FRONTEND}:${IMAGE_TAG}"
+          """
+        }
+      }
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // STAGE 6 — Summary
+    // ══════════════════════════════════════════════════════════════════════════
+    stage('Summary') {
+      steps {
+        sh '''
+          echo ""
+          echo "╔══════════════════════════════════════════════════════╗"
+          echo "  ✅  CI/CD PIPELINE COMPLETE — Build #${BUILD_NUMBER}"
+          echo "  Backend  : Jest tests passed + coverage report"
+          echo "  Frontend : Vitest tests passed + production build"
+          echo "  Coverage : http://localhost:9090/job/BMP-Pipeline/Coverage_20Report/"
+          echo "╚══════════════════════════════════════════════════════╝"
+        '''
+      }
+    }
+
+  }
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // POST
+  // ════════════════════════════════════════════════════════════════════════════
+  post {
+    success {
+      echo '🎉 Pipeline SUCCESS — all stages passed'
+    }
+    failure {
+      echo '💥 Pipeline FAILED — check test results above'
+    }
+    unstable {
+      echo '⚠️  Pipeline UNSTABLE — some tests may have failed'
+    }
+    always {
+      cleanWs(
+        cleanWhenSuccess: true,
+        cleanWhenFailure: false,
+        cleanWhenAborted: true
+      )
+    }
+  }
+}

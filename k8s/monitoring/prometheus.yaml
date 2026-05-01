@@ -1,0 +1,125 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: monitoring
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+    alerting:
+      alertmanagers:
+        - static_configs:
+            - targets: ['alertmanager:9093']
+    rule_files:
+      - /etc/prometheus/alert-rules.yml
+    scrape_configs:
+      - job_name: 'prometheus'
+        static_configs:
+          - targets: ['localhost:9090']
+      - job_name: 'bmp-backend'
+        static_configs:
+          - targets: ['bmp-backend.bmp-production.svc.cluster.local:5000']
+        metrics_path: /metrics
+      - job_name: 'node-exporter'
+        static_configs:
+          - targets: ['node-exporter:9100']
+      - job_name: 'blackbox-http'
+        metrics_path: /probe
+        params:
+          module: [http_2xx]
+        static_configs:
+          - targets:
+              - http://bmp-backend.bmp-production.svc.cluster.local:5000/api/health
+              - http://bmp-frontend.bmp-production.svc.cluster.local:80
+        relabel_configs:
+          - source_labels: [__address__]
+            target_label: __param_target
+          - source_labels: [__param_target]
+            target_label: instance
+          - target_label: __address__
+            replacement: blackbox:9115
+  alert-rules.yml: |
+    groups:
+      - name: bmp-alerts
+        rules:
+          - alert: BackendDown
+            expr: up{job="bmp-backend"} == 0
+            for: 1m
+            labels:
+              severity: critical
+            annotations:
+              summary: "BMP Backend is DOWN"
+          - alert: HighErrorRate
+            expr: rate(bmp_http_requests_total{status_code=~"5.."}[5m]) / rate(bmp_http_requests_total[5m]) > 0.05
+            for: 2m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High 5xx error rate"
+          - alert: HighMemoryUsage
+            expr: process_resident_memory_bytes{job="bmp-backend"} / 1024 / 1024 > 450
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Backend memory > 450MB"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      containers:
+        - name: prometheus
+          image: prom/prometheus:v2.48.0
+          args:
+            - '--config.file=/etc/prometheus/prometheus.yml'
+            - '--storage.tsdb.path=/prometheus'
+            - '--storage.tsdb.retention.time=15d'
+            - '--web.enable-lifecycle'
+          ports:
+            - containerPort: 9090
+          volumeMounts:
+            - name: config
+              mountPath: /etc/prometheus
+            - name: storage
+              mountPath: /prometheus
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      volumes:
+        - name: config
+          configMap:
+            name: prometheus-config
+        - name: storage
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  namespace: monitoring
+spec:
+  selector:
+    app: prometheus
+  ports:
+    - port: 9090
+      targetPort: 9090
+  type: NodePort

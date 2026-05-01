@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  jenkins:
+    image: jenkins/jenkins:lts-jdk17
+    container_name: bmp-jenkins
+    restart: unless-stopped
+    privileged: true
+    user: root
+    ports:
+      - "9090:8080"     # Jenkins UI — access at http://localhost:9090
+      - "50000:50000"   # Jenkins agents
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock   # Docker-in-Docker
+      - ./:/workspace/bmp                            # Mount project
+    environment:
+      - JAVA_OPTS=-Xmx512m
+    networks:
+      - devops
+
+  # Optional: run alongside monitoring
+  # prometheus, grafana etc. from docker-compose.monitoring.yml
+
+volumes:
+  jenkins_home:
+    driver: local
+
+networks:
+  devops:
+    driver: bridge

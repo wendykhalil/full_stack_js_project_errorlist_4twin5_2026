@@ -2,56 +2,81 @@ name: CI Backend
 
 on:
   push:
-    branches: [ main, user, dev ]
+    branches: [main, develop]
     paths:
       - 'backend/**'
       - '.github/workflows/ci-backend.yml'
   pull_request:
-    branches: [ main, user, dev ]
+    branches: [main, develop]
     paths:
       - 'backend/**'
 
 jobs:
-  test-and-sonar:
-    name: Backend tests and SonarQube
+  test:
+    name: Backend Tests & Quality
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend
+
+    services:
+      mongodb:
+        image: mongo:6.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand({ping:1})'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: npm
+          node-version: '20'
+          cache: 'npm'
           cache-dependency-path: backend/package-lock.json
 
       - name: Install dependencies
+        working-directory: backend
         run: npm ci
 
-      - name: Run backend unit tests with coverage
-        run: npm test -- --coverage
+      - name: Run unit tests with coverage
+        working-directory: backend
+        env:
+          NODE_ENV: test
+          JWT_SECRET: test-secret-ci
+          MONGO_URI: mongodb://localhost:27017/bmp_test
+        run: npm test -- --coverage --runInBand --forceExit
 
-      - name: Upload backend coverage artifact
+      - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
           name: backend-coverage
-          path: backend/coverage
+          path: backend/coverage/
+          retention-days: 7
 
-      - name: SonarQube backend scan
-        uses: SonarSource/sonarqube-scan-action@v5
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@master
+        if: github.event_name == 'push'
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         with:
           args: >
-            -Dsonar.projectKey=pilastversion-backend
-            -Dsonar.projectName=pilastversion-backend
+            -Dsonar.projectKey=bmp-backend
+            -Dsonar.projectName=BMP Backend
             -Dsonar.sources=backend/src
             -Dsonar.tests=backend/tests
             -Dsonar.test.inclusions=backend/tests/**/*.test.js
-            -Dsonar.exclusions=**/node_modules/**,**/coverage/**,**/uploads/**,**/.git/**
             -Dsonar.javascript.lcov.reportPaths=backend/coverage/lcov.info
+            -Dsonar.exclusions=**/node_modules/**,**/coverage/**,**/uploads/**
+
+      - name: Build Docker image (verify)
+        working-directory: backend
+        run: docker build -t bmp-backend:ci-${{ github.sha }} .
+
+      - name: Notify CD pipeline success
+        if: success() && github.ref == 'refs/heads/main'
+        run: echo "CI_BACKEND_SUCCESS=true" >> $GITHUB_ENV

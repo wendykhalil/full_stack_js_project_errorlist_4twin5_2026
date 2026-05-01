@@ -51,6 +51,16 @@ function createApp() {
     next();
   });
 
+  // Health check endpoint — used by K8s liveness/readiness probes
+  app.get('/api/health', (req, res) => {
+    res.json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      environment: process.env.NODE_ENV || 'development',
+    });
+  });
+
   // Prometheus scrape endpoint — must be before notFound middleware
   app.get('/metrics', async (req, res) => {
     try {
