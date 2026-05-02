@@ -1,0 +1,25 @@
+# robots.txt for BMP.tn
+# Allow all search engines to crawl the site
+
+User-agent: *
+Allow: /
+
+# Disallow admin and private areas
+Disallow: /admin/
+Disallow: /artisan/
+Disallow: /prescripteur/
+Disallow: /fournisseur/
+Disallow: /api/
+
+# Allow public pages
+Allow: /login
+Allow: /register
+Allow: /about
+Allow: /contact
+Allow: /pricing
+Allow: /how-it-works
+Allow: /privacy
+Allow: /terms
+
+# Sitemap location (create this file later)
+Sitemap: https://bmp.tn/sitemap.xml

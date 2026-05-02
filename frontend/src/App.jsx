@@ -1,262 +1,463 @@
 import React, { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-// Public info pages — lazy loaded so they don't bloat the main bundle
-const About       = lazy(() => import("./pages/About"));
-const HowItWorks  = lazy(() => import("./pages/HowItWorks"));
-const Pricing     = lazy(() => import("./pages/Pricing"));
-const Contact     = lazy(() => import("./pages/Contact"));
-const Privacy     = lazy(() => import("./pages/Privacy"));
-const Terms       = lazy(() => import("./pages/Terms"));
-import RealtimeNotifications from "./components/RealtimeNotifications";
-import ArtisanLocationPromptModal from "./components/ArtisanLocationPromptModal";
-import ReadPageButton from "./components/ReadPageButton";
-import ArtisanProfile from './pages/ArtisanProfile';
-import MLPredictionsPage from './pages/MLPredictions';
+// ============================================================================
+// LOADING FALLBACK COMPONENT
+// ============================================================================
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+  </div>
+);
 
-import Login from "./pages/Login";
-import PhoneLogin from "./pages/PhoneLogin";
-import RegisterRole from "./pages/RegisterRole";
-import VerifyEmail from "./pages/VerifyEmail";
-import Unauthorized from "./pages/Unauthorized";
-
-import ProtectedRoute from "./components/ProtectedRoute";
+// ============================================================================
+// CRITICAL COMPONENTS - Load immediately (needed for routing)
+// ============================================================================
 import { Roles } from "./auth/role";
 
-import AdminLayout from "./layouts/AdminLayout";
-import AdminDashboard from "./pages/AdminDashboard";
-import AdminArtisanDashboard from "./pages/AdminArtisanDashboard";
-import AdminUsers from "./pages/AdminUsers";
-import AdminActivityLogs from "./pages/AdminActivityLogs";
-import AdminPromoCodes from "./pages/AdminPromoCodes";
-import AdminTransactions from "./pages/AdminTransactions";
-import AdminReports from "./pages/AdminReports";
-import AdminDisputes from "./pages/AdminDisputes";
-import AdminAiInsights from "./pages/AdminAiInsights";
-import AdminUserStatisticsPage from "./pages/AdminUserStatistics";
-import AdminFraudAnalytics from "./pages/AdminFraudAnalytics";
-import FaceIdDemo from "./pages/FaceIdDemo";
+// ============================================================================
+// LAZY LOAD ALL PAGES AND COMPONENTS
+// ============================================================================
 
-// REGISTER
-import RegisterChooseRole from "./pages/RegisterChooseRole";
-import RegisterForm from "./pages/RegisterForm";
+// Core Components (small, but still lazy load for optimization)
+const ProtectedRoute = lazy(() => import("./components/ProtectedRoute"));
+const AppErrorBoundary = lazy(() => import("./components/AppErrorBoundary"));
+const RealtimeNotifications = lazy(() => import("./components/RealtimeNotifications"));
+const ArtisanLocationPromptModal = lazy(() => import("./components/ArtisanLocationPromptModal"));
+const ReadPageButton = lazy(() => import("./components/ReadPageButton"));
+const RequireSubscription = lazy(() => import("./components/RequireSubscription"));
 
-// ARTISAN
-import ArtisanLayout from "./layouts/ArtisanLayout";
-import ArtisanDashboard from "./pages/ArtisanDashboard";
-import ArtisanProjects from "./pages/ArtisanProjects";
-import ArtisanDevisCreate from "./pages/ArtisanDevisCreate";
-import ArtisanFactures from "./pages/ArtisanFactures";
-import ArtisanFactureStep1 from "./pages/ArtisanFactureStep1";
-import ArtisanFactureStep2 from "./pages/ArtisanFactureStep2";
-import ArtisanFactureStep3 from "./pages/ArtisanFactureStep3";
-import ArtisanMarketplace from "./pages/ArtisanMarketplace";
-import ArtisanProductDetails from "./pages/ArtisanProductDetails";
-import ArtisanOrderRequest from "./pages/ArtisanOrderRequest";
-import ArtisanOrders from "./pages/ArtisanOrders";
-import ArtisanCart from "./pages/ArtisanCart";
-import ArtisanFavorites from "./pages/ArtisanFavorites";
-import ArtisanSubscription from './pages/ArtisanSubscription';
-import RequireSubscription from './components/RequireSubscription';
+// Context Providers
+const MouseTooltipProvider = lazy(() => import("./components/MouseTooltip").then(m => ({ default: m.MouseTooltipProvider })));
+const DarkModeProvider = lazy(() => import("./contexts/DarkModeContext").then(m => ({ default: m.DarkModeProvider })));
 
-import ArtisanProfileEdit from './pages/ArtisanProfileEdit';
-import ArtisanPortfolio from './pages/ArtisanPortfolio';
-import ArtisanPortfolioAdd from './pages/ArtisanPortfolioAdd';
-import ArtisanWeather from './pages/ArtisanWeather';
-import ArtisanAvailability from './pages/ArtisanAvailability';
-import ArtisanServiceRequests from './pages/ArtisanServiceRequests';
-import PrescripteurServiceRequests from './pages/PrescripteurServiceRequests';
-import MyDisputes from './pages/MyDisputes';
-import Meetings from './pages/Meetings';
+// Public Pages
+const Login = lazy(() => import("./pages/Login"));
+const PhoneLogin = lazy(() => import("./pages/PhoneLogin"));
+const RegisterRole = lazy(() => import("./pages/RegisterRole"));
+const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
+const Unauthorized = lazy(() => import("./pages/Unauthorized"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const Profile = lazy(() => import("./pages/Profile"));
+const AccessibilitySettings = lazy(() => import("./pages/AccessibilitySettings"));
+const AccessibilityDemo = lazy(() => import("./pages/AccessibilityDemo"));
+const FaceIdDemo = lazy(() => import("./pages/FaceIdDemo"));
 
-// PRESCRIPTEUR
-import PrescripteurLayout from "./layouts/PrescripteurLayout";
-import PrescripteurProduits from "./pages/PrescripteurProduits";
-import PrescripteurArtisans from "./pages/PrescripteurArtisans";
-import PrescripteurProjects from "./pages/PrescripteurProjects";
-import PrescripteurSearch from './pages/PrescripteurSearch';
-import ArtisanPublicProfile from './pages/ArtisanPublicProfile';
-import PrescripteurProductDetails from './pages/PrescripteurProductDetails';
+// Public Info Pages
+const About = lazy(() => import("./pages/About"));
+const HowItWorks = lazy(() => import("./pages/HowItWorks"));
+const Pricing = lazy(() => import("./pages/Pricing"));
+const Contact = lazy(() => import("./pages/Contact"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const Terms = lazy(() => import("./pages/Terms"));
 
-// FOURNISSEUR
-import FournisseurLayout from "./layouts/FournisseurLayout";
-import FournisseurDashboard from "./pages/FournisseurDashboard";
-import FournisseurProduits from "./pages/FournisseurProduits";
-import FournisseurProduitNew from "./pages/FournisseurProduitNew";
-import FournisseurProduitEdit from "./pages/FournisseurProduitEdit";
-import FournisseurOrders from "./pages/FournisseurOrders";
-import FournisseurMarketplace from "./pages/FournisseurMarketplace";
-import FournisseurProductDetails from "./pages/FournisseurProductDetails";
-import OrderDetails from "./pages/OrderDetails";
+// Register Pages
+const RegisterChooseRole = lazy(() => import("./pages/RegisterChooseRole"));
+const RegisterForm = lazy(() => import("./pages/RegisterForm"));
 
-// MESSAGERIE
-import Messages from './pages/Messages';
-import Conversation from './pages/Conversation';
+// ============================================================================
+// ADMIN PAGES - Lazy load all admin components
+// ============================================================================
+const AdminLayout = lazy(() => import("./layouts/AdminLayout"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const AdminArtisanDashboard = lazy(() => import("./pages/AdminArtisanDashboard"));
+const AdminUsers = lazy(() => import("./pages/AdminUsers"));
+const AdminActivityLogs = lazy(() => import("./pages/AdminActivityLogs"));
+const AdminPromoCodes = lazy(() => import("./pages/AdminPromoCodes"));
+const AdminTransactions = lazy(() => import("./pages/AdminTransactions"));
+const AdminReports = lazy(() => import("./pages/AdminReports"));
+const AdminDisputes = lazy(() => import("./pages/AdminDisputes"));
+const AdminAiInsights = lazy(() => import("./pages/AdminAiInsights"));
+const AdminUserStatisticsPage = lazy(() => import("./pages/AdminUserStatistics"));
+const AdminFraudAnalytics = lazy(() => import("./pages/AdminFraudAnalytics"));
 
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
-import Profile from "./pages/Profile";
-import AccessibilitySettings from "./pages/AccessibilitySettings";
-import AccessibilityDemo from "./pages/AccessibilityDemo";
-import AppErrorBoundary from "./components/AppErrorBoundary";
-import AiChat from "./components/ai-chat"; // ton composant chat modernisé
-import { MouseTooltipProvider } from "./components/MouseTooltip";
-import { DarkModeProvider } from "./contexts/DarkModeContext";
+// ============================================================================
+// ARTISAN PAGES - Lazy load all artisan components
+// ============================================================================
+const ArtisanLayout = lazy(() => import("./layouts/ArtisanLayout"));
+const ArtisanDashboard = lazy(() => import("./pages/ArtisanDashboard"));
+const ArtisanProfile = lazy(() => import("./pages/ArtisanProfile"));
+const ArtisanProfileEdit = lazy(() => import("./pages/ArtisanProfileEdit"));
+const ArtisanSubscription = lazy(() => import("./pages/ArtisanSubscription"));
+const ArtisanMarketplace = lazy(() => import("./pages/ArtisanMarketplace"));
+const ArtisanPortfolio = lazy(() => import("./pages/ArtisanPortfolio"));
+const ArtisanPortfolioAdd = lazy(() => import("./pages/ArtisanPortfolioAdd"));
+const ArtisanProjects = lazy(() => import("./pages/ArtisanProjects"));
+const ArtisanDevisCreate = lazy(() => import("./pages/ArtisanDevisCreate"));
+const ArtisanFactures = lazy(() => import("./pages/ArtisanFactures"));
+const ArtisanFactureStep1 = lazy(() => import("./pages/ArtisanFactureStep1"));
+const ArtisanFactureStep2 = lazy(() => import("./pages/ArtisanFactureStep2"));
+const ArtisanFactureStep3 = lazy(() => import("./pages/ArtisanFactureStep3"));
+const ArtisanProductDetails = lazy(() => import("./pages/ArtisanProductDetails"));
+const ArtisanOrderRequest = lazy(() => import("./pages/ArtisanOrderRequest"));
+const ArtisanOrders = lazy(() => import("./pages/ArtisanOrders"));
+const ArtisanCart = lazy(() => import("./pages/ArtisanCart"));
+const ArtisanFavorites = lazy(() => import("./pages/ArtisanFavorites"));
+const ArtisanWeather = lazy(() => import("./pages/ArtisanWeather"));
+const ArtisanAvailability = lazy(() => import("./pages/ArtisanAvailability"));
+const ArtisanServiceRequests = lazy(() => import("./pages/ArtisanServiceRequests"));
 
+// ============================================================================
+// PRESCRIPTEUR PAGES - Lazy load all prescripteur components
+// ============================================================================
+const PrescripteurLayout = lazy(() => import("./layouts/PrescripteurLayout"));
+const PrescripteurProduits = lazy(() => import("./pages/PrescripteurProduits"));
+const PrescripteurArtisans = lazy(() => import("./pages/PrescripteurArtisans"));
+const PrescripteurProjects = lazy(() => import("./pages/PrescripteurProjects"));
+const PrescripteurSearch = lazy(() => import("./pages/PrescripteurSearch"));
+const ArtisanPublicProfile = lazy(() => import("./pages/ArtisanPublicProfile"));
+const PrescripteurProductDetails = lazy(() => import("./pages/PrescripteurProductDetails"));
+const PrescripteurServiceRequests = lazy(() => import("./pages/PrescripteurServiceRequests"));
+
+// ============================================================================
+// FOURNISSEUR PAGES - Lazy load all fournisseur components
+// ============================================================================
+const FournisseurLayout = lazy(() => import("./layouts/FournisseurLayout"));
+const FournisseurDashboard = lazy(() => import("./pages/FournisseurDashboard"));
+const FournisseurProduits = lazy(() => import("./pages/FournisseurProduits"));
+const FournisseurProduitNew = lazy(() => import("./pages/FournisseurProduitNew"));
+const FournisseurProduitEdit = lazy(() => import("./pages/FournisseurProduitEdit"));
+const FournisseurOrders = lazy(() => import("./pages/FournisseurOrders"));
+const FournisseurMarketplace = lazy(() => import("./pages/FournisseurMarketplace"));
+const FournisseurProductDetails = lazy(() => import("./pages/FournisseurProductDetails"));
+
+// ============================================================================
+// SHARED PAGES - Lazy load shared components
+// ============================================================================
+const OrderDetails = lazy(() => import("./pages/OrderDetails"));
+const Messages = lazy(() => import("./pages/Messages"));
+const Conversation = lazy(() => import("./pages/Conversation"));
+const MyDisputes = lazy(() => import("./pages/MyDisputes"));
+const Meetings = lazy(() => import("./pages/Meetings"));
+const MLPredictionsPage = lazy(() => import("./pages/MLPredictions"));
+const AiChat = lazy(() => import("./components/ai-chat"));
+
+// ============================================================================
+// MAIN APP COMPONENT
+// ============================================================================
 export default function App() {
     return (
-        <DarkModeProvider>
-        <AppErrorBoundary>
-        <MouseTooltipProvider>
-        <BrowserRouter>
-            <AppErrorBoundary></AppErrorBoundary>
-            <AppErrorBoundary><RealtimeNotifications /></AppErrorBoundary>
-            <AppErrorBoundary><ArtisanLocationPromptModal /></AppErrorBoundary>
-            <ReadPageButton />
-            <Routes>
-                {/* Routes publiques */}
-                <Route path="/" element={<Navigate to="/login" replace />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/login-phone" element={<PhoneLogin />} />
-                <Route path="/register-role" element={<RegisterRole />} />
-                <Route path="/register-role-sms" element={<RegisterRole />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/verify-email" element={<VerifyEmail />} />
-                <Route path="/unauthorized" element={<Unauthorized />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/accessibility-demo" element={<AccessibilityDemo />} />
-                <Route path="/faceid-demo" element={<FaceIdDemo />} />
-                {/* La route AiChat a été retirée d'ici : elle est maintenant dans chaque layout protégé */}
+        <Suspense fallback={<PageLoader />}>
+            <DarkModeProvider>
+                <AppErrorBoundary>
+                    <MouseTooltipProvider>
+                        <BrowserRouter>
+                            <Suspense fallback={null}>
+                                <RealtimeNotifications />
+                            </Suspense>
+                            <Suspense fallback={null}>
+                                <ArtisanLocationPromptModal />
+                            </Suspense>
+                            <Suspense fallback={null}>
+                                <ReadPageButton />
+                            </Suspense>
+                            
+                            <Routes>
+                                {/* ============================================ */}
+                                {/* PUBLIC ROUTES */}
+                                {/* ============================================ */}
+                                <Route path="/" element={<Navigate to="/login" replace />} />
+                                
+                                <Route path="/login" element={
+                                    <Suspense fallback={<PageLoader />}>
+                                        <Login />
+                                    </Suspense>
+                                } />
+                                
+                                <Route path="/login-phone" element={
+                                    <Suspense fallback={<PageLoader />}>
+                                        <PhoneLogin />
+                                    </Suspense>
+                                } />
+                                
+                                <Route path="/register-role" element={
+                                    <Suspense fallback={<PageLoader />}>
+                                        <RegisterRole />
+                                    </Suspense>
+                                } />
+                                
+                                <Route path="/register-role-sms" element={
+                                    <Suspense fallback={<PageLoader />}>
+                                        <RegisterRole />
+                                    </Suspense>
+                                } />
+                                
+                                <Route path="/forgot-password" element={
+                                    <Suspense fallback={<PageLoader />}>
+                                        <ForgotPassword />
+                                    </Suspense>
+                                } />
+                                
+                                <Route path="/reset-password" element={
+                                    <Suspense fallback={<PageLoader />}>
+                                        <ResetPassword />
+                                    </Suspense>
+                                } />
+                                
+                                <Route path="/verify-email" element={
+                                    <Suspense fallback={<PageLoader />}>
+                                        <VerifyEmail />
+                                    </Suspense>
+                                } />
+                                
+                                <Route path="/unauthorized" element={
+                                    <Suspense fallback={<PageLoader />}>
+                                        <Unauthorized />
+                                    </Suspense>
+                                } />
+                                
+                                <Route path="/profile" element={
+                                    <Suspense fallback={<PageLoader />}>
+                                        <Profile />
+                                    </Suspense>
+                                } />
+                                
+                                <Route path="/accessibility-demo" element={
+                                    <Suspense fallback={<PageLoader />}>
+                                        <AccessibilityDemo />
+                                    </Suspense>
+                                } />
+                                
+                                <Route path="/faceid-demo" element={
+                                    <Suspense fallback={<PageLoader />}>
+                                        <FaceIdDemo />
+                                    </Suspense>
+                                } />
 
-                {/* Public info pages — SPA navigation, no reload */}
-                <Route path="/about"         element={<Suspense fallback={null}><About /></Suspense>} />
-                <Route path="/how-it-works"  element={<Suspense fallback={null}><HowItWorks /></Suspense>} />
-                <Route path="/pricing"       element={<Suspense fallback={null}><Pricing /></Suspense>} />
-                <Route path="/contact"       element={<Suspense fallback={null}><Contact /></Suspense>} />
-                <Route path="/privacy"       element={<Suspense fallback={null}><Privacy /></Suspense>} />
-                <Route path="/terms"         element={<Suspense fallback={null}><Terms /></Suspense>} />
+                                {/* Public Info Pages */}
+                                <Route path="/about" element={
+                                    <Suspense fallback={<PageLoader />}>
+                                        <About />
+                                    </Suspense>
+                                } />
+                                
+                                <Route path="/how-it-works" element={
+                                    <Suspense fallback={<PageLoader />}>
+                                        <HowItWorks />
+                                    </Suspense>
+                                } />
+                                
+                                <Route path="/pricing" element={
+                                    <Suspense fallback={<PageLoader />}>
+                                        <Pricing />
+                                    </Suspense>
+                                } />
+                                
+                                <Route path="/contact" element={
+                                    <Suspense fallback={<PageLoader />}>
+                                        <Contact />
+                                    </Suspense>
+                                } />
+                                
+                                <Route path="/privacy" element={
+                                    <Suspense fallback={<PageLoader />}>
+                                        <Privacy />
+                                    </Suspense>
+                                } />
+                                
+                                <Route path="/terms" element={
+                                    <Suspense fallback={<PageLoader />}>
+                                        <Terms />
+                                    </Suspense>
+                                } />
 
-                {/* Register */}
-                <Route path="/register" element={<RegisterChooseRole />} />
-                <Route path="/register/:role" element={<RegisterForm />} />
+                                {/* Register Routes */}
+                                <Route path="/register" element={
+                                    <Suspense fallback={<PageLoader />}>
+                                        <RegisterChooseRole />
+                                    </Suspense>
+                                } />
+                                
+                                <Route path="/register/:role" element={
+                                    <Suspense fallback={<PageLoader />}>
+                                        <RegisterForm />
+                                    </Suspense>
+                                } />
 
-                {/* Redirections */}
-                <Route 
-                    path="/artisandeviscreate" 
-                    element={<Navigate to="/artisan/devis/create" replace />} 
-                />
-                <Route 
-                    path="/artisan/deviscreate" 
-                    element={<Navigate to="/artisan/devis/create" replace />} 
-                />
+                                {/* Redirections */}
+                                <Route path="/artisandeviscreate" element={<Navigate to="/artisan/devis/create" replace />} />
+                                <Route path="/artisan/deviscreate" element={<Navigate to="/artisan/devis/create" replace />} />
 
-                {/* Admin (protected) */}
-                <Route element={<ProtectedRoute allowedRoles={[Roles.ADMIN]} />}>
-                    <Route path="/admin" element={<AdminLayout />}>
-                        <Route index element={<AdminDashboard />} />
-                        <Route path="artisans" element={<AdminArtisanDashboard />} />
-                        <Route path="profile" element={<Profile />} />
-                        <Route path="accessibility" element={<AccessibilitySettings />} />
-                        <Route path="users" element={<AdminUsers />} />
-                        <Route path="activity" element={<AdminActivityLogs />} />
-                        <Route path="transactions" element={<AdminTransactions />} />
-                        <Route path="promo-codes" element={<AdminPromoCodes />} />
-                        <Route path="reports" element={<AdminReports />} />
-                        <Route path="disputes" element={<AdminDisputes />} />
-                        <Route path="ai-insights" element={<AdminAiInsights />} />
-                        <Route path="fraud-analytics" element={<AdminFraudAnalytics />} />
-                        <Route path="user-statistics" element={<AdminUserStatisticsPage />} />
-                        {/* AI Chat pour Admin */}
-                        <Route path="AiChat" element={<AiChat />} />
-                    </Route>
-                </Route>
+                                {/* ============================================ */}
+                                {/* ADMIN ROUTES (Protected) */}
+                                {/* ============================================ */}
+                                <Route element={
+                                    <Suspense fallback={<PageLoader />}>
+                                        <ProtectedRoute allowedRoles={[Roles.ADMIN]} />
+                                    </Suspense>
+                                }>
+                                    <Route path="/admin" element={
+                                        <Suspense fallback={<PageLoader />}>
+                                            <AdminLayout />
+                                        </Suspense>
+                                    }>
+                                        <Route index element={<Suspense fallback={<PageLoader />}><AdminDashboard /></Suspense>} />
+                                        <Route path="artisans" element={<Suspense fallback={<PageLoader />}><AdminArtisanDashboard /></Suspense>} />
+                                        <Route path="profile" element={<Suspense fallback={<PageLoader />}><Profile /></Suspense>} />
+                                        <Route path="accessibility" element={<Suspense fallback={<PageLoader />}><AccessibilitySettings /></Suspense>} />
+                                        <Route path="users" element={<Suspense fallback={<PageLoader />}><AdminUsers /></Suspense>} />
+                                        <Route path="activity" element={<Suspense fallback={<PageLoader />}><AdminActivityLogs /></Suspense>} />
+                                        <Route path="transactions" element={<Suspense fallback={<PageLoader />}><AdminTransactions /></Suspense>} />
+                                        <Route path="promo-codes" element={<Suspense fallback={<PageLoader />}><AdminPromoCodes /></Suspense>} />
+                                        <Route path="reports" element={<Suspense fallback={<PageLoader />}><AdminReports /></Suspense>} />
+                                        <Route path="disputes" element={<Suspense fallback={<PageLoader />}><AdminDisputes /></Suspense>} />
+                                        <Route path="ai-insights" element={<Suspense fallback={<PageLoader />}><AdminAiInsights /></Suspense>} />
+                                        <Route path="fraud-analytics" element={<Suspense fallback={<PageLoader />}><AdminFraudAnalytics /></Suspense>} />
+                                        <Route path="user-statistics" element={<Suspense fallback={<PageLoader />}><AdminUserStatisticsPage /></Suspense>} />
+                                        <Route path="AiChat" element={<Suspense fallback={<PageLoader />}><AiChat /></Suspense>} />
+                                    </Route>
+                                </Route>
 
-                {/* Artisan (protected) */}
-                <Route element={<ProtectedRoute allowedRoles={[Roles.ARTISAN]} />}>
-                    <Route path="/artisan" element={<ArtisanLayout />}>
-                        <Route index element={<ArtisanDashboard />} />
-                        <Route path="profile" element={<ArtisanProfile />} />
-                        <Route path="accessibility" element={<AccessibilitySettings />} />
-                        <Route path="profile/edit" element={<ArtisanProfileEdit />} />
-                        <Route path="subscription" element={<ArtisanSubscription />} />
-                        <Route path="marketplace" element={<ArtisanMarketplace />} />
-                        <Route path="portfolio" element={<ArtisanPortfolio />} />
-                        <Route path="portfolio/add" element={<ArtisanPortfolioAdd />} />
-                        <Route path="portfolio/edit/:id" element={<ArtisanPortfolioAdd />} />
-                        <Route path="projects" element={<ArtisanProjects />} />
-                        <Route path="devis/create" element={<ArtisanDevisCreate />} />
-                        <Route path="factures" element={<ArtisanFactures />} />
-                        <Route path="factures/new" element={<ArtisanFactureStep1 />} />
-                        <Route path="factures/new/step-2" element={<ArtisanFactureStep2 />} />
-                        <Route path="factures/new/step-3" element={<ArtisanFactureStep3 />} />
-                        <Route path="product/:id" element={<ArtisanProductDetails />} />
-                        <Route path="order-request/:productId" element={<RequireSubscription><ArtisanOrderRequest /></RequireSubscription>} />
-                        <Route path="orders" element={<RequireSubscription><ArtisanOrders /></RequireSubscription>} />
-                        <Route path="orders/:id" element={<RequireSubscription><OrderDetails /></RequireSubscription>} />
-                        <Route path="cart" element={<RequireSubscription><ArtisanCart /></RequireSubscription>} />
-                        <Route path="favorites" element={<ArtisanFavorites />} />
-                        <Route path="weather" element={<ArtisanWeather />} />
-                        <Route path="availability" element={<ArtisanAvailability />} />
-                        <Route path="service-requests" element={<ArtisanServiceRequests />} />
-                        <Route path="disputes" element={<MyDisputes />} />
-                        <Route path="meetings" element={<Meetings />} />
-                        <Route path="ml-predictions" element={<MLPredictionsPage />} />
-                        <Route path="messages" element={<RequireSubscription><Messages /></RequireSubscription>} />
-                        <Route path="messages/:userId" element={<RequireSubscription><Conversation /></RequireSubscription>} />
-                        {/* AI Chat pour Artisan */}
-                        <Route path="AiChat" element={<AiChat />} />
-                    </Route>
-                </Route>
+                                {/* ============================================ */}
+                                {/* ARTISAN ROUTES (Protected) */}
+                                {/* ============================================ */}
+                                <Route element={
+                                    <Suspense fallback={<PageLoader />}>
+                                        <ProtectedRoute allowedRoles={[Roles.ARTISAN]} />
+                                    </Suspense>
+                                }>
+                                    <Route path="/artisan" element={
+                                        <Suspense fallback={<PageLoader />}>
+                                            <ArtisanLayout />
+                                        </Suspense>
+                                    }>
+                                        <Route index element={<Suspense fallback={<PageLoader />}><ArtisanDashboard /></Suspense>} />
+                                        <Route path="profile" element={<Suspense fallback={<PageLoader />}><ArtisanProfile /></Suspense>} />
+                                        <Route path="accessibility" element={<Suspense fallback={<PageLoader />}><AccessibilitySettings /></Suspense>} />
+                                        <Route path="profile/edit" element={<Suspense fallback={<PageLoader />}><ArtisanProfileEdit /></Suspense>} />
+                                        <Route path="subscription" element={<Suspense fallback={<PageLoader />}><ArtisanSubscription /></Suspense>} />
+                                        <Route path="marketplace" element={<Suspense fallback={<PageLoader />}><ArtisanMarketplace /></Suspense>} />
+                                        <Route path="portfolio" element={<Suspense fallback={<PageLoader />}><ArtisanPortfolio /></Suspense>} />
+                                        <Route path="portfolio/add" element={<Suspense fallback={<PageLoader />}><ArtisanPortfolioAdd /></Suspense>} />
+                                        <Route path="portfolio/edit/:id" element={<Suspense fallback={<PageLoader />}><ArtisanPortfolioAdd /></Suspense>} />
+                                        <Route path="projects" element={<Suspense fallback={<PageLoader />}><ArtisanProjects /></Suspense>} />
+                                        <Route path="devis/create" element={<Suspense fallback={<PageLoader />}><ArtisanDevisCreate /></Suspense>} />
+                                        <Route path="factures" element={<Suspense fallback={<PageLoader />}><ArtisanFactures /></Suspense>} />
+                                        <Route path="factures/new" element={<Suspense fallback={<PageLoader />}><ArtisanFactureStep1 /></Suspense>} />
+                                        <Route path="factures/new/step-2" element={<Suspense fallback={<PageLoader />}><ArtisanFactureStep2 /></Suspense>} />
+                                        <Route path="factures/new/step-3" element={<Suspense fallback={<PageLoader />}><ArtisanFactureStep3 /></Suspense>} />
+                                        <Route path="product/:id" element={<Suspense fallback={<PageLoader />}><ArtisanProductDetails /></Suspense>} />
+                                        <Route path="order-request/:productId" element={
+                                            <Suspense fallback={<PageLoader />}>
+                                                <RequireSubscription>
+                                                    <ArtisanOrderRequest />
+                                                </RequireSubscription>
+                                            </Suspense>
+                                        } />
+                                        <Route path="orders" element={
+                                            <Suspense fallback={<PageLoader />}>
+                                                <RequireSubscription>
+                                                    <ArtisanOrders />
+                                                </RequireSubscription>
+                                            </Suspense>
+                                        } />
+                                        <Route path="orders/:id" element={
+                                            <Suspense fallback={<PageLoader />}>
+                                                <RequireSubscription>
+                                                    <OrderDetails />
+                                                </RequireSubscription>
+                                            </Suspense>
+                                        } />
+                                        <Route path="cart" element={
+                                            <Suspense fallback={<PageLoader />}>
+                                                <RequireSubscription>
+                                                    <ArtisanCart />
+                                                </RequireSubscription>
+                                            </Suspense>
+                                        } />
+                                        <Route path="favorites" element={<Suspense fallback={<PageLoader />}><ArtisanFavorites /></Suspense>} />
+                                        <Route path="weather" element={<Suspense fallback={<PageLoader />}><ArtisanWeather /></Suspense>} />
+                                        <Route path="availability" element={<Suspense fallback={<PageLoader />}><ArtisanAvailability /></Suspense>} />
+                                        <Route path="service-requests" element={<Suspense fallback={<PageLoader />}><ArtisanServiceRequests /></Suspense>} />
+                                        <Route path="disputes" element={<Suspense fallback={<PageLoader />}><MyDisputes /></Suspense>} />
+                                        <Route path="meetings" element={<Suspense fallback={<PageLoader />}><Meetings /></Suspense>} />
+                                        <Route path="ml-predictions" element={<Suspense fallback={<PageLoader />}><MLPredictionsPage /></Suspense>} />
+                                        <Route path="messages" element={
+                                            <Suspense fallback={<PageLoader />}>
+                                                <RequireSubscription>
+                                                    <Messages />
+                                                </RequireSubscription>
+                                            </Suspense>
+                                        } />
+                                        <Route path="messages/:userId" element={
+                                            <Suspense fallback={<PageLoader />}>
+                                                <RequireSubscription>
+                                                    <Conversation />
+                                                </RequireSubscription>
+                                            </Suspense>
+                                        } />
+                                        <Route path="AiChat" element={<Suspense fallback={<PageLoader />}><AiChat /></Suspense>} />
+                                    </Route>
+                                </Route>
 
-                {/* Prescripteur (protected) */}
-                <Route element={<ProtectedRoute allowedRoles={[Roles.PRESCRIPTEUR]} />}>
-                    <Route path="/prescripteur" element={<PrescripteurLayout />}>
-                        <Route index element={<PrescripteurProduits />} />
-                        <Route path="profile" element={<Profile />} />
-                        <Route path="accessibility" element={<AccessibilitySettings />} />
-                        <Route path="search" element={<PrescripteurSearch />} />
-                        <Route path="artisan/:id" element={<ArtisanPublicProfile />} />
-                        <Route path="artisans" element={<PrescripteurArtisans />} />
-                        <Route path="product/:id" element={<PrescripteurProductDetails />} />
-                        <Route path="projects" element={<PrescripteurProjects />} />
-                        <Route path="service-requests" element={<PrescripteurServiceRequests />} />
-                        <Route path="disputes" element={<MyDisputes />} />
-                        <Route path="meetings" element={<Meetings />} />
-                        <Route path="ml-predictions" element={<MLPredictionsPage />} />
-                        <Route path="messages" element={<Messages />} />
-                        <Route path="messages/:userId" element={<Conversation />} />
-                        {/* AI Chat pour Prescripteur */}
-                        <Route path="AiChat" element={<AiChat />} />
-                    </Route>
-                </Route>
+                                {/* ============================================ */}
+                                {/* PRESCRIPTEUR ROUTES (Protected) */}
+                                {/* ============================================ */}
+                                <Route element={
+                                    <Suspense fallback={<PageLoader />}>
+                                        <ProtectedRoute allowedRoles={[Roles.PRESCRIPTEUR]} />
+                                    </Suspense>
+                                }>
+                                    <Route path="/prescripteur" element={
+                                        <Suspense fallback={<PageLoader />}>
+                                            <PrescripteurLayout />
+                                        </Suspense>
+                                    }>
+                                        <Route index element={<Suspense fallback={<PageLoader />}><PrescripteurProduits /></Suspense>} />
+                                        <Route path="profile" element={<Suspense fallback={<PageLoader />}><Profile /></Suspense>} />
+                                        <Route path="accessibility" element={<Suspense fallback={<PageLoader />}><AccessibilitySettings /></Suspense>} />
+                                        <Route path="search" element={<Suspense fallback={<PageLoader />}><PrescripteurSearch /></Suspense>} />
+                                        <Route path="artisan/:id" element={<Suspense fallback={<PageLoader />}><ArtisanPublicProfile /></Suspense>} />
+                                        <Route path="artisans" element={<Suspense fallback={<PageLoader />}><PrescripteurArtisans /></Suspense>} />
+                                        <Route path="product/:id" element={<Suspense fallback={<PageLoader />}><PrescripteurProductDetails /></Suspense>} />
+                                        <Route path="projects" element={<Suspense fallback={<PageLoader />}><PrescripteurProjects /></Suspense>} />
+                                        <Route path="service-requests" element={<Suspense fallback={<PageLoader />}><PrescripteurServiceRequests /></Suspense>} />
+                                        <Route path="disputes" element={<Suspense fallback={<PageLoader />}><MyDisputes /></Suspense>} />
+                                        <Route path="meetings" element={<Suspense fallback={<PageLoader />}><Meetings /></Suspense>} />
+                                        <Route path="ml-predictions" element={<Suspense fallback={<PageLoader />}><MLPredictionsPage /></Suspense>} />
+                                        <Route path="messages" element={<Suspense fallback={<PageLoader />}><Messages /></Suspense>} />
+                                        <Route path="messages/:userId" element={<Suspense fallback={<PageLoader />}><Conversation /></Suspense>} />
+                                        <Route path="AiChat" element={<Suspense fallback={<PageLoader />}><AiChat /></Suspense>} />
+                                    </Route>
+                                </Route>
 
-                {/* Fournisseur (protected) */}
-                <Route element={<ProtectedRoute allowedRoles={[Roles.SUPPLIER]} />}>
-                    <Route path="/fournisseur" element={<FournisseurLayout />}>
-                        <Route index element={<FournisseurDashboard />} />
-                        <Route path="produits" element={<FournisseurProduits />} />
-                        <Route path="produits/new" element={<FournisseurProduitNew />} />
-                        <Route path="produits/edit/:id" element={<FournisseurProduitEdit />} />
-                        <Route path="marketplace" element={<FournisseurMarketplace />} />
-                        <Route path="product/:id" element={<FournisseurProductDetails />} />
-                        <Route path="orders" element={<FournisseurOrders />} />
-                        <Route path="orders/:id" element={<OrderDetails />} />
-                        <Route path="profile" element={<Profile />} />
-                        <Route path="accessibility" element={<AccessibilitySettings />} />
-                        <Route path="messages" element={<Messages />} />
-                        <Route path="messages/:userId" element={<Conversation />} />
-                        {/* AI Chat pour Fournisseur */}
-                        <Route path="AiChat" element={<AiChat />} />
-                    </Route>
-                </Route>
+                                {/* ============================================ */}
+                                {/* FOURNISSEUR ROUTES (Protected) */}
+                                {/* ============================================ */}
+                                <Route element={
+                                    <Suspense fallback={<PageLoader />}>
+                                        <ProtectedRoute allowedRoles={[Roles.SUPPLIER]} />
+                                    </Suspense>
+                                }>
+                                    <Route path="/fournisseur" element={
+                                        <Suspense fallback={<PageLoader />}>
+                                            <FournisseurLayout />
+                                        </Suspense>
+                                    }>
+                                        <Route index element={<Suspense fallback={<PageLoader />}><FournisseurDashboard /></Suspense>} />
+                                        <Route path="produits" element={<Suspense fallback={<PageLoader />}><FournisseurProduits /></Suspense>} />
+                                        <Route path="produits/new" element={<Suspense fallback={<PageLoader />}><FournisseurProduitNew /></Suspense>} />
+                                        <Route path="produits/edit/:id" element={<Suspense fallback={<PageLoader />}><FournisseurProduitEdit /></Suspense>} />
+                                        <Route path="marketplace" element={<Suspense fallback={<PageLoader />}><FournisseurMarketplace /></Suspense>} />
+                                        <Route path="product/:id" element={<Suspense fallback={<PageLoader />}><FournisseurProductDetails /></Suspense>} />
+                                        <Route path="orders" element={<Suspense fallback={<PageLoader />}><FournisseurOrders /></Suspense>} />
+                                        <Route path="orders/:id" element={<Suspense fallback={<PageLoader />}><OrderDetails /></Suspense>} />
+                                        <Route path="profile" element={<Suspense fallback={<PageLoader />}><Profile /></Suspense>} />
+                                        <Route path="accessibility" element={<Suspense fallback={<PageLoader />}><AccessibilitySettings /></Suspense>} />
+                                        <Route path="messages" element={<Suspense fallback={<PageLoader />}><Messages /></Suspense>} />
+                                        <Route path="messages/:userId" element={<Suspense fallback={<PageLoader />}><Conversation /></Suspense>} />
+                                        <Route path="AiChat" element={<Suspense fallback={<PageLoader />}><AiChat /></Suspense>} />
+                                    </Route>
+                                </Route>
 
-                {/* Route par défaut */}
-                <Route path="*" element={<Navigate to="/login" replace />} />
-            </Routes>
-        </BrowserRouter>
-        </MouseTooltipProvider>
-        </AppErrorBoundary>
-        </DarkModeProvider>
+                                {/* Default Route */}
+                                <Route path="*" element={<Navigate to="/login" replace />} />
+                            </Routes>
+                        </BrowserRouter>
+                    </MouseTooltipProvider>
+                </AppErrorBoundary>
+            </DarkModeProvider>
+        </Suspense>
     );
 }

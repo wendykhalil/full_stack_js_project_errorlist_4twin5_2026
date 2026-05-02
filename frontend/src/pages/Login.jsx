@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, lazy, Suspense } from "react";
 import { 
   Phone, Mail, Lock, Building2,
   Eye, EyeOff, Menu, X, ChevronDown
@@ -9,9 +9,12 @@ import { apiFetch } from "../auth/api";
 import { roleToBasePath } from "../auth/role";
 import logo from "../assets/bmp-logo.svg";
 import FieldError from "../components/FieldError";
-import FaceIdLogin from "../components/FaceIdLogin";
-import CameraFaceIdLogin from "../components/CameraFaceIdLogin";
 import { useServerErrors } from "../hooks/useServerErrors";
+import { loadGoogleIdentityScript } from "../utils/loadGoogleIdentity";
+
+// ✅ Lazy load FaceID components to prevent TensorFlow from loading on page load
+const FaceIdLogin = lazy(() => import("../components/FaceIdLogin"));
+const CameraFaceIdLogin = lazy(() => import("../components/CameraFaceIdLogin"));
 
 export default function Login() {
   const navigate = useNavigate();
@@ -27,6 +30,7 @@ export default function Login() {
   const [googleWidth, setGoogleWidth] = useState(320);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
+  const [showFaceIdOptions, setShowFaceIdOptions] = useState(false); // ✅ Control FaceID loading
   const googleBtnRef = useRef(null);
   const googleInitializedRef = useRef(false);
 
@@ -35,6 +39,9 @@ export default function Login() {
     { name: "Prescripteur", path: "/register/prescripteur", icon: "📐" },
     { name: "Fournisseur", path: "/register/fournisseur", icon: "🏭" }
   ];
+
+  // ✅ FIX: Declare useServerErrors BEFORE using clearErrors/handleError in useEffect
+  const { fieldErrors, globalError, handleError, clearErrors } = useServerErrors();
 
   useEffect(() => {
     const updateWidth = () => {
@@ -48,48 +55,73 @@ export default function Login() {
   }, []);
 
   useEffect(() => {
-    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    if (!clientId || !window.google?.accounts?.id) return;
+    const initializeGoogleSignIn = async () => {
+      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+      
+      // ✅ Guard: Don't initialize if already done
+      if (googleInitializedRef.current) return;
+      
+      // ✅ Guard: Check if client ID exists
+      if (!clientId) {
+        console.warn('[Google Sign-In] VITE_GOOGLE_CLIENT_ID not configured');
+        return;
+      }
 
-    if (!googleInitializedRef.current) {
-      googleInitializedRef.current = true;
-      window.google.accounts.id.initialize({
-        client_id: clientId,
-        callback: async (resp) => {
-          try {
-            setLoading(true);
-            clearErrors();
-            const res = await loginWithGoogle(resp.credential);
-            if (res?.needsRole) {
-              navigate("/register-role", { replace: true, state: { from: "google" } });
-              return;
+      try {
+        // ✅ Dynamically load Google Identity script (performance optimization)
+        await loadGoogleIdentityScript();
+        
+        // ✅ Guard: Check if Google API is loaded
+        if (!window.google?.accounts?.id) {
+          console.warn('[Google Sign-In] Google Identity Services not loaded');
+          return;
+        }
+
+        googleInitializedRef.current = true;
+        
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          callback: async (resp) => {
+            try {
+              setLoading(true);
+              clearErrors();
+              const res = await loginWithGoogle(resp.credential);
+              if (res?.needsRole) {
+                navigate("/register-role", { replace: true, state: { from: "google" } });
+                return;
+              }
+              navigate(roleToBasePath(res.user.role), { replace: true });
+            } catch (e) {
+              handleError(e);
+            } finally {
+              setLoading(false);
             }
-            navigate(roleToBasePath(res.user.role), { replace: true });
-          } catch (e) {
-            handleError(e);
-          } finally {
-            setLoading(false);
-          }
-        },
-      });
-    }
+          },
+        });
 
-    if (googleBtnRef.current) {
-      googleBtnRef.current.innerHTML = "";
-      const containerWidth = googleBtnRef.current.parentElement?.offsetWidth || googleWidth;
-      const btnWidth = Math.min(containerWidth - 16, googleWidth);
-      window.google.accounts.id.renderButton(googleBtnRef.current, {
-        type: "standard",
-        theme: "outline",
-        size: "large",
-        text: "signin_with",
-        shape: "rectangular",
-        width: btnWidth,
-      });
-    }
-  }, [googleWidth, loginWithGoogle, navigate]);
+        // ✅ Render button only after initialization
+        if (googleBtnRef.current) {
+          googleBtnRef.current.innerHTML = "";
+          const containerWidth = googleBtnRef.current.parentElement?.offsetWidth || googleWidth;
+          const btnWidth = Math.min(containerWidth - 16, googleWidth);
+          
+          window.google.accounts.id.renderButton(googleBtnRef.current, {
+            type: "standard",
+            theme: "outline",
+            size: "large",
+            text: "signin_with",
+            shape: "rectangular",
+            width: btnWidth,
+          });
+        }
+      } catch (error) {
+        console.error('[Google Sign-In] Initialization error:', error);
+        googleInitializedRef.current = false; // Reset on error
+      }
+    };
 
-  const { fieldErrors, globalError, handleError, clearErrors } = useServerErrors();
+    initializeGoogleSignIn();
+  }, [googleWidth, loginWithGoogle, navigate, clearErrors, handleError]); // ✅ Added missing dependencies
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -375,22 +407,45 @@ Commencer              </Link>
                   </div>
 
                   {/* Face ID buttons — wrapped to show on white bg for contrast */}
-                  <div className="rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 p-1">
-                    <FaceIdLogin
-                      onSuccess={handleFaceIdSuccess}
-                      onError={handleFaceIdError}
-                      disabled={loading}
-                    />
-                  </div>
+                  {!showFaceIdOptions && (
+                    <button
+                      type="button"
+                      onClick={() => setShowFaceIdOptions(true)}
+                      className="w-full rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 px-4 py-3 text-sm font-medium text-white transition-all hover:bg-white/20"
+                    >
+                      🔐 Show Face ID Options
+                    </button>
+                  )}
+                  
+                  {showFaceIdOptions && (
+                    <Suspense fallback={
+                      <div className="rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 p-4 text-center">
+                        <div className="flex items-center justify-center gap-2 text-white text-sm">
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                          Loading Face ID...
+                        </div>
+                      </div>
+                    }>
+                      <div className="space-y-3">
+                        <div className="rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 p-1">
+                          <FaceIdLogin
+                            onSuccess={handleFaceIdSuccess}
+                            onError={handleFaceIdError}
+                            disabled={loading}
+                          />
+                        </div>
 
-                  <div className="rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 p-1">
-                    <CameraFaceIdLogin
-                      onSuccess={handleFaceIdSuccess}
-                      onError={handleFaceIdError}
-                      disabled={loading}
-                      userEmail={emailOrPhone.trim()}
-                    />
-                  </div>
+                        <div className="rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 p-1">
+                          <CameraFaceIdLogin
+                            onSuccess={handleFaceIdSuccess}
+                            onError={handleFaceIdError}
+                            disabled={loading}
+                            userEmail={emailOrPhone.trim()}
+                          />
+                        </div>
+                      </div>
+                    </Suspense>
+                  )}
 
                   {/* Google */}
                   <div className="flex min-h-[52px] items-center justify-center rounded-2xl bg-white p-2 shadow-md transition-all hover:shadow-lg">

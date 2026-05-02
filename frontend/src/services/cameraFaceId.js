@@ -7,15 +7,20 @@
  * Backend: CPU (via @tensorflow/tfjs-backend-cpu) — works on every device
  * regardless of WebGL or WASM support. WebGL is faster but unavailable in
  * many environments (VMs, some browsers, hardware acceleration disabled).
+ * 
+ * ✅ OPTIMIZED: Lazy imports to prevent TensorFlow from loading on page load
  */
 
-import * as faceapi from '@vladmandic/face-api';
-import '@tensorflow/tfjs-backend-cpu';
+// ✅ DO NOT import TensorFlow or face-api at the top level!
+// This causes immediate initialization and duplicate kernel registration
+// Instead, we'll import them dynamically when needed
 
 // ── Model loading ─────────────────────────────────────────────────────────────
 
 let _modelsLoaded = false;
 let _loadPromise = null;
+let _faceapi = null; // ✅ Store face-api reference after dynamic import
+let _tf = null; // ✅ Store TensorFlow reference after dynamic import
 
 const LOCAL_MODEL_URL = '/models';
 const CDN_MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.14/model';
@@ -32,34 +37,55 @@ const isLocalModelAvailable = async () => {
   }
 };
 
+// ✅ Lazy load TensorFlow and face-api ONLY when needed
+const loadLibraries = async () => {
+  if (_faceapi && _tf) return { faceapi: _faceapi, tf: _tf };
+  
+  try {
+    // Dynamic imports - only loaded when this function is called
+    const [faceapiModule, tfModule] = await Promise.all([
+      import('@vladmandic/face-api'),
+      import('@tensorflow/tfjs-backend-cpu')
+    ]);
+    
+    _faceapi = faceapiModule;
+    _tf = faceapiModule.tf;
+    
+    return { faceapi: _faceapi, tf: _tf };
+  } catch (error) {
+    console.error('[FaceID] Failed to load libraries:', error);
+    throw new Error('Failed to load Face ID libraries');
+  }
+};
+
 export const loadFaceApiModels = async () => {
   if (_modelsLoaded) return true;
   if (_loadPromise) return _loadPromise;
 
   _loadPromise = (async () => {
-    // ── Step 1: initialise TensorFlow backend explicitly ──────────────────
-    // This MUST happen before any faceapi call.
-    // We try cpu first (universal), then wasm, then webgl.
-    // Without this, tf.js tries webgl → fails → tries wasm → fails due to
-    // wrong MIME type → throws "backend not initialised" and models never load.
+    // ✅ Step 1: Load libraries dynamically
+    const { faceapi, tf } = await loadLibraries();
+    
+    // ✅ Step 2: Initialize TensorFlow backend explicitly (ONLY ONCE)
     try {
-      const tf = faceapi.tf;
-      if (tf) {
+      if (tf && !tf.getBackend()) {
         await tf.setBackend('cpu');
         await tf.ready();
         console.log('[FaceID] TF backend:', tf.getBackend());
+      } else if (tf) {
+        console.log('[FaceID] TF backend already initialized:', tf.getBackend());
       }
     } catch (backendErr) {
       console.warn('[FaceID] Could not set CPU backend explicitly:', backendErr.message);
       // Continue anyway — face-api may still work
     }
 
-    // ── Step 2: probe local model files ───────────────────────────────────
+    // ✅ Step 3: Probe local model files
     const useLocal = await isLocalModelAvailable();
     const modelUrl = useLocal ? LOCAL_MODEL_URL : CDN_MODEL_URL;
-    console.log(`[FaceID] Loading models from: ${modelUrl}`);
+    console.log(`Loading models from ${modelUrl}`);
 
-    // ── Step 3: load with timeout ─────────────────────────────────────────
+    // ✅ Step 4: Load with timeout
     const withTimeout = (promise, ms, label) =>
       Promise.race([
         promise,
@@ -82,7 +108,7 @@ export const loadFaceApiModels = async () => {
         useLocal ? 'local' : 'CDN'
       );
       _modelsLoaded = true;
-      console.log('[FaceID] Models loaded successfully.');
+      console.log('Models loaded successfully');
       return true;
     } catch (err) {
       _loadPromise = null;
@@ -134,10 +160,10 @@ export const isCameraAvailable = async () => {
  * Returns the detection object or null if no face found.
  */
 export const detectFaceInFrame = async (videoElement) => {
-  if (!_modelsLoaded) return null;
+  if (!_modelsLoaded || !_faceapi) return null;
   try {
-    return await faceapi
-      .detectSingleFace(videoElement, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.4 }))
+    return await _faceapi
+      .detectSingleFace(videoElement, new _faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.4 }))
       .withFaceLandmarks();
   } catch {
     return null;
@@ -151,17 +177,17 @@ export const detectFaceInFrame = async (videoElement) => {
  * Throws with a precise message on every failure mode.
  */
 export const captureFaceData = async (videoElement) => {
-  if (!_modelsLoaded) {
+  if (!_modelsLoaded || !_faceapi) {
     throw new Error('Modèles non chargés. Attendez le chargement complet avant de capturer.');
   }
   if (!videoElement || videoElement.readyState < 2) {
     throw new Error('Caméra non initialisée. Démarrez la caméra et réessayez.');
   }
 
-  const detection = await faceapi
+  const detection = await _faceapi
     .detectSingleFace(
       videoElement,
-      new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.5 })
+      new _faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.5 })
     )
     .withFaceLandmarks()
     .withFaceDescriptor();

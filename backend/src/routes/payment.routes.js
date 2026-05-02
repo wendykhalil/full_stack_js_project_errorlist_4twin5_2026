@@ -5,7 +5,17 @@ const { authRequired } = require('../middleware/authMiddleware');
 const { upsertSubscription } = require('../modules/subscription/subscription.service');
 const PromoCode = require('../models/PromoCode');
 
-const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+// Lazy initialization - only create stripe instance when needed
+let stripe;
+function getStripe() {
+  if (!stripe) {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      throw new Error('STRIPE_SECRET_KEY is not defined in environment variables');
+    }
+    stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+  }
+  return stripe;
+}
 
 // Create payment intent
 router.post('/create-payment-intent', express.json(), authRequired, async (req, res) => {
@@ -13,7 +23,7 @@ router.post('/create-payment-intent', express.json(), authRequired, async (req, 
     const { amount, plan } = req.body;
     const userId = String(req.user._id);
 
-    const paymentIntent = await stripe.paymentIntents.create({
+    const paymentIntent = await getStripe().paymentIntents.create({
       amount: Math.round(amount * 100),
       currency: 'eur',
       metadata: { userId, plan: plan || 'unknown' },
@@ -75,7 +85,7 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
   let event;
 
   try {
-    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+    event = getStripe().webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
   } catch (err) {
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
