@@ -7,7 +7,7 @@ metadata:
     app: bmp-backend
     tier: backend
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: bmp-backend
@@ -28,8 +28,8 @@ spec:
     spec:
       containers:
         - name: backend
-          image: bmptn/bmp-backend:latest
-          imagePullPolicy: Always
+          image: bmp-backend:latest
+          imagePullPolicy: Never
           ports:
             - containerPort: 5000
               name: http

@@ -7,7 +7,7 @@ metadata:
     app: bmp-frontend
     tier: frontend
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: bmp-frontend
@@ -24,8 +24,8 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: bmptn/bmp-frontend:latest
-          imagePullPolicy: Always
+          image: bmp-frontend:latest
+          imagePullPolicy: Never
           ports:
             - containerPort: 80
               name: http
