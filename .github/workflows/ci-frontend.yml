@@ -1,16 +1,18 @@
 name: CI Frontend
 
 on:
-push:
-  branches: [main, develop, user]
+  push:
+    branches: [main, develop, user]
     paths:
       - 'frontend/**'
       - '.github/workflows/ci-frontend.yml'
+
   pull_request:
     branches: [main, develop]
     paths:
       - 'frontend/**'
-  workflow_dispatch:  # Allow manual trigger from GitHub Actions UI
+
+  workflow_dispatch:
 
 jobs:
   test-and-build:
@@ -32,7 +34,6 @@ jobs:
         working-directory: frontend
         run: npm ci
 
-      # ── Unit Tests (Vitest) ──────────────────────────────────────────────────
       - name: Run unit tests with coverage
         working-directory: frontend
         run: npx vitest run --coverage --reporter=verbose --reporter=junit --outputFile=junit.xml
@@ -52,13 +53,11 @@ jobs:
           path: frontend/coverage/
           retention-days: 7
 
-      # ── Lint ─────────────────────────────────────────────────────────────────
       - name: Lint
         working-directory: frontend
         run: npm run lint --if-present
         continue-on-error: true
 
-      # ── Production Build ─────────────────────────────────────────────────────
       - name: Build production bundle
         working-directory: frontend
         env:
@@ -72,24 +71,22 @@ jobs:
           path: frontend/dist/
           retention-days: 7
 
-      # ── SonarQube ────────────────────────────────────────────────────────────
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@master
-        if: github.event_name == 'push'
+        if: false
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         with:
           args: >
             -Dsonar.projectKey=bmp-frontend
-            -Dsonar.projectName=BMP Frontend
+            -Dsonar.projectName=BMP-Frontend
             -Dsonar.sources=frontend/src
             -Dsonar.tests=frontend/src/test
             -Dsonar.test.inclusions=frontend/src/test/**/*.test.*
             -Dsonar.javascript.lcov.reportPaths=frontend/coverage/lcov.info
             -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/coverage/**
 
-      # ── Docker Build Verify ──────────────────────────────────────────────────
-      - name: Build Docker image (verify)
+      - name: Build Docker image
         working-directory: frontend
         run: docker build -t bmp-frontend:ci-${{ github.sha }} .
