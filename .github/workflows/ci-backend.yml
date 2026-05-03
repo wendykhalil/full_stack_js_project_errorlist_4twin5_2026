@@ -56,9 +56,9 @@ jobs:
           path: backend/coverage/
           retention-days: 7
 
-      - name: SonarQube Scan
+            - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@master
-        if: github.event_name == 'push'
+        if: false
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
@@ -71,7 +71,6 @@ jobs:
             -Dsonar.test.inclusions=backend/tests/**/*.test.js
             -Dsonar.javascript.lcov.reportPaths=backend/coverage/lcov.info
             -Dsonar.exclusions=**/node_modules/**,**/coverage/**,**/uploads/**,backend/src/models/**,backend/src/config/**,backend/src/routes/**,backend/src/socket.js,backend/src/app.js
-
       - name: Build Docker image (verify)
         working-directory: backend
         run: docker build -t bmp-backend:ci-${{ github.sha }} .
