@@ -41,7 +41,7 @@ jobs:
           JWT_SECRET: test-secret-ci
         run: npm test -- --coverage --runInBand --forceExit
 
-      - name: Upload test results (JUnit)
+      - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -56,7 +56,7 @@ jobs:
           path: backend/coverage/
           retention-days: 7
 
-            - name: SonarQube Scan
+      - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@master
         if: false
         env:
@@ -71,6 +71,7 @@ jobs:
             -Dsonar.test.inclusions=backend/tests/**/*.test.js
             -Dsonar.javascript.lcov.reportPaths=backend/coverage/lcov.info
             -Dsonar.exclusions=**/node_modules/**,**/coverage/**,**/uploads/**,backend/src/models/**,backend/src/config/**,backend/src/routes/**,backend/src/socket.js,backend/src/app.js
-      - name: Build Docker image (verify)
+
+      - name: Build Docker image
         working-directory: backend
         run: docker build -t bmp-backend:ci-${{ github.sha }} .
