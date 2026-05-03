@@ -35,81 +35,8 @@ export default defineConfig({
     // Enable code splitting and chunking
     rollupOptions: {
       output: {
-        // ✅ AGGRESSIVE MANUAL CHUNK SPLITTING
-        manualChunks: (id) => {
-          // Core React libraries
-          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
-            return 'react-core';
-          }
-          
-          // React Router
-          if (id.includes('node_modules/react-router-dom/') || id.includes('node_modules/react-router/')) {
-            return 'react-router';
-          }
-          
-          // Redux & State Management
-          if (id.includes('node_modules/@reduxjs/') || id.includes('node_modules/react-redux/') || id.includes('node_modules/redux')) {
-            return 'redux';
-          }
-          
-          // ✅ HEAVY LIBRARIES - Separate chunks for lazy loading
-          // Charts library (recharts ~1.1MB)
-          if (id.includes('node_modules/recharts/') || id.includes('node_modules/d3-')) {
-            return 'charts';
-          }
-          
-          // Excel library (xlsx ~850KB)
-          if (id.includes('node_modules/xlsx/')) {
-            return 'xlsx';
-          }
-          
-          // PDF library (jspdf ~670KB)
-          if (id.includes('node_modules/jspdf/') || id.includes('node_modules/html2canvas/')) {
-            return 'pdf';
-          }
-          
-          // Icons library (lucide-react ~900KB) - split by usage
-          if (id.includes('node_modules/lucide-react/')) {
-            return 'icons';
-          }
-          
-          // TensorFlow & Face Recognition (very heavy)
-          if (id.includes('node_modules/@tensorflow/') || id.includes('node_modules/@vladmandic/face-api')) {
-            return 'tensorflow';
-          }
-          
-          // Stripe SDK
-          if (id.includes('node_modules/@stripe/')) {
-            return 'stripe';
-          }
-          
-          // i18n libraries
-          if (id.includes('node_modules/i18next/') || id.includes('node_modules/react-i18next/')) {
-            return 'i18n';
-          }
-          
-          // Socket.io
-          if (id.includes('node_modules/socket.io-client/')) {
-            return 'socket';
-          }
-          
-          // Axios & HTTP
-          if (id.includes('node_modules/axios/')) {
-            return 'http';
-          }
-          
-          // UI Libraries
-          if (id.includes('node_modules/clsx/') || id.includes('node_modules/tailwind')) {
-            return 'ui-utils';
-          }
-          
-          // Other vendor libraries
-          if (id.includes('node_modules/')) {
-            return 'vendor';
-          }
-        },
-        
-        // Optimize chunk file names for better caching
+        // Disabled manual chunks — caused React singleton issues (useLayoutEffect undefined)
+        // Let Vite handle splitting automatically
         chunkFileNames: 'assets/js/[name]-[hash].js',
         entryFileNames: 'assets/js/[name]-[hash].js',
         assetFileNames: (assetInfo) => {

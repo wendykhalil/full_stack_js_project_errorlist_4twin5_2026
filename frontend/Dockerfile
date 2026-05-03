@@ -6,7 +6,7 @@ ARG VITE_API_URL=http://localhost:5000/api
 ENV VITE_API_URL=$VITE_API_URL
 
 COPY package*.json ./
-RUN npm ci
+RUN npm ci && npm install terser
 
 COPY . .
 RUN npm run build
