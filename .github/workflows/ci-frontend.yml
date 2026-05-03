@@ -32,8 +32,9 @@ jobs:
 
       - name: Install dependencies
         working-directory: frontend
-        run: npm ci
+        run: npm ci && npm install terser --save-dev
 
+      # ── Unit Tests ───────────────────────────────────────────────────────────
       - name: Run unit tests with coverage
         working-directory: frontend
         run: npx vitest run --coverage --reporter=verbose --reporter=junit --outputFile=junit.xml
@@ -53,11 +54,13 @@ jobs:
           path: frontend/coverage/
           retention-days: 7
 
+      # ── Lint (warnings only, never fails pipeline) ───────────────────────────
       - name: Lint
         working-directory: frontend
         run: npm run lint --if-present
         continue-on-error: true
 
+      # ── Production Build ─────────────────────────────────────────────────────
       - name: Build production bundle
         working-directory: frontend
         env:
@@ -71,22 +74,7 @@ jobs:
           path: frontend/dist/
           retention-days: 7
 
-      - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@master
-        if: false
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        with:
-          args: >
-            -Dsonar.projectKey=bmp-frontend
-            -Dsonar.projectName=BMP-Frontend
-            -Dsonar.sources=frontend/src
-            -Dsonar.tests=frontend/src/test
-            -Dsonar.test.inclusions=frontend/src/test/**/*.test.*
-            -Dsonar.javascript.lcov.reportPaths=frontend/coverage/lcov.info
-            -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/coverage/**
-
-      - name: Build Docker image
+      # ── Docker Build Verify ──────────────────────────────────────────────────
+      - name: Build Docker image (verify)
         working-directory: frontend
         run: docker build -t bmp-frontend:ci-${{ github.sha }} .
