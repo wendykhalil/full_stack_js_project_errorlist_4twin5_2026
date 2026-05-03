@@ -2,15 +2,17 @@ name: CI Backend
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, user]
     paths:
       - 'backend/**'
       - '.github/workflows/ci-backend.yml'
+
   pull_request:
     branches: [main, develop]
     paths:
       - 'backend/**'
-  workflow_dispatch:  # Allow manual trigger from GitHub Actions UI
+
+  workflow_dispatch:
 
 jobs:
   test:
