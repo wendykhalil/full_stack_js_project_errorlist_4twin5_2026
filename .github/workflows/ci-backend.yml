@@ -64,10 +64,10 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        with:
+               with:
           args: >
             -Dsonar.projectKey=bmp-fullstack
-            -Dsonar.projectName=BMP.tn Full Stack
+            -Dsonar.projectName="BMP.tn Full Stack"
             -Dsonar.sources=backend/src
             -Dsonar.tests=backend/tests
             -Dsonar.test.inclusions=backend/tests/**/*.test.js
