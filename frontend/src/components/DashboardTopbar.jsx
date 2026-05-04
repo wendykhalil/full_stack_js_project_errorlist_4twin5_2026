@@ -17,6 +17,27 @@ import Notification from "./Notification";
 
 const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "");
 
+// ✅ Isolated clock component — only this re-renders every second, not the whole topbar
+const LiveClock = React.memo(function LiveClock() {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(id);
+  }, []);
+  return (
+    <div className="min-w-[180px] text-sm font-medium text-slate-600 dark:text-slate-300">
+      {new Intl.DateTimeFormat("fr-FR", {
+        weekday: "short",
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(now)}
+    </div>
+  );
+});
+
 const ROLE_CONFIG = {
   ADMIN: {
     home: "/admin",
@@ -116,7 +137,6 @@ export default function DashboardTopbar({ role = "ARTISAN", unreadCount = 0, onL
   const { user, token } = useAuth();
   const [query, setQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
-  const [now, setNow] = useState(() => new Date());
   const [avatarUrl, setAvatarUrl] = useState("");
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
@@ -277,10 +297,7 @@ export default function DashboardTopbar({ role = "ARTISAN", unreadCount = 0, onL
     setIsFocused(false);
   }, [pathname]);
 
-  useEffect(() => {
-    const id = window.setInterval(() => setNow(new Date()), 1000);
-    return () => window.clearInterval(id);
-  }, []);
+  // ✅ Clock moved to LiveClock component — no more setInterval in topbar
 
   useEffect(() => {
     let cancelled = false
@@ -386,16 +403,7 @@ export default function DashboardTopbar({ role = "ARTISAN", unreadCount = 0, onL
     <>
       <Notification notification={notification} onClose={hideNotification} />
       <div className="flex h-16 items-center justify-between gap-4 border-b border-slate-200 bg-white px-5 dark:border-slate-800 dark:bg-slate-900">
-      <div className="min-w-[180px] text-sm font-medium text-slate-600 dark:text-slate-300">
-        {new Intl.DateTimeFormat("fr-FR", {
-          weekday: "short",
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        }).format(now)}
-      </div>
+      <LiveClock />
 
       <div className="relative flex flex-1 justify-center px-2">
         <form onSubmit={submitQuickJump} className="w-full max-w-lg">

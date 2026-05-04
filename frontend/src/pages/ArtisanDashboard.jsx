@@ -49,14 +49,14 @@ const activityMeta = {
 import ReadCardButton from '../components/ReadCardButton';
 
 /* ── Small reusable stat card ── */
-function StatCard({ title, value, helper, icon, iconBg, iconFg, hint }) {
+const StatCard = React.memo(function StatCard({ title, value, helper, icon, iconBg, iconFg, hint }) {
   const cardRef = React.useRef();
   const card = (
     <div ref={cardRef} className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5">
       <div className="absolute right-0 top-0 h-24 w-24 -translate-y-8 translate-x-8 rounded-full bg-gradient-to-br from-indigo-50 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
       <div className="flex items-start justify-between">
         <div className="space-y-1.5 flex-1 min-w-0">
-          <p className="text-xs font-bold uppercase tracking-widest text-slate-400">{title}</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-slate-600">{title}</p>
           <p className="text-3xl font-bold tracking-tight text-slate-900">{value}</p>
           <p className="text-xs text-slate-500">{helper}</p>
         </div>
@@ -70,10 +70,10 @@ function StatCard({ title, value, helper, icon, iconBg, iconFg, hint }) {
     </div>
   );
   return hint ? <Hint text={hint}>{card}</Hint> : card;
-}
+});
 
 /* ── Quick action card ── */
-function ActionCard({ to, icon, label, description, iconBg, iconFg, hint }) {
+const ActionCard = React.memo(function ActionCard({ to, icon, label, description, iconBg, iconFg, hint }) {
   const card = (
     <Link
       to={to}
@@ -91,10 +91,10 @@ function ActionCard({ to, icon, label, description, iconBg, iconFg, hint }) {
     </Link>
   );
   return hint ? <Hint text={hint}>{card}</Hint> : card;
-}
+});
 
 /* ── Section header ── */
-function SectionHeader({ icon, title, subtitle, action }) {
+const SectionHeader = React.memo(function SectionHeader({ icon, title, subtitle, action }) {
   return (
     <div className="flex items-center justify-between mb-5">
       <div className="flex items-center gap-3">
@@ -109,7 +109,7 @@ function SectionHeader({ icon, title, subtitle, action }) {
       {action}
     </div>
   );
-}
+});
 
 export default function ArtisanDashboard() {
   const { token } = useAuth();
@@ -124,10 +124,20 @@ export default function ArtisanDashboard() {
     if (!silent) setLoading(true);
     else setRefreshing(true);
     try {
-      const data = await getArtisanDashboardSummary({ token });
+      // ✅ Parallel API calls — saves one full round-trip
+      const [data, subRes] = await Promise.all([
+        getArtisanDashboardSummary({ token }),
+        getMySubscription({ token }).catch(() => null),
+      ]);
       setSummary(data);
       setError("");
       setLastUpdated(new Date());
+
+      // Process subscription warning from parallel result
+      const d = subRes?.data;
+      if (d && d.daysUntilExpiry !== null && d.daysUntilExpiry <= 7 && d.status === 'ACTIVE' && d.plan !== 'FREE') {
+        setSubWarning({ days: d.daysUntilExpiry, isOnTrial: d.isOnTrial });
+      }
     } catch (err) {
       setError(err.message || "Impossible de charger le tableau de bord.");
     } finally {
@@ -139,12 +149,6 @@ export default function ArtisanDashboard() {
   useEffect(() => {
     if (!token) return;
     load();
-    getMySubscription({ token }).then(res => {
-      const d = res?.data;
-      if (d && d.daysUntilExpiry !== null && d.daysUntilExpiry <= 7 && d.status === 'ACTIVE' && d.plan !== 'FREE') {
-        setSubWarning({ days: d.daysUntilExpiry, isOnTrial: d.isOnTrial });
-      }
-    }).catch(() => {});
     const interval = setInterval(() => load(true), 30000);
     return () => clearInterval(interval);
   }, [token]);
@@ -316,7 +320,7 @@ export default function ArtisanDashboard() {
             <div className="mb-6">
               <div className="flex items-center gap-2 mb-4">
                 <div className="h-3 w-1 rounded-full bg-indigo-400" />
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Projets &amp; Documents</p>
+                <p className="text-xs font-bold text-slate-600 uppercase tracking-widest">Projets &amp; Documents</p>
               </div>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <ActionCard
@@ -362,7 +366,7 @@ export default function ArtisanDashboard() {
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <div className="h-3 w-1 rounded-full bg-purple-400" />
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Outils IA &amp; Analyse</p>
+                <p className="text-xs font-bold text-slate-600 uppercase tracking-widest">Outils IA &amp; Analyse</p>
               </div>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <ActionCard

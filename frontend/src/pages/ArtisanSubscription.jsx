@@ -1,16 +1,40 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Elements } from '@stripe/react-stripe-js';
 import SimpleFooter from '../components/Footer';
-import { loadStripe } from '@stripe/stripe-js';
 import { ShieldCheck, CreditCard, ArrowRight, AlertCircle, CheckCircle, Tag, X, Crown, Clock, XCircle, History, Zap, Check } from 'lucide-react';
-import StripePaymentForm from '../components/StripePaymentForm';
 import { useAuth } from '../auth/AuthContext';
 import { validatePromoCode, getMySubscription, cancelSubscription, startTrial } from '../auth/api';
 import { Hint } from '../components/MouseTooltip';
 import ReadCardButton from '../components/ReadCardButton';
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+// ✅ Stripe loaded lazily — only when payment form is shown
+let stripePromise = null;
+function getStripePromise() {
+  if (!stripePromise) {
+    stripePromise = import('@stripe/stripe-js').then(({ loadStripe }) =>
+      loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY)
+    );
+  }
+  return stripePromise;
+}
+
+// Lazy load Stripe Elements + StripePaymentForm only when needed
+const LazyStripePayment = React.lazy(async () => {
+  const [{ Elements }, { default: StripePaymentForm }, stripe] = await Promise.all([
+    import('@stripe/react-stripe-js'),
+    import('../components/StripePaymentForm'),
+    getStripePromise(),
+  ]);
+  // Wrap StripePaymentForm in Elements provider
+  function StripeWrapper({ amount, plan, promoCode, onSuccess, onError }) {
+    return (
+      <Elements stripe={stripe}>
+        <StripePaymentForm amount={amount} plan={plan} promoCode={promoCode} onSuccess={onSuccess} onError={onError} />
+      </Elements>
+    );
+  }
+  return { default: StripeWrapper };
+});
 
 const PLAN_FEATURES = {
   FREE:  { label: 'Gratuit',  color: 'slate',  price: 0 },
@@ -348,15 +372,15 @@ export default function ArtisanSubscription() {
                   <p className="mt-1 text-xs text-emerald-600">Redirection en cours…</p>
                 </div>
               ) : (
-                <Elements stripe={stripePromise}>
-                  <StripePaymentForm
+                <React.Suspense fallback={<div className="mt-4 py-6 text-center text-sm text-slate-400">Chargement du paiement…</div>}>
+                  <LazyStripePayment
                     amount={getFinalPrice(plans[selectedPlan].price)}
                     plan={selectedPlan}
                     promoCode={promoCode}
                     onSuccess={handlePaymentSuccess}
                     onError={e => setMessage('❌ ' + e)}
                   />
-                </Elements>
+                </React.Suspense>
               )}
               <p className="mt-3 text-center text-xs text-slate-400">Paiement sécurisé par Stripe</p>
             </div>

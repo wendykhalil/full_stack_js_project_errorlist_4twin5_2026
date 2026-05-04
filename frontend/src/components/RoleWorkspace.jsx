@@ -319,6 +319,7 @@ export default function RoleWorkspace({
                 onClick={() => navigate(`${getRoleBasePath(role)}/messages`)}
                 className="relative rounded-full p-2 text-blue-200 dark:text-slate-400 hover:bg-white/10 dark:hover:bg-slate-700/50"
                 title="Messages"
+                aria-label="Messages"
               >
                 <MessageCircle className="h-4 w-4" />
                 {unreadCount > 0 && (
@@ -332,6 +333,7 @@ export default function RoleWorkspace({
                 disabled={isUpdatingLocation}
                 className="relative rounded-full p-2 text-blue-200 dark:text-slate-400 hover:bg-white/10 dark:hover:bg-slate-700/50 disabled:opacity-50"
                 title={isUpdatingLocation ? "Mise à jour de la position..." : "Localisation rapide"}
+                aria-label={isUpdatingLocation ? "Mise à jour de la position..." : "Localisation rapide"}
               >
                 {isUpdatingLocation ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -339,12 +341,17 @@ export default function RoleWorkspace({
                   <MapPin className="h-4 w-4" />
                 )}
               </button>
-              <button className="rounded-full p-2 text-blue-200 dark:text-slate-400 hover:bg-white/10 dark:hover:bg-slate-700/50">
+              <button
+                className="rounded-full p-2 text-blue-200 dark:text-slate-400 hover:bg-white/10 dark:hover:bg-slate-700/50"
+                aria-label="Notifications"
+              >
                 <Bell className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setIsMobileMenuOpen((v) => !v)}
                 className="rounded-md p-2 text-blue-200 dark:text-slate-400 hover:bg-white/10 dark:hover:bg-slate-700/50"
+                aria-label={isMobileMenuOpen ? "Fermer le menu" : "Ouvrir le menu"}
+                aria-expanded={isMobileMenuOpen}
               >
                 {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>

@@ -2,9 +2,18 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 import { viteCommonjs } from '@originjs/vite-plugin-commonjs'
+import { compression } from 'vite-plugin-compression2'
 
 export default defineConfig({
-  plugins: [react(), viteCommonjs()],
+  plugins: [
+    react(),
+    viteCommonjs(),
+    // Gzip + Brotli compression for all JS/CSS assets
+    compression({
+      algorithms: ['gzip', 'brotliCompress'],
+      exclude: [/\.(png|jpe?g|gif|webp|svg|ico|woff2?)$/i],
+    }),
+  ],
   
   // ============================================================================
   // RESOLVE CONFIGURATION - Fix ESM/CommonJS compatibility issues
@@ -32,9 +41,59 @@ export default defineConfig({
     
     // Enable code splitting and chunking
     rollupOptions: {
+      // ✅ Externalize missing peer deps that are excluded from the bundle
+      external: (id) => {
+        // TensorFlow peer deps — these are loaded separately or not at all in browser
+        if (id === '@tensorflow/tfjs-core') return true;
+        if (id === '@tensorflow/tfjs-layers') return true;
+        if (id === '@tensorflow/tfjs-converter') return true;
+        return false;
+      },
       output: {
-        // Disabled manual chunks — caused React singleton issues (useLayoutEffect undefined)
-        // Let Vite handle splitting automatically
+        // ✅ Manual chunk splitting — keeps React in one chunk to avoid singleton issues
+        // Each vendor group is loaded only when a page that needs it is visited
+        manualChunks(id) {
+          // React core — always needed, keep together
+          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/') || id.includes('node_modules/scheduler/')) {
+            return 'vendor-react';
+          }
+          // Router — needed on first navigation
+          if (id.includes('node_modules/react-router') || id.includes('node_modules/@remix-run/')) {
+            return 'vendor-router';
+          }
+          // Socket.io — only needed after login
+          if (id.includes('node_modules/socket.io-client') || id.includes('node_modules/engine.io-client')) {
+            return 'vendor-socket';
+          }
+          // Stripe — only on subscription page
+          if (id.includes('node_modules/@stripe/')) {
+            return 'vendor-stripe';
+          }
+          // Charts — only on dashboard/analytics pages
+          if (id.includes('node_modules/recharts') || id.includes('node_modules/d3-') || id.includes('node_modules/victory-')) {
+            return 'vendor-charts';
+          }
+          // i18n — needed early but can be split
+          if (id.includes('node_modules/i18next') || id.includes('node_modules/react-i18next')) {
+            return 'vendor-i18n';
+          }
+          // Heavy export libs — loaded on demand via lazyImports.js
+          if (id.includes('node_modules/xlsx') || id.includes('node_modules/jspdf') || id.includes('node_modules/html2canvas')) {
+            return 'vendor-exports';
+          }
+          // TensorFlow / Face-API — only on FaceId pages
+          if (id.includes('node_modules/@tensorflow') || id.includes('node_modules/@vladmandic')) {
+            return 'vendor-ml';
+          }
+          // Lucide icons — tree-shaken but still group them
+          if (id.includes('node_modules/lucide-react')) {
+            return 'vendor-icons';
+          }
+          // All other node_modules
+          if (id.includes('node_modules/')) {
+            return 'vendor-misc';
+          }
+        },
         chunkFileNames: 'assets/js/[name]-[hash].js',
         entryFileNames: 'assets/js/[name]-[hash].js',
         assetFileNames: (assetInfo) => {
@@ -51,8 +110,9 @@ export default defineConfig({
       },
     },
     
-    // Increase chunk size warning limit (we're using code splitting)
-    chunkSizeWarningLimit: 1000,
+    // Increase chunk size warning limit — vendor-ml (TensorFlow) is intentionally large
+    // and only loaded on the FaceId page
+    chunkSizeWarningLimit: 1500,
     
     // ✅ AGGRESSIVE MINIFICATION
     minify: 'terser',
@@ -88,27 +148,25 @@ export default defineConfig({
   // DEPENDENCY OPTIMIZATION
   // ============================================================================
   optimizeDeps: {
-    // ✅ PRE-BUNDLE COMMON DEPENDENCIES
+    // ✅ PRE-BUNDLE COMMON DEPENDENCIES (speeds up dev server cold start)
     include: [
       'react',
       'react-dom',
       'react-router-dom',
       'axios',
-      'clsx',
       'socket.io-client',
-      'lodash',
-      'lodash/get',
-      'lodash/set',
-      'lodash/merge',
-      'lodash/cloneDeep',
+      'i18next',
+      'react-i18next',
     ],
     
     // ✅ EXCLUDE HEAVY LIBRARIES FROM PRE-BUNDLING
-    // These will be loaded on-demand
+    // These will be loaded on-demand via dynamic import()
     exclude: [
       '@tensorflow/tfjs',
+      '@tensorflow/tfjs-backend-cpu',
       '@vladmandic/face-api',
       '@stripe/stripe-js',
+      '@stripe/react-stripe-js',
       'recharts',
       'xlsx',
       'jspdf',

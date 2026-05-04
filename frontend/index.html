@@ -31,6 +31,13 @@
     <!-- Preconnect to external domains for faster loading -->
     <link rel="preconnect" href="https://accounts.google.com" />
     <link rel="dns-prefetch" href="https://accounts.google.com" />
+    <!-- Preconnect to Stripe (loaded on subscription page) -->
+    <link rel="preconnect" href="https://js.stripe.com" />
+    <link rel="dns-prefetch" href="https://js.stripe.com" />
+    <!-- Preconnect to API server -->
+    <link rel="preconnect" href="http://localhost:5000" />
+    <!-- Preconnect to IP geolocation (used in api.js) -->
+    <link rel="dns-prefetch" href="https://ipapi.co" />
   </head>
   <body>
     <div id="root"></div>

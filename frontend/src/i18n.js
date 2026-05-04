@@ -1,6 +1,5 @@
 import i18n from 'i18next';
 import { initReactI18next, useTranslation } from 'react-i18next';
-import frTranslation from './locales/fr/translation.json';
 import {
   translateDOM, restoreDOM,
   startObserver, stopObserver,
@@ -19,17 +18,24 @@ function applyLangToDOM(lang) {
   document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
 }
 
-// i18next only handles the FR JSON keys used by t() — DOM translation handles everything else
+// ✅ Initialize i18n with empty resources first, then load FR JSON dynamically
+// This avoids blocking the initial JS parse with a large JSON import
 i18n
   .use(initReactI18next)
   .init({
-    resources: { fr: { translation: frTranslation } },
+    resources: {},
     lng: 'fr',
     fallbackLng: 'fr',
     supportedLngs: ['fr', 'en', 'ar'],
     interpolation: { escapeValue: false },
     react: { useSuspense: false },
   });
+
+// Load FR translation asynchronously — doesn't block initial render
+import('./locales/fr/translation.json').then((module) => {
+  const frTranslation = module.default || module;
+  i18n.addResourceBundle('fr', 'translation', frTranslation, true, true);
+}).catch(() => {});
 
 // Apply saved language on startup
 const savedLang = getSavedLang();

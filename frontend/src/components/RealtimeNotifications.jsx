@@ -26,7 +26,7 @@ function Toast({ item, onClose }) {
   );
 }
 
-export default function RealtimeNotifications() {
+function RealtimeNotifications() {
   const { token, isAuthenticated } = useAuth();
   const socketRef = useRef(null);
   const [toasts, setToasts] = useState([]);
@@ -44,7 +44,22 @@ export default function RealtimeNotifications() {
       setTimeout(() => setToasts(prev => prev.filter(x => x.id !== item.id)), 8000);
     });
 
-    return () => { try { s.disconnect(); } catch {} socketRef.current = null; };
+    // ✅ bfcache fix: disconnect when page is hidden so browser can cache the page
+    // Reconnect when page becomes visible again
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        try { s.disconnect(); } catch {}
+      } else if (document.visibilityState === 'visible' && !s.connected) {
+        s.connect();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      try { s.disconnect(); } catch {}
+      socketRef.current = null;
+    };
   }, [isAuthenticated, token]);
 
   if (!isAuthenticated) return null;
@@ -57,3 +72,5 @@ export default function RealtimeNotifications() {
     </div>
   );
 }
+
+export default React.memo(RealtimeNotifications);
