@@ -51,9 +51,13 @@ scrape_configs:
       - target_label: __address__
         replacement: blackbox:9115
 
-  # ── Jenkins (if running) ──────────────────────────────────────────────────
+  # ── Jenkins ───────────────────────────────────────────────────────────────
+  # Note: requires Prometheus plugin + auth disabled in Jenkins settings
   - job_name: 'jenkins'
     static_configs:
       - targets: ['host.docker.internal:9090']
     metrics_path: /prometheus
     scrape_interval: 30s
+    basic_auth:
+      username: 'admin'
+      password: 'admin'

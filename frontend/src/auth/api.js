@@ -1,4 +1,10 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// Dynamic API URL — uses current hostname so it works on any network
+// In production (K8s): uses window.location.hostname with NodePort 30500
+// In development: uses localhost:5000
+const API_URL = import.meta.env.VITE_API_URL || 
+  (typeof window !== 'undefined' && window.location.hostname !== 'localhost' 
+    ? `http://${window.location.hostname}:30500/api`
+    : 'http://localhost:5000/api');
 
 let clientMetaPromise = null;
 

@@ -1,9 +1,10 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
+import { viteCommonjs } from '@originjs/vite-plugin-commonjs'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), viteCommonjs()],
   
   // ============================================================================
   // RESOLVE CONFIGURATION - Fix ESM/CommonJS compatibility issues
@@ -11,10 +12,7 @@ export default defineConfig({
   resolve: {
     alias: {
       // Fix debug module ESM/CommonJS compatibility issue
-      // socket.io-client uses debug which has mixed module exports
       'debug': path.resolve(__dirname, 'node_modules/debug/src/browser.js'),
-      
-      // Add path alias for cleaner imports
       '@': path.resolve(__dirname, './src'),
     },
     
@@ -97,7 +95,12 @@ export default defineConfig({
       'react-router-dom',
       'axios',
       'clsx',
-      'socket.io-client', // Include socket.io-client to fix debug module issue
+      'socket.io-client',
+      'lodash',
+      'lodash/get',
+      'lodash/set',
+      'lodash/merge',
+      'lodash/cloneDeep',
     ],
     
     // ✅ EXCLUDE HEAVY LIBRARIES FROM PRE-BUNDLING

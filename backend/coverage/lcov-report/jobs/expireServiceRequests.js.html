@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">66.66% </span>
+                <span class="strong">18.75% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>8/12</span>
+                <span class='fraction'>3/16</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">50% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>2/4</span>
+                <span class='fraction'>0/6</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">50% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>1/2</span>
+                <span class='fraction'>0/2</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">66.66% </span>
+                <span class="strong">18.75% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>8/12</span>
+                <span class='fraction'>3/16</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line medium'></div>
+    <div class='status-line low'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -97,33 +97,51 @@
 <a name='L32'></a><a href='#L32'>32</a>
 <a name='L33'></a><a href='#L33'>33</a>
 <a name='L34'></a><a href='#L34'>34</a>
-<a name='L35'></a><a href='#L35'>35</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L35'></a><a href='#L35'>35</a>
+<a name='L36'></a><a href='#L36'>36</a>
+<a name='L37'></a><a href='#L37'>37</a>
+<a name='L38'></a><a href='#L38'>38</a>
+<a name='L39'></a><a href='#L39'>39</a>
+<a name='L40'></a><a href='#L40'>40</a>
+<a name='L41'></a><a href='#L41'>41</a>
+<a name='L42'></a><a href='#L42'>42</a>
+<a name='L43'></a><a href='#L43'>43</a>
+<a name='L44'></a><a href='#L44'>44</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -136,32 +154,41 @@
  * Runs on an interval set by EXPIRE_SR_INTERVAL_MS (default: every hour).
  * Safe to call multiple times — uses $lt: now so already-cancelled docs are skipped.
  */
+const mongoose = require('mongoose');
 const ServiceRequest = require('../models/ServiceRequest');
 &nbsp;
-async function expireServiceRequests() {
-  try {
-    const now = new Date();
-    const result = await ServiceRequest.updateMany(
+async function <span class="fstat-no" title="function not covered" >expireServiceRequests(</span>) {
+<span class="cstat-no" title="statement not covered" >  try {</span>
+    // ✅ FIX: Check if MongoDB is connected before running query
+<span class="cstat-no" title="statement not covered" >    if (mongoose.connection.readyState !== 1) {</span>
+<span class="cstat-no" title="statement not covered" >      console.warn('[expireServiceRequests] Skipping - MongoDB not connected yet');</span>
+<span class="cstat-no" title="statement not covered" >      return;</span>
+    }
+&nbsp;
+    const now = <span class="cstat-no" title="statement not covered" >new Date();</span>
+    const result = <span class="cstat-no" title="statement not covered" >await ServiceRequest.updateMany(</span>
       {
         status: 'OPEN',
         deadline: { $lt: now, $ne: null },
       },
       { $set: { status: 'CANCELLED' } }
     );
-    if (result.modifiedCount &gt; 0) {
-      console.log(`[expireServiceRequests] Auto-cancelled ${result.modifiedCount} expired request(s)`);
+<span class="cstat-no" title="statement not covered" >    if (result.modifiedCount &gt; 0) {</span>
+<span class="cstat-no" title="statement not covered" >      console.log(`[expireServiceRequests] Auto-cancelled ${result.modifiedCount} expired request(s)`);</span>
     }
   } catch (err) {
-    console.error('[expireServiceRequests] Error:', err.message);
+<span class="cstat-no" title="statement not covered" >    console.error('[expireServiceRequests] Error:', err.message);</span>
   }
 }
 &nbsp;
 function <span class="fstat-no" title="function not covered" >startExpireJob(</span>) {
   const intervalMs = <span class="cstat-no" title="statement not covered" >Number(process.env.EXPIRE_SR_INTERVAL_MS) || 60 * 60 * 1000;</span> // default 1h
-  // Run once immediately on startup, then on interval
-<span class="cstat-no" title="statement not covered" >  expireServiceRequests();</span>
+  
+  // ✅ FIX: Don't run immediately - wait for first interval
+  // This ensures MongoDB connection is established first
 <span class="cstat-no" title="statement not covered" >  setInterval(expireServiceRequests, intervalMs);</span>
 <span class="cstat-no" title="statement not covered" >  console.log(`[expireServiceRequests] Job started — interval: ${intervalMs / 1000}s`);</span>
+<span class="cstat-no" title="statement not covered" >  console.log('[expireServiceRequests] First run will occur after interval delay');</span>
 }
 &nbsp;
 module.exports = { startExpireJob, expireServiceRequests };
@@ -172,7 +199,7 @@ module.exports = { startExpireJob, expireServiceRequests };
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-01T22:13:19.646Z
+                at 2026-05-03T23:02:24.454Z
             </div>
         <script src="../prettify.js"></script>
         <script>

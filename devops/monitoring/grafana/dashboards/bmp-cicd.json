@@ -2,58 +2,82 @@
   "title": "BMP.tn — CI/CD & DevOps",
   "uid": "bmp-cicd",
   "schemaVersion": 38,
-  "version": 1,
-  "refresh": "1m",
-  "time": { "from": "now-24h", "to": "now" },
+  "version": 2,
+  "refresh": "10s",
+  "time": { "from": "now-1h", "to": "now" },
   "tags": ["bmp", "cicd", "devops"],
   "panels": [
     {
       "id": 1,
-      "title": "SonarQube — Code Coverage",
+      "title": "Backend Status",
       "type": "stat",
-      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
-      "targets": [{ "expr": "sonarqube_coverage{project=\"bmp-fullstack\"}", "legendFormat": "Coverage %" }],
-      "fieldConfig": { "defaults": { "unit": "percent", "thresholds": { "steps": [{ "color": "red", "value": 0 }, { "color": "yellow", "value": 60 }, { "color": "green", "value": 70 }] } } }
+      "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
+      "targets": [{ "expr": "up{job=\"bmp-backend\"}", "legendFormat": "Backend" }],
+      "options": { "colorMode": "background", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "mappings": [{ "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }] } }
     },
     {
       "id": 2,
-      "title": "Backend — HTTP Request Rate",
+      "title": "HTTP Requests / sec",
       "type": "timeseries",
-      "gridPos": { "x": 6, "y": 0, "w": 18, "h": 8 },
-      "targets": [
-        { "expr": "sum(rate(bmp_http_requests_total[5m])) by (status_code)", "legendFormat": "{{status_code}}" }
-      ],
+      "gridPos": { "x": 4, "y": 0, "w": 10, "h": 8 },
+      "targets": [{ "expr": "rate(bmp_http_requests_total[1m])", "legendFormat": "{{method}} {{route}} {{status_code}}" }],
       "fieldConfig": { "defaults": { "unit": "reqps" } }
     },
     {
       "id": 3,
-      "title": "Node.js Event Loop Lag",
+      "title": "P95 Response Time",
       "type": "timeseries",
-      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
-      "targets": [{ "expr": "bmp_backend_nodejs_eventloop_lag_seconds", "legendFormat": "Event Loop Lag" }],
+      "gridPos": { "x": 14, "y": 0, "w": 10, "h": 8 },
+      "targets": [{ "expr": "histogram_quantile(0.95, rate(bmp_http_request_duration_seconds_bucket[5m]))", "legendFormat": "P95 latency" }],
       "fieldConfig": { "defaults": { "unit": "s" } }
     },
     {
       "id": 4,
       "title": "Node.js Heap Used",
       "type": "timeseries",
-      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
       "targets": [{ "expr": "bmp_backend_nodejs_heap_size_used_bytes", "legendFormat": "Heap Used" }],
       "fieldConfig": { "defaults": { "unit": "bytes" } }
     },
     {
       "id": 5,
-      "title": "HTTP Status Code Distribution",
-      "type": "piechart",
-      "gridPos": { "x": 0, "y": 16, "w": 8, "h": 8 },
-      "targets": [{ "expr": "sum by (status_code)(bmp_http_requests_total)", "legendFormat": "{{status_code}}" }]
+      "title": "Node.js Event Loop Lag",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "targets": [{ "expr": "bmp_backend_nodejs_eventloop_lag_seconds", "legendFormat": "Event Loop Lag" }],
+      "fieldConfig": { "defaults": { "unit": "s" } }
     },
     {
       "id": 6,
-      "title": "Top Routes by Request Count",
-      "type": "table",
-      "gridPos": { "x": 8, "y": 16, "w": 16, "h": 8 },
-      "targets": [{ "expr": "topk(10, sum by (route, method)(bmp_http_requests_total))", "legendFormat": "{{method}} {{route}}", "instant": true }]
+      "title": "Backend Process Memory (RSS)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
+      "targets": [{ "expr": "bmp_backend_process_resident_memory_bytes", "legendFormat": "RSS Memory" }],
+      "fieldConfig": { "defaults": { "unit": "bytes" } }
+    },
+    {
+      "id": 7,
+      "title": "HTTP Status Code Distribution",
+      "type": "piechart",
+      "gridPos": { "x": 12, "y": 16, "w": 12, "h": 8 },
+      "targets": [{ "expr": "sum by (status_code)(bmp_http_requests_total)", "legendFormat": "{{status_code}}" }]
+    },
+    {
+      "id": 8,
+      "title": "Active Handles",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 24, "w": 6, "h": 4 },
+      "targets": [{ "expr": "bmp_backend_nodejs_active_handles_total", "legendFormat": "Active Handles" }],
+      "fieldConfig": { "defaults": { "unit": "short" } }
+    },
+    {
+      "id": 9,
+      "title": "GC Duration",
+      "type": "timeseries",
+      "gridPos": { "x": 6, "y": 24, "w": 18, "h": 4 },
+      "targets": [{ "expr": "rate(bmp_backend_nodejs_gc_duration_seconds_sum[1m])", "legendFormat": "GC {{kind}}" }],
+      "fieldConfig": { "defaults": { "unit": "s" } }
     }
   ]
 }

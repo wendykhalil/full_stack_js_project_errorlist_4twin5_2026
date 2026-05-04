@@ -18,6 +18,7 @@
     "@tensorflow/tfjs-backend-cpu": "^4.22.0",
     "@vladmandic/face-api": "^1.7.15",
     "axios": "^1.15.2",
+    "es-toolkit": "^1.46.1",
     "i18next": "^26.0.4",
     "jspdf": "^4.2.1",
     "lucide-react": "^0.564.0",
@@ -26,13 +27,14 @@
     "react-google-recaptcha": "^3.1.0",
     "react-i18next": "^17.0.2",
     "react-router-dom": "^7.13.0",
-    "recharts": "^2.15.0",
+    "recharts": "^3.8.1",
     "socket.io-client": "^4.8.1",
     "tawk-react": "^0.0.2",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@originjs/vite-plugin-commonjs": "^1.0.3",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",

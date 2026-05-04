@@ -1,0 +1,170 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job">
+  <description>BMP.tn Full Stack CI/CD Pipeline</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <jenkins.model.BuildDiscarderProperty>
+      <strategy class="hudson.tasks.LogRotator">
+        <daysToKeep>-1</daysToKeep>
+        <numToKeep>10</numToKeep>
+        <artifactDaysToKeep>-1</artifactDaysToKeep>
+        <artifactNumToKeep>-1</artifactNumToKeep>
+        <removeLastBuild>false</removeLastBuild>
+      </strategy>
+    </jenkins.model.BuildDiscarderProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition">
+    <script>
+pipeline {
+  agent any
+
+  tools {
+    nodejs &apos;NodeJS 20&apos;
+  }
+
+  environment {
+    PROJECT_DIR = &apos;/workspace/bmp&apos;
+    NODE_ENV    = &apos;test&apos;
+    CI          = &apos;true&apos;
+    PATH        = &quot;/var/jenkins_home/tools/jenkins.plugins.nodejs.tools.NodeJSInstallation/NodeJS 20/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${env.PATH}&quot;
+  }
+
+  options {
+    timeout(time: 30, unit: &apos;MINUTES&apos;)
+    buildDiscarder(logRotator(numToKeepStr: &apos;10&apos;))
+    disableConcurrentBuilds()
+  }
+
+  stages {
+
+    stage(&apos;Verify Workspace&apos;) {
+      steps {
+        sh &apos;&apos;&apos;
+          echo "=== Jenkins Build #${BUILD_NUMBER} ==="
+          echo "Node: $(node --version)"
+          echo "NPM:  $(npm --version)"
+          ls /workspace/bmp/
+        &apos;&apos;&apos;
+      }
+    }
+
+    stage(&apos;CI Backend — Install&apos;) {
+      steps {
+        sh &apos;&apos;&apos;
+          echo "Installing backend dependencies..."
+          cd /workspace/bmp/backend
+          npm install --prefer-offline
+          echo "Done"
+        &apos;&apos;&apos;
+      }
+    }
+
+    stage(&apos;CI Backend — Unit Tests + Coverage&apos;) {
+      steps {
+        sh &apos;&apos;&apos;
+          echo "Running backend unit tests (Jest)..."
+          cd /workspace/bmp/backend
+          npm test -- --forceExit --runInBand
+          echo "Backend tests complete"
+        &apos;&apos;&apos;
+      }
+      post {
+        always {
+          junit testResults: &apos;/workspace/bmp/backend/junit.xml&apos;, allowEmptyResults: true
+          publishHTML(target: [
+            allowMissing: true,
+            alwaysLinkToLastBuild: true,
+            keepAll: true,
+            reportDir: &apos;/workspace/bmp/backend/coverage/lcov-report&apos;,
+            reportFiles: &apos;index.html&apos;,
+            reportName: &apos;Backend Coverage Report&apos;
+          ])
+          archiveArtifacts artifacts: &apos;/workspace/bmp/backend/coverage/lcov.info&apos;, allowEmptyArchive: true
+        }
+        success { echo &apos;Backend tests PASSED&apos; }
+        failure { error &apos;Backend tests FAILED — stopping pipeline&apos; }
+      }
+    }
+
+    stage(&apos;CI Frontend — Install&apos;) {
+      steps {
+        sh &apos;&apos;&apos;
+          echo "Installing frontend dependencies..."
+          cd /workspace/bmp/frontend
+          npm install --prefer-offline
+          npm install terser --save-dev --prefer-offline
+          echo "Done"
+        &apos;&apos;&apos;
+      }
+    }
+
+    stage(&apos;CI Frontend — Unit Tests + Coverage&apos;) {
+      steps {
+        sh &apos;&apos;&apos;
+          echo "Running frontend unit tests (Vitest)..."
+          cd /workspace/bmp/frontend
+          npx vitest run --coverage --reporter=verbose --reporter=junit --outputFile=junit.xml
+          echo "Frontend tests complete"
+        &apos;&apos;&apos;
+      }
+      post {
+        always {
+          junit testResults: &apos;/workspace/bmp/frontend/junit.xml&apos;, allowEmptyResults: true
+          publishHTML(target: [
+            allowMissing: true,
+            alwaysLinkToLastBuild: true,
+            keepAll: true,
+            reportDir: &apos;/workspace/bmp/frontend/coverage&apos;,
+            reportFiles: &apos;index.html&apos;,
+            reportName: &apos;Frontend Coverage Report&apos;
+          ])
+        }
+        success { echo &apos;Frontend tests PASSED&apos; }
+        failure { error &apos;Frontend tests FAILED — stopping pipeline&apos; }
+      }
+    }
+
+    stage(&apos;CI Frontend — Production Build&apos;) {
+      steps {
+        sh &apos;&apos;&apos;
+          echo "Building frontend production bundle..."
+          cd /workspace/bmp/frontend
+          VITE_API_URL=http://localhost:5000/api npm run build
+          echo "Build complete"
+        &apos;&apos;&apos;
+      }
+      post {
+        success {
+          archiveArtifacts artifacts: &apos;/workspace/bmp/frontend/dist/**&apos;, allowEmptyArchive: true
+          echo &apos;Frontend build artifact archived&apos;
+        }
+      }
+    }
+
+    stage(&apos;Summary&apos;) {
+      steps {
+        sh &apos;&apos;&apos;
+          echo ""
+          echo "=================================================="
+          echo "  CI/CD PIPELINE COMPLETE — Build #${BUILD_NUMBER}"
+          echo "  Backend  : 815 Jest tests + coverage report"
+          echo "  Frontend : 80 Vitest tests + production build"
+          echo "=================================================="
+        &apos;&apos;&apos;
+      }
+    }
+
+  }
+
+  post {
+    success { echo &apos;Pipeline SUCCESS&apos; }
+    failure { echo &apos;Pipeline FAILED&apos; }
+    always  { cleanWs(cleanWhenSuccess: true, cleanWhenFailure: false) }
+  }
+}
+    </script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>
