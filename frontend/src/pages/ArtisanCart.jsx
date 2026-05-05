@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import ReadCardButton from '../components/ReadCardButton';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, Minus, Package, Plus, ShoppingBag, Trash2, X } from 'lucide-react';
@@ -48,11 +48,11 @@ export default function ArtisanCart() {
       <div className="flex-1 space-y-6">
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-8 text-center">
           <ShoppingBag className="mx-auto h-12 w-12 text-emerald-500" />
-          <h2 className="mt-4 text-2xl font-bold text-emerald-800">Commandes passÃ©es !</h2>
+          <h2 className="mt-4 text-2xl font-bold text-emerald-800">Commandes passées !</h2>
           <p className="mt-2 text-emerald-700">{result.message}</p>
           {result.errors?.length > 0 && (
             <div className="mt-4 rounded-xl bg-amber-50 border border-amber-200 p-4 text-left">
-              <p className="text-sm font-semibold text-amber-800">Produits non commandÃ©s :</p>
+              <p className="text-sm font-semibold text-amber-800">Produits non commandés :</p>
               {result.errors.map((e, i) => (
                 <p key={i} className="text-xs text-amber-700 mt-1">â€¢ {e.productName || 'Produit'} â€” {e.reason}</p>
               ))}
@@ -123,8 +123,8 @@ export default function ArtisanCart() {
                       <p className="font-semibold text-slate-900 truncate">{p.name}</p>
                       <ReadCardButton text={`${p.name}. Catégorie: ${p.categoryId?.name}. Fournisseur: ${p.supplierId?.companyName || 'Fournisseur'}. Prix: ${item.priceSnapshot} TND. Quantité: ${item.quantity}.`} />
                     </div>
-                    <p className="text-xs text-slate-500">{p.categoryId?.name} Â· {p.supplierId?.companyName || 'Fournisseur'}</p>
-                    <p className="mt-1 text-sm font-semibold text-indigo-700">{fmt(item.priceSnapshot)} / unitÃ©</p>
+                    <p className="text-xs text-slate-500">{p.categoryId?.name} · {p.supplierId?.companyName || 'Fournisseur'}</p>
+                    <p className="mt-1 text-sm font-semibold text-indigo-700">{fmt(item.priceSnapshot)} / unité</p>
 
                     {/* Qty controls */}
                     <div className="mt-2 flex items-center gap-2">
@@ -159,7 +159,7 @@ export default function ArtisanCart() {
           <div className="space-y-4">
             {/* Summary */}
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <h3 className="text-base font-semibold text-slate-800">RÃ©capitulatif</h3>
+              <h3 className="text-base font-semibold text-slate-800">Récapitulatif</h3>
               <div className="mt-4 space-y-2">
                 {items.map(i => (
                   <div key={i._id} className="flex justify-between text-sm">
@@ -186,7 +186,7 @@ export default function ArtisanCart() {
               <div>
                 <label className="text-xs font-medium text-slate-600">Rue / Quartier</label>
                 <input value={street} onChange={e => setStreet(e.target.value)}
-                  placeholder="Ex: Rue de la LibertÃ©"
+                  placeholder="Ex: Rue de la Liberté"
                   className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none" />
               </div>
               <div>
@@ -212,7 +212,7 @@ export default function ArtisanCart() {
                 }
               </button>
               <p className="text-center text-xs text-slate-400">
-                {items.length} produit{items.length > 1 ? 's' : ''} Â· {items.length} commande{items.length > 1 ? 's' : ''} crÃ©Ã©e{items.length > 1 ? 's' : ''}
+                {items.length} produit{items.length > 1 ? 's' : ''} · {items.length} commande{items.length > 1 ? 's' : ''} créée{items.length > 1 ? 's' : ''}
               </p>
             </div>
           </div>

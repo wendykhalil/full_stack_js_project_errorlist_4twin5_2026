@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import ReadCardButton from '../components/ReadCardButton';
 import { apiFetch } from "../auth/api";
 import { useAuth } from "../auth/AuthContext";
@@ -211,7 +211,7 @@ export default function AdminActivityLogs() {
             <p className="mt-1 text-sm text-slate-600 sm:text-base">Historique administratif des mises a jour de profil, connexions, changements de role et actions de compte.</p>
           </div>
 
-          <Hint text="Recharger les journaux d'activitÃ© depuis le serveur.">
+          <Hint text="Recharger les journaux d'activité depuis le serveur.">
           <button onClick={() => load(page)} className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto">
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             Actualiser
@@ -226,14 +226,14 @@ export default function AdminActivityLogs() {
             <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center">
               <div className="relative w-full sm:max-w-sm">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <Hint text="Rechercher par nom d'utilisateur, email, action ou dÃ©tails de l'Ã©vÃ©nement.">
+                <Hint text="Rechercher par nom d'utilisateur, email, action ou détails de l'événement.">
                 <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Rechercher un utilisateur, une action ou un detail..." className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-indigo-200" />
                 </Hint>
               </div>
 
               <div className="flex items-center gap-2">
                 <Filter className="h-4 w-4 text-slate-400" />
-                <Hint text="Filtrer les journaux par type d'action effectuÃ©e sur la plateforme.">
+                <Hint text="Filtrer les journaux par type d'action effectuée sur la plateforme.">
                 <select value={action} onChange={(e) => setAction(e.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
                   <option value="ALL">Toutes les actions</option>
                   <option value="PROFILE_UPDATE">Mises a jour du profil</option>
@@ -303,7 +303,7 @@ export default function AdminActivityLogs() {
           </div>
 
           <div className="flex flex-col gap-3 border-t border-slate-200 bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="text-sm text-slate-600">Page <b>{data.currentPage}</b> sur <b>{data.totalPages}</b> - <b>{data.totalItems}</b> Ã©lÃ©ments</div>
+            <div className="text-sm text-slate-600">Page <b>{data.currentPage}</b> sur <b>{data.totalPages}</b> - <b>{data.totalItems}</b> éléments</div>
             <div className="flex items-center gap-2">
               <button disabled={data.currentPage <= 1 || loading} onClick={() => load(data.currentPage - 1)} className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 disabled:opacity-50">Precedent</button>
               <button disabled={data.currentPage >= data.totalPages || loading} onClick={() => load(data.currentPage + 1)} className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 disabled:opacity-50">Suivant</button>

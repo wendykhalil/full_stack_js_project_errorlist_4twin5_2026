@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import ReadCardButton from '../components/ReadCardButton';
 import { ChevronDown } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -87,7 +87,7 @@ export default function ArtisanFactureStep1() {
     <PageShell>
     <main className="mx-auto max-w-none px-4 py-10">
       <h1 className="text-3xl font-semibold text-slate-900">{t('artisanFactureStep1.title')}</h1>
-      {state?.projectTitle ? <p className="mt-3 inline-flex rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">Projet sÃ©lectionnÃ©: {state.projectTitle}</p> : null}
+      {state?.projectTitle ? <p className="mt-3 inline-flex rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">Projet sélectionné: {state.projectTitle}</p> : null}
       <p className="mt-1 text-sm text-slate-500">{t('artisanFactureStep1.subtitle')}</p>
 
       <Stepper step={1} />

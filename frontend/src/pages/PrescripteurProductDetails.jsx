@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import ReadCardButton from '../components/ReadCardButton';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from '../i18n';
@@ -40,7 +40,7 @@ export default function PrescripteurProductDetails() {
         if (found) {
           setProduct(found);
         } else {
-          setError(t('product.notFound', 'Produit non trouvÃ©'));
+          setError(t('product.notFound', 'Produit non trouvé'));
         }
       } catch (err) {
         setError(err.message);
@@ -63,7 +63,7 @@ export default function PrescripteurProductDetails() {
   if (error || !product) {
     return (
       <div className="flex-1 flex items-center justify-center py-20">
-        <div className="text-red-600">{error || t('product.notFound', 'Produit non trouvÃ©')}</div>
+        <div className="text-red-600">{error || t('product.notFound', 'Produit non trouvé')}</div>
       </div>
     );
   }
@@ -138,7 +138,7 @@ export default function PrescripteurProductDetails() {
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-3 py-1 text-sm font-medium text-indigo-700">
                 <Tag className="h-3.5 w-3.5" />
-                {product.categoryId?.name || t('common.uncategorized', 'Non catÃ©gorisÃ©')}
+                {product.categoryId?.name || t('common.uncategorized', 'Non catégorisé')}
               </span>
               <span
                 className={`text-sm font-medium px-3 py-1 rounded-full ${
@@ -156,7 +156,7 @@ export default function PrescripteurProductDetails() {
               <span className="text-3xl font-bold text-indigo-700">
                 {product.price?.toFixed(2)} TND
               </span>
-              <span className="text-sm text-slate-500">/ {product.unit || 'piÃ¨ce'}</span>
+              <span className="text-sm text-slate-500">/ {product.unit || 'pièce'}</span>
             </div>
 
             {/* Description */}

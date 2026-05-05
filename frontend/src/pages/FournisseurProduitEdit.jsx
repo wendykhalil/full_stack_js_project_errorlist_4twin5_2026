@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import ReadCardButton from '../components/ReadCardButton';
 import { useParams, useNavigate } from "react-router-dom";
 import { ChevronDown, Upload, FileText, Plus, X, Image, File } from "lucide-react";
@@ -129,7 +129,7 @@ export default function FournisseurProduitEdit() {
 
   const { fieldErrors: serverErrors, globalError: serverGlobalError, handleError, clearErrors } = useServerErrors();
   
-  // Ã‰tats pour les catÃ©gories
+  // Ã‰tats pour les catégories
   const [categories, setCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [showNewCategoryInput, setShowNewCategoryInput] = useState(false);
@@ -182,7 +182,7 @@ export default function FournisseurProduitEdit() {
         console.log('Fetching product with ID:', id);
         const data = await getMyProducts({ token, search: '', page: 1, limit: 100 });
         
-        // GÃ©rer diffÃ©rentes structures de donnÃ©es
+        // Gérer différentes structures de données
         let productsArray = [];
         if (data?.products) {
           productsArray = data.products;
@@ -271,10 +271,10 @@ export default function FournisseurProduitEdit() {
         price: formData.price,
         stock: formData.stock,
         description: formData.description,
-        // Envoyer les fichiers existants qui n'ont pas Ã©tÃ© supprimÃ©s
+        // Envoyer les fichiers existants qui n'ont pas été supprimés
         existingImages: existingImages,
         existingDocs: existingDocs,
-        // Envoyer la liste des fichiers Ã  supprimer
+        // Envoyer la liste des fichiers à supprimer
         imagesToDelete: imagesToDelete,
         docsToDelete: docsToDelete
       };
@@ -307,7 +307,7 @@ export default function FournisseurProduitEdit() {
   if (loading || loadingCategories) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <div className="text-center">Chargement des donnÃ©es du produit...</div>
+        <div className="text-center">Chargement des données du produit...</div>
       </div>
     );
   }
@@ -345,7 +345,7 @@ export default function FournisseurProduitEdit() {
               error={serverErrors.name}
             />
             
-            {/* CatÃ©gorie avec option d'ajout */}
+            {/* Catégorie avec option d'ajout */}
             <div>
               <label className="mb-2 block text-sm font-semibold text-slate-900">
                 {t('fournisseurProduitNew.categoryLabel')}
@@ -381,7 +381,7 @@ export default function FournisseurProduitEdit() {
                       type="text"
                       value={newCategoryName}
                       onChange={(e) => setNewCategoryName(e.target.value)}
-                      placeholder="Nouvelle catÃ©gorie"
+                      placeholder="Nouvelle catégorie"
                       className="flex-1 rounded-xl border border-slate-200 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none"
                       autoFocus
                     />

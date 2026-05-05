@@ -1,4 +1,4 @@
-﻿import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import ReadCardButton from '../components/ReadCardButton';
 import {
   AlertTriangle,
@@ -22,7 +22,7 @@ function ScoreRing({ score }) {
   const color =
     score >= 80 ? "#10b981" : score >= 60 ? "#f59e0b" : score >= 40 ? "#f97316" : "#ef4444";
   const label =
-    score >= 80 ? "Sain" : score >= 60 ? "ModÃ©rÃ©" : score >= 40 ? "Ã€ surveiller" : "Critique";
+    score >= 80 ? "Sain" : score >= 60 ? "Modéré" : score >= 40 ? "Ã€ surveiller" : "Critique";
 
   return (
     <div className="flex flex-col items-center gap-2">
@@ -171,11 +171,11 @@ export default function AdminAiInsights() {
             </h1>
           </div>
           <p className="mt-1 text-sm text-slate-500">
-            Analyse IA de la santÃ© de la plateforme et recommandations actionnables.
+            Analyse IA de la santé de la plateforme et recommandations actionnables.
           </p>
           {lastFetched && !loading && (
             <p className="mt-1 text-xs text-slate-400">
-              DerniÃ¨re mise Ã  jour : {lastFetched.toLocaleTimeString()}
+              Dernière mise à jour : {lastFetched.toLocaleTimeString()}
               {data?.source === "heuristic" && (
                 <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-amber-700">
                   mode heuristique (IA hors ligne)
@@ -189,7 +189,7 @@ export default function AdminAiInsights() {
             </p>
           )}
         </div>
-        <Hint text="Forcer une nouvelle analyse IA avec les donnÃ©es les plus rÃ©centes (ignore le cache).">
+        <Hint text="Forcer une nouvelle analyse IA avec les données les plus récentes (ignore le cache).">
         <button
           type="button"
           onClick={() => load(true)}
@@ -210,7 +210,7 @@ export default function AdminAiInsights() {
       {loading && (
         <div className="flex flex-col items-center justify-center rounded-3xl border border-slate-200 bg-white py-20 shadow-sm">
           <Loader2 className="h-10 w-10 animate-spin text-indigo-500" />
-          <p className="mt-4 text-sm text-slate-500">Analyse des donnÃ©es de la plateforme en coursâ€¦</p>
+          <p className="mt-4 text-sm text-slate-500">Analyse des données de la plateforme en coursâ€¦</p>
         </div>
       )}
 
@@ -231,7 +231,7 @@ export default function AdminAiInsights() {
             </div>
             <div className="lg:col-span-2 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
               <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">
-                RÃ©sumÃ©
+                Résumé
               </h2>
               <p className="text-base leading-relaxed text-slate-700">{data.summary}</p>
 
@@ -255,7 +255,7 @@ export default function AdminAiInsights() {
 
           {/* Positives / Risks / Recommendations */}
           <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-            <Hint text="Points forts dÃ©tectÃ©s par l'IA : croissance, engagement, performance des ventes, etc.">
+            <Hint text="Points forts détectés par l'IA : croissance, engagement, performance des ventes, etc.">
             <InsightCard
               title="Tendances positives"
               icon={<TrendingUp />}
@@ -263,7 +263,7 @@ export default function AdminAiInsights() {
               tone="green"
             />
             </Hint>
-            <Hint text="Risques et anomalies identifiÃ©s par l'IA nÃ©cessitant votre attention.">
+            <Hint text="Risques et anomalies identifiés par l'IA nécessitant votre attention.">
             <InsightCard
               title="Risques & Alertes"
               icon={<AlertTriangle />}
@@ -271,7 +271,7 @@ export default function AdminAiInsights() {
               tone="red"
             />
             </Hint>
-            <Hint text="Actions concrÃ¨tes suggÃ©rÃ©es par l'IA pour amÃ©liorer les performances de la plateforme.">
+            <Hint text="Actions concrètes suggérées par l'IA pour améliorer les performances de la plateforme.">
             <InsightCard
               title="Recommandations"
               icon={<Lightbulb />}
@@ -284,7 +284,7 @@ export default function AdminAiInsights() {
           {/* Generated at */}
           {data.generatedAt && (
             <p className="text-center text-xs text-slate-400">
-              Rapport gÃ©nÃ©rÃ© le {new Date(data.generatedAt).toLocaleString("fr-TN")}
+              Rapport généré le {new Date(data.generatedAt).toLocaleString("fr-TN")}
             </p>
           )}
         </>

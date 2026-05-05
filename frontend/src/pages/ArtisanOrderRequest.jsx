@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import ReadCardButton from '../components/ReadCardButton';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
@@ -48,7 +48,7 @@ export default function ArtisanOrderRequest() {
         if (found) {
           setProduct(found);
         } else {
-          setError(t('artisan.order.productNotFound', 'Produit non trouvÃ©'));
+          setError(t('artisan.order.productNotFound', 'Produit non trouvé'));
         }
       } catch (err) {
         setError(err.message);
@@ -76,7 +76,7 @@ export default function ArtisanOrderRequest() {
   };
 
   const { errors: formErrors, validate } = useFormValidation({
-    quantity: [rules.required('QuantitÃ© requise'), rules.numeric(), rules.min(1, 'Minimum 1')],
+    quantity: [rules.required('Quantité requise'), rules.numeric(), rules.min(1, 'Minimum 1')],
     street: [rules.required('Rue requise'), rules.minLength(3)],
     city: [rules.required('Ville requise'), rules.minLength(2)],
     postalCode: [rules.required('Code postal requis')],
@@ -100,7 +100,7 @@ export default function ArtisanOrderRequest() {
         deliveryAddress: formData.deliveryAddress,
         artisanMessage: formData.artisanMessage,
       }});
-      setSuccess('Votre demande de commande a Ã©tÃ© envoyÃ©e avec succÃ¨s !');
+      setSuccess('Votre demande de commande a été envoyée avec succès !');
       setTimeout(() => navigate('/artisan/orders'), 2000);
     } catch (err) {
       setError(err.message || 'Erreur lors de l\'envoi de la demande');
@@ -144,7 +144,7 @@ export default function ArtisanOrderRequest() {
           {t('artisan.order.subtitle', 'Remplissez ce formulaire pour demander ce produit au fournisseur')}
         </p>
 
-        {/* RÃ©sumÃ© du produit */}
+        {/* Résumé du produit */}
         <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="flex gap-4">
             {product.imageUrls?.[0] && (
@@ -157,7 +157,7 @@ export default function ArtisanOrderRequest() {
             <div>
               <h2 className="font-semibold text-slate-900">{product.name}</h2>
               <p className="text-sm text-slate-500">
-                {t('artisan.order.supplier', 'Fournisseur')} : {product.supplierId?.companyName || t('common.notSpecified', 'Non spÃ©cifiÃ©')}
+                {t('artisan.order.supplier', 'Fournisseur')} : {product.supplierId?.companyName || t('common.notSpecified', 'Non spécifié')}
               </p>
               <p className="mt-1 text-lg font-semibold text-indigo-700">
                 {product.price?.toFixed(2)} TND
@@ -168,11 +168,11 @@ export default function ArtisanOrderRequest() {
 
         {/* Formulaire */}
         <form onSubmit={handleSubmit} className="mt-6 space-y-6">
-          {/* QuantitÃ© */}
+          {/* Quantité */}
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4"><h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
               <Package className="h-5 w-5" />
-              {t('artisan.order.quantity', 'QuantitÃ©')}
+              {t('artisan.order.quantity', 'Quantité')}
             </h3><ReadCardButton text="Section formulaire" /></div>
             <div className="mt-4">
               <input
@@ -184,7 +184,7 @@ export default function ArtisanOrderRequest() {
               />
               <FieldError error={formErrors.quantity} />
               <p className="mt-1 text-xs text-slate-400">
-                {t('artisan.order.stock', 'Stock disponible')} : {product.stock} {t('common.units', 'unitÃ©s')}
+                {t('artisan.order.stock', 'Stock disponible')} : {product.stock} {t('common.units', 'unités')}
               </p>
             </div>
           </div>
@@ -201,7 +201,7 @@ export default function ArtisanOrderRequest() {
                 name="street"
                 value={formData.deliveryAddress.street}
                 onChange={handleAddressChange}
-                placeholder={t('artisan.order.streetPlaceholder', 'Rue, numÃ©ro')}
+                placeholder={t('artisan.order.streetPlaceholder', 'Rue, numéro')}
                 className={`w-full rounded-xl border px-4 py-3 text-sm focus:outline-none ${formErrors.street ? 'border-red-400' : 'border-slate-200 focus:border-indigo-500'}`}
               />
               <FieldError error={formErrors.street} />
@@ -233,7 +233,7 @@ export default function ArtisanOrderRequest() {
                 name="additionalInfo"
                 value={formData.deliveryAddress.additionalInfo}
                 onChange={handleAddressChange}
-                placeholder={t('artisan.order.additionalInfoPlaceholder', "Informations complÃ©mentaires (Ã©tage, code d'accÃ¨s...)")}
+                placeholder={t('artisan.order.additionalInfoPlaceholder', "Informations complémentaires (étage, code d'accès...)")}
                 rows="2"
                 className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
               />
@@ -258,7 +258,7 @@ export default function ArtisanOrderRequest() {
             </div>
           </div>
 
-          {/* Messages d'erreur/succÃ¨s */}
+          {/* Messages d'erreur/succès */}
           {error && (
             <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
               {error}

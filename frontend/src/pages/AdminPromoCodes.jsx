@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import ReadCardButton from '../components/ReadCardButton';
 import { Plus, Trash2, Pencil, X, Tag, CheckCircle, XCircle } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
@@ -50,7 +50,7 @@ function PromoForm({ form, setForm, onSubmit, loading, submitLabel }) {
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="text-sm font-medium text-slate-700">Remise (%) *</label>
-          <Hint text="Pourcentage de rÃ©duction appliquÃ© au montant total">
+          <Hint text="Pourcentage de réduction appliqué au montant total">
           <input value={form.discountPercent} onChange={e => { setForm(s => ({ ...s, discountPercent: e.target.value })); clearErrors(); }}
             className={`mt-1 w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 ${fieldErrors.discountPercent ? 'border-red-400' : 'border-slate-200'}`}
             placeholder="20" />
@@ -62,14 +62,14 @@ function PromoForm({ form, setForm, onSubmit, loading, submitLabel }) {
           <Hint text="Nombre maximum d'utilisations avant expiration automatique">
           <input value={form.maxUses} onChange={e => { setForm(s => ({ ...s, maxUses: e.target.value })); clearErrors(); }}
             className={`mt-1 w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 ${fieldErrors.maxUses ? 'border-red-400' : 'border-slate-200'}`}
-            placeholder="IllimitÃ©" />
+            placeholder="Illimité" />
           </Hint>
           <FieldError error={fieldErrors.maxUses} />
         </div>
       </div>
       <div>
         <label className="text-sm font-medium text-slate-700">Date d'expiration</label>
-        <Hint text="Date aprÃ¨s laquelle le code ne sera plus valide">
+        <Hint text="Date après laquelle le code ne sera plus valide">
         <input value={form.expiresAt} onChange={e => setForm(s => ({ ...s, expiresAt: e.target.value }))}
           type="date" className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
         </Hint>
@@ -166,9 +166,9 @@ export default function AdminPromoCodes() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Codes Promo</h1>
-          <p className="mt-1.5 text-base text-slate-500">GÃ©rez les remises pour les abonnements</p>
+          <p className="mt-1.5 text-base text-slate-500">Gérez les remises pour les abonnements</p>
         </div>
-        <Hint text="CrÃ©er un nouveau code promotionnel">
+        <Hint text="Créer un nouveau code promotionnel">
         <button onClick={() => { setForm(emptyForm); setCreateOpen(true); }}
           className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white hover:bg-indigo-700">
           <Plus className="h-4 w-4" /> Nouveau code
@@ -183,7 +183,7 @@ export default function AdminPromoCodes() {
       ) : codes.length === 0 ? (
         <div className="rounded-3xl border border-dashed border-slate-300 py-16 text-center">
           <Tag className="mx-auto h-8 w-8 text-slate-300" />
-          <p className="mt-2 text-slate-500">Aucun code promo crÃ©Ã©.</p>
+          <p className="mt-2 text-slate-500">Aucun code promo créé.</p>
         </div>
       ) : (
         <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
@@ -217,7 +217,7 @@ export default function AdminPromoCodes() {
                     <td className="px-5 py-4">
                       {expired || exhausted ? (
                         <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-600">
-                          {expired ? "ExpirÃ©" : "Ã‰puisÃ©"}
+                          {expired ? "Expiré" : "Ã‰puisé"}
                         </span>
                       ) : c.isActive ? (
                         <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700">Actif</span>
@@ -227,19 +227,19 @@ export default function AdminPromoCodes() {
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-2">
-                        <Hint text="Activer ou dÃ©sactiver ce code sans le supprimer">
-                        <button onClick={() => toggleActive(c)} title={c.isActive ? "DÃ©sactiver" : "Activer"}
+                        <Hint text="Activer ou désactiver ce code sans le supprimer">
+                        <button onClick={() => toggleActive(c)} title={c.isActive ? "Désactiver" : "Activer"}
                           className="rounded-lg p-1.5 hover:bg-slate-100">
                           {c.isActive ? <XCircle className="h-4 w-4 text-slate-400" /> : <CheckCircle className="h-4 w-4 text-emerald-500" />}
                         </button>
                         </Hint>
-                        <Hint text="Modifier les paramÃ¨tres de ce code promo">
+                        <Hint text="Modifier les paramètres de ce code promo">
                         <button onClick={() => { setEditItem(c); setForm({ code: c.code, discountPercent: c.discountPercent, maxUses: c.maxUses || "", expiresAt: c.expiresAt ? c.expiresAt.slice(0, 10) : "", isActive: c.isActive, appliesTo: c.appliesTo }); }}
                           className="rounded-lg p-1.5 hover:bg-slate-100">
                           <Pencil className="h-4 w-4 text-slate-400" />
                         </button>
                         </Hint>
-                        <Hint text="Supprimer dÃ©finitivement ce code promo">
+                        <Hint text="Supprimer définitivement ce code promo">
                         <button onClick={() => handleDelete(c._id)}
                           className="rounded-lg p-1.5 hover:bg-red-50">
                           <Trash2 className="h-4 w-4 text-slate-400 hover:text-red-500" />
@@ -256,7 +256,7 @@ export default function AdminPromoCodes() {
       )}
 
       <Modal open={createOpen} title="Nouveau code promo" onClose={() => setCreateOpen(false)}>
-        <PromoForm form={form} setForm={setForm} onSubmit={handleCreate} loading={saving} submitLabel="CrÃ©er le code" />
+        <PromoForm form={form} setForm={setForm} onSubmit={handleCreate} loading={saving} submitLabel="Créer le code" />
       </Modal>
 
       <Modal open={!!editItem} title="Modifier le code" onClose={() => setEditItem(null)}>

@@ -1,36 +1,36 @@
-﻿const Order = require('../../models/Order');
+const Order = require('../../models/Order');
 const Product = require('../../models/Product');
 const User = require('../../models/User');
 const { sendNewOrderEmailToSupplier, sendOrderStatusUpdateEmailToArtisan } = require('../../utils/orderEmail');
 const { notify } = require('../../utils/notify');
 const { notifySupplierNewOrder } = require('../../socket');
 
-// CrÃ©er une commande
-// CrÃ©er une commande
-// CrÃ©er une commande
+// Créer une commande
+// Créer une commande
+// Créer une commande
 async function createOrder(orderData) {
   try {
     const { productId, quantity, deliveryAddress, artisanMessage, artisanId } = orderData;
 
-    // VÃ©rifier que le produit existe
+    // Vérifier que le produit existe
     const product = await Product.findById(productId).populate('supplierId');
     if (!product) {
-      const error = new Error('Produit non trouvÃ©');
+      const error = new Error('Produit non trouvé');
       error.statusCode = 404;
       throw error;
     }
 
-    // VÃ©rifier le stock
+    // Vérifier le stock
     if (product.stock < quantity) {
       const error = new Error('Stock insuffisant');
       error.statusCode = 400;
       throw error;
     }
 
-    // RÃ©cupÃ©rer l'artisan
+    // Récupérer l'artisan
     const artisan = await User.findById(artisanId);
     if (!artisan) {
-      const error = new Error('Artisan non trouvÃ©');
+      const error = new Error('Artisan non trouvé');
       error.statusCode = 404;
       throw error;
     }
@@ -39,14 +39,14 @@ async function createOrder(orderData) {
     const unitPrice = product.price;
     const lineTotal = unitPrice * quantity;
 
-    // GÃ©nÃ©rer un numÃ©ro de commande
+    // Générer un numéro de commande
     const date = new Date();
     const year = date.getFullYear().toString().slice(-2);
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
     const orderNumber = `CMD-${year}${month}-${random}`;
 
-    // CrÃ©er la commande
+    // Créer la commande
     const order = new Order({
       orderNumber,
       productId,
@@ -61,14 +61,14 @@ async function createOrder(orderData) {
       statusHistory: [{
         status: 'PENDING',
         changedBy: artisanId,
-        note: 'Commande crÃ©Ã©e'
+        note: 'Commande créée'
       }]
     });
 
     await order.save();
     console.log('Order created successfully:', order._id);
     
-    // Peupler les rÃ©fÃ©rences
+    // Peupler les références
     await order.populate([
       { path: 'productId', select: 'name price imageUrls' },
       { path: 'supplierId', select: 'firstName lastName email supplierProfile' },
@@ -85,7 +85,7 @@ async function createOrder(orderData) {
       );
     } catch (emailError) {
       console.error('Erreur envoi email (non bloquante):', emailError);
-      // Ne pas bloquer la crÃ©ation de la commande si l'email Ã©choue
+      // Ne pas bloquer la création de la commande si l'email échoue
     }
 
     // âœ… REAL-TIME: notify supplier via Socket.io + persist notification
@@ -109,12 +109,12 @@ async function createOrder(orderData) {
       await notify({
         userId:  product.supplierId._id,
         type:    'NEW_ORDER',
-        title:   'Nouvelle commande reÃ§ue',
-        message: `${artisanName} a commandÃ© ${order.quantity}Ã— ${product.name} â€” ${order.lineTotal.toFixed(2)} TND`,
+        title:   'Nouvelle commande reçue',
+        message: `${artisanName} a commandé ${order.quantity}Ã— ${product.name} â€” ${order.lineTotal.toFixed(2)} TND`,
         link:    `/fournisseur/orders/${order._id}`,
       });
     } catch (socketErr) {
-      console.error('Erreur notification temps rÃ©el (non bloquante):', socketErr.message);
+      console.error('Erreur notification temps réel (non bloquante):', socketErr.message);
     }
 
     return order;
@@ -127,7 +127,7 @@ async function createOrder(orderData) {
 
   
 
-// RÃ©cupÃ©rer les commandes d'un artisan
+// Récupérer les commandes d'un artisan
 async function getOrdersByArtisan(artisanId, { page, limit, status }) {
   const query = { artisanId };
   if (status) query.status = status;
@@ -150,7 +150,7 @@ async function getOrdersByArtisan(artisanId, { page, limit, status }) {
   };
 }
 
-// RÃ©cupÃ©rer les commandes d'un fournisseur
+// Récupérer les commandes d'un fournisseur
 async function getOrdersBySupplier(supplierId, { page, limit, status }) {
   const query = { supplierId };
   if (status) query.status = status;
@@ -173,33 +173,33 @@ async function getOrdersBySupplier(supplierId, { page, limit, status }) {
   };
 }
 
-// Mettre Ã  jour le statut d'une commande
-// Mettre Ã  jour le statut d'une commande
-// Mettre Ã  jour le statut d'une commande
+// Mettre à jour le statut d'une commande
+// Mettre à jour le statut d'une commande
+// Mettre à jour le statut d'une commande
 async function updateOrderStatus(orderId, userId, newStatus, note = '') {
-  // RÃ©cupÃ©rer la commande
+  // Récupérer la commande
   const order = await Order.findById(orderId)
     .populate('productId')
     .populate('supplierId')
     .populate('artisanId');
     
   if (!order) {
-    const error = new Error('Commande non trouvÃ©e');
+    const error = new Error('Commande non trouvée');
     error.statusCode = 404;
     throw error;
   }
 
-  // VÃ©rifier que l'utilisateur est le fournisseur
+  // Vérifier que l'utilisateur est le fournisseur
   if (order.supplierId._id.toString() !== userId.toString()) {
-    const error = new Error('Non autorisÃ©');
+    const error = new Error('Non autorisé');
     error.statusCode = 403;
     throw error;
   }
 
-  // Ancien statut pour rÃ©fÃ©rence
+  // Ancien statut pour référence
   const oldStatus = order.status;
 
-  // Mettre Ã  jour en utilisant updateOne
+  // Mettre à jour en utilisant updateOne
   await Order.updateOne(
     { _id: orderId },
     {
@@ -214,13 +214,13 @@ async function updateOrderStatus(orderId, userId, newStatus, note = '') {
         statusHistory: {
           status: newStatus,
           changedBy: userId,
-          note: note || `Statut changÃ© de ${oldStatus} Ã  ${newStatus}`
+          note: note || `Statut changé de ${oldStatus} à ${newStatus}`
         }
       }
     }
   );
 
-  // RÃ©cupÃ©rer la commande mise Ã  jour
+  // Récupérer la commande mise à jour
   const updatedOrder = await Order.findById(orderId)
     .populate('productId')
     .populate('supplierId')
@@ -249,13 +249,13 @@ async function updateOrderStatus(orderId, userId, newStatus, note = '') {
 async function addSupplierNote(orderId, supplierId, note) {
   const order = await Order.findById(orderId);
   if (!order) {
-    const error = new Error('Commande non trouvÃ©e');
+    const error = new Error('Commande non trouvée');
     error.statusCode = 404;
     throw error;
   }
 
   if (order.supplierId.toString() !== supplierId.toString()) {
-    const error = new Error('Non autorisÃ©');
+    const error = new Error('Non autorisé');
     error.statusCode = 403;
     throw error;
   }
@@ -266,7 +266,7 @@ async function addSupplierNote(orderId, supplierId, note) {
   return order;
 }
 
-// RÃ©cupÃ©rer une commande par ID
+// Récupérer une commande par ID
 async function getOrderById(orderId, userId) {
   const order = await Order.findById(orderId)
     .populate('productId')
@@ -275,23 +275,23 @@ async function getOrderById(orderId, userId) {
     .populate('statusHistory.changedBy', 'firstName lastName');
 
   if (!order) {
-    const error = new Error('Commande non trouvÃ©e');
+    const error = new Error('Commande non trouvée');
     error.statusCode = 404;
     throw error;
   }
 
-  // VÃ©rifier que l'utilisateur est soit l'artisan soit le fournisseur
+  // Vérifier que l'utilisateur est soit l'artisan soit le fournisseur
   if (order.artisanId._id.toString() !== userId.toString() && 
       order.supplierId._id.toString() !== userId.toString()) {
-    const error = new Error('Non autorisÃ©');
+    const error = new Error('Non autorisé');
     error.statusCode = 403;
     throw error;
   }
 
   return order;
 }
-// RÃ©cupÃ©rer les commandes en cours d'un artisan
-// RÃ©cupÃ©rer les commandes en cours d'un artisan
+// Récupérer les commandes en cours d'un artisan
+// Récupérer les commandes en cours d'un artisan
 async function getArtisanActiveOrders(artisanId, { page = 1, limit = 10 }) {
   const query = { 
     artisanId,
@@ -316,7 +316,7 @@ async function getArtisanActiveOrders(artisanId, { page = 1, limit = 10 }) {
   };
 }
 
-// RÃ©cupÃ©rer l'historique des commandes d'un artisan
+// Récupérer l'historique des commandes d'un artisan
 async function getArtisanOrderHistory(artisanId, { page = 1, limit = 10 }) {
   const query = { 
     artisanId,
@@ -341,7 +341,7 @@ async function getArtisanOrderHistory(artisanId, { page = 1, limit = 10 }) {
   };
 }
 
-// RÃ©cupÃ©rer les commandes en cours d'un fournisseur
+// Récupérer les commandes en cours d'un fournisseur
 async function getSupplierActiveOrders(supplierId, { page = 1, limit = 10 }) {
   const query = { 
     supplierId,
@@ -366,7 +366,7 @@ async function getSupplierActiveOrders(supplierId, { page = 1, limit = 10 }) {
   };
 }
 
-// RÃ©cupÃ©rer l'historique des commandes d'un fournisseur
+// Récupérer l'historique des commandes d'un fournisseur
 async function getSupplierOrderHistory(supplierId, { page = 1, limit = 10 }) {
   const query = { 
     supplierId,
@@ -417,7 +417,7 @@ module.exports = {
 async function submitReview(orderId, artisanId, { rating, comment }) {
   const parsedRating = Number(rating);
   if (!Number.isFinite(parsedRating) || parsedRating < 1 || parsedRating > 5) {
-    const err = new Error('La note doit Ãªtre un entier entre 1 et 5');
+    const err = new Error('La note doit être un entier entre 1 et 5');
     err.statusCode = 400;
     throw err;
   }
@@ -425,25 +425,25 @@ async function submitReview(orderId, artisanId, { rating, comment }) {
 
   const order = await Order.findById(orderId);
   if (!order) {
-    const err = new Error('Commande non trouvÃ©e');
+    const err = new Error('Commande non trouvée');
     err.statusCode = 404;
     throw err;
   }
 
   if (order.artisanId.toString() !== artisanId.toString()) {
-    const err = new Error('Non autorisÃ© â€” vous n\'Ãªtes pas l\'acheteur de cette commande');
+    const err = new Error('Non autorisé â€” vous n\'êtes pas l\'acheteur de cette commande');
     err.statusCode = 403;
     throw err;
   }
 
   if (order.status !== 'DELIVERED') {
-    const err = new Error('Vous ne pouvez noter qu\'une commande livrÃ©e');
+    const err = new Error('Vous ne pouvez noter qu\'une commande livrée');
     err.statusCode = 400;
     throw err;
   }
 
   if (order.review?.isReviewed) {
-    const err = new Error('Vous avez dÃ©jÃ  notÃ© cette commande');
+    const err = new Error('Vous avez déjà noté cette commande');
     err.statusCode = 409;
     throw err;
   }

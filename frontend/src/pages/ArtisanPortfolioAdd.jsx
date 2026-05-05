@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import ReadCardButton from '../components/ReadCardButton';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
@@ -54,7 +54,7 @@ export default function ArtisanPortfolioAdd() {
   const { fieldErrors: serverErrors, globalError, handleError, clearErrors } = useServerErrors();
   const isSubscribed = subscription?.plan && subscription?.plan !== 'FREE' && subscription?.status === 'ACTIVE';
 
-  // VÃ©rifier si l'artisan a un profil
+  // Vérifier si l'artisan a un profil
   useEffect(() => {
     const checkProfileAndSubscription = async () => {
       try {
@@ -93,7 +93,7 @@ export default function ArtisanPortfolioAdd() {
     
     const validFiles = files.filter(file => file.size <= 5 * 1024 * 1024);
     if (validFiles.length !== files.length) {
-      setError('Certaines images dÃ©passent la taille maximale de 5MB');
+      setError('Certaines images dépassent la taille maximale de 5MB');
     }
 
     setImageFiles(prev => [...prev, ...validFiles]);
@@ -145,8 +145,8 @@ export default function ArtisanPortfolioAdd() {
       const data = await response.json();
 
       if (!response.ok) {
-        if (data.message === 'Profil artisan non trouvÃ©') {
-          setError('Vous devez d\'abord crÃ©er votre profil avant d\'ajouter des projets');
+        if (data.message === 'Profil artisan non trouvé') {
+          setError('Vous devez d\'abord créer votre profil avant d\'ajouter des projets');
           setTimeout(() => {
             navigate('/artisan/profile/edit');
           }, 3000);
@@ -155,7 +155,7 @@ export default function ArtisanPortfolioAdd() {
         throw new Error(data.message || 'Erreur lors de l\'ajout du projet');
       }
 
-      setSuccess('Projet ajoutÃ© avec succÃ¨s !');
+      setSuccess('Projet ajouté avec succès !');
       
       setTimeout(() => {
         navigate('/artisan/portfolio');
@@ -187,13 +187,13 @@ export default function ArtisanPortfolioAdd() {
             Profil incomplet
           </h2>
           <p className="mt-2 text-slate-600">
-            Vous devez d'abord complÃ©ter votre profil avant de pouvoir ajouter des projets.
+            Vous devez d'abord compléter votre profil avant de pouvoir ajouter des projets.
           </p>
           <button
             onClick={() => navigate('/artisan/profile/edit')}
             className="mt-6 rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-700"
           >
-            ComplÃ©ter mon profil
+            Compléter mon profil
           </button>
         </div>
         <SimpleFooter />
@@ -218,7 +218,7 @@ export default function ArtisanPortfolioAdd() {
         Ajouter un projet
       </h1>
       <p className="text-sm text-slate-500 mb-8">
-        Partagez vos rÃ©alisations avec les prescripteurs
+        Partagez vos réalisations avec les prescripteurs
       </p>
 
       {error && (
@@ -329,7 +329,7 @@ export default function ArtisanPortfolioAdd() {
                 value={formData.description}
                 onChange={(e) => setFormData({...formData, description: e.target.value})}
                 rows="4"
-                placeholder="DÃ©crivez le projet rÃ©alisÃ©..."
+                placeholder="Décrivez le projet réalisé..."
                 className={`w-full rounded-xl border ${formErrors.description || serverErrors.description ? 'border-red-400' : 'border-slate-200'} px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none`}
               />
               <FieldError error={formErrors.description || serverErrors.description} />
@@ -354,7 +354,7 @@ export default function ArtisanPortfolioAdd() {
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Date de rÃ©alisation *
+                  Date de réalisation *
                 </label>
                 <div className="relative">
                   <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -378,11 +378,11 @@ export default function ArtisanPortfolioAdd() {
                 type="text"
                 value={formData.tags}
                 onChange={(e) => setFormData({...formData, tags: e.target.value})}
-                placeholder="Ex: plomberie, rÃ©novation, salle de bain"
+                placeholder="Ex: plomberie, rénovation, salle de bain"
                 className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
               />
               <p className="mt-1 text-xs text-slate-400">
-                SÃ©parez les tags par des virgules
+                Séparez les tags par des virgules
               </p>
             </div>
           </div>

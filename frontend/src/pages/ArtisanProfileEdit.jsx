@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ReadCardButton from '../components/ReadCardButton';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
@@ -52,9 +52,9 @@ export default function ArtisanProfileEdit() {
   const [success, setSuccess] = useState('');
 
   const { errors: formErrors, validate } = useFormValidation({
-    trade: [rules.required('MÃ©tier requis')],
-    region: [rules.required('RÃ©gion requise')],
-    phone: [rules.required('TÃ©lÃ©phone requis'), rules.phone()],
+    trade: [rules.required('Métier requis')],
+    region: [rules.required('Région requise')],
+    phone: [rules.required('Téléphone requis'), rules.phone()],
     description: [rules.maxLength(500)],
   });
   const { fieldErrors: serverErrors, globalError, handleError, clearErrors } = useServerErrors();
@@ -83,7 +83,7 @@ export default function ArtisanProfileEdit() {
   const tradeOptions = [
     'Plombier',
     'Ã‰lectricien',
-    'MaÃ§on',
+    'Maçon',
     'Peintre',
     'Menuisier',
     'Carreleur',
@@ -187,7 +187,7 @@ export default function ArtisanProfileEdit() {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        setError('L\'image doit Ãªtre infÃ©rieure Ã  5MB');
+        setError('L\'image doit être inférieure à 5MB');
         return;
       }
       setImageFile(file);
@@ -218,7 +218,7 @@ export default function ArtisanProfileEdit() {
       formData.append('address[postalCode]', profile.address.postalCode);
       formData.append('address[country]', profile.address.country);
       
-      // Ajouter les coordonnÃ©es si disponibles
+      // Ajouter les coordonnées si disponibles
       if (profile.location.latitude && profile.location.longitude) {
         formData.append('coordinates', JSON.stringify([
           profile.location.longitude,
@@ -247,7 +247,7 @@ export default function ArtisanProfileEdit() {
       await refreshMe();
       setSuccess('Profile updated successfully!');
       
-      // Rediriger vers la page de profil aprÃ¨s 2 secondes
+      // Rediriger vers la page de profil après 2 secondes
       setTimeout(() => {
         navigate('/artisan/profile');
       }, 2000);
@@ -385,7 +385,7 @@ export default function ArtisanProfileEdit() {
                 value={profile.description}
                 onChange={(e) => setProfile({...profile, description: e.target.value})}
                 rows="4"
-                placeholder="DÃ©crivez votre expÃ©rience, vos compÃ©tences..."
+                placeholder="Décrivez votre expérience, vos compétences..."
                 className={`w-full rounded-xl border ${formErrors.description || serverErrors.description ? 'border-red-400' : 'border-slate-200'} px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none`}
               />
               <FieldError error={formErrors.description || serverErrors.description} />
@@ -408,7 +408,7 @@ export default function ArtisanProfileEdit() {
               {updatingLocation ? 'Saving location...' : 'Update my position'}
             </button>
             <p className="mt-2 text-xs text-slate-500">
-              Votre position sera mise Ã  jour quotidiennement
+              Votre position sera mise à jour quotidiennement
             </p>
           </div>
 
@@ -454,7 +454,7 @@ export default function ArtisanProfileEdit() {
                   ...profile,
                   address: {...profile.address, street: e.target.value}
                 })}
-                placeholder="Ex: Rue de la LibertÃ©"
+                placeholder="Ex: Rue de la Liberté"
                 className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
               />
             </div>

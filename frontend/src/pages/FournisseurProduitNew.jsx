@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import ReadCardButton from '../components/ReadCardButton';
 import { useNavigate } from "react-router-dom";
 import { ChevronDown, Upload, FileText, Package, ShoppingCart, TrendingUp, Plus, X } from "lucide-react";
@@ -167,7 +167,7 @@ export default function FournisseurProduitNew() {
 
     try {
       const fd = new FormData();
-      // Construire l'objet data Ã  envoyer
+      // Construire l'objet data à envoyer
       let categoryId = formData.category;
       const dataToSend = {
         name: formData.name,
@@ -231,7 +231,7 @@ export default function FournisseurProduitNew() {
               error={serverErrors.name}
             />
             
-            {/* CatÃ©gorie avec gestion d'erreur */}
+            {/* Catégorie avec gestion d'erreur */}
             <div>
               <label className="mb-2 block text-sm font-semibold text-slate-900">
                 {t('fournisseurProduitNew.categoryLabel')}
@@ -245,7 +245,7 @@ export default function FournisseurProduitNew() {
                       disabled={loadingCategories}
                       className={`w-full appearance-none rounded-xl border ${serverErrors.category ? 'border-red-500' : 'border-slate-200'} bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none disabled:opacity-50`}
                     >
-                      <option value="">{loadingCategories ? 'Chargement des catÃ©gories...' : t('fournisseurProduitNew.categoryPlaceholder')}</option>
+                      <option value="">{loadingCategories ? 'Chargement des catégories...' : t('fournisseurProduitNew.categoryPlaceholder')}</option>
                       {categoryOptions.map((opt, idx) => (
                         <option key={idx} value={opt.value}>{opt.label}</option>
                       ))}
@@ -260,7 +260,7 @@ export default function FournisseurProduitNew() {
 
                 {showNewCategoryInput && (
                   <div className="flex gap-2 mt-2">
-                    <input type="text" value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} placeholder="Nouvelle catÃ©gorie" className="flex-1 rounded-xl border border-slate-200 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none" autoFocus />
+                    <input type="text" value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} placeholder="Nouvelle catégorie" className="flex-1 rounded-xl border border-slate-200 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none" autoFocus />
                     <button type="button" onClick={handleAddCustomCategory} className="px-4 py-2 rounded-xl bg-green-600 text-white hover:bg-green-700 text-sm">Ajouter</button>
                     <button type="button" onClick={() => { setShowNewCategoryInput(false); setNewCategoryName(''); }} className="px-4 py-2 rounded-xl bg-red-50 text-red-700 hover:bg-red-100 border border-red-200"><X className="h-4 w-4" /></button>
                   </div>
@@ -310,12 +310,12 @@ export default function FournisseurProduitNew() {
           )}
 
           <div className="mt-8 flex flex-col gap-4 md:flex-row">
-            <Hint text="Annuler et retourner Ã  la liste de vos produits sans enregistrer.">
+            <Hint text="Annuler et retourner à la liste de vos produits sans enregistrer.">
             <button type="button" onClick={() => navigate("/fournisseur/produits")} className="flex-1 rounded-2xl border border-slate-200 bg-white py-4 text-sm font-semibold text-slate-800 hover:bg-slate-50">
               {t('fournisseurProduitNew.cancelButton')}
             </button>
             </Hint>
-            <Hint text="Publier ce produit sur la place de marchÃ© pour que les artisans puissent le commander.">
+            <Hint text="Publier ce produit sur la place de marché pour que les artisans puissent le commander.">
             <button type="submit" disabled={submitting || loadingCategories} className="flex-1 rounded-2xl bg-indigo-700 py-4 text-sm font-semibold text-white hover:bg-indigo-800 disabled:opacity-50">
               {submitting ? 'Creating...' : t('fournisseurProduitNew.submitButton')}
             </button>
