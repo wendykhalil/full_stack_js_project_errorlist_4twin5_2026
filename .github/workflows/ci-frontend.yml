@@ -32,8 +32,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: frontend
-        run: npm ci && npm install terser --save-dev
-
+run: npm install
       # ── Unit Tests ───────────────────────────────────────────────────────────
       - name: Run unit tests with coverage
         working-directory: frontend
