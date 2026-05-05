@@ -710,28 +710,69 @@ def predict_batch():
 @app.route("/retrain", methods=["POST"])
 def retrain():
     """
-    Retrain the model.
+    Retrain the product-performance classifier.
 
-    Two modes:
-      1. Live data mode (from Node.js):
-         Body: { "products": [ { price, stock, orders, rating } ] }
-         Labels are auto-generated using the same deterministic rules as dataset.py.
-         If >= 20 live samples → merge with base dataset and retrain.
+    Three modes (checked in priority order):
 
-      2. Regen mode (dev/admin):
-         Body: { "regen": true }
-         Regenerates data.csv from scratch and retrains.
+      1. MongoDB mode  — default / { "mongo": true }
+         Connects to the real MongoDB Atlas cluster, reads the `products` and
+         `orders` collections, builds a labelled dataset from live business data,
+         and retrains the model entirely from real data.
+         This is the PRIMARY mode and the one called by the "Retrain AI" button.
+
+      2. Live-products mode  — { "products": [ { price, stock, orders, rating } ] }
+         Backward-compatible path kept for Node.js clients that send pre-fetched
+         product arrays. Labels are auto-generated and the live rows are merged
+         with the base synthetic dataset before retraining.
+
+      3. Regen mode  — { "regen": true }
+         Regenerates data.csv from scratch and retrains on synthetic data only.
+         Useful for development / resetting the model.
     """
     global pipeline, CLASSES
 
-    body     = request.get_json(silent=True) or {}
-    products = body.get("products")   # live supplier data
-    regen    = bool(body.get("regen", False))
+    body    = request.get_json(silent=True) or {}
+    regen   = bool(body.get("regen",   False))
+    use_mongo = bool(body.get("mongo", True))   # default: MongoDB mode
+    products  = body.get("products")            # optional pre-fetched array
 
     try:
-        # ── Path A: live product data from Node.js ────────────────────────────
+        # ── Path A: MongoDB mode (PRIMARY — real data) ────────────────────────
+        if use_mongo and not regen and not isinstance(products, list):
+            print("[ML /retrain] ── MongoDB mode: training from real data ──")
+            from train_from_mongo import train_from_mongo
+
+            result = train_from_mongo()
+
+            # Hot-swap the in-process model without restarting Flask
+            pipeline = joblib.load(MODEL_PATH)
+            with open(CLASSES_PATH) as f:
+                CLASSES = json.load(f)
+
+            print(
+                f"[ML /retrain] ✅ Model hot-swapped. "
+                f"Products={result['products_used']}  "
+                f"Accuracy={result['accuracy']:.4f}  "
+                f"Classes={CLASSES}"
+            )
+
+            return jsonify({
+                "status":             "ok",
+                "message":            result["message"],
+                "training_source":    "mongodb",
+                "products_used":      result["products_used"],
+                "orders_processed":   result["orders_processed"],
+                "class_distribution": result["class_distribution"],
+                "samples_used":       result["samples_used"],
+                "accuracy":           result["accuracy"],
+                "lastTrainedAt":      result["lastTrainedAt"],
+                "classes":            CLASSES,
+                "augmented":          result.get("augmented", False),
+            })
+
+        # ── Path B: live product data from Node.js (backward compat) ─────────
         if isinstance(products, list) and len(products) >= 1:
-            print(f"[ML /retrain] Received {len(products)} live product(s) from Node.js")
+            print(f"[ML /retrain] ── Live-products mode: {len(products)} product(s) from Node.js ──")
 
             live_rows = []
             for p in products:
@@ -743,54 +784,52 @@ def retrain():
                     label  = _auto_label(price, stock, orders, rating)
                     live_rows.append(dict(price=price, stock=stock, orders=orders, rating=rating, label=label))
                 except (TypeError, ValueError):
-                    continue  # skip malformed rows
+                    continue
 
             if not live_rows:
                 return jsonify({"error": "No valid product rows after parsing"}), 400
 
             live_df = pd.DataFrame(live_rows)
-            print(f"[ML /retrain] Live label distribution:\n{live_df['label'].value_counts().to_dict()}")
+            print(f"[ML /retrain] Live label distribution: {live_df['label'].value_counts().to_dict()}")
 
-            # Load base dataset and merge (live data takes priority via concat)
+            # Merge with base synthetic dataset
             data_path = os.path.join(os.path.dirname(__file__), "data.csv")
             if os.path.exists(data_path):
                 base_df = pd.read_csv(data_path)
-                # Validate base dataset has required columns
                 if not {"price", "stock", "orders", "rating", "label"}.issubset(base_df.columns):
                     from dataset import generate
                     base_df = generate()
                 combined_df = pd.concat([base_df, live_df], ignore_index=True)
             else:
-                # No base dataset — generate one and merge
                 from dataset import generate
                 base_df     = generate()
                 combined_df = pd.concat([base_df, live_df], ignore_index=True)
 
             df = combined_df.sample(frac=1, random_state=42).reset_index(drop=True)
-            print(f"[ML /retrain] Total training rows: {len(df)}")
+            print(f"[ML /retrain] Total training rows (live + synthetic): {len(df)}")
 
-        # ── Path B: regen mode ────────────────────────────────────────────────
+        # ── Path C: regen mode (synthetic CSV only) ───────────────────────────
         else:
-            print("[ML /retrain] Regen mode — regenerating dataset …")
+            print("[ML /retrain] ── Regen mode: regenerating synthetic dataset ──")
             from train import train
             pipeline = train(regen=True)
             with open(CLASSES_PATH) as f:
                 CLASSES = json.load(f)
             meta = _save_meta(samples_used=0, accuracy=1.0)
             return jsonify({
-                "status":       "ok",
-                "message":      "Model retrained from generated dataset",
-                "samples_used": meta["samplesUsed"],
-                "accuracy":     meta["accuracy"],
-                "lastTrainedAt": meta["lastTrainedAt"],
-                "classes":      CLASSES,
+                "status":          "ok",
+                "message":         "Model retrained from generated synthetic dataset",
+                "training_source": "synthetic_csv",
+                "samples_used":    meta["samplesUsed"],
+                "accuracy":        meta["accuracy"],
+                "lastTrainedAt":   meta["lastTrainedAt"],
+                "classes":         CLASSES,
             })
 
-        # ── Train on combined df ──────────────────────────────────────────────
+        # ── Shared training block (Path B only reaches here) ─────────────────
         X = df[["price", "stock", "orders", "rating"]].values
         y = df["label"].values
 
-        # Need at least 2 samples per class for stratified split
         class_counts = pd.Series(y).value_counts()
         can_stratify = (class_counts >= 2).all()
 
@@ -799,7 +838,7 @@ def retrain():
                 X, y, test_size=0.15, random_state=42, stratify=y
             )
         else:
-            X_train, X_test, y_train, y_test = X, X, y, y  # tiny dataset — train=test
+            X_train, X_test, y_train, y_test = X, X, y, y
 
         new_pipeline = Pipeline([
             ("scaler", StandardScaler()),
@@ -832,13 +871,14 @@ def retrain():
         print(f"[ML /retrain] ✅ Done. Accuracy={accuracy:.4f}  Classes={CLASSES}")
 
         return jsonify({
-            "status":        "ok",
-            "message":       "Model retrained successfully with live data",
-            "samples_used":  len(df),
-            "live_samples":  len(live_rows),
-            "accuracy":      round(accuracy, 4),
-            "lastTrainedAt": meta["lastTrainedAt"],
-            "classes":       CLASSES,
+            "status":          "ok",
+            "message":         "Model retrained with live product data (merged with synthetic)",
+            "training_source": "live_products_merged",
+            "samples_used":    len(df),
+            "live_samples":    len(live_rows),
+            "accuracy":        round(accuracy, 4),
+            "lastTrainedAt":   meta["lastTrainedAt"],
+            "classes":         CLASSES,
         })
 
     except Exception as e:

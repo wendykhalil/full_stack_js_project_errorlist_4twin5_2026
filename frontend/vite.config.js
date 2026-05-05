@@ -157,6 +157,13 @@ export default defineConfig({
       'socket.io-client',
       'i18next',
       'react-i18next',
+      // ✅ FIX: recharts imports use-sync-external-store/shim/with-selector (CJS).
+      // Vite cannot serve raw CJS in ESM mode — pre-bundling converts it to ESM.
+      // recharts must be pre-bundled so all its CJS transitive deps are resolved.
+      'recharts',
+      'use-sync-external-store',
+      'use-sync-external-store/shim',
+      'use-sync-external-store/shim/with-selector',
     ],
     
     // ✅ EXCLUDE HEAVY LIBRARIES FROM PRE-BUNDLING
@@ -167,7 +174,7 @@ export default defineConfig({
       '@vladmandic/face-api',
       '@stripe/stripe-js',
       '@stripe/react-stripe-js',
-      'recharts',
+      // recharts removed from exclude — it must be pre-bundled (see include above)
       'xlsx',
       'jspdf',
       'html2canvas',

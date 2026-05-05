@@ -123,8 +123,15 @@ async function getAiInsights(supplierId, forceRefresh = false) {
 }
 
 /**
- * Retrain the ML model using this supplier's live product data,
- * then invalidate the insights cache so the next fetch uses the new model.
+ * Retrain the ML model using REAL MongoDB data (primary mode).
+ *
+ * Sends { mongo: true } to the Flask /retrain endpoint, which triggers
+ * train_from_mongo.py — connecting directly to MongoDB Atlas, reading the
+ * `products` and `orders` collections, and retraining the RandomForest
+ * classifier on live business data.
+ *
+ * Falls back to sending the supplier's pre-fetched product metrics if the
+ * MongoDB mode fails (e.g. network issue from the Python side).
  */
 async function retrainAiModel(supplierId) {
   const mlUp = await isHealthy();
@@ -132,27 +139,55 @@ async function retrainAiModel(supplierId) {
     throw new Error('ML service is unavailable. Please start the Python microservice.');
   }
 
-  const metrics = await collectProductMetrics(supplierId);
+  // ── Primary: trigger MongoDB-driven retraining ────────────────────────────
+  // The Flask service connects to MongoDB directly and trains on ALL products,
+  // not just this supplier's. This gives the model the full picture.
+  try {
+    const result = await retrainModel({ mongo: true });
 
-  // Build the payload — only the 4 numeric features needed for training
-  const payload = metrics.map(({ price, stock, orders, rating }) => ({
-    price, stock, orders, rating,
-  }));
+    // Invalidate cache so next /ai-insights call uses the freshly trained model
+    cache.delete(String(supplierId));
 
-  const result = await retrainModel(payload);
+    return {
+      status:             'success',
+      message:            result.message || 'Model retrained from real MongoDB data',
+      trainingSource:     result.training_source || 'mongodb',
+      samplesUsed:        result.samples_used   ?? 0,
+      productsUsed:       result.products_used  ?? 0,
+      ordersProcessed:    result.orders_processed ?? 0,
+      classDistribution:  result.class_distribution ?? {},
+      accuracy:           result.accuracy ?? null,
+      lastTrainedAt:      result.lastTrainedAt ?? new Date().toISOString(),
+      classes:            result.classes ?? [],
+      augmented:          result.augmented ?? false,
+    };
+  } catch (mongoErr) {
+    // ── Fallback: send this supplier's pre-fetched metrics ──────────────────
+    console.warn(
+      '[aiInsights] MongoDB retrain failed, falling back to live-products mode:',
+      mongoErr.message
+    );
 
-  // Invalidate cache so next /ai-insights call uses the freshly trained model
-  cache.delete(String(supplierId));
+    const metrics = await collectProductMetrics(supplierId);
+    const payload = metrics.map(({ price, stock, orders, rating }) => ({
+      price, stock, orders, rating,
+    }));
 
-  return {
-    status:        'success',
-    message:       result.message || 'Model retrained successfully',
-    samplesUsed:   result.samples_used ?? payload.length,
-    liveSamples:   result.live_samples ?? payload.length,
-    accuracy:      result.accuracy ?? null,
-    lastTrainedAt: result.lastTrainedAt ?? new Date().toISOString(),
-    classes:       result.classes ?? [],
-  };
+    const result = await retrainModel(payload);
+
+    cache.delete(String(supplierId));
+
+    return {
+      status:        'success',
+      message:       result.message || 'Model retrained (fallback: supplier products)',
+      trainingSource: 'live_products_merged',
+      samplesUsed:   result.samples_used ?? payload.length,
+      liveSamples:   result.live_samples ?? payload.length,
+      accuracy:      result.accuracy ?? null,
+      lastTrainedAt: result.lastTrainedAt ?? new Date().toISOString(),
+      classes:       result.classes ?? [],
+    };
+  }
 }
 
 module.exports = { getAiInsights, retrainAiModel, collectProductMetrics, cache };

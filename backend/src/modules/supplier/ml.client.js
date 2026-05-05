@@ -38,20 +38,26 @@ async function predictBatch(products) {
 }
 
 /**
- * Trigger model retraining with live product data.
+ * Trigger model retraining.
  *
- * @param {Array<{ price, stock, orders, rating }>} products
- * @returns {Promise<{ status, message, samples_used, accuracy, lastTrainedAt }>}
+ * @param {Array<{ price, stock, orders, rating }>|{ mongo: true }|{ regen: true }} payload
+ *   - Array of products  → live-products mode (backward compat)
+ *   - { mongo: true }    → MongoDB mode (primary — train from real DB data)
+ *   - { regen: true }    → synthetic CSV regen mode
+ * @returns {Promise<{ status, message, samples_used, accuracy, lastTrainedAt, ... }>}
  */
-async function retrainModel(products) {
+async function retrainModel(payload) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), RETRAIN_TIMEOUT_MS);
+
+  // Normalise payload: arrays become { products: [...] }, objects pass through
+  const body = Array.isArray(payload) ? { products: payload } : payload;
 
   try {
     const res = await fetch(`${ML_BASE_URL}/retrain`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ products }),
+      body:    JSON.stringify(body),
       signal:  controller.signal,
     });
 
